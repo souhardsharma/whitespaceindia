@@ -65,6 +65,8 @@ function MiniBarChart({
               fontSize: 12,
               color: "#fff",
             }}
+            itemStyle={{ color: "#fff" }}
+            labelStyle={{ color: "#94A3B8", fontWeight: 600, paddingBottom: 4 }}
             formatter={(value) => [`${Number(value).toLocaleString("en-IN")}${unit}`, ""]}
             cursor={{ fill: "rgba(255,255,255,0.03)" }}
           />
@@ -126,6 +128,8 @@ function TrendChart({
               fontSize: 12,
               color: "#fff",
             }}
+            itemStyle={{ color: "#fff" }}
+            labelStyle={{ color: "#94A3B8", fontWeight: 600, paddingBottom: 4 }}
             formatter={(value) => [`${value}%`, "Headcount"]}
           />
           <Line

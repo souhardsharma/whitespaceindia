@@ -129,7 +129,7 @@ export default function Hero() {
       <SubtleBackground />
 
       <motion.div
-        className="relative z-10 text-center px-4 max-w-5xl mx-auto"
+        className="relative z-10 text-center px-4 max-w-5xl mx-auto pt-24"
         style={{ opacity }}
         variants={stagger}
         initial="hidden"
