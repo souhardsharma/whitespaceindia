@@ -60,6 +60,9 @@ export default function Navbar() {
           <Link href="/methodology" className="text-[#94A3B8] hover:text-white transition-colors">
             Methodology
           </Link>
+          <Link href="/reports" className="text-[#94A3B8] hover:text-white transition-colors">
+            Reports
+          </Link>
           <Link href="/about" className="text-[#94A3B8] hover:text-white transition-colors">
             About
           </Link>
@@ -111,6 +114,9 @@ export default function Navbar() {
               </a>
               <Link href="/methodology" onClick={() => setMobileOpen(false)} className="text-[#94A3B8] hover:text-white transition-colors">
                 Methodology
+              </Link>
+              <Link href="/reports" onClick={() => setMobileOpen(false)} className="text-[#94A3B8] hover:text-white transition-colors">
+                Reports
               </Link>
               <Link href="/about" onClick={() => setMobileOpen(false)} className="text-[#94A3B8] hover:text-white transition-colors">
                 About

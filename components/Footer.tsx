@@ -120,7 +120,7 @@ export default function Footer() {
               Coming Soon
             </h4>
             <ul className="space-y-2 text-sm text-[#475569]">
-              {["Education", "Health", "Energy", "Reports & Analysis"].map((item, i) => (
+              {["Education", "Health", "Energy"].map((item, i) => (
                 <motion.li
                   key={item}
                   initial={{ opacity: 0, x: -12 }}

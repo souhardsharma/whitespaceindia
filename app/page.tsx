@@ -139,7 +139,7 @@ function BeyondSection() {
                 The same methodology can surface whitespaces in other public-data domains. Education infrastructure gaps, health access disparities, and energy poverty are next.
               </motion.p>
               <div className="flex flex-wrap gap-2">
-                {["Education", "Health", "Energy", "Reports & Analysis"].map((v, i) => (
+                {["Education", "Health", "Energy"].map((v, i) => (
                   <motion.span
                     key={v}
                     initial={{ opacity: 0, scale: 0.9 }}
