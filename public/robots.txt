@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://whitespaceindia.vercel.app/sitemap.xml

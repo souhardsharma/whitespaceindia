@@ -1,0 +1,25 @@
+{
+  "national_median_csr_per_person": 127.25,
+  "tier_medians": {
+    "Tier 1 (Small)": 112.37,
+    "Tier 2 (Medium)": 138.97,
+    "Tier 3 (Large)": 135.89
+  },
+  "total_districts": 583,
+  "methodology": "population-tertile-stratified benchmarking",
+  "whitespace_thresholds": {
+    "csr_p25": 39.82,
+    "hr_p75_pct": 21.5
+  },
+  "whitespace_count": 49,
+  "pos_range": {
+    "min": 1.6,
+    "max": 78.5
+  },
+  "pop_tier_boundaries": {
+    "p33": 1066888,
+    "p67": 2090922
+  },
+  "national_mean_csr": 678.43,
+  "median_retention_ratio": 0.557
+}
