@@ -15,14 +15,6 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-export const metadata = {
-  title: "Methodology",
-  description: "Detailed methodology behind the Philanthropic Opportunity Score (POS). Learn how we process NITI Aayog MPI poverty data and MCA CSR spending data.",
-  alternates: {
-    canonical: "https://whitespaceindia-csr.vercel.app/methodology",
-  },
-};
-
 function FadeIn({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
