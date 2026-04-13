@@ -275,12 +275,12 @@ export default function HomePage() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Whitespace India CSR",
-    url: "https://whitespaceindia.vercel.app",
+    url: "https://whitespaceindia-csr.vercel.app",
     description:
       "Interactive tool ranking 583 Indian districts by philanthropic opportunity. Combines NITI Aayog MPI poverty data with CSR spending to find where philanthropic capital can create the most impact.",
     potentialAction: {
       "@type": "SearchAction",
-      target: "https://whitespaceindia.vercel.app/#simulator",
+      target: "https://whitespaceindia-csr.vercel.app/#simulator",
     },
   };
 
@@ -290,7 +290,7 @@ export default function HomePage() {
     name: "India District Philanthropic Opportunity Scores",
     description:
       "Composite Philanthropic Opportunity Score (POS) for 583 Indian districts, derived from NITI Aayog MPI 2023 poverty data and MCA CSR spending data.",
-    url: "https://whitespaceindia.vercel.app",
+    url: "https://whitespaceindia-csr.vercel.app",
     creator: { "@type": "Organization", name: "Whitespace India CSR" },
     citation: [
       {

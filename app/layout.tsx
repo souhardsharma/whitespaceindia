@@ -16,7 +16,7 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://whitespaceindia.vercel.app"),
+  metadataBase: new URL("https://whitespaceindia-csr.vercel.app"),
   title: {
     default: "Whitespace India CSR | Where CSR Should Go",
     template: "%s | Whitespace India CSR",
