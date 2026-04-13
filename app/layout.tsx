@@ -44,6 +44,9 @@ export const metadata: Metadata = {
     description:
       "Find India's philanthropic whitespaces - districts with high poverty and low CSR funding.",
   },
+  alternates: {
+    canonical: "https://whitespaceindia-csr.vercel.app",
+  },
   robots: { index: true, follow: true },
 };
 

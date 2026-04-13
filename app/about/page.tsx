@@ -5,6 +5,14 @@ import { motion, useInView } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
+export const metadata = {
+  title: "About",
+  description: "About Whitespace India CSR: Quantifying the gap between where philanthropic money goes and where people need it most.",
+  alternates: {
+    canonical: "https://whitespaceindia-csr.vercel.app/about",
+  },
+};
+
 function FadeIn({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
