@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 
+export const maxDuration = 60; // Max allowed for Vercel Hobby tier
+
 const SYSTEM_PROMPT = `You are a senior research analyst at a philanthropic advisory firm in India. You write district investment briefs used by foundation program officers and CSR heads. Your writing is direct, data-anchored, and clear.
 
 RULES:
@@ -108,7 +110,8 @@ async function callGemini(
 
         // Wait before retrying (exponential backoff)
         if (attempt < maxRetriesPerKey - 1) {
-          const wait = Math.pow(2, attempt + 1) * 1000;
+          // Changed to slower cycle: 4 seconds for Try 2, 8 seconds for Try 3
+          const wait = Math.pow(2, attempt + 1) * 2000;
           await new Promise(r => setTimeout(r, wait));
         }
       }
