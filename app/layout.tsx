@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Karla, Lora } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const karla = Karla({
   subsets: ["latin"],
@@ -56,6 +57,7 @@ export default function RootLayout({
       <body className="bg-[#0B1526] text-white font-sans antialiased">
         {children}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
