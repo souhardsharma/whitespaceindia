@@ -580,109 +580,29 @@ export default function BriefModal({ district, onClose }: Props) {
               </motion.div>
             )}
 
-            {/* Brief text display */}
-            {briefText && (
+            {/* Success display */}
+            {generated && briefText && (
               <motion.div
-                ref={briefRef}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
                 className="mt-6"
               >
-                {/* Brief content */}
-                <div className="space-y-5">
-                  {briefText.split(/\n\n+/).filter(Boolean).map((para, i) => {
-                    const trimmed = para.trim();
-                    // Detect **Section Heading** lines
-                    const headingMatch = trimmed.match(/^\*\*(.+?)\*\*\s*$/);
-                    if (headingMatch) {
-                      return (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, x: -12 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.4, delay: i * 0.05 }}
-                          className="pt-2"
-                        >
-                          <div className="flex items-center gap-3 mb-1">
-                            <div className="w-1 h-5 rounded-full bg-[#F5A623]" />
-                            <h4 className="font-display text-white font-semibold text-base tracking-wide">
-                              {headingMatch[1]}
-                            </h4>
-                          </div>
-                        </motion.div>
-                      );
-                    }
-                    // Inline bold: replace **text** with <strong>
-                    const parts = trimmed.split(/(\*\*[^*]+\*\*)/g);
-                    return (
-                      <motion.p
-                        key={i}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: i * 0.05 }}
-                        className="text-[#C8D3E0] text-sm leading-[1.9] font-light"
-                      >
-                        {parts.map((part, j) => {
-                          const m = part.match(/^\*\*(.+)\*\*$/);
-                          return m ? <strong key={j} className="text-white font-medium">{m[1]}</strong> : part;
-                        })}
-                      </motion.p>
-                    );
-                  })}
-                </div>
-
-                {/* Brief footer with sources */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  className="mt-8 pt-6 border-t border-white/10 space-y-2 text-xs text-[#64748B]"
-                >
-                  <p className="font-semibold text-[#94A3B8] text-xs uppercase tracking-wider mb-3">Sources</p>
-                  <p>
-                    Poverty data:{" "}
-                    <a href="https://www.niti.gov.in/sites/default/files/2023-08/India-National-Multidimentional-Poverty-Index-2023.pdf" target="_blank" rel="noopener noreferrer" className="text-[#F5A623] hover:underline">
-                      NITI Aayog National MPI 2023 (NFHS-5, 2019-21)
-                    </a>
+                <div className="bg-[#22C55E]/10 border border-[#22C55E]/30 rounded-xl p-6 text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#22C55E]/20 mb-4">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <h3 className="text-[#22C55E] text-lg font-semibold mb-2">Brief Generated Successfully!</h3>
+                  <p className="text-[#94A3B8] text-sm mb-6">
+                    Your PDF research brief has automatically downloaded to your device.
                   </p>
-                  <p>
-                    CSR data:{" "}
-                    <a href="https://dataful.in/datasets/1612" target="_blank" rel="noopener noreferrer" className="text-[#F5A623] hover:underline">
-                      Ministry of Corporate Affairs, via Dataful.in (Dataset ID: 1612)
-                    </a>
-                  </p>
-                  <p>
-                    Population:{" "}
-                    <a href="https://censusindia.gov.in" target="_blank" rel="noopener noreferrer" className="text-[#F5A623] hover:underline">
-                      Census of India 2011
-                    </a>
-                  </p>
-                  <p>
-                    Scoring methodology:{" "}
-                    <a href="https://www.oecd.org/en/publications/handbook-on-constructing-composite-indicators-methodology-and-user-guide_9789264043466-en.html" target="_blank" rel="noopener noreferrer" className="text-[#F5A623] hover:underline">
-                      OECD Handbook on Constructing Composite Indicators (Nardo et al., 2008)
-                    </a>
-                  </p>
-                  <p className="pt-2 text-[#94A3B8]/80 italic">
-                    Brief text is generated using the Google Gemini API. All underlying data comes from the three public sources listed above and the Whitespace India scoring methodology.
-                  </p>
-                  <p className="pt-2">
-                    Contact:{" "}
-                    <a href="https://www.linkedin.com/in/souhardsharma/" target="_blank" rel="noopener noreferrer" className="text-[#F5A623] hover:underline">
-                      linkedin.com/in/souhardsharma
-                    </a>
-                  </p>
-                </motion.div>
-
-                {/* Download PDF again button */}
-                {generated && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.4 }}
+                  
+                  {/* Download PDF again button */}
+                  <button
                     onClick={() => downloadPdf(briefText)}
-                    className="mt-6 w-full border border-[#F5A623]/40 text-[#F5A623] font-semibold py-3 rounded-xl hover:bg-[#F5A623]/10 transition-all duration-300 hover:border-[#F5A623]/60 flex items-center justify-center gap-2"
+                    className="w-full border border-[#F5A623]/40 text-[#F5A623] font-semibold py-3 rounded-xl hover:bg-[#F5A623]/10 transition-all duration-300 hover:border-[#F5A623]/60 flex items-center justify-center gap-2"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -690,8 +610,8 @@ export default function BriefModal({ district, onClose }: Props) {
                       <line x1="12" y1="15" x2="12" y2="3" />
                     </svg>
                     Download PDF Again
-                  </motion.button>
-                )}
+                  </button>
+                </div>
               </motion.div>
             )}
           </motion.div>
