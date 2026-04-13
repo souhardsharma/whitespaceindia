@@ -292,22 +292,10 @@ export default function HomePage() {
       "Composite Philanthropic Opportunity Score (POS) for 583 Indian districts, derived from NITI Aayog MPI 2023 poverty data and MCA CSR spending data.",
     url: "https://whitespaceindia-csr.vercel.app",
     creator: { "@type": "Organization", name: "Whitespace India CSR" },
+    license: "https://creativecommons.org/licenses/by/4.0/",
     citation: [
-      {
-        "@type": "Dataset",
-        name: "National Multidimensional Poverty Index 2023",
-        creator: { "@type": "Organization", name: "NITI Aayog" },
-        url: "https://niti.gov.in/sites/default/files/2023-07/Final-MPI_7thJuly.pdf",
-      },
-      {
-        "@type": "Dataset",
-        name: "CSR District-Level Spending Data",
-        creator: {
-          "@type": "Organization",
-          name: "Ministry of Corporate Affairs, Government of India",
-        },
-        url: "https://www.csr.gov.in/",
-      },
+      "National Multidimensional Poverty Index 2023 (NITI Aayog) - https://niti.gov.in/sites/default/files/2023-07/Final-MPI_7thJuly.pdf",
+      "CSR District-Level Spending Data (Ministry of Corporate Affairs) - https://www.csr.gov.in/"
     ],
     temporalCoverage: "2014/2024",
     spatialCoverage: { "@type": "Place", name: "India" },
