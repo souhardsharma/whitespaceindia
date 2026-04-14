@@ -273,7 +273,7 @@ export default function MethodologyPage() {
                   style={{ borderColor: `${comp.color}20` }}
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <span className="font-mono font-bold text-sm px-3 py-1 rounded-full" style={{ background: `${comp.color}20`, color: comp.color }}>
+                    <span className="font-sans font-bold text-sm px-3 py-1 rounded-full" style={{ background: `${comp.color}20`, color: comp.color }}>
                       {comp.key}
                     </span>
                     <span className="font-display text-sm font-bold" style={{ color: comp.color }}>
@@ -378,7 +378,7 @@ export default function MethodologyPage() {
                 <div className="flex-1">
                   <p className="text-white font-medium mb-2">Weighted linear aggregation</p>
                   <div className="bg-[#060E1A] border border-[#F5A623]/25 rounded-xl p-6">
-                    <p className="font-mono text-[#F5A623] text-lg text-center tracking-wide">
+                    <p className="font-sans text-[#F5A623] text-lg text-center tracking-wide">
                       POS = (0.40 &times; N&#x0302; + 0.40 &times; G&#x0302; + 0.20 &times; U&#x0302;) &times; 100
                     </p>
                   </div>
@@ -414,7 +414,7 @@ export default function MethodologyPage() {
                       { label: "U", value: preset.U, color: "#10B981" },
                     ].map((w) => (
                       <div key={w.label} className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono w-3" style={{ color: w.color }}>{w.label}</span>
+                        <span className="text-[10px] font-sans font-medium w-3" style={{ color: w.color }}>{w.label}</span>
                         <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
                           <div className="h-full rounded-full" style={{ width: `${w.value}%`, background: w.color }} />
                         </div>

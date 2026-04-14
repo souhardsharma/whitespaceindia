@@ -1,6 +1,23 @@
 import { NextRequest } from 'next/server';
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, renderToBuffer, Link, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, renderToBuffer, Link, Image, Font } from '@react-pdf/renderer';
+
+// Register Google Fonts for the PDF renderer
+Font.register({
+  family: 'Karla',
+  fonts: [
+    { src: 'https://fonts.gstatic.com/s/karla/v33/qkBIXvYC6trAT55ZBi1ueQVIjQTD-JqqFA.ttf', fontWeight: 400 },
+    { src: 'https://fonts.gstatic.com/s/karla/v33/qkBIXvYC6trAT55ZBi1ueQVIjQTDH52qFA.ttf', fontWeight: 700 }
+  ]
+});
+
+Font.register({
+  family: 'Lora',
+  fonts: [
+    { src: 'https://fonts.gstatic.com/s/lora/v37/0QI6MX1D_JOuGQbT0gvTJPa787weuyJG.ttf', fontWeight: 400 },
+    { src: 'https://fonts.gstatic.com/s/lora/v37/0QI6MX1D_JOuGQbT0gvTJPa787z5vCJG.ttf', fontWeight: 700 }
+  ]
+});
 
 const NAVY = '#0B1526';
 const AMBER = '#F5A623';
@@ -15,7 +32,7 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
     paddingLeft: 52,
     paddingRight: 52,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Karla',
   },
   // ── Header ──────────────────────────────────────────────
   wordmark: {
@@ -26,7 +43,8 @@ const styles = StyleSheet.create({
   },
   districtName: {
     fontSize: 30,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Lora',
+    fontWeight: 700,
     color: WHITE,
     lineHeight: 1.1,
     marginBottom: 4,
@@ -50,7 +68,8 @@ const styles = StyleSheet.create({
   },
   scoreBadgeText: {
     fontSize: 9,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Karla',
+    fontWeight: 700,
     color: NAVY,
     letterSpacing: 1.2,
   },
@@ -77,14 +96,16 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontSize: 7,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Karla',
+    fontWeight: 700,
     color: AMBER,
     letterSpacing: 1.5,
     marginBottom: 8,
   },
   cardValue: {
     fontSize: 20,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Karla',
+    fontWeight: 700,
     color: WHITE,
     lineHeight: 1,
     marginBottom: 4,
@@ -99,7 +120,8 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 12,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Lora',
+    fontWeight: 700,
     color: AMBER,
     marginBottom: 8,
     marginTop: 6,
@@ -109,7 +131,8 @@ const styles = StyleSheet.create({
     color: WHITE,
     lineHeight: 1.75,
     marginBottom: 11,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Karla',
+    fontWeight: 400,
   },
   // ── Footer ───────────────────────────────────────────────
   footer: {
@@ -253,7 +276,7 @@ function buildDocument(payload: PdfPayload) {
             ...chunks.map((chunk, index) => {
               // In an array split by '**', every odd index was inside the asterisks
               if (index % 2 === 1) {
-                return ce(Text, { key: `chunk-${index}`, style: { fontFamily: 'Helvetica-Bold' } }, chunk);
+                return ce(Text, { key: `chunk-${index}`, style: { fontFamily: 'Karla', fontWeight: 700 } }, chunk);
               }
               return chunk; // Normal text
             })

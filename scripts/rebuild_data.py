@@ -1,6 +1,5 @@
 """
-Whitespace India - Complete Data Pipeline
-Re-extracts and recalculates everything from 3 original source files:
+Whitespace India - Data Analysis
 1. India-National-Multidimentional-Poverty-Index-2023.pdf (MPI data)
 2. csr_state_sector.xlsx (CSR spending data)
 3. census_2011_districts.csv (population data)
@@ -312,7 +311,6 @@ def process_census(census_path):
 
     # Identify key columns
     # The CSV has: District code, State name, District name, Population, etc.
-    # Column names may vary, so let's inspect
     col_map = {}
     for col in df.columns:
         cl = col.lower().strip()
