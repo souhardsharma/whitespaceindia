@@ -1,12 +1,21 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { useState, useEffect, useMemo, useRef, useCallback, useTransition } from "react";
+import { motion, useInView } from "framer-motion";
+import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
 import WeightsPanel from "@/components/WeightsPanel";
-import IndiaMap from "@/components/IndiaMap";
+
+const IndiaMap = dynamic(() => import("@/components/IndiaMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full flex items-center justify-center border border-white/5 rounded-2xl bg-white/[0.02]" style={{ aspectRatio: "3/4", maxHeight: "500px" }}>
+      <div className="w-8 h-8 border-2 border-[#F5A623] border-t-transparent rounded-full animate-spin" />
+    </div>
+  ),
+});
 import RankingList from "@/components/RankingList";
 import BriefModal from "@/components/BriefModal";
 import Footer from "@/components/Footer";
@@ -17,7 +26,7 @@ import {
   rankDistricts,
 } from "@/lib/score";
 
-/* Debounce removed - direct state for instant reactivity */
+
 
 function DataInsightCard({
   value,
@@ -190,6 +199,7 @@ export default function HomePage() {
   >(null);
   const [isLoading, setIsLoading] = useState(true);
   const [highlightedState, setHighlightedState] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const simulatorRef = useRef<HTMLDivElement>(null);
   const simulatorInView = useInView(simulatorRef, { once: true, margin: "-100px" });
@@ -261,14 +271,36 @@ export default function HomePage() {
   );
 
   const handleStateClick = useCallback((stateName: string) => {
-    setHighlightedState((prev) => (prev === stateName ? null : stateName));
+    startTransition(() => {
+      setHighlightedState((prev) => (prev === stateName ? null : stateName));
+    });
+  }, []);
+
+  const handleWeightsChange = useCallback((newWeights: Weights) => {
+    startTransition(() => {
+      setWeights(newWeights);
+    });
+  }, []);
+
+  const handleSectorChange = useCallback((val: string) => {
+    startTransition(() => {
+      setSector(val);
+    });
+  }, []);
+
+  const handleWhitespaceToggle = useCallback((val: boolean) => {
+    startTransition(() => {
+      setWhitespaceOnly(val);
+    });
   }, []);
 
   const handleReset = useCallback(() => {
-    setWeights(DEFAULT_WEIGHTS);
-    setSector("All Sectors");
-    setWhitespaceOnly(false);
-    setHighlightedState(null);
+    startTransition(() => {
+      setWeights(DEFAULT_WEIGHTS);
+      setSector("All Sectors");
+      setWhitespaceOnly(false);
+      setHighlightedState(null);
+    });
   }, []);
 
   const websiteSchema = {
@@ -387,9 +419,9 @@ export default function HomePage() {
                 className="lg:col-span-1"
               >
                 <WeightsPanel
-                  onWeightsChange={setWeights}
-                  onSectorChange={setSector}
-                  onWhitespaceToggle={setWhitespaceOnly}
+                  onWeightsChange={handleWeightsChange}
+                  onSectorChange={handleSectorChange}
+                  onWhitespaceToggle={handleWhitespaceToggle}
                   onReset={handleReset}
                   weights={weights}
                 />
@@ -442,7 +474,7 @@ export default function HomePage() {
                       )}
                     </div>
                   </div>
-                  <div className="p-4">
+                  <div className={`p-4 transition-opacity duration-300 ${isPending ? 'opacity-40 select-none pointer-events-none' : 'opacity-100'}`}>
                     <RankingList
                       districts={displayDistricts}
                       onSelectDistrict={handleSelectDistrict}
