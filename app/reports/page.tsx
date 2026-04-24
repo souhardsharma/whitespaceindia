@@ -40,9 +40,6 @@ export default function ReportsPage() {
         <FadeIn className="relative z-10 w-full max-w-5xl flex flex-col items-center">
           {/* Monumental heading */}
           <div className="text-center mb-14 md:mb-16">
-            <span className="font-label text-[10px] md:text-[11px] tracking-[0.5em] uppercase text-[#1c1c19]/70 mb-6 block">
-              Reports
-            </span>
             <h1 className="font-headline headline-tight text-[clamp(3.5rem,12vw,9rem)] leading-[0.9] text-[#1c1c19]">
               Reports &amp;<br />
               <span className="italic font-light">analysis.</span>
@@ -64,16 +61,6 @@ export default function ReportsPage() {
           <p className="font-body text-base md:text-lg text-[#1c1c19]/70 italic text-center max-w-xl leading-relaxed">
             In-depth district profiling, thematic studies, and funder analyses are in preparation. New reports will be published here as research is completed.
           </p>
-
-          {/* Asymmetric anchor */}
-          <div className="hidden lg:flex absolute bottom-6 right-12 flex-col items-end gap-2 text-right">
-            <span className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/40">
-              Built by
-            </span>
-            <span className="font-headline italic text-xl text-[#1c1c19]/70">
-              Whitespace India
-            </span>
-          </div>
         </FadeIn>
       </section>
 
