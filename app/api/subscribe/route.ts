@@ -113,9 +113,18 @@ export async function POST(req: NextRequest) {
       ? process.env.KIT_FORM_ID_LANDING || DEFAULT_FORM_ID_LANDING
       : process.env.KIT_FORM_ID || DEFAULT_FORM_ID_REPORTS;
 
-  // Kit field keys are derived from the labels you set on the form.
-  // "Company Name (Optional)" -> company_name, "Phone Number (Optional)" -> phone_number.
-  // We send a few common spellings so the data lands regardless of how the field was named.
+  const apiKey = process.env.KIT_API_KEY;
+  if (!apiKey) {
+    console.error("[subscribe] KIT_API_KEY missing in environment");
+    return NextResponse.json(
+      { ok: false, message: "Subscription is temporarily unavailable." },
+      { status: 500 }
+    );
+  }
+
+  // Kit subscriber custom-field keys. Kit auto-derives these from the field
+  // labels in the form editor. If a key doesn't exist on the account, Kit
+  // silently drops it — sending common spellings maximises the hit rate.
   const fields: Record<string, string> = {};
   if (company) {
     fields.company_name = company;
@@ -127,33 +136,36 @@ export async function POST(req: NextRequest) {
   }
   fields.source = source;
 
-  const kitPayload: Record<string, unknown> = { email_address: email };
-  // Kit's "Name" field on a form maps to first_name on the subscriber.
+  // v3 forms/subscribe endpoint — authenticated via api_key in the body.
+  // This bypasses Kit's public form-guard (anti-bot quarantine) that blocked
+  // the unauthenticated /forms/:id/subscriptions path from Vercel.
+  const kitPayload: Record<string, unknown> = {
+    api_key: apiKey,
+    email,
+    fields,
+  };
   if (name) kitPayload.first_name = name;
-  kitPayload.fields = fields;
-
-  // Kit's form-subscription endpoint flags server-to-server calls that look
-  // bot-like. Send browser-typical headers plus an honest Origin/Referer so
-  // the request is treated the same as an embed-script submission.
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
 
   try {
-    const kitRes = await fetch(`https://app.kit.com/forms/${formId}/subscriptions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        Origin: siteUrl,
-        Referer: `${siteUrl}/`,
-      },
-      body: JSON.stringify(kitPayload),
-      cache: "no-store",
-    });
+    const kitRes = await fetch(
+      `https://api.convertkit.com/v3/forms/${formId}/subscribe`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(kitPayload),
+        cache: "no-store",
+      }
+    );
 
     const rawBody = await kitRes.text().catch(() => "");
-    type KitBody = { status?: string; errors?: unknown };
+    type KitBody = {
+      subscription?: { id?: number; state?: string };
+      error?: string;
+      message?: string;
+    };
     let kitBody: KitBody | null = null;
     try {
       kitBody = rawBody ? (JSON.parse(rawBody) as KitBody) : null;
@@ -161,7 +173,7 @@ export async function POST(req: NextRequest) {
       kitBody = null;
     }
 
-    if (!kitRes.ok || !kitBody || kitBody.status !== "success") {
+    if (!kitRes.ok || !kitBody?.subscription?.id) {
       console.error(
         "[subscribe] Kit error",
         "http=" + kitRes.status,
