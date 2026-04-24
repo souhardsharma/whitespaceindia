@@ -67,7 +67,7 @@ export default function SubscribeForm({ variant, source }: Props) {
             <span aria-hidden>✓</span>
           </div>
           <p className="font-body text-xs text-[#1c1c19]/60 italic leading-relaxed">
-            We&apos;re a young project. Gmail may file our confirmation email under spam until it learns to trust us — rescue it once and we&apos;re in.
+            We&apos;re a young project. Gmail may file our confirmation email under spam until it learns to trust us; rescue it once and we&apos;re in.
           </p>
         </div>
       );
@@ -122,7 +122,7 @@ export default function SubscribeForm({ variant, source }: Props) {
           A confirmation email is on its way. Click the link inside and you&apos;ll be on the list for the next research drop.
         </p>
         <p className="font-body text-xs md:text-sm text-[#1c1c19]/50 mt-4 max-w-md leading-relaxed">
-          Can&apos;t find it? Check your spam folder. We&apos;re a young project and Gmail hasn&apos;t learned to trust us yet — fishing us out once is all it takes.
+          Can&apos;t find it? Check your spam folder. We&apos;re a young project and Gmail hasn&apos;t learned to trust us yet; fishing us out once is all it takes.
         </p>
       </div>
     );
@@ -215,7 +215,7 @@ export default function SubscribeForm({ variant, source }: Props) {
 
       <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <p className="font-body text-xs text-[#1c1c19]/50 italic leading-relaxed max-w-sm">
-          One email to confirm, then only research updates. If the confirmation lands in spam, we&apos;re new — Gmail hasn&apos;t met us yet.
+          One email to confirm, then only research updates. If the confirmation lands in spam, we&apos;re new; Gmail hasn&apos;t met us yet.
         </p>
         <button
           type="submit"
