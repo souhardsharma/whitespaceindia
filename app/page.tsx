@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
 import WeightsPanel from "@/components/WeightsPanel";
+import SubscribeForm from "@/components/SubscribeForm";
 
 const IndiaMap = dynamic(() => import("@/components/IndiaMap"), {
   ssr: false,
@@ -199,17 +200,7 @@ function BeyondSection() {
             <p className="font-body text-sm text-[#1c1c19]/80 leading-relaxed">
               Future research will apply this methodology to education, health, and energy infrastructure data.
             </p>
-            <a
-              href="https://www.linkedin.com/in/souhardsharma/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group bg-[#BD402C] text-white font-label uppercase tracking-[0.25em] text-[11px] py-4 px-6 flex justify-between items-center gap-6 hover:bg-[#1c1c19] transition-colors"
-            >
-              Follow updates
-              <svg width="16" height="10" viewBox="0 0 24 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M0 6h22M16 1l5 5-5 5" />
-              </svg>
-            </a>
+            <SubscribeForm variant="compact" source="landing" />
           </motion.div>
         </motion.div>
       </div>

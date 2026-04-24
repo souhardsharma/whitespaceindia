@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SubscribeForm from "@/components/SubscribeForm";
 
 function FadeIn({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -58,9 +59,14 @@ export default function ReportsPage() {
           </div>
 
           {/* Brief editorial note */}
-          <p className="font-body text-base md:text-lg text-[#1c1c19]/70 italic text-center max-w-xl leading-relaxed">
+          <p className="font-body text-base md:text-lg text-[#1c1c19]/70 italic text-center max-w-xl leading-relaxed mb-14 md:mb-16">
             In-depth district profiling, thematic studies, and funder analyses are in preparation. New reports will be published here as research is completed.
           </p>
+
+          {/* Subscribe form */}
+          <div className="w-full flex justify-center">
+            <SubscribeForm variant="full" source="reports" />
+          </div>
         </FadeIn>
       </section>
 

@@ -37,6 +37,11 @@ export default function WeightsPanel({
   const [sector, setSector] = useState("All Sectors");
   const [whitespaceOnly, setWhitespaceOnly] = useState(false);
   const [activePreset, setActivePreset] = useState<string | null>("Balanced");
+  const [drafts, setDrafts] = useState<Record<"w_N" | "w_G" | "w_U", string | null>>({
+    w_N: null,
+    w_G: null,
+    w_U: null,
+  });
 
   useEffect(() => {
     if (externalWeights) {
@@ -120,8 +125,23 @@ export default function WeightsPanel({
     setSector("All Sectors");
     setWhitespaceOnly(false);
     setActivePreset("Balanced");
+    setDrafts({ w_N: null, w_G: null, w_U: null });
     onReset?.();
   }, [onReset]);
+
+  const commitDraft = useCallback(
+    (key: "w_N" | "w_G" | "w_U") => {
+      const raw = drafts[key];
+      setDrafts((d) => ({ ...d, [key]: null }));
+      if (raw === null || raw === "") return;
+      const parsed = parseInt(raw, 10);
+      if (Number.isNaN(parsed)) return;
+      const clamped = Math.max(0, Math.min(100, parsed));
+      if (clamped === localPct[key]) return;
+      handleSliderChange(key, clamped);
+    },
+    [drafts, localPct, handleSliderChange]
+  );
 
   const total = localPct.w_N + localPct.w_G + localPct.w_U;
 
@@ -219,8 +239,33 @@ export default function WeightsPanel({
                     <span className="font-label text-[11px] uppercase tracking-[0.15em] text-[#1c1c19]">
                       {slider.label}
                     </span>
-                    <span className="font-label text-sm font-bold text-[#BD402C] tracking-tighter">
-                      {pct}%
+                    <span className="font-label text-sm font-bold text-[#BD402C] tracking-tighter inline-flex items-baseline">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={1}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={drafts[slider.key] ?? pct}
+                        onChange={(e) =>
+                          setDrafts((d) => ({ ...d, [slider.key]: e.target.value }))
+                        }
+                        onFocus={(e) => e.currentTarget.select()}
+                        onBlur={() => commitDraft(slider.key)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            (e.target as HTMLInputElement).blur();
+                          } else if (e.key === "Escape") {
+                            setDrafts((d) => ({ ...d, [slider.key]: null }));
+                            (e.target as HTMLInputElement).blur();
+                          }
+                        }}
+                        aria-label={`${slider.label} weight percentage`}
+                        className="w-10 text-right bg-transparent border-0 border-b border-transparent focus:border-[#BD402C] focus:outline-none font-label text-sm font-bold text-[#BD402C] tracking-tighter [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      />
+                      <span aria-hidden>%</span>
                     </span>
                   </div>
                   <input
