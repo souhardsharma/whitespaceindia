@@ -37,10 +37,18 @@ interface MetaData {
   total_districts: number;
   whitespace_thresholds?: { csr_p25: number; hr_p75_pct: number };
   whitespace_count?: number;
+  whitespace_by_state?: Record<string, number>;
   pos_range?: { min: number; max: number };
+  sector_pos_max?: number;
   pop_tier_boundaries?: { p33: number; p67: number };
   national_mean_csr?: number;
   median_retention_ratio?: number;
+  national_hr_official_pct?: number;
+  u_imputed_count?: number;
+  retention_ratio_stats?: {
+    median?: number; p25?: number; p75?: number; std?: number;
+    n_observed?: number; n_imputed?: number;
+  };
 }
 
 const WEIGHT_PRESETS = [
@@ -118,16 +126,36 @@ export default function MethodologyPage() {
 
   const tierColors = ["#e0bfb9", "#BD402C", "#9b2817"];
 
-  const totalDistricts = meta?.total_districts ?? 569;
+  const totalDistricts = meta?.total_districts ?? 651;
   const posMin = meta?.pos_range?.min ?? 0;
   const posMax = meta?.pos_range?.max ?? 100;
-  const csrP25 = meta?.whitespace_thresholds?.csr_p25 ?? 40;
-  const hrP75 = meta?.whitespace_thresholds?.hr_p75_pct ?? 21.5;
-  const wsCount = meta?.whitespace_count ?? 49;
-  const popP33 = meta?.pop_tier_boundaries?.p33 ?? 1066888;
-  const popP67 = meta?.pop_tier_boundaries?.p67 ?? 2090922;
-  const meanCsr = meta?.national_mean_csr ?? 678;
-  const medianCsr = meta?.national_median_csr_per_person ?? 127;
+  const sectorPosMax = meta?.sector_pos_max ?? posMax;
+  const csrP25 = meta?.whitespace_thresholds?.csr_p25 ?? 13;
+  const hrP75 = meta?.whitespace_thresholds?.hr_p75_pct ?? 21.1;
+  const wsCount = meta?.whitespace_count ?? 44;
+  const wsByState = meta?.whitespace_by_state ?? {};
+  const popP33 = meta?.pop_tier_boundaries?.p33 ?? 1092256;
+  const popP67 = meta?.pop_tier_boundaries?.p67 ?? 2265482;
+  const meanCsr = meta?.national_mean_csr ?? 607;
+  const medianCsr = meta?.national_median_csr_per_person ?? 100;
+  const uImputedCount = meta?.u_imputed_count ?? 55;
+  const retStats = meta?.retention_ratio_stats;
+  const retMedian = retStats?.median ?? 0.555;
+  const retP25 = retStats?.p25 ?? 0.442;
+  const retP75 = retStats?.p75 ?? 0.674;
+  const retStd = retStats?.std ?? 0.274;
+
+  // Build the whitespace-state list dynamically from meta.json so the copy
+  // never goes stale when the pipeline reruns.
+  const wsStateEntries = Object.entries(wsByState).sort((a, b) => b[1] - a[1]);
+  const wsTopThree = wsStateEntries.slice(0, 3);
+  const wsRest = wsStateEntries.slice(3);
+  const wsTopPhrase = wsTopThree
+    .map(([s, c]) => `${s} (${c})`)
+    .join(", ");
+  const wsRestPhrase = wsRest.length
+    ? `, with smaller numbers in ${wsRest.map(([s]) => s).join(", ")}`
+    : "";
 
   return (
     <main id="main-content" className="bg-[#fcf9f4] min-h-screen">
@@ -167,6 +195,9 @@ export default function MethodologyPage() {
                 <div className="font-label text-3xl font-bold text-[#BD402C] tracking-tighter">
                   {posMin}–{posMax}
                 </div>
+                <p className="font-body text-[10px] uppercase tracking-[0.15em] text-[#1c1c19]/55 mt-3 leading-relaxed">
+                  All Sectors, default weights. Under a sector filter, scores can reach ~{sectorPosMax}.
+                </p>
               </div>
             </div>
           </div>
@@ -327,7 +358,7 @@ export default function MethodologyPage() {
                 Matching districts across three independently maintained datasets presented a significant reconciliation challenge. District names are spelled inconsistently across sources. For example, &quot;Hooghly&quot; in the Census, &quot;Hugli (Hooghly)&quot; in the MPI, and &quot;Hugli&quot; in CSR records. Approximate string matching within each state was used to join records, with a minimum similarity threshold of 75%. This threshold is intentionally conservative to maximize coverage; however, at the 75% level, fuzz.ratio is known to produce false positives for similarly named districts in different states (e.g., &quot;Hamirpur&quot; in Himachal Pradesh vs. &quot;Hamirpur&quot; in Uttar Pradesh). State-scoped matching mitigates this, but matches scoring between 75% and 90% should be treated with caution. A full list of sub-90% matches is available in the pipeline output for reviewer inspection.
               </p>
               <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
-                State boundary changes required additional handling. Telangana (created 2014) and Ladakh (created 2019) did not exist in Census 2011, so districts in these states were mapped back to their parent states (Andhra Pradesh and Jammu &amp; Kashmir respectively) for population matching. This remapping affects approximately 31 districts in Telangana and 2 in Ladakh. For Telangana, per-capita CSR figures are calculated using undivided Andhra Pradesh population figures, which may stretch the denominator and skew per-capita values for individual districts. Of the 653 MPI districts, {totalDistricts} were successfully matched to both a Census population and CSR spending record. The remaining {653 - totalDistricts}, predominantly in Telangana, newer Uttar Pradesh districts, and smaller northeastern states, were excluded due to missing population denominators.
+                State boundary changes required additional handling. Telangana (created 2014), Ladakh (created 2019), and over fifty post-Census-2011 carve-outs (Palghar, Kondagaon, Gariyaband, the 21 new Telangana districts, etc.) did not exist in Census 2011. These districts are resolved by explicit mapping to their Census-2011 parent district(s), and the parent&apos;s total population is used as a denominator. Districts resolved this way carry a <span className="italic">population_imputed</span> flag so the funding-gap figure can be read with the appropriate caveat: per-capita CSR is conservatively low for an imputed district, since its parent&apos;s full population is used even when the carve-out covers only a fraction of the parent. A further set of rename-style aliases (Gurgaon→Gurugram, Mysore→Mysuru, Allahabad→Prayagraj, Belgaum→Belagavi, Faizabad→Ayodhya, and 20 more) join MPI names to Census names directly. Of the 653 MPI districts, <span className="text-[#BD402C] font-bold">{totalDistricts}</span> are successfully scored; the handful that remain unmatched lack a CSR record entirely or name-collide irrecoverably across parent states.
               </p>
             </div>
           </section>
@@ -362,7 +393,7 @@ export default function MethodologyPage() {
                   key: "U",
                   title: "Persistent Poverty",
                   weight: "20%",
-                  text: "The retention ratio: what fraction of 2015-16 poverty persists in 2019-21. Values near one indicate no improvement. Values above one indicate poverty worsened. Districts without baseline data (3 of 569) receive the median retention ratio as an imputation. This biases the U dimension toward the population mean for those districts, which is a conservative choice in an index designed to surface outliers.",
+                  text: `The retention ratio: what fraction of 2015-16 poverty persists in 2019-21. Values near one indicate no improvement. Values above one indicate poverty worsened. Districts without a 2015-16 baseline (${uImputedCount} of ${totalDistricts}, mostly post-2011 carve-outs that did not exist at NFHS-4) receive the median retention ratio as an imputation. This biases the U dimension toward the population mean for those districts, which is a conservative choice in an index designed to surface outliers.`,
                   bg: "bg-[#fcf9f4]",
                 },
               ].map((comp, i) => (
@@ -651,7 +682,7 @@ export default function MethodologyPage() {
                 </div>
               )}
               <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-4 text-center">
-                Scores range from {posMin} to {posMax}. Most districts cluster in the 10–40 band.
+                All Sectors, default weights: scores span {posMin}–{posMax}. Under a sector filter, unfunded sectors saturate Ĝ at 1.0 and scores can reach ~{sectorPosMax}.
               </p>
             </div>
           </section>
@@ -671,7 +702,7 @@ export default function MethodologyPage() {
                 <span className="text-[#BD402C] font-bold">neglected</span>{" "}
                 when it falls simultaneously in the bottom 25th percentile of CSR per person (below ₹{Math.round(csrP25)} per person) and the top 25th percentile of MPI headcount ratio (above {hrP75}% poverty). These are districts where need is highest and funding lowest. The current dataset identifies{" "}
                 <span className="text-[#BD402C] font-bold">{wsCount}</span>{" "}
-                such districts, concentrated in Uttar Pradesh ({wsCount > 0 ? '15' : ''}), Bihar (13), and Madhya Pradesh (6), with smaller numbers in Jharkhand, Chhattisgarh, Meghalaya, and Nagaland.
+                such districts{wsTopPhrase ? `, concentrated in ${wsTopPhrase}` : ""}{wsRestPhrase}.
               </p>
             </div>
           </section>
@@ -710,9 +741,9 @@ export default function MethodologyPage() {
               {[
                 "This is a screening tool for geographic prioritization, not a causal model. A high score does not guarantee that investment will produce impact. It indicates where the gap between need and funding is widest.",
                 "District-level CSR totals are conservative. Approximately 60.7% of gross CSR spending is classified as Pan India or lacks a district code and cannot be attributed to specific districts. This exclusion is not random: Pan-India programs disproportionately originate from districts housing corporate headquarters, meaning the funding gap is likely overstated for well-connected urban districts and understated for rural districts that may benefit from these programmes without receiving attribution.",
-                "Population denominators are from Census 2011, over 8 years before the MPI survey. Some districts have been reorganized, merged, or carved since then. The 84 excluded districts highlight the gap: population estimates may be 10-15% stale for fast-growing districts.",
+                `Population denominators are from Census 2011, over eight years before the MPI survey. Districts carved from parents after 2011 inherit the parent's full population (flagged \`population_imputed\`), which deflates per-capita CSR and inflates G for those districts. Fast-growing districts may also be 10–15% understated relative to current population.`,
                 "MPI data reflects conditions in 2019-21 (NFHS-5). District-level poverty may have shifted in the years since data collection.",
-                "The Unresolved component (U) imputes the median retention ratio (0.557, IQR: 0.441–0.673, std: 0.276) for 3 of 569 districts. This is a small fraction but users should be aware that U values for imputed districts are estimates, not observations.",
+                `The Unresolved component (U) imputes the median retention ratio (${retMedian.toFixed(3)}, IQR: ${retP25.toFixed(3)}–${retP75.toFixed(3)}, std: ${retStd.toFixed(3)}) for ${uImputedCount} of ${totalDistricts} districts that lack a 2015-16 baseline — predominantly districts carved from parent districts after Census 2011 (and therefore absent from NFHS-4). U values for imputed districts are estimates, not observations.`,
                 "The score does not account for government spending beyond CSR, private philanthropy outside the Companies Act framework, or international development aid flowing to these districts.",
                 "The three components are treated as independent dimensions. In practice, poverty severity, funding gaps, and poverty persistence may be correlated, which could amplify the signal for districts that score high on multiple dimensions.",
               ].map((text, i) => (

@@ -208,11 +208,17 @@ function BeyondSection() {
   );
 }
 
+interface HomeMeta {
+  pos_range?: { min: number; max: number };
+  sector_pos_max?: number;
+}
+
 export default function HomePage() {
   const [districts, setDistricts] = useState<District[]>([]);
   const [sectorScores, setSectorScores] = useState<
     Record<string, Record<string, number>>
   >({});
+  const [meta, setMeta] = useState<HomeMeta | null>(null);
   const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
   const [sector, setSector] = useState("All Sectors");
   const [whitespaceOnly, setWhitespaceOnly] = useState(false);
@@ -230,14 +236,20 @@ export default function HomePage() {
     Promise.all([
       fetch("/data/whitespace_master.json").then((r) => r.json()),
       fetch("/data/sector_scores.json").then((r) => r.json()),
+      fetch("/data/meta.json").then((r) => r.json()),
     ])
-      .then(([d, s]) => {
+      .then(([d, s, m]) => {
         setDistricts(d);
         setSectorScores(s);
+        setMeta(m);
         setIsLoading(false);
       })
       .catch(() => setIsLoading(false));
   }, []);
+
+  const posMin = meta?.pos_range?.min ?? 0.0;
+  const posMax = meta?.pos_range?.max ?? 81.2;
+  const sectorPosMax = meta?.sector_pos_max ?? 85.5;
 
   const rankedDistricts = useMemo(
     () =>
@@ -328,25 +340,21 @@ export default function HomePage() {
     process.env.NEXT_PUBLIC_SITE_URL ||
     "https://whitespaceindia-csr.vercel.app";
 
+  const districtCount = districts.length || 651;
+
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Whitespace India CSR",
     url: siteUrl,
-    description:
-      "Interactive tool ranking 569 Indian districts by philanthropic opportunity. Combines NITI Aayog MPI poverty data with CSR spending to find where philanthropic capital can create the most impact.",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${siteUrl}/#simulator`,
-    },
+    description: `Interactive tool ranking ${districtCount} Indian districts by philanthropic opportunity. Combines NITI Aayog MPI poverty data with CSR spending to find where philanthropic capital can create the most impact.`,
   };
 
   const datasetSchema = {
     "@context": "https://schema.org",
     "@type": "Dataset",
     name: "India District Philanthropic Opportunity Scores",
-    description:
-      "Composite Philanthropic Opportunity Score (POS) for 569 Indian districts, derived from NITI Aayog MPI 2023 poverty data and MCA CSR spending data.",
+    description: `Composite Philanthropic Opportunity Score (POS) for ${districtCount} Indian districts, derived from NITI Aayog MPI 2023 poverty data and MCA CSR spending data (via Dataful.in dataset 1612).`,
     url: siteUrl,
     creator: {
       "@type": "Person",
@@ -356,8 +364,9 @@ export default function HomePage() {
     },
     license: "https://creativecommons.org/licenses/by/4.0/",
     citation: [
-      "National Multidimensional Poverty Index 2023 (NITI Aayog) - https://niti.gov.in/sites/default/files/2023-07/Final-MPI_7thJuly.pdf",
+      "National Multidimensional Poverty Index 2023 (NITI Aayog) - https://niti.gov.in/sites/default/files/2023-07/National-Multidimentional-Poverty-Index-2023-Final-17th-July.pdf",
       "CSR District-Level Spending Data (Ministry of Corporate Affairs) - https://www.csr.gov.in/",
+      "CSR District-Level Dataset via Dataful.in (Dataset 1612) - https://dataful.in/datasets/1612",
     ],
     temporalCoverage: "2014/2024",
     spatialCoverage: { "@type": "Place", name: "India" },
@@ -402,8 +411,11 @@ export default function HomePage() {
                 <p className="font-body text-base md:text-lg text-[#1c1c19]/75 leading-relaxed max-w-2xl">
                   Adjust weights, select a sector, and click any state to surface your highest-opportunity districts.
                 </p>
+                <p className="mt-4 font-body text-xs md:text-sm text-[#1c1c19]/60 italic leading-relaxed max-w-2xl">
+                  POS spans {posMin}&ndash;{posMax} at All Sectors (default weights). Picking a sector rescales the funding-gap component: districts with zero CSR in that sector saturate Ĝ at 1.0, so scores can reach ~{sectorPosMax}.
+                </p>
                 <p className="mt-4 font-label text-[10px] uppercase tracking-[0.2em] text-[#1c1c19]/60 max-w-2xl">
-                  Source · NITI Aayog MPI 2023 · MCA CSR · Census 2011 · Briefs AI-assisted and require independent verification
+                  Source · NITI Aayog MPI 2023 · MCA CSR via Dataful.in · Census 2011 · Briefs AI-assisted and require independent verification
                 </p>
               </div>
             </motion.div>

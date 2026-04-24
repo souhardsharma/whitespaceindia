@@ -1,27 +1,44 @@
 {
-  "national_median_csr_per_person": 127.63,
-  "national_mean_csr": 680.25,
+  "national_median_csr_per_person": 100.31,
+  "national_mean_csr": 606.62,
   "tier_medians": {
-    "Tier 1 (Small)": 107.72,
-    "Tier 2 (Medium)": 142.96,
-    "Tier 3 (Large)": 138.63
+    "Tier 1 (Small)": 92.67,
+    "Tier 2 (Medium)": 133.96,
+    "Tier 3 (Large)": 82.91
   },
-  "total_districts": 569,
+  "total_districts": 651,
   "methodology": "population-tertile-stratified benchmarking",
   "whitespace_thresholds": {
-    "csr_p25": 40.51,
-    "hr_p75_pct": 21.6
+    "csr_p25": 12.65,
+    "hr_p75_pct": 21.1
   },
-  "whitespace_count": 49,
+  "whitespace_count": 44,
+  "whitespace_by_state": {
+    "Uttar Pradesh": 15,
+    "Bihar": 9,
+    "Chhattisgarh": 4,
+    "Jharkhand": 3,
+    "Gujarat": 2,
+    "Nagaland": 2,
+    "Arunachal Pradesh": 1,
+    "Haryana": 1,
+    "Assam": 1,
+    "Meghalaya": 1,
+    "Madhya Pradesh": 1,
+    "Mizoram": 1,
+    "Rajasthan": 1,
+    "Tripura": 1,
+    "West Bengal": 1
+  },
   "pos_range": {
-    "min": 1.7,
-    "max": 78.3
+    "min": 0.0,
+    "max": 81.2
   },
   "pop_tier_boundaries": {
-    "p33": 1064519,
-    "p67": 2038889
+    "p33": 1092256,
+    "p67": 2265482
   },
-  "median_retention_ratio": 0.557,
+  "median_retention_ratio": 0.555,
   "weights": {
     "w_N": 0.4,
     "w_G": 0.4,
@@ -31,5 +48,79 @@
     "2021-22",
     "2022-23",
     "2023-24"
-  ]
+  ],
+  "national_hr_official_pct": 14.96,
+  "national_hr_pop_weighted_pct": 13.93,
+  "national_hr_2015_16_official_pct": 24.85,
+  "u_imputed_count": 55,
+  "sector_pos_max": 85.5,
+  "sector_pos_meta": {
+    "Education": {
+      "pos_max": 82.96
+    },
+    "Health Care": {
+      "pos_max": 81.24
+    },
+    "Rural Development Projects": {
+      "pos_max": 81.24
+    },
+    "Livelihood Enhancement Projects": {
+      "pos_max": 82.96
+    },
+    "Environmental Sustainability": {
+      "pos_max": 82.96
+    },
+    "Poverty, Eradicating Hunger, Malnutrition": {
+      "pos_max": 85.49
+    },
+    "Safe Drinking Water": {
+      "pos_max": 82.96
+    },
+    "Sanitation": {
+      "pos_max": 85.49
+    },
+    "Vocational Skills": {
+      "pos_max": 85.49
+    },
+    "Women Empowerment": {
+      "pos_max": 85.49
+    }
+  },
+  "csr_totals": {
+    "total_all_years_gross_crore": 213593.76,
+    "total_all_years_attributable_crore": 83933.39,
+    "total_fy23_24_crore": 21878.49,
+    "total_3yr_window_crore": 57419.01,
+    "pan_india_csr_all_years_crore": 129660.37,
+    "pan_india_pct": 60.7
+  },
+  "state_stats": {
+    "bihar": {
+      "state": "Bihar",
+      "districts_matched": 28,
+      "population_2011": 76152184,
+      "hr_2019_21_pop_weighted_pct": 32.29,
+      "hr_2019_21_simple_avg_pct": 32.84,
+      "csr_3yr_crore": 505.66,
+      "csr_per_person_inr": 66.4
+    },
+    "maharashtra": {
+      "state": "Maharashtra",
+      "districts_matched": 31,
+      "population_2011": 109482786,
+      "hr_2019_21_pop_weighted_pct": 7.2,
+      "hr_2019_21_simple_avg_pct": 8.02,
+      "csr_3yr_crore": 14241.02,
+      "csr_per_person_inr": 1300.75
+    }
+  },
+  "retention_ratio_stats": {
+    "median": 0.555,
+    "mean": 0.59,
+    "std": 0.274,
+    "p25": 0.442,
+    "p75": 0.674,
+    "n_observed": 596,
+    "n_imputed": 55
+  }
 }

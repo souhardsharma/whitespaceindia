@@ -104,6 +104,181 @@ INDIAN_STATES = [
     "Dadra & Nagar Haveli and Daman & Diu",
 ]
 
+# Canonical state abbreviations used to build the internal district_lgd_code key
+# (a composite state+district slug, not the official LGD number). This guarantees
+# uniqueness even when the upstream MCA CSR source assigns the same LGD number to
+# two distinct districts (e.g. both Bihar/Aurangabad and Maharashtra/Aurangabad
+# carry LGD 189 in the MCA dataset).
+STATE_CODES: dict[str, str] = {
+    "andhra pradesh": "AP", "arunachal pradesh": "AR", "assam": "AS",
+    "bihar": "BR", "chhattisgarh": "CG", "goa": "GA", "gujarat": "GJ",
+    "haryana": "HR", "himachal pradesh": "HP", "jharkhand": "JH",
+    "karnataka": "KA", "kerala": "KL", "madhya pradesh": "MP",
+    "maharashtra": "MH", "manipur": "MN", "meghalaya": "ML",
+    "mizoram": "MZ", "nagaland": "NL", "odisha": "OR", "punjab": "PB",
+    "rajasthan": "RJ", "sikkim": "SK", "tamil nadu": "TN", "telangana": "TG",
+    "tripura": "TR", "uttar pradesh": "UP", "uttarakhand": "UK",
+    "west bengal": "WB", "andaman and nicobar islands": "AN",
+    "chandigarh": "CH", "dadra and nagar haveli": "DN",
+    "daman and diu": "DD", "delhi": "DL", "nct of delhi": "DL",
+    "jammu and kashmir": "JK", "ladakh": "LA", "lakshadweep": "LD",
+    "puducherry": "PY",
+}
+
+# Spelling aliases that normalise to the same canonical district name.
+# Morigaon (historic spelling) and Marigaon (current Assam district) refer
+# to the same district; the NITI MPI PDF ocassionally lists both.
+DISTRICT_NAME_ALIASES: dict[str, str] = {
+    "morigaon": "marigaon",
+}
+
+# ─────────────────────────────────────────────────────────────────────────
+# Post-Census-2011 district rescue tables
+#
+# Many MPI districts cannot match Census 2011 directly, either because the
+# Census used a different / older spelling, or because the district did not
+# exist in 2011 and was carved from a parent. Each entry was validated
+# against Census of India 2011 DCHB PDFs, Wikipedia "District of <State>"
+# articles, and the LGD directory (sources inline below in commit-friendly
+# form). Keys are (normalized_state, normalized_mpi_district).
+#
+# CENSUS_NAME_OVERRIDES: MPI district → the exact (state_norm, district_norm)
+# Census 2011 key. Used when Census has the district under an older spelling.
+# ─────────────────────────────────────────────────────────────────────────
+CENSUS_NAME_OVERRIDES: dict[tuple[str, str], tuple[str, str]] = {
+    # Andhra Pradesh — Census full names (verified against DCHB)
+    ("andhra pradesh", "spsr nellore"): ("andhra pradesh", "sri potti sriramulu nellore"),
+    ("andhra pradesh", "ysr (kadapa)"): ("andhra pradesh", "ysr"),
+    # Assam
+    ("assam", "kamrup metro"): ("assam", "kamrup metropolitan"),
+    # Chhattisgarh
+    ("chhattisgarh", "dantewada"): ("chhattisgarh", "dakshin bastar dantewada"),
+    # Gujarat
+    ("gujarat", "dang"): ("gujarat", "the dangs"),
+    # Haryana
+    ("haryana", "gurugram"): ("haryana", "gurgaon"),
+    ("haryana", "nuh (mewat)"): ("haryana", "mewat"),
+    # J&K
+    ("jammu and kashmir", "badgam (budgam)"): ("jammu and kashmir", "badgam"),
+    ("jammu and kashmir", "punch (poonch)"): ("jammu and kashmir", "punch"),
+    # Karnataka
+    ("karnataka", "belagavi"): ("karnataka", "belgaum"),
+    ("karnataka", "bellary (ballari)"): ("karnataka", "bellary"),
+    ("karnataka", "bijapur (vijayapura)"): ("karnataka", "bijapur"),
+    ("karnataka", "gulbarga (kalaburagi)"): ("karnataka", "gulbarga"),
+    ("karnataka", "mysuru"): ("karnataka", "mysore"),
+    # Maharashtra
+    ("maharashtra", "bid (beed)"): ("maharashtra", "bid"),
+    ("maharashtra", "raigad"): ("maharashtra", "raigarh"),
+    # Odisha
+    ("odisha", "baudh (boudh)"): ("orissa", "baudh"),
+    ("odisha", "sonepur"): ("orissa", "subarnapur"),
+    # Puducherry
+    ("puducherry", "puducherry"): ("puducherry", "pondicherry"),
+    # Tamil Nadu
+    ("tamil nadu", "thoothukkudi (tuticorin)"): ("tamil nadu", "thoothukkudi"),
+    # Uttar Pradesh
+    ("uttar pradesh", "allahabad (prayagraj)"): ("uttar pradesh", "allahabad"),
+    ("uttar pradesh", "faizabad (ayodhya)"): ("uttar pradesh", "faizabad"),
+    ("uttar pradesh", "kasganj"): ("uttar pradesh", "kanshiram nagar"),
+    ("uttar pradesh", "mahamaya nagar (hathras)"): ("uttar pradesh", "mahamaya nagar"),
+    # Uttarakhand
+    ("uttarakhand", "garhwal (pauri garhwal)"): ("uttarakhand", "garhwal"),
+    # West Bengal
+    ("west bengal", "howrah"): ("west bengal", "haora"),
+    ("west bengal", "hugli (hooghly)"): ("west bengal", "hugli"),
+    ("west bengal", "koch bihar (coochbehar)"): ("west bengal", "koch bihar"),
+}
+
+# CARVEOUT_PARENTS: MPI district created after Census 2011 → one or more parent
+# districts present in Census 2011. Population is imputed as the SUM of the
+# parents' populations (upper bound / conservative denominator). Districts
+# imputed this way are flagged `population_imputed: true` in the final output so
+# the UI can surface the caveat.
+CARVEOUT_PARENTS: dict[tuple[str, str], list[tuple[str, str]]] = {
+    # Arunachal Pradesh — 2012+ carve-outs
+    ("arunachal pradesh", "longding"): [("arunachal pradesh", "tirap")],
+    ("arunachal pradesh", "namsai"): [("arunachal pradesh", "lohit")],
+    ("arunachal pradesh", "siang"): [("arunachal pradesh", "west siang")],
+    # Assam
+    ("assam", "charaideo"): [("assam", "sivasagar")],
+    ("assam", "hojai"): [("assam", "nagaon")],
+    ("assam", "majuli"): [("assam", "jorhat")],
+    ("assam", "south salmara mancachar"): [("assam", "dhubri")],
+    # Chhattisgarh
+    ("chhattisgarh", "gariyaband"): [("chhattisgarh", "raipur")],
+    ("chhattisgarh", "kondagaon"): [("chhattisgarh", "bastar")],
+    ("chhattisgarh", "mungeli"): [("chhattisgarh", "bilaspur")],
+    ("chhattisgarh", "sukma"): [("chhattisgarh", "dakshin bastar dantewada")],
+    ("chhattisgarh", "surajpur"): [("chhattisgarh", "surguja")],
+    # Delhi — Shahdara carved from East + North East 2012
+    ("delhi", "shahdara"): [("nct of delhi", "north east"), ("nct of delhi", "east")],
+    # Gujarat
+    ("gujarat", "devbhumi dwarka"): [("gujarat", "jamnagar")],
+    ("gujarat", "gir somnath"): [("gujarat", "junagadh")],
+    ("gujarat", "mahisagar"): [("gujarat", "panch mahals"), ("gujarat", "kheda")],
+    ("gujarat", "morbi"): [("gujarat", "rajkot")],
+    # Haryana
+    ("haryana", "charki dadri"): [("haryana", "bhiwani")],
+    # Maharashtra
+    ("maharashtra", "palghar"): [("maharashtra", "thane")],
+    # Punjab
+    ("punjab", "fazilka"): [("punjab", "firozpur")],
+    ("punjab", "pathankot"): [("punjab", "gurdaspur")],
+    # Sikkim — 2021 notification renamed East/West/North/South to new names.
+    # normalize_name strips the trailing " district" suffix, so the census
+    # lookup uses single-word keys.
+    ("sikkim", "gangtok"): [("sikkim", "east")],
+    ("sikkim", "gyalshing"): [("sikkim", "west")],
+    ("sikkim", "mangan"): [("sikkim", "north")],
+    ("sikkim", "namchi"): [("sikkim", "south")],
+    # Telangana — all 21 carved from the original 10 AP districts
+    ("telangana", "bhadradri kothagudem"): [("andhra pradesh", "khammam")],
+    ("telangana", "jagitial"): [("andhra pradesh", "karimnagar")],
+    ("telangana", "jangoan"): [("andhra pradesh", "warangal")],
+    ("telangana", "jayashankar bhupalapally"): [("andhra pradesh", "warangal")],
+    ("telangana", "jogulamba gadwal"): [("andhra pradesh", "mahbubnagar")],
+    ("telangana", "kamareddy"): [("andhra pradesh", "nizamabad")],
+    ("telangana", "kumuram bheem asifabad"): [("andhra pradesh", "adilabad")],
+    ("telangana", "mahabubabad"): [("andhra pradesh", "warangal")],
+    ("telangana", "mancherial"): [("andhra pradesh", "adilabad")],
+    ("telangana", "medchal-malkajgiri"): [("andhra pradesh", "rangareddy")],
+    ("telangana", "nagarkurnool"): [("andhra pradesh", "mahbubnagar")],
+    ("telangana", "nirmal"): [("andhra pradesh", "adilabad")],
+    ("telangana", "peddapalli"): [("andhra pradesh", "karimnagar")],
+    ("telangana", "rajanna sircilla"): [("andhra pradesh", "karimnagar")],
+    ("telangana", "siddipet"): [("andhra pradesh", "medak")],
+    ("telangana", "suryapet"): [("andhra pradesh", "nalgonda")],
+    ("telangana", "vikarabad"): [("andhra pradesh", "rangareddy")],
+    ("telangana", "wanaparthy"): [("andhra pradesh", "mahbubnagar")],
+    ("telangana", "warangal rural"): [("andhra pradesh", "warangal")],
+    ("telangana", "warangal urban"): [("andhra pradesh", "warangal")],
+    ("telangana", "yadadri bhuvanagiri"): [("andhra pradesh", "nalgonda")],
+    # Tripura — 2012 carve-outs
+    ("tripura", "gomati"): [("tripura", "south tripura")],
+    ("tripura", "khowai"): [("tripura", "west tripura")],
+    ("tripura", "sepahijala"): [("tripura", "west tripura")],
+    ("tripura", "unakoti"): [("tripura", "north tripura")],
+    # Uttar Pradesh
+    ("uttar pradesh", "amethi"): [("uttar pradesh", "sultanpur")],
+    ("uttar pradesh", "hapur"): [("uttar pradesh", "ghaziabad")],
+    ("uttar pradesh", "sambhal"): [("uttar pradesh", "moradabad")],
+    ("uttar pradesh", "shamli"): [("uttar pradesh", "muzaffarnagar")],
+    # West Bengal — 2017 split of Barddhaman
+    ("west bengal", "paschim bardhaman"): [("west bengal", "barddhaman")],
+    ("west bengal", "purba bardhaman"): [("west bengal", "barddhaman")],
+}
+
+
+def state_code(state: str) -> str:
+    return STATE_CODES.get(normalize_name(state), "XX")
+
+
+def build_district_key(state: str, district: str) -> str:
+    """Composite, stable internal key that disambiguates homonyms across states."""
+    slug = re.sub(r"[^a-z0-9]+", "_", normalize_name(district)).strip("_").upper()
+    return f"{state_code(state)}_{slug}" if slug else f"{state_code(state)}_UNKNOWN"
+
 # Census 2011 used "Orissa", "Pondicherry" and did not yet include Telangana
 # (formed 2014 from AP) or Ladakh (formed 2019 from J&K). Map MPI state names
 # to the Census 2011 equivalent(s). "Dadra and Nagar Haveli and Daman and Diu"
@@ -160,7 +335,8 @@ def normalize_name(name: object) -> str:
     s = s.replace(" district", "")
     s = s.replace(".", "")
     s = s.replace("'", "")
-    return s
+    # Collapse known spelling aliases so that historic/current forms unify.
+    return DISTRICT_NAME_ALIASES.get(s, s)
 
 
 def safe_float(val: object) -> float | None:
@@ -385,8 +561,15 @@ def best_match(
     keys: list,
     allowed_states: list[str],
     cutoff: int,
+    enforce_first_token: bool = False,
 ) -> tuple[object, float | None]:
-    """Exact match first; else fuzzy within the allowed states. Returns (value, score)."""
+    """Exact match first; else fuzzy within the allowed states. Returns (value, score).
+
+    When `enforce_first_token` is True, reject fuzzy matches (score < 100) whose
+    first token differs — prevents "west jaintia hills" inheriting "east jaintia
+    hills" identity. We enable this only for CSR matching, since Census has
+    legitimate first-token drift (e.g. "hugli" ↔ "hooghly").
+    """
     for st in allowed_states:
         if (st, dist_norm) in lookup:
             return lookup[(st, dist_norm)], 100.0
@@ -398,6 +581,13 @@ def best_match(
     if not result:
         return None, None
     matched, score, _ = result
+
+    if enforce_first_token and score < 100:
+        def _first_token(s: str) -> str:
+            return s.split(" ", 1)[0] if s else ""
+        if _first_token(dist_norm) != _first_token(matched):
+            return None, None
+
     for (s, d) in candidates:
         if d == matched:
             return lookup[(s, d)], float(score)
@@ -425,51 +615,120 @@ def join_datasets(
     out = mpi.copy()
     out["total_csr_recent"] = 0.0
     out["total_population"] = np.nan
+    # csr_lgd_source preserves whatever LGD number the MCA CSR sheet carried for
+    # this row. Several districts share wrong LGD numbers in the upstream data
+    # (e.g. BR/Aurangabad + MH/Aurangabad both = 189; Kheri + Kushinagar both =
+    # 159). We store it for traceability only. The canonical internal identifier
+    # is `district_lgd_code`, built as `{STATE_ABBREV}_{DIST_SLUG}` below.
+    out["csr_lgd_source"] = ""
     out["district_lgd_code"] = ""
     out["csr_match_score"] = np.nan
     out["census_match_score"] = np.nan
+    out["population_imputed"] = False
+    out["population_parent_districts"] = ""
     matched_csr = matched_census = 0
+    matched_override = matched_carveout = 0
+
+    # CSR fuzzy cutoff raised from 85 → 90 plus first-token guard (West/East
+    # Jaintia Hills scored 89 and got wrongly merged under the old setting).
+    # Census stays at 80 without guard: real Census spelling drift can shift
+    # the first token (Hugli ↔ Hooghly, Baleshwar ↔ Balasore).
+    CSR_FUZZ_CUTOFF = 90
+    CENSUS_FUZZ_CUTOFF = 80
 
     for idx, row in out.iterrows():
         state_norm = normalize_name(row["state"])
         dist_norm = normalize_name(row["district"])
+
+        # Build the canonical internal key from the MPI spine (state + district),
+        # not from the CSR LGD number. This guarantees uniqueness across scored
+        # districts, regardless of source-data LGD collisions.
+        out.at[idx, "district_lgd_code"] = build_district_key(row["state"], row["district"])
 
         # CSR — MCA uses modern state names, so prefer the MPI state directly
         csr_states = [state_norm] + [
             s for s in resolve_census_state(state_norm) if s != state_norm
         ]
         csr_val, csr_score = best_match(
-            dist_norm, csr_lookup, csr_keys, csr_states, cutoff=85,
+            dist_norm, csr_lookup, csr_keys, csr_states,
+            cutoff=CSR_FUZZ_CUTOFF, enforce_first_token=True,
         )
         if csr_val is not None:
             out.at[idx, "total_csr_recent"] = float(csr_val["total_csr_recent"])
-            out.at[idx, "district_lgd_code"] = str(csr_val["district_lgd_code"])
+            out.at[idx, "csr_lgd_source"] = str(csr_val["district_lgd_code"])
             out.at[idx, "csr_match_score"] = csr_score
             matched_csr += 1
 
-        # Census — may require alias mapping (Odisha→Orissa, Telangana→AP…)
+        # Census — three-tier match:
+        #  (1) Explicit override (rename / alt-spelling)
+        #  (2) Fuzzy match within allowed census states
+        #  (3) Parent-district imputation (post-2011 carve-out)
+        census_key = (state_norm, dist_norm)
+        override = CENSUS_NAME_OVERRIDES.get(census_key)
+        if override and override in census_lookup:
+            out.at[idx, "total_population"] = float(census_lookup[override])
+            out.at[idx, "census_match_score"] = 100.0
+            matched_census += 1
+            matched_override += 1
+            continue
+
         census_states = resolve_census_state(state_norm)
         pop_val, pop_score = best_match(
-            dist_norm, census_lookup, census_keys, census_states, cutoff=80,
+            dist_norm, census_lookup, census_keys, census_states,
+            cutoff=CENSUS_FUZZ_CUTOFF, enforce_first_token=False,
         )
         if pop_val is not None:
             out.at[idx, "total_population"] = float(pop_val)
             out.at[idx, "census_match_score"] = pop_score
             matched_census += 1
+            continue
 
-    # Generate synthetic LGD codes for MPI-only districts
-    mask = out["district_lgd_code"] == ""
-    for idx in out[mask].index:
-        out.at[idx, "district_lgd_code"] = f"MPI_{idx}"
+        # Parent-district imputation for post-Census-2011 carve-outs.
+        parents = CARVEOUT_PARENTS.get(census_key)
+        if parents:
+            imputed = 0.0
+            missing: list[str] = []
+            for p_state, p_dist in parents:
+                if (p_state, p_dist) in census_lookup:
+                    imputed += float(census_lookup[(p_state, p_dist)])
+                else:
+                    missing.append(f"{p_state}/{p_dist}")
+            if imputed > 0 and not missing:
+                out.at[idx, "total_population"] = imputed
+                out.at[idx, "census_match_score"] = 0.0  # sentinel: imputed
+                out.at[idx, "population_imputed"] = True
+                out.at[idx, "population_parent_districts"] = ", ".join(
+                    f"{p[1].title()}" for p in parents
+                )
+                matched_census += 1
+                matched_carveout += 1
+            elif missing:
+                print(f"  WARN carveout parents missing for {state_norm}/{dist_norm}: {missing}")
 
     print(f"  MPI districts in:           {len(out)}")
-    print(f"  Matched to CSR (cutoff 85): {matched_csr} ({matched_csr/len(out)*100:.1f} %)")
-    print(f"  Matched to Census (cut 80): {matched_census} ({matched_census/len(out)*100:.1f} %)")
+    print(f"  Matched to CSR (cutoff {CSR_FUZZ_CUTOFF}): {matched_csr} ({matched_csr/len(out)*100:.1f} %)")
+    print(f"  Matched to Census (cutoff {CENSUS_FUZZ_CUTOFF}): {matched_census} ({matched_census/len(out)*100:.1f} %)")
+    print(f"    via explicit override:  {matched_override}")
+    print(f"    via carveout parent:    {matched_carveout} (population_imputed=true)")
 
     before = len(out)
     out = out.dropna(subset=["total_population"])
     out = out[out["total_population"] > 0].reset_index(drop=True)
     print(f"  Dropped {before - len(out)} districts without a population match")
+
+    # Post-dedup: if two MPI rows collapse to the same canonical key (e.g.
+    # Morigaon/Marigaon alias), keep the one with a non-null 2015-16 baseline
+    # (more information) and fall back to the first otherwise.
+    before = len(out)
+    out["_baseline"] = out["hr_2016"].notna() & (out["hr_2016"] > 0)
+    out = (
+        out.sort_values("_baseline", ascending=False)
+        .drop_duplicates(subset=["district_lgd_code"], keep="first")
+        .drop(columns=["_baseline"])
+        .reset_index(drop=True)
+    )
+    if len(out) < before:
+        print(f"  Dedup: collapsed {before - len(out)} rows on canonical key")
     print(f"  Final scoreable districts:  {len(out)}")
     return out
 
@@ -543,6 +802,24 @@ def compute_scores(master: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     print(f"  Whitespace districts: {int(master['is_whitespace'].sum())}")
     print(f"  Whitespace thresholds: CSR p25 Rs {csr_p25:,.2f}, HR p75 {hr_p75*100:.2f} %")
 
+    # Whitespace counts per state — used by the methodology copy so the list
+    # can't go stale when the pipeline reruns.
+    ws_by_state = (
+        master[master["is_whitespace"]]
+        .groupby("state")
+        .size()
+        .sort_values(ascending=False)
+        .to_dict()
+    )
+
+    # Pop-weighted national headcount ratio computed across matched districts
+    # (distinct from the NITI Aayog published national figure of 14.96%, which
+    # covers all 36 States/UTs and 653 MPI districts; we match 569).
+    tot_pop = float(master["total_population"].sum())
+    national_hr_pop_weighted = float(
+        (master["hr_2021"] * master["total_population"]).sum() / tot_pop
+    )
+
     meta = {
         "national_median_csr_per_person": round(national_median, 2),
         "national_mean_csr": round(national_mean, 2),
@@ -554,6 +831,7 @@ def compute_scores(master: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
             "hr_p75_pct": round(hr_p75 * 100, 1),
         },
         "whitespace_count": int(master["is_whitespace"].sum()),
+        "whitespace_by_state": {str(k): int(v) for k, v in ws_by_state.items()},
         "pos_range": {
             "min": round(float(master["POS"].min()), 1),
             "max": round(float(master["POS"].max()), 1),
@@ -562,6 +840,10 @@ def compute_scores(master: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         "median_retention_ratio": round(median_retention, 3),
         "weights": {"w_N": W_N, "w_G": W_G, "w_U": W_U},
         "csr_window_fy": CSR_RECENT_YEARS,
+        "national_hr_official_pct": 14.96,  # NITI Aayog (PIB 17-Jul-2023)
+        "national_hr_pop_weighted_pct": round(national_hr_pop_weighted * 100, 2),
+        "national_hr_2015_16_official_pct": 24.85,  # NITI Aayog (PIB 17-Jul-2023)
+        "u_imputed_count": int(master.get("u_imputed", pd.Series([], dtype=bool)).sum()) if "u_imputed" in master.columns else 0,
     }
     return master, meta
 
@@ -569,12 +851,22 @@ def compute_scores(master: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
 # ═════════════════════════════════════════════════════════════════════════
 # STEP 6 — Sector-specific scores
 # ═════════════════════════════════════════════════════════════════════════
-def compute_sector_scores(master: pd.DataFrame, pivot: pd.DataFrame) -> dict:
+def compute_sector_scores(master: pd.DataFrame, pivot: pd.DataFrame) -> tuple[dict, dict]:
     print("\n" + "=" * 72)
     print("STEP 6  Sector-specific G_norm")
     print("=" * 72)
 
     scores: dict[str, dict] = {row["district_lgd_code"]: {} for _, row in master.iterrows()}
+    sector_meta: dict[str, dict] = {}
+
+    # The pivot is keyed by (state, district_as_per_lgd, district_lgd_code) from
+    # the CSR source. The master now uses a canonical internal key built from
+    # (state, district), so build a (state_norm, district_norm) → sector_csr
+    # lookup to bridge the two.
+    pivot_by_sd = {
+        (normalize_name(r.get("state", "")), normalize_name(r.get("district_as_per_lgd", ""))): r
+        for _, r in pivot.iterrows()
+    }
 
     for sector in SCORE_SECTORS:
         col = next(
@@ -585,17 +877,16 @@ def compute_sector_scores(master: pd.DataFrame, pivot: pd.DataFrame) -> dict:
             print(f"  WARN  sector '{sector}' not in CSR data")
             continue
 
-        sector_csr = {
-            str(r.get("district_lgd_code", "")): float(r.get(col, 0) or 0)
-            for _, r in pivot.iterrows()
-        }
-
         m = master.copy()
-        m["sector_density"] = [
-            (sector_csr.get(r["district_lgd_code"], 0) * 1e7) / r["total_population"]
-            if r["total_population"] > 0 else 0
-            for _, r in m.iterrows()
-        ]
+        densities = []
+        for _, r in m.iterrows():
+            key = (normalize_name(r["state"]), normalize_name(r["district"]))
+            src = pivot_by_sd.get(key)
+            amt_cr = float(src.get(col, 0) or 0) if src is not None else 0.0
+            pop = float(r["total_population"] or 0)
+            densities.append((amt_cr * 1e7) / pop if pop > 0 else 0.0)
+        m["sector_density"] = densities
+
         tier_sec_med = m.groupby("pop_tier", observed=True)["sector_density"].median()
         m["tier_sec_med"] = m["pop_tier"].map(tier_sec_med).astype(float)
         m["sector_gap"] = (m["tier_sec_med"] - m["sector_density"]).clip(lower=0)
@@ -605,12 +896,18 @@ def compute_sector_scores(master: pd.DataFrame, pivot: pd.DataFrame) -> dict:
 
         # Store the sector-specific G_norm (not the composite POS) so the
         # frontend can apply arbitrary user weights correctly.
+        sector_pos_max = 0.0
         for i, (_, r) in enumerate(master.iterrows()):
             v = float(m["sector_G_norm"].iloc[i])
-            scores[r["district_lgd_code"]][sector] = round(v, 6) if math.isfinite(v) else 0.5
+            g = round(v, 6) if math.isfinite(v) else 0.5
+            scores[r["district_lgd_code"]][sector] = g
+            pos = (W_N * r["N_norm"] + W_G * g + W_U * r["U_norm"]) * 100
+            if pos > sector_pos_max:
+                sector_pos_max = pos
+        sector_meta[sector] = {"pos_max": round(sector_pos_max, 2)}
 
-        print(f"  {sector:<42} scored {len(master)} districts")
-    return scores
+        print(f"  {sector:<42} scored {len(master)} districts  max POS {sector_pos_max:.2f}")
+    return scores, sector_meta
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -635,6 +932,7 @@ def write_outputs(
             "state_name": str(r["state"]),
             "district_name": str(r["district"]),
             "district_lgd_code": str(r["district_lgd_code"]),
+            "csr_lgd_source": str(r.get("csr_lgd_source", "") or ""),
             "headcount_ratio_2016": safe_json(r["hr_2016"]),
             "headcount_ratio_2021": safe_json(r["hr_2021"]),
             "mpi_2021": safe_json(r["mpi_2021"]),
@@ -651,7 +949,24 @@ def write_outputs(
             "U_norm": safe_json(r["U_norm"]),
             "POS": safe_json(r["POS"]),
             "is_whitespace": safe_json(r["is_whitespace"]),
+            "u_imputed": bool(r.get("u_imputed", False)),
+            "population_imputed": bool(r.get("population_imputed", False)),
+            "population_parent_districts": str(r.get("population_parent_districts", "") or ""),
         })
+
+    # Produce the verification report first — meta.json embeds a compact subset
+    # so the UI can cite reconciled numbers without loading the full report.
+    report = build_verification_report(master, meta, csr_overview, mpi_total_extracted)
+
+    meta = {
+        **meta,
+        "csr_totals": report["csr_totals"],
+        "state_stats": {
+            "bihar": report["bihar"],
+            "maharashtra": report["maharashtra"],
+        },
+        "retention_ratio_stats": report["retention_ratio_stats"],
+    }
 
     (out_dir / "whitespace_master.json").write_text(
         json.dumps(records, indent=2, ensure_ascii=False), encoding="utf-8"
@@ -666,8 +981,6 @@ def write_outputs(
     print(f"  wrote sector_scores.json     ({len(sector_scores)} districts)")
     print(f"  wrote meta.json")
 
-    # ── Verification report: local-only audit artifact ───────────────────
-    report = build_verification_report(master, meta, csr_overview, mpi_total_extracted)
     (SCRIPTS_DIR / "verification_report.json").write_text(
         json.dumps(report, indent=2), encoding="utf-8"
     )
@@ -796,7 +1109,11 @@ def main() -> None:
     census, _ = load_census(CENSUS_PATH)
     master = join_datasets(mpi, csr_district, census)
     master, meta = compute_scores(master)
-    sector_scores = compute_sector_scores(master, csr_sector_pivot)
+    sector_scores, sector_meta = compute_sector_scores(master, csr_sector_pivot)
+    meta["sector_pos_max"] = round(
+        max((m.get("pos_max", 0) for m in sector_meta.values()), default=0), 1
+    )
+    meta["sector_pos_meta"] = sector_meta
     write_outputs(master, sector_scores, meta, csr_overview, OUT_DIR, mpi_total_extracted)
 
     print("\n" + "=" * 72)

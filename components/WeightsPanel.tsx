@@ -14,11 +14,14 @@ interface Props {
 }
 
 function matchesPreset(w: { w_N: number; w_G: number; w_U: number }): string | null {
+  // Tolerance 0.015 (1.5%) so the slider's 1% step can't drift the active
+  // preset off after a ratio reshuffle (e.g. 40/40/20 → 41/40/19 still reads as
+  // Balanced).
   for (const p of WEIGHT_PRESETS) {
     if (
-      Math.abs(w.w_N - p.w_N) < 0.005 &&
-      Math.abs(w.w_G - p.w_G) < 0.005 &&
-      Math.abs(w.w_U - p.w_U) < 0.005
+      Math.abs(w.w_N - p.w_N) < 0.015 &&
+      Math.abs(w.w_G - p.w_G) < 0.015 &&
+      Math.abs(w.w_U - p.w_U) < 0.015
     ) {
       return p.name;
     }

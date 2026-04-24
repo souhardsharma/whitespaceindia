@@ -18,6 +18,9 @@ export interface District {
   U_norm: number;
   POS: number;
   is_whitespace: boolean;
+  u_imputed?: boolean;
+  population_imputed?: boolean;
+  population_parent_districts?: string;
 }
 
 export interface Weights {
@@ -31,8 +34,8 @@ export const DEFAULT_WEIGHTS: Weights = { w_N: 0.40, w_G: 0.40, w_U: 0.20 };
 export const SECTORS = [
   'All Sectors', 'Education', 'Health Care', 'Rural Development Projects',
   'Livelihood Enhancement Projects', 'Poverty, Eradicating Hunger, Malnutrition',
-  'Safe Drinking Water', 'Sanitation', 'Vocational Skills',
-  'Environmental Sustainability', 'Women Empowerment'
+  'Safe Drinking Water', 'Sanitation', 'Vocational Skills', 'Women Empowerment',
+  'Environmental Sustainability'
 ] as const;
 
 export function computePOS(d: District, weights: Weights): number {

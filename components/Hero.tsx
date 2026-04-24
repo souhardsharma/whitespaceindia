@@ -3,6 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
+interface HeroMeta {
+  total_districts?: number;
+  national_hr_official_pct?: number;
+  csr_totals?: { total_fy23_24_crore?: number };
+  state_stats?: {
+    bihar?: { csr_per_person_inr?: number };
+    maharashtra?: { csr_per_person_inr?: number };
+  };
+}
+
 function CountUp({
   end,
   prefix = "",
@@ -75,9 +85,25 @@ const fadeUp = {
 };
 
 export default function Hero() {
+  const [meta, setMeta] = useState<HeroMeta | null>(null);
+
+  useEffect(() => {
+    fetch("/data/meta.json")
+      .then((r) => r.json())
+      .then((m: HeroMeta) => setMeta(m))
+      .catch(() => {});
+  }, []);
+
   const scrollToSimulator = () => {
     document.getElementById("simulator")?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const fy24Csr = Math.round(meta?.csr_totals?.total_fy23_24_crore ?? 21878);
+  const totalDistricts = meta?.total_districts ?? 651;
+  const nationalHr = meta?.national_hr_official_pct ?? 14.96;
+  const bhCsrPp = meta?.state_stats?.bihar?.csr_per_person_inr;
+  const mhCsrPp = meta?.state_stats?.maharashtra?.csr_per_person_inr;
+  const csrRatio = bhCsrPp && mhCsrPp && bhCsrPp > 0 ? Math.round(mhCsrPp / bhCsrPp) : 20;
 
   return (
     <section className="relative bg-[#fcf9f4] pt-32 md:pt-40 pb-16 md:pb-24 px-6 md:px-12 lg:px-16">
@@ -143,7 +169,7 @@ export default function Hero() {
                 Total Expenditure
               </span>
               <div className="font-label text-3xl lg:text-4xl font-bold text-[#BD402C] tracking-tighter">
-                <CountUp end={21878} prefix="₹" suffix=" Cr" />
+                <CountUp end={fy24Csr} prefix="₹" suffix=" Cr" />
               </div>
               <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
                 District-attributable CSR in FY2023-24, from Ministry of Corporate Affairs filings.
@@ -155,7 +181,7 @@ export default function Hero() {
                 Coverage Analysis
               </span>
               <div className="font-label text-3xl lg:text-4xl font-bold text-[#BD402C] tracking-tighter">
-                <CountUp end={569} suffix=" Districts" />
+                <CountUp end={totalDistricts} suffix=" Districts" />
               </div>
               <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
                 Scored and ranked across administrative zones with complete data.
@@ -167,10 +193,10 @@ export default function Hero() {
                 National Poverty
               </span>
               <div className="font-label text-3xl lg:text-4xl font-bold text-[#BD402C] tracking-tighter">
-                <CountUp end={14.46} suffix="%" decimals={2} />
+                <CountUp end={nationalHr} suffix="%" decimals={2} />
               </div>
               <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
-                Headcount ratio from NITI Aayog MPI 2023.
+                Headcount ratio from NITI Aayog MPI 2023 (2019-21, NFHS-5).
               </div>
             </div>
           </motion.div>
@@ -189,7 +215,7 @@ export default function Hero() {
               CSR clusters in Tier-1 corridors while aspirational districts see minimal funding.
             </p>
             <p className="font-body text-sm md:text-base text-[#1c1c19]/80 leading-relaxed">
-              Our methodology cross-references Ministry of Corporate Affairs data with NITI Aayog MPI headcount ratios to reveal the widening gap in social capital allocation across 569 districts.
+              Our methodology cross-references Ministry of Corporate Affairs data with NITI Aayog MPI headcount ratios to reveal the widening gap in social capital allocation across {totalDistricts} districts.
             </p>
           </div>
           <div className="md:col-span-5 p-10 md:p-14 flex flex-col justify-between gap-8">
@@ -207,7 +233,7 @@ export default function Hero() {
               <div className="h-1 bg-[#1c1c19] w-[95%]" />
             </div>
             <p className="font-body text-xs text-[#1c1c19]/70 leading-relaxed italic">
-              Bihar has ~5&times; the poverty rate of Maharashtra, yet receives roughly 22&times; less CSR per person.
+              Bihar&apos;s poverty rate is more than 4&times; Maharashtra&apos;s, yet it receives roughly {csrRatio}&times; less CSR per person.
             </p>
           </div>
         </motion.div>

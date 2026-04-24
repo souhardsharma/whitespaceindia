@@ -6,7 +6,7 @@ const siteUrl =
 export const metadata: Metadata = {
   title: "About",
   description:
-    "About the Whitespace India CSR project — quantifying the gap between where philanthropic money goes and where people need it most, across 569 Indian districts.",
+    "About the Whitespace India CSR project — quantifying the gap between where philanthropic money goes and where people need it most, across 651 Indian districts.",
   openGraph: {
     title: "About — Whitespace India CSR",
     description:

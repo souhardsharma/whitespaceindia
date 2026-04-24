@@ -93,7 +93,21 @@ function TrendChart({
   current: number;
   districtName: string;
 }) {
-  if (!baseline) return null;
+  if (!baseline) {
+    return (
+      <div className="border border-[#1c1c19] bg-[#f6f3ee] p-5">
+        <p className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19] font-bold mb-2">
+          Poverty Trend
+        </p>
+        <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mb-3">
+          {districtName} · MPI Headcount
+        </p>
+        <p className="font-body text-sm text-[#1c1c19]/70 italic leading-relaxed">
+          2015-16 baseline unavailable for this district — U dimension uses the national median retention ratio as a conservative imputation.
+        </p>
+      </div>
+    );
+  }
   const data = [
     { period: "2015-16", value: +(baseline * 100).toFixed(1) },
     { period: "2019-21", value: +(current * 100).toFixed(1) },
@@ -375,6 +389,17 @@ export default function BriefModal({ district, onClose }: Props) {
                       {district.pop_tier.replace(/\s*\(.*?\)/, "")}
                     </motion.span>
                   )}
+                  {district.population_imputed && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: 0.4 }}
+                      title={`Carved from ${district.population_parent_districts || "parent district"} after Census 2011 — population inherited from parent; per-capita CSR is conservatively low.`}
+                      className="font-label text-xs uppercase tracking-[0.2em] border border-dashed border-[#1c1c19]/60 text-[#1c1c19]/70 px-4 py-2"
+                    >
+                      Pop imputed
+                    </motion.span>
+                  )}
                 </div>
               </motion.div>
 
@@ -559,10 +584,10 @@ export default function BriefModal({ district, onClose }: Props) {
 
                   <div className="mt-6 mx-auto max-w-xs h-px bg-[#1c1c19]/20 relative overflow-hidden">
                     <motion.div
-                      className="absolute inset-y-0 left-0 bg-[#BD402C]"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 25, ease: "linear" }}
+                      className="absolute inset-y-0 bg-[#BD402C]"
+                      initial={{ x: "-40%", width: "40%" }}
+                      animate={{ x: "140%" }}
+                      transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                       style={{ height: "2px", top: "-0.5px" }}
                     />
                   </div>

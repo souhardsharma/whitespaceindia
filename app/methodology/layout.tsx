@@ -6,7 +6,7 @@ const siteUrl =
 export const metadata: Metadata = {
   title: "Methodology",
   description:
-    "Detailed methodology behind the Philanthropic Opportunity Score (POS). Learn how we process NITI Aayog MPI poverty data and MCA CSR spending data across 569 Indian districts.",
+    "Detailed methodology behind the Philanthropic Opportunity Score (POS). Learn how we process NITI Aayog MPI poverty data and MCA CSR spending data across 651 Indian districts.",
   openGraph: {
     title: "Methodology — Whitespace India CSR",
     description:
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Methodology — Whitespace India CSR",
     description:
-      "How we measure the gap between poverty and philanthropic funding across 569 Indian districts.",
+      "How we measure the gap between poverty and philanthropic funding across 651 Indian districts.",
     creator: "@souaboroq",
   },
   alternates: {

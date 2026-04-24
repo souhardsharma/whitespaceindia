@@ -1,9 +1,18 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+
+interface AboutMeta {
+  total_districts?: number;
+  whitespace_count?: number;
+  state_stats?: {
+    bihar?: { csr_per_person_inr?: number };
+    maharashtra?: { csr_per_person_inr?: number };
+  };
+}
 
 function FadeIn({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -37,7 +46,7 @@ function AnimatedBar({ width, color, delay = 0 }: { width: string; color: string
   );
 }
 
-function ComparisonChart() {
+function ComparisonChart({ csrRatio }: { csrRatio: number }) {
   return (
     <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#f6f3ee]">
       <div className="flex items-center justify-between mb-8">
@@ -99,7 +108,7 @@ function ComparisonChart() {
         </div>
       </div>
       <p className="font-body text-sm text-[#1c1c19]/70 italic mt-8 pt-5 border-t border-[#1c1c19] leading-relaxed">
-        Bihar&apos;s poverty rate is more than five times Maharashtra&apos;s, yet Maharashtra receives roughly 22 times more CSR per person. This tool quantifies that gap for every district.
+        Bihar&apos;s poverty rate is more than four times Maharashtra&apos;s (33.76% vs 7.81%), yet Maharashtra receives roughly {csrRatio} times more CSR per person. This tool quantifies that gap for every district.
       </p>
     </div>
   );
@@ -128,7 +137,7 @@ const DIMENSIONS = [
 
 const PIPELINE_STEPS = [
   { label: "NITI Aayog MPI", sub: "653 districts extracted" },
-  { label: "MCA CSR Data", sub: "10 fiscal years" },
+  { label: "MCA CSR Data", sub: "10 fiscal years (via Dataful.in)" },
   { label: "Census 2011", sub: "Population baseline" },
 ];
 
@@ -156,6 +165,18 @@ function SectionHeader({ num, tag, title, lead }: { num: string; tag: string; ti
 }
 
 export default function AboutPage() {
+  const [meta, setMeta] = useState<AboutMeta | null>(null);
+  useEffect(() => {
+    fetch("/data/meta.json")
+      .then((r) => r.json())
+      .then((m: AboutMeta) => setMeta(m))
+      .catch(() => {});
+  }, []);
+  const totalDistricts = meta?.total_districts ?? 651;
+  const whitespaceCount = meta?.whitespace_count ?? 44;
+  const bh = meta?.state_stats?.bihar?.csr_per_person_inr;
+  const mh = meta?.state_stats?.maharashtra?.csr_per_person_inr;
+  const csrRatio = bh && mh && bh > 0 ? Math.round(mh / bh) : 20;
   return (
     <main id="main-content" className="bg-[#fcf9f4] min-h-screen">
       <Navbar />
@@ -210,7 +231,7 @@ export default function AboutPage() {
                 </p>
               </div>
               <div className="md:col-span-7">
-                <ComparisonChart />
+                <ComparisonChart csrRatio={csrRatio} />
               </div>
             </div>
           </section>
@@ -279,7 +300,7 @@ export default function AboutPage() {
                   Merge &amp; Score
                 </p>
                 <p className="font-body text-xs text-white/80 italic">
-                  569 district POS
+                  {totalDistricts} district POS
                 </p>
               </div>
             </div>
@@ -384,9 +405,9 @@ export default function AboutPage() {
             />
             <div className="grid grid-cols-2 md:grid-cols-4 border border-[#1c1c19]">
               {[
-                { value: "569", label: "Districts Scored" },
+                { value: String(totalDistricts), label: "Districts Scored" },
                 { value: "10", label: "Years of CSR Data" },
-                { value: "49", label: "Whitespace Districts" },
+                { value: String(whitespaceCount), label: "Whitespace Districts" },
                 { value: "FY14-24", label: "CSR Data Coverage" },
               ].map(({ value, label }, i) => (
                 <div
