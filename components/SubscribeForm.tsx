@@ -61,13 +61,14 @@ export default function SubscribeForm({ variant, source }: Props) {
   if (variant === "compact") {
     if (status === "success") {
       return (
-        <div
-          className="bg-[#BD402C] text-white font-label uppercase tracking-[0.25em] text-[11px] py-4 px-6 flex items-center justify-between gap-6"
-          role="status"
-          aria-live="polite"
-        >
-          <span>You&apos;re on the list.</span>
-          <span aria-hidden>✓</span>
+        <div role="status" aria-live="polite" className="flex flex-col gap-3">
+          <div className="bg-[#BD402C] text-white font-label uppercase tracking-[0.25em] text-[11px] py-4 px-6 flex items-center justify-between gap-6">
+            <span>Check your inbox.</span>
+            <span aria-hidden>✓</span>
+          </div>
+          <p className="font-body text-xs text-[#1c1c19]/60 italic leading-relaxed">
+            We&apos;re a young project. Gmail may file our confirmation email under spam until it learns to trust us — rescue it once and we&apos;re in.
+          </p>
         </div>
       );
     }
@@ -111,14 +112,17 @@ export default function SubscribeForm({ variant, source }: Props) {
         aria-live="polite"
       >
         <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.3em] text-[#BD402C] mb-4">
-          Subscribed
+          One step left
         </span>
         <div className="h-px w-12 bg-[#1c1c19]" />
         <span className="font-label text-xl md:text-2xl font-bold uppercase tracking-tighter text-[#1c1c19] mt-4">
-          You&apos;re on the list
+          Check your inbox
         </span>
         <p className="font-body text-sm md:text-base text-[#1c1c19]/70 italic mt-4 max-w-md leading-relaxed">
-          We&apos;ll write when new reports ship.
+          A confirmation email is on its way. Click the link inside and you&apos;ll be on the list for the next research drop.
+        </p>
+        <p className="font-body text-xs md:text-sm text-[#1c1c19]/50 mt-4 max-w-md leading-relaxed">
+          Can&apos;t find it? Check your spam folder. We&apos;re a young project and Gmail hasn&apos;t learned to trust us yet — fishing us out once is all it takes.
         </p>
       </div>
     );
@@ -211,7 +215,7 @@ export default function SubscribeForm({ variant, source }: Props) {
 
       <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <p className="font-body text-xs text-[#1c1c19]/50 italic leading-relaxed max-w-sm">
-          We&apos;ll only use this to send report updates. No spam, unsubscribe anytime.
+          One email to confirm, then only research updates. If the confirmation lands in spam, we&apos;re new — Gmail hasn&apos;t met us yet.
         </p>
         <button
           type="submit"
