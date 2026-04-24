@@ -23,48 +23,59 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
 
 export default function ReportsPage() {
   return (
-    <main className="bg-[#0B1526] min-h-screen flex flex-col">
+    <main id="main-content" className="bg-[#fcf9f4] min-h-screen flex flex-col">
       <Navbar />
 
-      {/* Page header */}
-      <section className="relative pt-32 pb-16 px-4 overflow-hidden">
+      <section className="relative flex-1 flex flex-col items-center justify-center px-6 md:px-12 lg:px-16 pt-32 md:pt-40 pb-24 md:pb-28 overflow-hidden">
+        {/* Faint opaque background label */}
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/images/hero-bg.png')", opacity: 0.08 }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0B1526]/70 to-[#0B1526]" />
-        <div className="relative max-w-4xl mx-auto text-center">
-          <h1 className="font-display text-5xl md:text-6xl text-white leading-tight mb-4 text-center">
-            Reports & Analysis
-          </h1>
-          <p className="text-xl text-[#94A3B8] max-w-2xl mx-auto leading-relaxed text-center">
-            In-depth district profiling and thematic research.
-          </p>
+          aria-hidden
+          className="absolute top-16 left-6 md:left-16 opacity-[0.04] select-none pointer-events-none"
+        >
+          <span className="font-label text-[8rem] md:text-[14rem] leading-none uppercase tracking-tighter text-[#1c1c19]">
+            Reports
+          </span>
         </div>
-      </section>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-32">
-        <FadeIn>
-          <div className="bg-white/[0.03] border border-[#F5A623]/30 rounded-2xl p-10 md:p-14 text-center max-w-lg mx-auto shadow-[0_0_30px_rgba(245,166,35,0.05)] relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FBBF24] to-[#F97316]" />
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#F5A623]/10 mb-6">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#F5A623" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
-              </svg>
-            </div>
-            <h2 className="font-display text-3xl text-white mb-3 tracking-wide">
+        <FadeIn className="relative z-10 w-full max-w-5xl flex flex-col items-center">
+          {/* Monumental heading */}
+          <div className="text-center mb-14 md:mb-16">
+            <span className="font-label text-[10px] md:text-[11px] tracking-[0.5em] uppercase text-[#1c1c19]/70 mb-6 block">
+              Reports
+            </span>
+            <h1 className="font-headline headline-tight text-[clamp(3.5rem,12vw,9rem)] leading-[0.9] text-[#1c1c19]">
+              Reports &amp;<br />
+              <span className="italic font-light">analysis.</span>
+            </h1>
+          </div>
+
+          {/* Wireframe "Coming Soon" status card */}
+          <div className="border border-[#1c1c19] px-12 md:px-16 py-8 md:py-10 mb-14 md:mb-16 flex flex-col items-center justify-center max-w-xs w-full bg-transparent">
+            <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.3em] text-[#1c1c19] mb-4">
+              Access Status
+            </span>
+            <div className="h-px w-12 bg-[#1c1c19]" />
+            <span className="font-label text-xl md:text-2xl font-bold uppercase tracking-tighter text-[#1c1c19] mt-4">
               Coming Soon
-            </h2>
-            <p className="text-[#94A3B8] leading-relaxed">
-              We are currently generating extensive research reports for priority states. Check back later for downloadable publications, thematic case studies, and deep-dive analytics.
-            </p>
+            </span>
+          </div>
+
+          {/* Brief editorial note */}
+          <p className="font-body text-base md:text-lg text-[#1c1c19]/70 italic text-center max-w-xl leading-relaxed">
+            In-depth district profiling, thematic studies, and funder analyses are in preparation. New reports will be published here as research is completed.
+          </p>
+
+          {/* Asymmetric anchor */}
+          <div className="hidden lg:flex absolute bottom-6 right-12 flex-col items-end gap-2 text-right">
+            <span className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/40">
+              Built by
+            </span>
+            <span className="font-headline italic text-xl text-[#1c1c19]/70">
+              Whitespace India
+            </span>
           </div>
         </FadeIn>
-      </div>
+      </section>
 
       <Footer />
     </main>

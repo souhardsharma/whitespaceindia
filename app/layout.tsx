@@ -1,35 +1,37 @@
 import type { Metadata } from "next";
-import { Karla, Lora } from "next/font/google";
+import { Newsreader, Public_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-const karla = Karla({
+const newsreader = Newsreader({
   subsets: ["latin"],
-  variable: "--font-karla",
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-newsreader",
+  weight: ["300", "400", "500", "700"],
+  style: ["normal", "italic"],
 });
-const lora = Lora({
+const publicSans = Public_Sans({
   subsets: ["latin"],
-  variable: "--font-lora",
-  weight: ["400", "600", "700"],
+  variable: "--font-public-sans",
+  weight: ["300", "400", "500", "700"],
+});
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  weight: ["300", "400", "500", "700"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://whitespaceindia-csr.vercel.app"),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Whitespace India CSR | Where CSR Should Go",
     template: "%s | Whitespace India CSR",
   },
   description:
     "Interactive tool ranking Indian districts by philanthropic opportunity. Combines NITI Aayog MPI poverty data with CSR spending to find where philanthropic capital can create the most impact.",
-  keywords: [
-    "CSR India",
-    "MPI India districts",
-    "philanthropic opportunity India",
-    "NITI Aayog MPI 2023",
-    "CSR spending gap India",
-  ],
   openGraph: {
     title: "Whitespace India CSR - Find Where CSR Should Go",
     description:
@@ -43,11 +45,19 @@ export const metadata: Metadata = {
     title: "Whitespace India CSR",
     description:
       "Find India's philanthropic whitespaces - districts with high poverty and low CSR funding.",
+    creator: "@souaboroq",
   },
   alternates: {
-    canonical: "https://whitespaceindia-csr.vercel.app",
+    canonical: siteUrl,
   },
   robots: { index: true, follow: true },
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -56,8 +66,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${karla.variable} ${lora.variable}`}>
-      <body className="bg-[#0B1526] text-white font-sans antialiased">
+    <html lang="en" className={`${newsreader.variable} ${publicSans.variable} ${spaceGrotesk.variable}`}>
+      <body className="bg-[#fcf9f4] text-[#1c1c19] font-body antialiased">
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         {children}
         <Analytics />
         <SpeedInsights />

@@ -13,12 +13,6 @@ interface Props {
   weights?: Weights;
 }
 
-const SLIDER_COLORS: Record<string, string> = {
-  w_N: "#F5A623",
-  w_G: "#7C3AED",
-  w_U: "#10B981",
-};
-
 function matchesPreset(w: { w_N: number; w_G: number; w_U: number }): string | null {
   for (const p of WEIGHT_PRESETS) {
     if (
@@ -44,7 +38,6 @@ export default function WeightsPanel({
   const [whitespaceOnly, setWhitespaceOnly] = useState(false);
   const [activePreset, setActivePreset] = useState<string | null>("Balanced");
 
-  // Sync local display when parent resets weights
   useEffect(() => {
     if (externalWeights) {
       const newPct = {
@@ -62,13 +55,24 @@ export default function WeightsPanel({
       const clamped = Math.max(0, Math.min(100, value));
       const remaining = 100 - clamped;
       const others = (["w_N", "w_G", "w_U"] as const).filter((k) => k !== key);
-      const each = Math.floor(remaining / 2);
-      const extra = remaining - each * 2;
-      const newPct = {
-        [key]: clamped,
-        [others[0]]: each + extra,
-        [others[1]]: each,
-      } as { w_N: number; w_G: number; w_U: number };
+      const otherSum = localPct[others[0]] + localPct[others[1]];
+      let newPct: { w_N: number; w_G: number; w_U: number };
+      if (otherSum > 0) {
+        const r0 = Math.round(remaining * (localPct[others[0]] / otherSum));
+        const r1 = remaining - r0;
+        newPct = {
+          [key]: clamped,
+          [others[0]]: Math.max(0, r0),
+          [others[1]]: Math.max(0, r1),
+        } as { w_N: number; w_G: number; w_U: number };
+      } else {
+        const each = Math.floor(remaining / 2);
+        newPct = {
+          [key]: clamped,
+          [others[0]]: each + (remaining - each * 2),
+          [others[1]]: each,
+        } as { w_N: number; w_G: number; w_U: number };
+      }
       setLocalPct(newPct);
       const decimal = {
         w_N: newPct.w_N / 100,
@@ -78,7 +82,7 @@ export default function WeightsPanel({
       onWeightsChange(decimal);
       setActivePreset(matchesPreset(decimal));
     },
-    [onWeightsChange]
+    [onWeightsChange, localPct]
   );
 
   const applyPreset = useCallback(
@@ -125,111 +129,116 @@ export default function WeightsPanel({
     {
       key: "w_N" as const,
       label: "Poverty Severity",
-      tooltip: "How much weight to give the MPI headcount ratio",
+      tooltip: "Weight given to MPI headcount ratio",
+      hint1: "LOW",
+      hint2: "HIGH",
     },
     {
       key: "w_G" as const,
       label: "Funding Gap",
-      tooltip: "How much weight to give CSR underfunding relative to population",
+      tooltip: "Weight given to CSR under-funding vs tier median",
+      hint1: "FUNDED",
+      hint2: "NEGLECTED",
     },
     {
       key: "w_U" as const,
       label: "Persistent Poverty",
-      tooltip: "How much weight to give districts where poverty has not improved",
+      tooltip: "Weight given to districts where poverty has not improved",
+      hint1: "IMPROVED",
+      hint2: "STUCK",
     },
   ];
 
   return (
-    <div className="bg-[#0D1B2E]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
+    <div className="bg-[#fcf9f4] border border-[#1c1c19]">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
+      <div className="px-6 py-5 border-b border-[#1c1c19] bg-[#f6f3ee] flex items-center justify-between gap-4">
         <div>
-          <h3 className="font-display text-base text-white font-semibold">Scoring Controls</h3>
-          <p className="text-xs text-[#64748B] mt-0.5">Adjust weights to match your strategy</p>
+          <h3 className="font-label text-[11px] uppercase tracking-[0.3em] font-bold text-[#1c1c19]">
+            Scoring Controls
+          </h3>
+          <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-2">
+            Calibrate the Index
+          </p>
         </div>
         <button
           onClick={handleReset}
-          className="text-[10px] text-[#64748B] hover:text-[#F5A623] border border-white/10 hover:border-[#F5A623]/30 px-2.5 py-1 rounded-lg transition-colors uppercase tracking-wider font-semibold"
+          className="font-label text-[10px] uppercase tracking-[0.2em] border border-[#1c1c19] text-[#1c1c19] px-3 py-2 hover:bg-[#1c1c19] hover:text-[#fcf9f4] transition-colors"
         >
-          Reset all
+          Reset
         </button>
       </div>
 
-      <div className="p-6 space-y-7">
+      <div className="p-6 space-y-8">
         {/* Sector */}
         <div>
           <label
             htmlFor="sector-select"
-            className="text-xs uppercase tracking-wider text-[#F5A623] font-semibold mb-2 block"
+            className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] font-bold mb-3 block"
           >
             Focus Sector
           </label>
-          <select
-            id="sector-select"
-            value={sector}
-            onChange={(e) => handleSectorChange(e.target.value)}
-            aria-label="Filter districts by CSR sector"
-            className="w-full bg-[#1E293B] text-white border border-white/10 rounded-xl px-3 py-2.5 text-sm focus:border-[#F5A623] focus:outline-none focus:ring-1 focus:ring-[#F5A623] transition-colors"
-          >
-            {SECTORS.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              id="sector-select"
+              value={sector}
+              onChange={(e) => handleSectorChange(e.target.value)}
+              aria-label="Filter districts by CSR sector"
+              className="w-full bg-transparent text-[#1c1c19] border-0 border-b border-[#1c1c19] py-3 px-0 pr-8 font-body text-sm focus:ring-0 focus:outline-none appearance-none cursor-pointer"
+            >
+              {SECTORS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <span className="absolute right-0 top-1/2 -translate-y-1/2 font-label text-xs text-[#1c1c19]/60 pointer-events-none">
+              ▾
+            </span>
+          </div>
         </div>
 
         {/* Scoring Weights */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <label className="text-xs uppercase tracking-wider text-[#F5A623] font-semibold">
+        <div className="pt-2">
+          <div className="flex items-center justify-between mb-6">
+            <label className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] font-bold">
               Scoring Weights
             </label>
             {total !== 100 && (
-              <span className="text-xs text-red-400">Sum: {total}%</span>
+              <span className="font-label text-[10px] uppercase tracking-widest text-[#BD402C]">
+                Σ {total}%
+              </span>
             )}
           </div>
-          <div className="space-y-5">
+          <div className="space-y-8">
             {sliders.map((slider) => {
-              const color = SLIDER_COLORS[slider.key];
               const pct = localPct[slider.key];
               return (
                 <div key={slider.key}>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-white">{slider.label}</span>
-                    <span
-                      className="text-sm font-bold px-2 py-0.5 rounded-full"
-                      style={{ background: `${color}20`, color }}
-                    >
+                  <div className="flex justify-between items-baseline mb-3">
+                    <span className="font-label text-[11px] uppercase tracking-[0.15em] text-[#1c1c19]">
+                      {slider.label}
+                    </span>
+                    <span className="font-label text-sm font-bold text-[#BD402C] tracking-tighter">
                       {pct}%
                     </span>
                   </div>
-                  {/* Custom styled range */}
-                  <div className="relative h-2 rounded-full bg-white/10">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full transition-all duration-150"
-                      style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${color}90, ${color})` }}
-                    />
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={pct}
-                      onChange={(e) => handleSliderChange(slider.key, Number(e.target.value))}
-                      aria-label={`${slider.label} weight: ${pct}%`}
-                      className="absolute inset-0 w-full opacity-0 cursor-pointer h-full"
-                    />
-                    <div
-                      className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 shadow-lg transition-all duration-150"
-                      style={{
-                        left: `calc(${pct}% - 8px)`,
-                        borderColor: color,
-                        background: "#0D1B2E",
-                        boxShadow: `0 0 8px ${color}60`,
-                      }}
-                    />
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={pct}
+                    onChange={(e) => handleSliderChange(slider.key, Number(e.target.value))}
+                    aria-label={`${slider.label} weight: ${pct}%`}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between mt-2 font-label text-[9px] tracking-[0.2em] text-[#1c1c19]/40">
+                    <span>{slider.hint1}</span>
+                    <span>{slider.hint2}</span>
                   </div>
-                  <p className="text-xs text-[#64748B] mt-1.5">{slider.tooltip}</p>
+                  <p className="font-body text-xs text-[#1c1c19]/60 mt-2 italic">
+                    {slider.tooltip}
+                  </p>
                 </div>
               );
             })}
@@ -237,10 +246,12 @@ export default function WeightsPanel({
         </div>
 
         {/* Presets */}
-        <div>
-          <p className="text-xs uppercase tracking-wider text-[#64748B] font-semibold mb-3">Quick Presets</p>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Scoring weight presets">
-            {WEIGHT_PRESETS.map((preset) => {
+        <div className="pt-2">
+          <p className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60 font-bold mb-4">
+            Quick Presets
+          </p>
+          <div className="flex flex-wrap gap-0 border border-[#1c1c19]" role="group" aria-label="Scoring weight presets">
+            {WEIGHT_PRESETS.map((preset, idx) => {
               const isActive = activePreset === preset.name;
               return (
                 <button
@@ -248,11 +259,11 @@ export default function WeightsPanel({
                   onClick={() => applyPreset(preset)}
                   aria-label={`Apply ${preset.name} weight preset`}
                   aria-pressed={isActive}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-200 ${
-                    isActive
-                      ? "bg-[#F5A623] text-[#0B1526] border-[#F5A623] font-bold shadow-[0_0_12px_rgba(245,166,35,0.3)]"
-                      : "border-[#F5A623]/30 text-[#F5A623] hover:bg-[#F5A623]/10 hover:border-[#F5A623]/60"
-                  }`}
+                  className={`font-label text-[10px] uppercase tracking-[0.15em] px-3 py-3 flex-1 min-w-[50%] transition-colors ${idx % 2 === 1 ? "border-l border-[#1c1c19]" : ""
+                    } ${idx >= 2 ? "border-t border-[#1c1c19]" : ""} ${isActive
+                      ? "bg-[#BD402C] text-white"
+                      : "bg-[#fcf9f4] text-[#1c1c19] hover:bg-[#f6f3ee]"
+                    }`}
                 >
                   {preset.name}
                 </button>
@@ -262,43 +273,44 @@ export default function WeightsPanel({
         </div>
 
         {/* Whitespace Toggle */}
-        <div className="border-t border-white/10 pt-5">
+        <div className="border-t border-[#1c1c19] pt-6">
           <button
             onClick={handleWhitespaceToggle}
             aria-pressed={whitespaceOnly}
             aria-label={`Show neglected districts only: ${whitespaceOnly ? "on" : "off"}`}
-            className="flex items-center justify-between w-full group"
+            className="flex items-center justify-between w-full group gap-4"
           >
             <div className="text-left">
-              <span className="text-sm font-medium text-white block">
-                Neglected Districts Only
+              <span className="font-label text-[11px] uppercase tracking-[0.15em] text-[#1c1c19] block">
+                Neglected Only
               </span>
-              <span className="text-xs text-[#64748B] block mt-0.5">
+              <span className="font-body text-xs text-[#1c1c19]/60 block mt-1 italic">
                 Bottom 25% CSR + Top 25% poverty
               </span>
             </div>
             <div
-              className="w-12 h-6 rounded-full transition-colors relative shrink-0 ml-4"
-              style={{ background: whitespaceOnly ? "#F5A623" : "rgba(255,255,255,0.1)" }}
+              className="w-14 h-6 relative shrink-0 border border-[#1c1c19]"
+              style={{ background: whitespaceOnly ? "#BD402C" : "transparent" }}
             >
               <div
-                className="w-5 h-5 rounded-full bg-white absolute top-0.5 transition-transform shadow-sm"
-                style={{ transform: whitespaceOnly ? "translateX(26px)" : "translateX(2px)" }}
+                className="w-5 h-5 absolute top-0 transition-transform"
+                style={{
+                  transform: whitespaceOnly ? "translateX(32px)" : "translateX(0px)",
+                  background: whitespaceOnly ? "#fcf9f4" : "#1c1c19",
+                }}
               />
             </div>
           </button>
         </div>
 
         {/* Methodology link */}
-        <div className="border-t border-white/10 pt-4">
+        <div className="border-t border-[#1c1c19] pt-5">
           <Link
             href="/methodology"
-            className="text-xs text-[#64748B] hover:text-[#F5A623] transition-colors flex items-center gap-1"
+            className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19] hover:text-[#BD402C] transition-colors flex items-center justify-between gap-2"
           >
-            OECD composite indicator methodology
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            <span>Full Methodology</span>
+            <span className="text-[10px]">→</span>
           </Link>
         </div>
       </div>

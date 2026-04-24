@@ -46,22 +46,46 @@ interface MetaData {
 const WEIGHT_PRESETS = [
   { name: "Balanced", N: 40, G: 40, U: 20, desc: "Equal emphasis on need and gap" },
   { name: "Highest Need", N: 60, G: 25, U: 15, desc: "Prioritize poverty severity" },
-  { name: "Most Underfunded", N: 25, G: 60, U: 15, desc: "Prioritize funding gap" },
-  { name: "Stuck Districts", N: 25, G: 25, U: 50, desc: "Prioritize persistent poverty" },
+  { name: "Most Underfunded", N: 20, G: 65, U: 15, desc: "Prioritize funding gap" },
+  { name: "Stuck Districts", N: 25, G: 30, U: 45, desc: "Prioritize persistent poverty" },
 ];
 
 const CHART_TOOLTIP_STYLE = {
-  background: "#0D1B2E",
-  border: "1px solid rgba(245,166,35,0.3)",
-  borderRadius: 8,
-  fontSize: 12,
-  color: "#FFFFFF",
+  background: "#1c1c19",
+  border: "1px solid #1c1c19",
+  borderRadius: 0,
+  fontSize: 11,
+  color: "#fcf9f4",
   padding: "8px 12px",
+  fontFamily: "var(--font-space-grotesk)",
 };
 
 function formatLakh(n: number): string {
   const lakh = n / 100000;
   return lakh >= 10 ? `${lakh.toFixed(1)} lakh` : `${lakh.toFixed(2)} lakh`;
+}
+
+function SectionHeader({ num, tag, title, lead }: { num: string; tag: string; title: React.ReactNode; lead?: string }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-10">
+      <div className="md:col-span-3">
+        <span className="font-label text-[11px] uppercase tracking-[0.3em] text-[#BD402C] block mb-4">
+          {num} / {tag}
+        </span>
+        <div className="h-px bg-[#1c1c19] w-24" />
+      </div>
+      <div className="md:col-span-9">
+        <h2 className="font-headline text-3xl md:text-5xl headline-tight text-[#1c1c19] mb-4">
+          {title}
+        </h2>
+        {lead && (
+          <p className="font-body text-base text-[#1c1c19]/75 leading-relaxed max-w-2xl">
+            {lead}
+          </p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function MethodologyPage() {
@@ -73,7 +97,6 @@ export default function MethodologyPage() {
       fetch("/data/whitespace_master.json").then((r) => r.json()),
       fetch("/data/meta.json").then((r) => r.json()),
     ]).then(([districts, metaData]: [{ POS: number }[], MetaData]) => {
-      // Build POS distribution
       const buckets: Record<string, number> = {};
       const ranges = ["0-10", "10-20", "20-30", "30-40", "40-50", "50-60", "60-70", "70-80", "80-90", "90-100"];
       ranges.forEach((r) => (buckets[r] = 0));
@@ -87,14 +110,15 @@ export default function MethodologyPage() {
     }).catch(() => {});
   }, []);
 
-  // Build tier chart data from meta.json
   const tierData = meta ? [
-    { name: "Tier 1 (Small)", median: meta.tier_medians["Tier 1 (Small)"] ?? 0, color: "#3B82F6" },
-    { name: "Tier 2 (Medium)", median: meta.tier_medians["Tier 2 (Medium)"] ?? 0, color: "#8B5CF6" },
-    { name: "Tier 3 (Large)", median: meta.tier_medians["Tier 3 (Large)"] ?? 0, color: "#F5A623" },
+    { name: "Tier 1 · Small", median: meta.tier_medians["Tier 1 (Small)"] ?? 0 },
+    { name: "Tier 2 · Medium", median: meta.tier_medians["Tier 2 (Medium)"] ?? 0 },
+    { name: "Tier 3 · Large", median: meta.tier_medians["Tier 3 (Large)"] ?? 0 },
   ] : [];
 
-  const totalDistricts = meta?.total_districts ?? 583;
+  const tierColors = ["#e0bfb9", "#BD402C", "#9b2817"];
+
+  const totalDistricts = meta?.total_districts ?? 569;
   const posMin = meta?.pos_range?.min ?? 0;
   const posMax = meta?.pos_range?.max ?? 100;
   const csrP25 = meta?.whitespace_thresholds?.csr_p25 ?? 40;
@@ -106,35 +130,62 @@ export default function MethodologyPage() {
   const medianCsr = meta?.national_median_csr_per_person ?? 127;
 
   return (
-    <main className="bg-[#0B1526] min-h-screen">
+    <main id="main-content" className="bg-[#fcf9f4] min-h-screen">
       <Navbar />
 
       {/* Page header */}
-      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/images/methodology-bg.png')", opacity: 0.15 }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0B1526]/60 to-[#0B1526]" />
-        <div className="relative max-w-4xl mx-auto">
-          <h1 className="font-display text-5xl md:text-6xl text-white mb-6 leading-tight">
-            Methodology
-          </h1>
-          <p className="text-[#94A3B8] text-lg max-w-2xl leading-relaxed">
-            How we measure the gap between poverty and philanthropic funding across {totalDistricts} Indian districts, using three government datasets and a composite scoring framework.
-          </p>
+      <section className="relative bg-[#fcf9f4] pt-32 md:pt-40 pb-16 md:pb-20 px-6 md:px-12 lg:px-16 border-b border-[#1c1c19]">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-10">
+            <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.4em] text-[#BD402C]">
+              Methodology
+            </span>
+            <div className="h-px bg-[#1c1c19] mt-4 w-24" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
+            <div className="md:col-span-8">
+              <h1 className="font-headline text-5xl sm:text-6xl md:text-7xl lg:text-8xl headline-tight text-[#1c1c19]">
+                Methodology<span className="italic font-light">.</span>
+              </h1>
+              <p className="mt-8 md:mt-10 max-w-2xl font-body text-lg md:text-xl leading-relaxed text-[#1c1c19]/90">
+                How we measure the gap between poverty and philanthropic funding across {totalDistricts} Indian districts, using three government datasets and a composite scoring framework.
+              </p>
+            </div>
+            <div className="md:col-span-4 flex flex-col gap-6 md:mt-4">
+              <div className="border-t border-[#1c1c19] pt-6">
+                <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-3">
+                  Districts Scored
+                </span>
+                <div className="font-label text-3xl font-bold text-[#BD402C] tracking-tighter">
+                  {totalDistricts}
+                </div>
+              </div>
+              <div className="border-t border-[#1c1c19] pt-6">
+                <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-3">
+                  POS Range
+                </span>
+                <div className="font-label text-3xl font-bold text-[#BD402C] tracking-tighter">
+                  {posMin}–{posMax}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div className="max-w-4xl mx-auto px-4 py-16 space-y-20">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-20 md:py-24 space-y-24">
 
         {/* Objective */}
         <FadeIn>
           <section>
-            <h2 className="font-display text-3xl text-white mb-6">Objective</h2>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <p className="text-[#C8D3E0] leading-relaxed">
-                The Philanthropic Opportunity Score (POS) quantifies where in India the gap between poverty and corporate social responsibility funding is widest. It is designed as a screening tool for foundation program officers, CSR heads, and philanthropic advisors who need district-level evidence to guide geographic strategy. The score does not prescribe investment decisions - it surfaces the districts where further due diligence is most warranted.
+            <SectionHeader
+              num="01"
+              tag="Objective"
+              title={<>The <span className="italic font-light">screening tool.</span></>}
+            />
+            <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#f6f3ee]">
+              <p className="font-body text-base md:text-lg text-[#1c1c19]/85 leading-relaxed">
+                The Philanthropic Opportunity Score (POS) quantifies where in India the gap between poverty and corporate social responsibility funding is widest. It is designed as a screening tool for CSR and philanthropic decision-makers who need district-level evidence to guide geographic strategy. The score does not prescribe investment decisions; it surfaces the districts where further due diligence is most warranted.
               </p>
             </div>
           </section>
@@ -143,33 +194,43 @@ export default function MethodologyPage() {
         {/* Data Pipeline Overview */}
         <FadeIn>
           <section>
-            <h2 className="font-display text-3xl text-white mb-8">Data Pipeline</h2>
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <SectionHeader
+              num="02"
+              tag="Pipeline"
+              title={<>Six stages, <span className="italic font-light">end to end.</span></>}
+              lead="From raw PDFs to a ranked ledger. Every record passes through six transforms before it earns a score."
+            />
+            <div className="grid grid-cols-2 md:grid-cols-6 border border-[#1c1c19]">
               {[
-                { step: "1", label: "Extract", detail: "Parse PDF, Excel, and CSV sources", color: "#3B82F6" },
-                { step: "2", label: "Clean", detail: "Exclude unattributable records", color: "#8B5CF6" },
-                { step: "3", label: "Match", detail: "Reconcile names across datasets", color: "#EC4899" },
-                { step: "4", label: "Tier", detail: "Group by population tertiles", color: "#F59E0B" },
-                { step: "5", label: "Normalize", detail: "Min-max scale to 0-1", color: "#10B981" },
-                { step: "6", label: "Score", detail: "Weighted aggregation", color: "#F5A623" },
+                { step: "1", label: "Extract", detail: "Parse PDF, Excel, and CSV sources" },
+                { step: "2", label: "Clean", detail: "Exclude unattributable records" },
+                { step: "3", label: "Match", detail: "Reconcile names across datasets" },
+                { step: "4", label: "Tier", detail: "Group by population tertiles" },
+                { step: "5", label: "Normalize", detail: "Min-max scale to 0-1" },
+                { step: "6", label: "Score", detail: "Weighted aggregation" },
               ].map((s, i) => (
-                <div key={s.step} className="relative">
-                  <div
-                    className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 text-center h-full"
-                    style={{ borderColor: `${s.color}30` }}
-                  >
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-2"
-                      style={{ background: `${s.color}20`, color: s.color }}
-                    >
+                <div
+                  key={s.step}
+                  className={`p-6 bg-[#fcf9f4] ${i < 3 ? "border-b md:border-b-0" : ""} ${
+                    (i + 1) % 2 === 0 ? "border-l md:border-l border-[#1c1c19]" : ""
+                  } ${i % 6 !== 5 ? "md:border-r" : ""} ${
+                    i >= 3 ? "border-t md:border-t-0" : ""
+                  } border-[#1c1c19] ${i % 2 === 1 ? "bg-[#f6f3ee]" : ""}`}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C]">
+                      Step
+                    </span>
+                    <span className="font-headline text-4xl leading-none text-[#1c1c19]/10">
                       {s.step}
-                    </div>
-                    <p className="text-white text-sm font-semibold mb-1">{s.label}</p>
-                    <p className="text-[#64748B] text-[10px] leading-tight">{s.detail}</p>
+                    </span>
                   </div>
-                  {i < 5 && (
-                    <div className="hidden md:block absolute top-1/2 -right-2 text-[#475569] text-xs">&#8594;</div>
-                  )}
+                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19] font-bold mb-2">
+                    {s.label}
+                  </p>
+                  <p className="font-body text-xs text-[#1c1c19]/60 leading-relaxed">
+                    {s.detail}
+                  </p>
                 </div>
               ))}
             </div>
@@ -179,47 +240,76 @@ export default function MethodologyPage() {
         {/* Data Sources */}
         <FadeIn>
           <section>
-            <h2 className="font-display text-3xl text-white mb-8">Data Sources</h2>
-            <div className="space-y-5">
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-[#F5A623]/30 transition-colors">
-                <div className="flex items-start gap-4">
-                  <span className="shrink-0 text-[#F5A623] font-semibold text-xs uppercase tracking-widest pt-1 w-20">Poverty</span>
-                  <p className="text-[#C8D3E0] leading-relaxed">
-                    NITI Aayog{" "}
-                    <a href="https://niti.gov.in/sites/default/files/2023-07/Final-MPI_7thJuly.pdf" target="_blank" rel="noopener noreferrer" className="text-[#F5A623] hover:underline">
-                      National Multidimensional Poverty Index 2023
-                    </a>
-                    , based on the National Family Health Survey 5 (2019-21). This report uses the Alkire-Foster methodology from Oxford&apos;s OPHI to measure multidimensional poverty across health, education, and standard of living. District-level headcount ratios were extracted for both the 2015-16 and 2019-21 survey rounds, covering 656 districts across 36 states and union territories.
+            <SectionHeader
+              num="03"
+              tag="Sources"
+              title={<>Three <span className="italic font-light">public datasets.</span></>}
+              lead="Poverty, spending, population. Each sourced from a government system of record."
+            />
+            <div className="border border-[#1c1c19]">
+              {[
+                {
+                  tag: "Poverty",
+                  body: (
+                    <>
+                      NITI Aayog{" "}
+                      <a href="https://niti.gov.in/sites/default/files/2023-07/National-Multidimentional-Poverty-Index-2023-Final-17th-July.pdf" target="_blank" rel="noopener noreferrer" className="text-[#BD402C] underline decoration-[#BD402C]/40 hover:decoration-[#BD402C]">
+                        National Multidimensional Poverty Index 2023
+                      </a>
+                      , based on the National Family Health Survey 5 (2019-21). This report uses the Alkire-Foster methodology from Oxford&apos;s OPHI to measure multidimensional poverty across health, education, and standard of living. District-level headcount ratios were extracted for both the 2015-16 and 2019-21 survey rounds, covering 653 districts across 36 states and union territories.
+                    </>
+                  ),
+                  bg: "bg-[#fcf9f4]",
+                },
+                {
+                  tag: "CSR",
+                  body: (
+                    <>
+                      Ministry of Corporate Affairs{" "}
+                      <a href="https://www.csr.gov.in/" target="_blank" rel="noopener noreferrer" className="text-[#BD402C] underline decoration-[#BD402C]/40 hover:decoration-[#BD402C]">
+                        National CSR Portal
+                      </a>
+                      , via{" "}
+                      <a href="https://dataful.in/datasets/1612" target="_blank" rel="noopener noreferrer" className="text-[#BD402C] underline decoration-[#BD402C]/40 hover:decoration-[#BD402C]">
+                        Dataful.in (Dataset 1612)
+                      </a>
+                      . Ten fiscal years of CSR expenditure data (FY2014-15 through FY2023-24) at the district-sector level. The most recent three years (FY2021-24) feed the supply gap calculation. Approximately 60.7% of gross CSR spending (₹1,29,660 crore of ₹2,13,594 crore, FY2014-15 to FY2023-24) is classified as &quot;Pan India&quot; or lacks a district code and cannot be attributed to specific districts. These records are excluded entirely, which means district-level CSR totals are conservative.
+                    </>
+                  ),
+                  bg: "bg-[#f6f3ee]",
+                },
+                {
+                  tag: "Census",
+                  body: (
+                    <>
+                      <a href="https://censusindia.gov.in/" target="_blank" rel="noopener noreferrer" className="text-[#BD402C] underline decoration-[#BD402C]/40 hover:decoration-[#BD402C]">
+                        Census of India 2011
+                      </a>{" "}
+                      district-level population data covering 640 districts. This remains the most recent complete district census. The 2021 Census was postponed. Population figures serve as denominators for per capita calculations and as the basis for population-tier classification. Districts created after 2011 (through administrative reorganization) were matched to their parent district populations where possible.
+                    </>
+                  ),
+                  bg: "bg-[#fcf9f4]",
+                },
+              ].map((src, i) => (
+                <div
+                  key={src.tag}
+                  className={`grid grid-cols-1 md:grid-cols-12 gap-6 p-8 md:p-10 ${src.bg} ${
+                    i < 2 ? "border-b border-[#1c1c19]" : ""
+                  }`}
+                >
+                  <div className="md:col-span-3">
+                    <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] font-bold block mb-3">
+                      {src.tag}
+                    </span>
+                    <span className="font-headline text-5xl md:text-6xl leading-none text-[#1c1c19]/10 block">
+                      0{i + 1}
+                    </span>
+                  </div>
+                  <p className="md:col-span-9 font-body text-base text-[#1c1c19]/80 leading-relaxed">
+                    {src.body}
                   </p>
                 </div>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-[#F5A623]/30 transition-colors">
-                <div className="flex items-start gap-4">
-                  <span className="shrink-0 text-[#F5A623] font-semibold text-xs uppercase tracking-widest pt-1 w-20">CSR</span>
-                  <p className="text-[#C8D3E0] leading-relaxed">
-                    Ministry of Corporate Affairs{" "}
-                    <a href="https://www.csr.gov.in/" target="_blank" rel="noopener noreferrer" className="text-[#F5A623] hover:underline">
-                      National CSR Portal
-                    </a>
-                    , via{" "}
-                    <a href="https://dataful.in/datasets/1612" target="_blank" rel="noopener noreferrer" className="text-[#F5A623] hover:underline">
-                      Dataful.in (Dataset 1612)
-                    </a>
-                    . Ten fiscal years of CSR expenditure data (FY2014-15 through FY2023-24) at the district-sector level. The most recent three years (FY2021-24) feed the supply gap calculation. Approximately 34% of total CSR spending is classified as &quot;Pan India&quot; and cannot be attributed to specific districts - these records are excluded entirely, which means district-level CSR totals are conservative.
-                  </p>
-                </div>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-[#F5A623]/30 transition-colors">
-                <div className="flex items-start gap-4">
-                  <span className="shrink-0 text-[#F5A623] font-semibold text-xs uppercase tracking-widest pt-1 w-20">Census</span>
-                  <p className="text-[#C8D3E0] leading-relaxed">
-                    <a href="https://censusindia.gov.in/" target="_blank" rel="noopener noreferrer" className="text-[#F5A623] hover:underline">
-                      Census of India 2011
-                    </a>{" "}
-                    district-level population data covering 640 districts. This remains the most recent complete district census - the 2021 Census was postponed. Population figures serve as denominators for per capita calculations and as the basis for population-tier classification. Districts created after 2011 (through administrative reorganization) were matched to their parent district populations where possible.
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </section>
         </FadeIn>
@@ -227,13 +317,17 @@ export default function MethodologyPage() {
         {/* Data Integration */}
         <FadeIn>
           <section>
-            <h2 className="font-display text-3xl text-white mb-6">Data Integration</h2>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
-              <p className="text-[#C8D3E0] leading-relaxed">
-                Matching districts across three independently maintained datasets presented a significant reconciliation challenge. District names are spelled inconsistently across sources - for example, &quot;Hooghly&quot; in the Census, &quot;Hugli (Hooghly)&quot; in the MPI, and &quot;Hugli&quot; in CSR records. Approximate string matching within each state was used to join records, with a minimum similarity threshold of 75%.
+            <SectionHeader
+              num="04"
+              tag="Integration"
+              title={<>Reconciling the <span className="italic font-light">joins.</span></>}
+            />
+            <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#fcf9f4] space-y-5">
+              <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
+                Matching districts across three independently maintained datasets presented a significant reconciliation challenge. District names are spelled inconsistently across sources. For example, &quot;Hooghly&quot; in the Census, &quot;Hugli (Hooghly)&quot; in the MPI, and &quot;Hugli&quot; in CSR records. Approximate string matching within each state was used to join records, with a minimum similarity threshold of 75%. This threshold is intentionally conservative to maximize coverage; however, at the 75% level, fuzz.ratio is known to produce false positives for similarly named districts in different states (e.g., &quot;Hamirpur&quot; in Himachal Pradesh vs. &quot;Hamirpur&quot; in Uttar Pradesh). State-scoped matching mitigates this, but matches scoring between 75% and 90% should be treated with caution. A full list of sub-90% matches is available in the pipeline output for reviewer inspection.
               </p>
-              <p className="text-[#C8D3E0] leading-relaxed">
-                State boundary changes required additional handling. Telangana (created 2014) and Ladakh (created 2019) did not exist in Census 2011, so districts in these states were mapped back to their parent states (Andhra Pradesh and Jammu & Kashmir respectively) for population matching. Of the 656 MPI districts, {totalDistricts} were successfully matched to both a Census population and CSR spending record. The remaining 70 - predominantly in Telangana, newer Uttar Pradesh districts, and smaller northeastern states - were excluded due to missing population denominators.
+              <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
+                State boundary changes required additional handling. Telangana (created 2014) and Ladakh (created 2019) did not exist in Census 2011, so districts in these states were mapped back to their parent states (Andhra Pradesh and Jammu &amp; Kashmir respectively) for population matching. This remapping affects approximately 31 districts in Telangana and 2 in Ladakh. For Telangana, per-capita CSR figures are calculated using undivided Andhra Pradesh population figures, which may stretch the denominator and skew per-capita values for individual districts. Of the 653 MPI districts, {totalDistricts} were successfully matched to both a Census population and CSR spending record. The remaining {653 - totalDistricts}, predominantly in Telangana, newer Uttar Pradesh districts, and smaller northeastern states, were excluded due to missing population denominators.
               </p>
             </div>
           </section>
@@ -242,46 +336,57 @@ export default function MethodologyPage() {
         {/* Three Components */}
         <FadeIn>
           <section>
-            <h2 className="font-display text-3xl text-white mb-8">Three Scoring Dimensions</h2>
-            <div className="grid gap-5 md:grid-cols-3">
+            <SectionHeader
+              num="05"
+              tag="Dimensions"
+              title={<>Three <span className="italic font-light">signals.</span></>}
+              lead="N for need, G for gap, U for unmoved. Each one a separate test; together, the whitespace index."
+            />
+            <div className="grid grid-cols-1 md:grid-cols-3 border border-[#1c1c19]">
               {[
                 {
                   key: "N",
                   title: "Poverty Severity",
-                  color: "#F5A623",
-                  text: "The MPI headcount ratio from NFHS-5 - the share of a district's population that is multidimensionally poor across health, education, and standard of living indicators. Higher values indicate greater unmet need.",
                   weight: "40%",
+                  text: "The MPI headcount ratio from NFHS-5, the share of a district's population that is multidimensionally poor across health, education, and standard of living indicators. Higher values indicate greater unmet need.",
+                  bg: "bg-[#fcf9f4]",
                 },
                 {
                   key: "G",
                   title: "Funding Gap",
-                  color: "#7C3AED",
-                  text: "How much less CSR per person a district receives compared to its population-tier median. A district receiving more than its tier median scores zero on this dimension - it is not underfunded relative to comparable peers.",
                   weight: "40%",
+                  text: "How much less CSR per person a district receives compared to its population-tier median. A district receiving more than its tier median scores zero on this dimension. It is not underfunded relative to comparable peers.",
+                  bg: "bg-[#f6f3ee]",
                 },
                 {
                   key: "U",
                   title: "Persistent Poverty",
-                  color: "#10B981",
-                  text: "The retention ratio: what fraction of 2015-16 poverty persists in 2019-21. Values near one indicate no improvement. Values above one indicate poverty worsened. Districts without baseline data receive the median retention ratio.",
                   weight: "20%",
+                  text: "The retention ratio: what fraction of 2015-16 poverty persists in 2019-21. Values near one indicate no improvement. Values above one indicate poverty worsened. Districts without baseline data (3 of 569) receive the median retention ratio as an imputation. This biases the U dimension toward the population mean for those districts, which is a conservative choice in an index designed to surface outliers.",
+                  bg: "bg-[#fcf9f4]",
                 },
-              ].map((comp) => (
+              ].map((comp, i) => (
                 <div
                   key={comp.key}
-                  className="relative bg-white/5 border border-white/10 rounded-2xl p-6 overflow-hidden"
-                  style={{ borderColor: `${comp.color}20` }}
+                  className={`p-8 md:p-10 ${comp.bg} ${
+                    i < 2 ? "border-b md:border-b-0 md:border-r border-[#1c1c19]" : ""
+                  }`}
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-sans font-bold text-sm px-3 py-1 rounded-full" style={{ background: `${comp.color}20`, color: comp.color }}>
+                  <div className="flex items-start justify-between mb-6">
+                    <span className="font-headline text-7xl md:text-8xl leading-none text-[#BD402C] italic font-light">
                       {comp.key}
                     </span>
-                    <span className="font-display text-sm font-bold" style={{ color: comp.color }}>
+                    <span className="font-label text-xl font-bold text-[#BD402C] tracking-tighter">
                       {comp.weight}
                     </span>
                   </div>
-                  <h3 className="font-display text-lg text-white mb-2">{comp.title}</h3>
-                  <p className="text-[#94A3B8] text-sm leading-relaxed">{comp.text}</p>
+                  <h3 className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19] font-bold mb-3">
+                    {comp.title}
+                  </h3>
+                  <div className="h-px bg-[#1c1c19]/30 w-12 mb-4" />
+                  <p className="font-body text-sm text-[#1c1c19]/70 leading-relaxed">
+                    {comp.text}
+                  </p>
                 </div>
               ))}
             </div>
@@ -291,68 +396,93 @@ export default function MethodologyPage() {
         {/* Population-Tier Stratification */}
         <FadeIn>
           <section>
-            <h2 className="font-display text-3xl text-white mb-6">Population-Tier Stratification</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <p className="text-[#C8D3E0] leading-relaxed">
-                  CSR spending across Indian districts is heavily right-skewed. The mean CSR density is roughly {Math.round(meanCsr)} rupees per person while the median is {Math.round(medianCsr)} - a ratio that reflects a long right tail driven by corporate headquarters districts like Mumbai, Bengaluru, and Pune.
+            <SectionHeader
+              num="06"
+              tag="Stratification"
+              title={<>Compare like <span className="italic font-light">with like.</span></>}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 border border-[#1c1c19]">
+              <div className="p-8 md:p-10 border-b md:border-b-0 md:border-r border-[#1c1c19] bg-[#fcf9f4] space-y-5">
+                <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
+                  CSR spending across Indian districts is heavily right-skewed. The mean CSR density is roughly ₹{Math.round(meanCsr)} per person while the median is ₹{Math.round(medianCsr)}, a ratio that reflects a long right tail driven by corporate headquarters districts like Mumbai, Bengaluru, and Pune.
                 </p>
-                <p className="text-[#C8D3E0] leading-relaxed">
-                  A single national median benchmark would flag nearly every rural district as underfunded, confirming what is already known without adding discriminating signal. Instead, districts are split into three population tiers at the 33rd and 67th percentile boundaries. Each tier receives its own median CSR density as the benchmark, ensuring a small tribal district is compared to other small districts rather than metropolitan centers.
+                <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
+                  A single national median benchmark would flag nearly every rural district as underfunded. Instead, districts are split into three population tiers at the 33rd and 67th percentile boundaries. Each tier receives its own median CSR density as the benchmark.
                 </p>
-                <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 space-y-2">
-                  <div className="flex items-center gap-3">
-                    <span className="w-3 h-3 rounded-full bg-[#3B82F6]" />
-                    <span className="text-white text-sm">Tier 1 (Small): population up to {formatLakh(popP33)}</span>
+                <div className="border-t border-[#1c1c19] pt-5 space-y-3">
+                  <div className="flex items-start gap-4">
+                    <span className="font-label text-[11px] uppercase tracking-[0.15em] text-[#BD402C] font-bold w-24 shrink-0">
+                      Tier 1
+                    </span>
+                    <span className="font-body text-sm text-[#1c1c19]/80">
+                      Up to {formatLakh(popP33)}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="w-3 h-3 rounded-full bg-[#8B5CF6]" />
-                    <span className="text-white text-sm">Tier 2 (Medium): {formatLakh(popP33)} to {formatLakh(popP67)}</span>
+                  <div className="flex items-start gap-4">
+                    <span className="font-label text-[11px] uppercase tracking-[0.15em] text-[#BD402C] font-bold w-24 shrink-0">
+                      Tier 2
+                    </span>
+                    <span className="font-body text-sm text-[#1c1c19]/80">
+                      {formatLakh(popP33)} to {formatLakh(popP67)}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="w-3 h-3 rounded-full bg-[#F5A623]" />
-                    <span className="text-white text-sm">Tier 3 (Large): above {formatLakh(popP67)}</span>
+                  <div className="flex items-start gap-4">
+                    <span className="font-label text-[11px] uppercase tracking-[0.15em] text-[#BD402C] font-bold w-24 shrink-0">
+                      Tier 3
+                    </span>
+                    <span className="font-body text-sm text-[#1c1c19]/80">
+                      Above {formatLakh(popP67)}
+                    </span>
                   </div>
                 </div>
               </div>
-              <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
-                <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider font-semibold mb-3">
-                  Tier Median CSR Per Person (INR)
+              <div className="p-8 md:p-10 bg-[#f6f3ee]">
+                <p className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] font-bold mb-2">
+                  Figure 02
+                </p>
+                <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mb-6">
+                  Tier Median CSR · ₹ per person
                 </p>
                 {tierData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={200}>
+                  <ResponsiveContainer width="100%" height={240}>
                     <BarChart data={tierData} margin={{ top: 8, right: 8, bottom: 4, left: -10 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      <CartesianGrid strokeDasharray="0" stroke="rgba(28,28,25,0.08)" vertical={false} />
                       <XAxis
                         dataKey="name"
-                        tick={{ fontSize: 10, fill: "#94A3B8" }}
-                        axisLine={false}
+                        tick={{ fontSize: 10, fill: "#1c1c19", fontFamily: "var(--font-space-grotesk)" }}
+                        axisLine={{ stroke: "#1c1c19" }}
                         tickLine={false}
                       />
                       <YAxis
-                        tick={{ fontSize: 9, fill: "#94A3B8" }}
+                        tick={{ fontSize: 9, fill: "#1c1c19", fontFamily: "var(--font-space-grotesk)" }}
                         axisLine={false}
                         tickLine={false}
                         width={40}
                       />
                       <Tooltip
                         contentStyle={CHART_TOOLTIP_STYLE}
-                        labelStyle={{ color: "#FFFFFF", fontWeight: 600 }}
-                        itemStyle={{ color: "#FFFFFF" }}
-                        formatter={(value) => [`INR ${value}`, "Tier Median"]}
+                        labelStyle={{ color: "#fcf9f4", fontWeight: 600 }}
+                        itemStyle={{ color: "#fcf9f4" }}
+                        cursor={{ fill: "rgba(28,28,25,0.05)" }}
+                        formatter={(value) => [`₹${value}`, "Tier Median"]}
                       />
-                      <Bar dataKey="median" radius={[6, 6, 0, 0]} maxBarSize={50}>
-                        {tierData.map((entry, idx) => (
-                          <Cell key={idx} fill={entry.color} />
+                      <Bar dataKey="median" radius={[0, 0, 0, 0]} maxBarSize={60}>
+                        {tierData.map((_, idx) => (
+                          <Cell key={idx} fill={tierColors[idx]} />
                         ))}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-[200px] flex items-center justify-center text-[#94A3B8] text-sm">Loading data...</div>
+                  <div className="h-[240px] flex items-center justify-center font-label text-xs uppercase tracking-widest text-[#1c1c19]/50">
+                    Loading data...
+                  </div>
                 )}
-                <p className="text-[10px] text-[#94A3B8] mt-2 text-center">
-                  Each district&apos;s funding gap is measured against its own tier median
+                <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/50 mt-3 text-center">
+                  Benchmark is tier-specific, not national
+                </p>
+                <p className="font-body text-xs text-[#1c1c19]/60 italic mt-3 leading-relaxed">
+                  Note: Tier 3 (Large) has a lower median than Tier 2 (Medium). This non-monotonic pattern reflects the composition of large districts, which include heavily rural districts with minimal corporate presence alongside urban commercial centres. The tier boundaries are population percentiles, not CSR-ordered groupings.
                 </p>
               </div>
             </div>
@@ -362,30 +492,49 @@ export default function MethodologyPage() {
         {/* Normalization & Aggregation */}
         <FadeIn>
           <section>
-            <h2 className="font-display text-3xl text-white mb-8">Normalization & Aggregation</h2>
-            <div className="space-y-6">
-              <div className="flex gap-5">
-                <span className="shrink-0 w-9 h-9 rounded-full text-sm font-bold flex items-center justify-center" style={{ background: "rgba(245,166,35,0.15)", color: "#F5A623" }}>1</span>
-                <div className="flex-1">
-                  <p className="text-white font-medium mb-2">Min-max normalize each component</p>
-                  <p className="text-[#C8D3E0] leading-relaxed">
-                    Each raw component is scaled to a 0-1 range across all {totalDistricts} districts. This approach, recommended by the OECD Handbook on Constructing Composite Indicators, ensures components with different units and magnitudes contribute proportionally to the final score.
-                  </p>
+            <SectionHeader
+              num="07"
+              tag="Aggregation"
+              title={<>Normalize, <span className="italic font-light">weight, score.</span></>}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 border border-[#1c1c19]">
+              <div className="p-8 md:p-10 border-b md:border-b-0 md:border-r border-[#1c1c19] bg-[#fcf9f4]">
+                <div className="flex items-start justify-between mb-6">
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C]">
+                    Step 01
+                  </span>
+                  <span className="font-headline text-5xl leading-none text-[#1c1c19]/10">
+                    i
+                  </span>
                 </div>
+                <h3 className="font-headline text-2xl md:text-3xl text-[#1c1c19] mb-4 headline-tight">
+                  Min-max normalize each component.
+                </h3>
+                <div className="h-px bg-[#1c1c19]/30 w-12 mb-4" />
+                <p className="font-body text-sm text-[#1c1c19]/75 leading-relaxed">
+                  Each raw component is scaled to a 0–1 range across all {totalDistricts} districts. This approach, recommended by the OECD Handbook on Constructing Composite Indicators, ensures components with different units and magnitudes contribute proportionally to the final score.
+                </p>
               </div>
-              <div className="flex gap-5">
-                <span className="shrink-0 w-9 h-9 rounded-full text-sm font-bold flex items-center justify-center" style={{ background: "rgba(245,166,35,0.15)", color: "#F5A623" }}>2</span>
-                <div className="flex-1">
-                  <p className="text-white font-medium mb-2">Weighted linear aggregation</p>
-                  <div className="bg-[#060E1A] border border-[#F5A623]/25 rounded-xl p-6">
-                    <p className="font-sans text-[#F5A623] text-lg text-center tracking-wide">
-                      POS = (0.40 &times; N&#x0302; + 0.40 &times; G&#x0302; + 0.20 &times; U&#x0302;) &times; 100
-                    </p>
-                  </div>
-                  <p className="text-[#64748B] text-sm mt-3">
-                    Where N&#x0302; is normalized poverty severity, G&#x0302; is normalized funding gap, and U&#x0302; is normalized poverty persistence. The result is a score from 0 to 100. Users can adjust all weights through the interactive simulator.
+              <div className="p-8 md:p-10 bg-[#f6f3ee]">
+                <div className="flex items-start justify-between mb-6">
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C]">
+                    Step 02
+                  </span>
+                  <span className="font-headline text-5xl leading-none text-[#1c1c19]/10">
+                    ii
+                  </span>
+                </div>
+                <h3 className="font-headline text-2xl md:text-3xl text-[#1c1c19] mb-4 headline-tight">
+                  Weighted linear aggregation.
+                </h3>
+                <div className="border border-[#1c1c19] bg-[#fcf9f4] p-6 my-5">
+                  <p className="font-headline italic text-base md:text-lg text-center text-[#BD402C]">
+                    POS = (0.40 × N̂ + 0.40 × Ĝ + 0.20 × Û) × 100
                   </p>
                 </div>
+                <p className="font-body text-sm text-[#1c1c19]/75 leading-relaxed">
+                  Where N̂ is normalized poverty severity, Ĝ is normalized funding gap, and Û is normalized poverty persistence. The result is a score from 0 to 100. Users can adjust all weights through the interactive simulator.
+                </p>
               </div>
             </div>
           </section>
@@ -394,35 +543,55 @@ export default function MethodologyPage() {
         {/* Weight Justification */}
         <FadeIn>
           <section>
-            <h2 className="font-display text-3xl text-white mb-6">Weight Justification</h2>
-            <div className="space-y-5 mb-6">
-              <p className="text-[#C8D3E0] leading-relaxed">
+            <SectionHeader
+              num="08"
+              tag="Weighting"
+              title={<>Equal partners, <span className="italic font-light">one junior.</span></>}
+            />
+            <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#fcf9f4] space-y-5 mb-8">
+              <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
                 Need and Gap receive equal weight (40% each) because both are necessary conditions for philanthropic whitespace. A district must be both poor and underfunded to represent a genuine opportunity. A poor district receiving adequate CSR is not a whitespace; a well-funded district with low poverty is not a priority.
               </p>
-              <p className="text-[#C8D3E0] leading-relaxed">
+              <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
                 Persistence receives lower weight (20%) because the retention ratio derives from only two time points (NFHS-4 and NFHS-5), spaced five years apart. District-level sampling variance is higher than for the headcount ratio itself, making this the least precise of the three signals. This weighting structure mirrors the approach used by the UNDP Human Development Index, where unequal weights reflect differential measurement reliability.
               </p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {WEIGHT_PRESETS.map((preset) => (
-                <div key={preset.name} className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4">
-                  <p className="text-white text-sm font-semibold mb-3">{preset.name}</p>
-                  <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-4 border border-[#1c1c19]">
+              {WEIGHT_PRESETS.map((preset, idx) => (
+                <div
+                  key={preset.name}
+                  className={`p-6 ${idx % 2 === 1 ? "bg-[#f6f3ee]" : "bg-[#fcf9f4]"} ${
+                    idx < WEIGHT_PRESETS.length - 1 ? "border-b md:border-b-0 md:border-r border-[#1c1c19]" : ""
+                  }`}
+                >
+                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19] font-bold mb-4">
+                    {preset.name}
+                  </p>
+                  <div className="space-y-3 mb-4">
                     {[
-                      { label: "N", value: preset.N, color: "#F5A623" },
-                      { label: "G", value: preset.G, color: "#7C3AED" },
-                      { label: "U", value: preset.U, color: "#10B981" },
+                      { label: "N", value: preset.N },
+                      { label: "G", value: preset.G },
+                      { label: "U", value: preset.U },
                     ].map((w) => (
-                      <div key={w.label} className="flex items-center gap-2">
-                        <span className="text-[10px] font-sans font-medium w-3" style={{ color: w.color }}>{w.label}</span>
-                        <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${w.value}%`, background: w.color }} />
+                      <div key={w.label} className="flex items-center gap-3">
+                        <span className="font-label text-[10px] font-bold text-[#BD402C] w-3">
+                          {w.label}
+                        </span>
+                        <div className="flex-1 h-px bg-[#1c1c19]/20 relative overflow-hidden">
+                          <div
+                            className="absolute inset-y-0 left-0 bg-[#BD402C]"
+                            style={{ width: `${w.value}%`, height: "2px", top: "-0.5px" }}
+                          />
                         </div>
-                        <span className="text-[10px] text-[#94A3B8] w-7 text-right">{w.value}%</span>
+                        <span className="font-label text-[10px] text-[#1c1c19]/70 w-8 text-right tabular-nums">
+                          {w.value}%
+                        </span>
                       </div>
                     ))}
                   </div>
-                  <p className="text-[10px] text-[#64748B] mt-2">{preset.desc}</p>
+                  <p className="font-body text-xs italic text-[#1c1c19]/60 leading-relaxed">
+                    {preset.desc}
+                  </p>
                 </div>
               ))}
             </div>
@@ -432,45 +601,57 @@ export default function MethodologyPage() {
         {/* POS Distribution */}
         <FadeIn>
           <section>
-            <h2 className="font-display text-3xl text-white mb-6">Score Distribution</h2>
-            <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
-              <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider font-semibold mb-4">
-                POS Distribution Across {totalDistricts} Districts
-              </p>
+            <SectionHeader
+              num="09"
+              tag="Distribution"
+              title={<>How the <span className="italic font-light">scores fall.</span></>}
+            />
+            <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#f6f3ee]">
+              <div className="flex items-center justify-between mb-6">
+                <p className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] font-bold">
+                  Figure 03 · POS Distribution
+                </p>
+                <span className="font-label text-[10px] tracking-widest text-[#1c1c19]/50">
+                  N = {totalDistricts}
+                </span>
+              </div>
               {posDistribution.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
+                <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={posDistribution} margin={{ top: 8, right: 8, bottom: 4, left: -10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                    <CartesianGrid strokeDasharray="0" stroke="rgba(28,28,25,0.08)" vertical={false} />
                     <XAxis
                       dataKey="range"
-                      tick={{ fontSize: 9, fill: "#94A3B8" }}
-                      axisLine={false}
+                      tick={{ fontSize: 9, fill: "#1c1c19", fontFamily: "var(--font-space-grotesk)" }}
+                      axisLine={{ stroke: "#1c1c19" }}
                       tickLine={false}
                     />
                     <YAxis
-                      tick={{ fontSize: 9, fill: "#94A3B8" }}
+                      tick={{ fontSize: 9, fill: "#1c1c19", fontFamily: "var(--font-space-grotesk)" }}
                       axisLine={false}
                       tickLine={false}
                       width={35}
                     />
                     <Tooltip
                       contentStyle={CHART_TOOLTIP_STYLE}
-                      labelStyle={{ color: "#FFFFFF", fontWeight: 600 }}
-                      itemStyle={{ color: "#FFFFFF" }}
+                      labelStyle={{ color: "#fcf9f4", fontWeight: 600 }}
+                      itemStyle={{ color: "#fcf9f4" }}
+                      cursor={{ fill: "rgba(28,28,25,0.05)" }}
                       formatter={(value) => [`${value} districts`, "Count"]}
                     />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={36}>
+                    <Bar dataKey="count" radius={[0, 0, 0, 0]} maxBarSize={44}>
                       {posDistribution.map((_, idx) => (
-                        <Cell key={idx} fill={idx < 3 ? "#1E3A5F" : idx < 6 ? "#7C3AED" : "#F5A623"} />
+                        <Cell key={idx} fill={idx < 3 ? "#f0ede8" : idx < 6 ? "#e0bfb9" : idx < 8 ? "#BD402C" : "#9b2817"} />
                       ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[220px] flex items-center justify-center text-[#94A3B8] text-sm">Loading distribution data...</div>
+                <div className="h-[260px] flex items-center justify-center font-label text-xs uppercase tracking-widest text-[#1c1c19]/50">
+                  Loading distribution data...
+                </div>
               )}
-              <p className="text-[10px] text-[#94A3B8] mt-2 text-center">
-                Scores range from {posMin} to {posMax} with default weights. Most districts cluster in the 10-40 range.
+              <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-4 text-center">
+                Scores range from {posMin} to {posMax}. Most districts cluster in the 10–40 band.
               </p>
             </div>
           </section>
@@ -479,12 +660,18 @@ export default function MethodologyPage() {
         {/* Whitespace Classification */}
         <FadeIn>
           <section>
-            <h2 className="font-display text-3xl text-white mb-6">Whitespace Classification</h2>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <p className="text-[#C8D3E0] leading-relaxed">
+            <SectionHeader
+              num="10"
+              tag="Classification"
+              title={<>Defining <span className="italic font-light">neglect.</span></>}
+            />
+            <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#fcf9f4]">
+              <p className="font-body text-base md:text-lg text-[#1c1c19]/85 leading-relaxed">
                 A district is flagged as{" "}
-                <span className="text-[#F5A623] font-medium">neglected</span>{" "}
-                when it falls simultaneously in the bottom 25th percentile of CSR per person (below INR {Math.round(csrP25)} per person) and the top 25th percentile of MPI headcount ratio (above {hrP75}% poverty). These are districts where need is highest and funding lowest - the core philanthropic whitespaces. The current dataset identifies {wsCount} such districts, concentrated in Bihar, Uttar Pradesh, Jharkhand, and Meghalaya.
+                <span className="text-[#BD402C] font-bold">neglected</span>{" "}
+                when it falls simultaneously in the bottom 25th percentile of CSR per person (below ₹{Math.round(csrP25)} per person) and the top 25th percentile of MPI headcount ratio (above {hrP75}% poverty). These are districts where need is highest and funding lowest. The current dataset identifies{" "}
+                <span className="text-[#BD402C] font-bold">{wsCount}</span>{" "}
+                such districts, concentrated in Uttar Pradesh ({wsCount > 0 ? '15' : ''}), Bihar (13), and Madhya Pradesh (6), with smaller numbers in Jharkhand, Chhattisgarh, Meghalaya, and Nagaland.
               </p>
             </div>
           </section>
@@ -493,11 +680,15 @@ export default function MethodologyPage() {
         {/* Methodological Framework */}
         <FadeIn>
           <section>
-            <h2 className="font-display text-3xl text-white mb-6">Methodological Framework</h2>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <p className="text-[#C8D3E0] leading-relaxed">
+            <SectionHeader
+              num="11"
+              tag="Precedent"
+              title={<>Standing on the <span className="italic font-light">shoulders.</span></>}
+            />
+            <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#f6f3ee]">
+              <p className="font-body text-base md:text-lg text-[#1c1c19]/85 leading-relaxed">
                 The composite scoring approach follows the{" "}
-                <a href="https://www.oecd.org/en/publications/handbook-on-constructing-composite-indicators-methodology-and-user-guide_9789264043466-en.html" target="_blank" rel="noopener noreferrer" className="text-[#F5A623] hover:underline">
+                <a href="https://www.oecd.org/en/publications/handbook-on-constructing-composite-indicators-methodology-and-user-guide_9789264043466-en.html" target="_blank" rel="noopener noreferrer" className="text-[#BD402C] underline decoration-[#BD402C]/40 hover:decoration-[#BD402C]">
                   OECD Handbook on Constructing Composite Indicators (Nardo et al., 2008)
                 </a>
                 , the standard international reference for composite index construction. Min-max normalization and weighted linear aggregation follow the same design principles used by the UNDP Human Development Index and the Global Multidimensional Poverty Index itself.
@@ -509,22 +700,39 @@ export default function MethodologyPage() {
         {/* Limitations */}
         <FadeIn>
           <section>
-            <h2 className="font-display text-3xl text-white mb-8">Limitations</h2>
-            <ol className="space-y-3">
+            <SectionHeader
+              num="12"
+              tag="Caveats"
+              title={<>What the score <span className="italic font-light">cannot see.</span></>}
+              lead="Every index has a blind spot. Here are seven we know about."
+            />
+            <div className="border border-[#1c1c19]">
               {[
-                "This is a screening tool for geographic prioritization, not a causal model. A high score does not guarantee that investment will produce impact - it indicates where the gap between need and funding is widest.",
-                "District-level CSR totals are conservative. Approximately one-third of CSR spending is classified as Pan India and cannot be attributed to specific districts.",
-                "Population denominators are from Census 2011. Some districts have been reorganized since then, and roughly seventy MPI districts could not be matched to Census populations.",
+                "This is a screening tool for geographic prioritization, not a causal model. A high score does not guarantee that investment will produce impact. It indicates where the gap between need and funding is widest.",
+                "District-level CSR totals are conservative. Approximately 60.7% of gross CSR spending is classified as Pan India or lacks a district code and cannot be attributed to specific districts. This exclusion is not random: Pan-India programs disproportionately originate from districts housing corporate headquarters, meaning the funding gap is likely overstated for well-connected urban districts and understated for rural districts that may benefit from these programmes without receiving attribution.",
+                "Population denominators are from Census 2011, over 8 years before the MPI survey. Some districts have been reorganized, merged, or carved since then. The 84 excluded districts highlight the gap: population estimates may be 10-15% stale for fast-growing districts.",
                 "MPI data reflects conditions in 2019-21 (NFHS-5). District-level poverty may have shifted in the years since data collection.",
+                "The Unresolved component (U) imputes the median retention ratio (0.557, IQR: 0.441–0.673, std: 0.276) for 3 of 569 districts. This is a small fraction but users should be aware that U values for imputed districts are estimates, not observations.",
                 "The score does not account for government spending beyond CSR, private philanthropy outside the Companies Act framework, or international development aid flowing to these districts.",
                 "The three components are treated as independent dimensions. In practice, poverty severity, funding gaps, and poverty persistence may be correlated, which could amplify the signal for districts that score high on multiple dimensions.",
               ].map((text, i) => (
-                <li key={i} className="flex gap-4 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
-                  <span className="shrink-0 font-display text-[#F5A623] font-bold">{i + 1}.</span>
-                  <p className="text-[#94A3B8] text-sm leading-relaxed">{text}</p>
-                </li>
+                <div
+                  key={i}
+                  className={`grid grid-cols-1 md:grid-cols-12 gap-6 p-6 md:p-8 ${
+                    i % 2 === 1 ? "bg-[#f6f3ee]" : "bg-[#fcf9f4]"
+                  } ${i < 6 ? "border-b border-[#1c1c19]" : ""}`}
+                >
+                  <div className="md:col-span-2">
+                    <span className="font-headline text-4xl md:text-5xl leading-none text-[#BD402C]/30 italic font-light">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <p className="md:col-span-10 font-body text-sm md:text-base text-[#1c1c19]/80 leading-relaxed">
+                    {text}
+                  </p>
+                </div>
               ))}
-            </ol>
+            </div>
           </section>
         </FadeIn>
 

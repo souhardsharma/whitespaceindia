@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 
 function CountUp({
   end,
   prefix = "",
   suffix = "",
   decimals = 0,
-  duration = 2200,
+  duration = 2000,
 }: {
   end: number;
   prefix?: string;
@@ -60,204 +60,167 @@ function CountUp({
   );
 }
 
-function SubtleBackground() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px)
-          `,
-          backgroundSize: "80px 80px",
-          maskImage: "linear-gradient(to bottom, transparent 0%, black 30%, black 60%, transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 30%, black 60%, transparent 100%)",
-        }}
-      />
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full"
-        style={{
-          background: "radial-gradient(circle, rgba(245,166,35,0.06) 0%, transparent 70%)",
-        }}
-      />
-    </div>
-  );
-}
-
 const stagger = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.18 } },
+  show: { transition: { staggerChildren: 0.15 } },
 };
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } },
+  hidden: { opacity: 0, y: 28 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  },
 };
 
 export default function Hero() {
-  const containerRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"],
-  });
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-
   const scrollToSimulator = () => {
     document.getElementById("simulator")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <section
-      ref={containerRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0B1526]"
-    >
-      {/* Hero background image with parallax */}
+    <section className="relative bg-[#fcf9f4] pt-32 md:pt-40 pb-16 md:pb-24 px-6 md:px-12 lg:px-16">
       <motion.div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: "url('/images/hero-bg.png')",
-          y,
-          opacity: 0.35,
-        }}
-      />
-
-      {/* Deep gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0B1526]/70 via-[#0B1526]/50 to-[#0B1526]" />
-
-      <SubtleBackground />
-
-      <motion.div
-        className="relative z-10 text-center px-4 max-w-5xl mx-auto pt-24"
-        style={{ opacity }}
+        className="max-w-7xl mx-auto"
         variants={stagger}
         initial="hidden"
         animate="show"
       >
-        {/* Badge */}
-        <motion.div variants={fadeUp} className="flex justify-center mb-6">
-          <span className="inline-flex items-center gap-2 bg-[#F5A623]/10 border border-[#F5A623]/30 text-[#F5A623] text-xs font-semibold tracking-widest uppercase px-4 py-2 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#F5A623] animate-pulse" />
-            583 Indian Districts Scored
-          </span>
-        </motion.div>
+        {/* Asymmetric hero grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-14 items-start">
+          {/* Headline column */}
+          <div className="md:col-span-8 lg:col-span-9">
+            <motion.h1
+              variants={fadeUp}
+              className="font-headline text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl headline-tight text-[#1c1c19]"
+            >
+              Over two lakh crore in CSR since 2014.
+              <br />
+              <span className="italic font-light">
+                The poorest districts got the least.
+              </span>
+            </motion.h1>
 
-        {/* Main headline */}
-        <motion.h1
-          variants={fadeUp}
-          className="font-display font-bold leading-[1.35] mb-6"
-          style={{ fontSize: "clamp(2.6rem, 7vw, 5.5rem)" }}
-        >
-          <span className="text-white block">
-            Two lakh crore in CSR.
-          </span>
-          <span
-            className="block"
-            style={{
-              background: "linear-gradient(135deg, #F5A623 0%, #FBBF24 50%, #F97316 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
+            <motion.p
+              variants={fadeUp}
+              className="mt-10 md:mt-14 max-w-2xl font-body text-lg md:text-xl leading-relaxed text-[#1c1c19]/90"
+            >
+              An investigative mapping of India&apos;s Corporate Social Responsibility landscape reveals a staggering geographical divide. While capital centers flourish, the aspirational districts remain shadowed by industrial neglect.
+            </motion.p>
+
+            {/* CTA row */}
+            <motion.div
+              variants={fadeUp}
+              className="mt-10 md:mt-12 flex flex-col sm:flex-row gap-4"
+            >
+              <button
+                onClick={scrollToSimulator}
+                className="group bg-[#BD402C] text-white font-label uppercase tracking-[0.25em] text-xs py-5 px-8 flex justify-between items-center gap-6 hover:bg-[#1c1c19] transition-colors w-full sm:w-auto sm:min-w-[280px]"
+              >
+                Enter the Ledger
+                <svg width="18" height="10" viewBox="0 0 24 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M0 6h22M16 1l5 5-5 5" />
+                </svg>
+              </button>
+              <a
+                href="/methodology"
+                className="group border border-[#1c1c19] text-[#1c1c19] font-label uppercase tracking-[0.25em] text-xs py-5 px-8 flex justify-between items-center gap-6 hover:bg-[#1c1c19] hover:text-[#fcf9f4] transition-colors w-full sm:w-auto sm:min-w-[280px]"
+              >
+                Read the Methodology
+                <span className="text-[10px] opacity-70">→</span>
+              </a>
+            </motion.div>
+          </div>
+
+          {/* Ledger / Data column */}
+          <motion.div
+            variants={fadeUp}
+            className="md:col-span-4 lg:col-span-3 flex flex-col gap-10 md:gap-12 mt-8 md:mt-0"
           >
-            The poorest districts got the least.
-          </span>
-        </motion.h1>
+            <div className="border-t border-[#1c1c19] pt-6">
+              <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-5">
+                Total Expenditure
+              </span>
+              <div className="font-label text-3xl lg:text-4xl font-bold text-[#BD402C] tracking-tighter">
+                <CountUp end={21878} prefix="₹" suffix=" Cr" />
+              </div>
+              <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
+                District-attributable CSR in FY2023-24, from Ministry of Corporate Affairs filings.
+              </div>
+            </div>
 
-        {/* Subheadline */}
-        <motion.p
-          variants={fadeUp}
-          className="text-[#94A3B8] text-lg md:text-xl max-w-2xl mx-auto mb-14 leading-relaxed"
-        >
-          Find where philanthropic capital is absent. An evidence-based tool for foundation leaders and program officers directing CSR strategy across India.
-        </motion.p>
+            <div className="border-t border-[#1c1c19] pt-6">
+              <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-5">
+                Coverage Analysis
+              </span>
+              <div className="font-label text-3xl lg:text-4xl font-bold text-[#BD402C] tracking-tighter">
+                <CountUp end={569} suffix=" Districts" />
+              </div>
+              <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
+                Scored and ranked across administrative zones with complete data.
+              </div>
+            </div>
 
-        {/* Stats */}
+            <div className="border-t border-[#1c1c19] pt-6">
+              <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-5">
+                National Poverty
+              </span>
+              <div className="font-label text-3xl lg:text-4xl font-bold text-[#BD402C] tracking-tighter">
+                <CountUp end={14.46} suffix="%" decimals={2} />
+              </div>
+              <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
+                Headcount ratio from NITI Aayog MPI 2023.
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Editorial exhibit band */}
         <motion.div
           variants={fadeUp}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-px mb-14 max-w-2xl mx-auto bg-white/10 rounded-2xl overflow-hidden border border-white/10"
+          className="mt-24 md:mt-32 grid grid-cols-1 md:grid-cols-12 border border-[#1c1c19]"
         >
-          {[
-            {
-              end: 34909,
-              prefix: "₹",
-              suffix: " Cr",
-              decimals: 0,
-              label: "CSR spent in FY2023-24",
-            },
-            {
-              end: 583,
-              prefix: "",
-              suffix: "",
-              decimals: 0,
-              label: "districts scored",
-            },
-            {
-              end: 14.96,
-              prefix: "",
-              suffix: "%",
-              decimals: 2,
-              label: "national poverty headcount",
-            },
-          ].map((stat, i) => (
-            <div
-              key={stat.label}
-              className="bg-[#0B1526]/80 backdrop-blur-sm py-6 px-4 text-center"
-              style={{
-                borderRight: i < 2 ? "1px solid rgba(255,255,255,0.08)" : undefined,
-              }}
-            >
-              <div
-                className="text-3xl md:text-4xl font-bold mb-1"
-                style={{
-                  background: "linear-gradient(135deg, #F5A623, #FBBF24)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                <CountUp
-                  end={stat.end}
-                  prefix={stat.prefix}
-                  suffix={stat.suffix}
-                  decimals={stat.decimals}
-                />
+          <div className="md:col-span-7 p-10 md:p-14 border-b md:border-b-0 md:border-r border-[#1c1c19] bg-[#f6f3ee]">
+            <span className="font-label text-[10px] uppercase tracking-[0.3em] block mb-6 text-[#BD402C]">
+              Key Finding // Geographical Disparity
+            </span>
+            <p className="font-headline text-2xl md:text-3xl leading-tight mb-6 text-[#1c1c19]">
+              CSR clusters in Tier-1 corridors while aspirational districts see minimal funding.
+            </p>
+            <p className="font-body text-sm md:text-base text-[#1c1c19]/80 leading-relaxed">
+              Our methodology cross-references Ministry of Corporate Affairs data with NITI Aayog MPI headcount ratios to reveal the widening gap in social capital allocation across 569 districts.
+            </p>
+          </div>
+          <div className="md:col-span-5 p-10 md:p-14 flex flex-col justify-between gap-8">
+            <div>
+              <span className="font-label text-[10px] uppercase tracking-[0.3em] block mb-6 text-[#1c1c19]/60">
+                Key Insight // Bihar vs Maharashtra
+              </span>
+              <div className="font-label text-[11px] uppercase tracking-widest text-[#1c1c19] mb-2">
+                Bihar: Poverty 33.76% / Low CSR
               </div>
-              <div className="text-xs text-[#94A3B8] uppercase tracking-wider">{stat.label}</div>
+              <div className="h-1 bg-[#BD402C] w-[5%] mb-6" />
+              <div className="font-label text-[11px] uppercase tracking-widest text-[#1c1c19] mb-2">
+                Maharashtra: Poverty 7.81% / High CSR
+              </div>
+              <div className="h-1 bg-[#1c1c19] w-[95%]" />
             </div>
-          ))}
-        </motion.div>
-
-        {/* CTA */}
-        <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            onClick={scrollToSimulator}
-            className="relative overflow-hidden group bg-[#F5A623] text-[#0B1526] font-bold text-base rounded-full px-8 py-4 transition-all duration-300 hover:shadow-[0_0_30px_rgba(245,166,35,0.4)] hover:scale-105"
-          >
-            <span className="relative z-10">Open Simulator</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#FBBF24] to-[#F97316] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </button>
-          <a
-            href="/methodology"
-            className="border border-white/20 text-white font-medium text-base rounded-full px-8 py-4 hover:bg-white/5 hover:border-white/40 transition-all duration-300"
-          >
-            Read the Methodology
-          </a>
+            <p className="font-body text-xs text-[#1c1c19]/70 leading-relaxed italic">
+              Bihar has ~5&times; the poverty rate of Maharashtra, yet receives roughly 22&times; less CSR per person.
+            </p>
+          </div>
         </motion.div>
 
         {/* Scroll indicator */}
         <motion.div
           variants={fadeUp}
-          className="mt-16 flex flex-col items-center gap-2"
+          className="mt-16 md:mt-20 flex items-center gap-4"
         >
-          <span className="text-xs text-[#94A3B8] tracking-widest uppercase">Scroll to explore</span>
-          <motion.div
-            className="w-px h-12 bg-gradient-to-b from-[#F5A623]/60 to-transparent"
-            animate={{ scaleY: [0, 1, 0], opacity: [0, 1, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-            style={{ transformOrigin: "top" }}
-          />
+          <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60">
+            Scroll to explore
+          </span>
+          <div className="flex-grow h-px bg-[#1c1c19]/30" />
         </motion.div>
       </motion.div>
     </section>

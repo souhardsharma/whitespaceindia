@@ -19,10 +19,9 @@ function normalizeForMatch(name: string): string {
     .trim();
 }
 
-// D3 linear color scale for continuous scoring
 const colorScale = scaleLinear<string>()
   .domain([0, 25, 50, 75])
-  .range(["#1a1f35", "#2d1f5e", "#8b3a3a", "#ef4444"])
+  .range(["#f0ede8", "#e0bfb9", "#BD402C", "#9b2817"])
   .clamp(true);
 
 interface Props {
@@ -33,7 +32,7 @@ interface Props {
 
 interface TooltipData {
   name: string;
-  score: number;
+  score: number | null;
   x: number;
   y: number;
 }
@@ -58,7 +57,6 @@ function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
       .catch(console.error);
   }, []);
 
-  // Build normalized lookup: normalized name -> score
   const scoreLookup = useMemo(() => {
     const lookup: Record<string, number> = {};
     for (const [k, v] of Object.entries(districtScores)) {
@@ -67,7 +65,6 @@ function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
     return lookup;
   }, [districtScores]);
 
-  // Build reverse map: normalized name -> original data name
   const dataNameLookup = useMemo(() => {
     const lookup: Record<string, string> = {};
     for (const k of Object.keys(districtScores)) {
@@ -97,7 +94,7 @@ function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
   const getStateFill = useCallback(
     (name: string): string => {
       const score = getStateScore(name);
-      if (score === null) return "#111827";
+      if (score === null) return "#f0ede8";
       return colorScale(score);
     },
     [getStateScore]
@@ -119,7 +116,7 @@ function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
       const { x, y } = getRelativePos(evt);
       setTooltip({
         name,
-        score: score !== null ? Math.round(score) : -1,
+        score: score !== null ? Math.round(score) : null,
         x,
         y,
       });
@@ -151,14 +148,14 @@ function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full"
-      style={{ aspectRatio: "3/4", maxHeight: "500px" }}
+      className="relative w-full bg-[#fcf9f4]"
+      style={{ aspectRatio: "3/4", maxHeight: "560px" }}
       role="img"
       aria-label="Map of India showing average Philanthropic Opportunity Scores by state"
     >
       {!geoData ? (
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-[#F5A623] border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-2 border-[#BD402C] border-t-transparent animate-spin" />
         </div>
       ) : (
         <ComposableMap
@@ -182,32 +179,23 @@ function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
                   <Geography
                     key={(geo as Record<string, unknown>).rsmKey as string}
                     geography={geo}
-                    fill={isSelected ? "#F5A623" : getStateFill(name)}
-                    stroke={isSelected ? "#FBBF24" : isHovered ? "#F5A623" : "#0B1526"}
-                    strokeWidth={isSelected ? 2 : isHovered ? 1.5 : 0.5}
+                    fill={isSelected ? "#BD402C" : getStateFill(name)}
+                    stroke={isSelected ? "#1c1c19" : isHovered ? "#1c1c19" : "#1c1c19"}
+                    strokeWidth={isSelected ? 1.5 : isHovered ? 1.2 : 0.4}
                     onMouseEnter={(evt: React.MouseEvent<SVGPathElement>) =>
                       handleMouseEnter(geo, evt)
                     }
                     onMouseMove={handleMouseMove}
                     onMouseLeave={handleMouseLeave}
                     onClick={() => handleClick(geo)}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`${name}: average score ${Math.round(getStateScore(name) ?? 0)}`}
-                    onKeyDown={(e: React.KeyboardEvent) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        handleClick(geo);
-                      }
-                    }}
                     style={{
                       default: {
                         outline: "none",
-                        transition: "all 0.3s ease",
+                        transition: "all 0.2s ease",
                       },
                       hover: {
                         outline: "none",
-                        filter: "brightness(1.3)",
+                        filter: "brightness(0.92)",
                         cursor: "pointer",
                       },
                       pressed: { outline: "none" },
@@ -220,44 +208,56 @@ function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
         </ComposableMap>
       )}
 
-      {/* Tooltip - flip sides when near edges */}
+      {/* Tooltip */}
       {tooltip && (() => {
         const containerW = containerRef.current?.offsetWidth ?? 600;
         const containerH = containerRef.current?.offsetHeight ?? 500;
-        const flipX = tooltip.x > containerW - 180;
-        const flipY = tooltip.y > containerH - 70;
+        const flipX = tooltip.x > containerW - 200;
+        const flipY = tooltip.y > containerH - 90;
         return (
           <div
-            className="absolute z-50 pointer-events-none bg-[#0D1B2E] border border-[#F5A623]/30 rounded-lg px-3 py-2 text-sm shadow-xl backdrop-blur-sm whitespace-nowrap"
+            className="absolute z-50 pointer-events-none bg-[#1c1c19] text-[#fcf9f4] px-4 py-3 whitespace-nowrap"
             style={{
-              left: flipX ? tooltip.x - 14 : tooltip.x + 14,
-              top: flipY ? tooltip.y - 14 : tooltip.y + 14,
+              left: flipX ? tooltip.x - 12 : tooltip.x + 12,
+              top: flipY ? tooltip.y - 12 : tooltip.y + 12,
               transform: `translate(${flipX ? "-100%" : "0"}, ${flipY ? "-100%" : "0"})`,
             }}
           >
-            <div className="font-semibold text-white text-xs">{tooltip.name}</div>
-            <div className="text-[#94A3B8] text-xs mt-0.5">
+            <div className="font-label text-[10px] uppercase tracking-[0.25em] text-[#fcf9f4]/60 mb-1">
+              {tooltip.name}
+            </div>
+            <div className="font-label text-[11px] uppercase tracking-widest">
               Avg Score:{" "}
-              <span className="text-[#F5A623] font-bold">
-                {tooltip.score >= 0 ? tooltip.score : "N/A"}
+              <span className="text-[#BD402C] font-bold tracking-tighter">
+                {tooltip.score !== null ? tooltip.score : "N/A"}
               </span>
             </div>
           </div>
         );
       })()}
 
+      {/* Coordinates */}
+      <div className="absolute top-4 right-4 text-right pointer-events-none">
+        <p className="font-label text-[9px] uppercase tracking-[0.3em] text-[#1c1c19]/40 mb-1">
+          Coordinates
+        </p>
+        <p className="font-label text-[10px] tracking-widest text-[#1c1c19]/70">
+          20.59° N, 78.96° E
+        </p>
+      </div>
+
       {/* Color legend */}
-      <div className="absolute bottom-2 left-2 bg-[#0B1526]/80 backdrop-blur-sm rounded-lg p-2.5 border border-white/5">
-        <p className="text-[8px] text-[#64748B] uppercase tracking-wider font-semibold mb-1.5">
+      <div className="absolute bottom-4 left-4 bg-[#fcf9f4] border border-[#1c1c19] p-4 w-52">
+        <p className="font-label text-[9px] uppercase tracking-[0.3em] text-[#1c1c19] mb-3 font-bold">
           Avg Opportunity Score
         </p>
         <div
-          className="w-24 h-2 rounded-full mb-1"
+          className="h-2 w-full"
           style={{
-            background: "linear-gradient(90deg, #1a1f35, #2d1f5e, #8b3a3a, #ef4444)",
+            background: "linear-gradient(90deg, #f0ede8, #e0bfb9, #BD402C, #9b2817)",
           }}
         />
-        <div className="flex justify-between text-[8px] text-[#64748B]">
+        <div className="flex justify-between mt-2 font-label text-[9px] tracking-widest text-[#1c1c19]/70">
           <span>Low</span>
           <span>High</span>
         </div>

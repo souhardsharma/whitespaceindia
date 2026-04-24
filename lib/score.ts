@@ -4,7 +4,6 @@ export interface District {
   district_lgd_code: string;
   headcount_ratio_2016: number | null;
   headcount_ratio_2021: number;
-  intensity_2021: number | null;
   mpi_2021: number;
   total_csr_recent: number;
   total_population: number;
@@ -51,18 +50,11 @@ export function rankDistricts(
 
   const scored = filtered.map(d => {
     let pos: number;
-    if (sector === 'All Sectors' || !sectorScores[d.district_lgd_code]?.[sector]) {
+    if (sector === 'All Sectors' || sectorScores[d.district_lgd_code]?.[sector] == null) {
       pos = computePOS(d, weights);
     } else {
-      // Sector score was pre-computed with default weights.
-      // Extract the sector-specific G_norm and recompute with user weights.
-      const sectorScore = sectorScores[d.district_lgd_code][sector] / 100;
-      // sectorScore = 0.40*N + 0.40*G_sector + 0.20*U (at default weights)
-      // Solve for G_sector: G_sector = (sectorScore - 0.40*N - 0.20*U) / 0.40
-      const G_sector = Math.max(0, Math.min(1,
-        (sectorScore - 0.40 * d.N_norm - 0.20 * d.U_norm) / 0.40
-      ));
-      pos = (weights.w_N * d.N_norm + weights.w_G * G_sector + weights.w_U * d.U_norm) * 100;
+      const sectorGNorm = sectorScores[d.district_lgd_code][sector];
+      pos = (weights.w_N * d.N_norm + weights.w_G * sectorGNorm + weights.w_U * d.U_norm) * 100;
     }
     return { ...d, computed_pos: Math.max(0, Math.min(100, pos)) };
   });

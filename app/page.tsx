@@ -11,8 +11,11 @@ import WeightsPanel from "@/components/WeightsPanel";
 const IndiaMap = dynamic(() => import("@/components/IndiaMap"), {
   ssr: false,
   loading: () => (
-    <div className="w-full flex items-center justify-center border border-white/5 rounded-2xl bg-white/[0.02]" style={{ aspectRatio: "3/4", maxHeight: "500px" }}>
-      <div className="w-8 h-8 border-2 border-[#F5A623] border-t-transparent rounded-full animate-spin" />
+    <div
+      className="w-full flex items-center justify-center border border-[#1c1c19] bg-[#fcf9f4]"
+      style={{ aspectRatio: "3/4", maxHeight: "500px" }}
+    >
+      <div className="w-8 h-8 border-2 border-[#BD402C] border-t-transparent animate-spin" />
     </div>
   ),
 });
@@ -26,20 +29,18 @@ import {
   rankDistricts,
 } from "@/lib/score";
 
-
-
 function DataInsightCard({
+  number,
   value,
   label,
   sub,
   delay = 0,
-  accent = "#F5A623",
 }: {
+  number: string;
   value: string;
   label: string;
   sub: string;
   delay?: number;
-  accent?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
@@ -47,23 +48,29 @@ function DataInsightCard({
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
-      className="relative bg-white/[0.03] border border-white/[0.07] rounded-2xl p-8 overflow-hidden hover:border-white/[0.15] transition-colors duration-300"
+      className="relative p-8 md:p-10 bg-[#fcf9f4] border-[#1c1c19]"
     >
-      <div
-        className="absolute top-0 left-0 w-12 h-1 rounded-br-full"
-        style={{ background: accent }}
-      />
-      <div
-        className="font-display text-4xl md:text-5xl font-bold mb-2"
-        style={{ color: accent }}
-      >
+      <div className="flex items-start justify-between mb-6">
+        <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C]">
+          Finding {number}
+        </span>
+        <span className="font-headline text-6xl md:text-7xl leading-none text-[#1c1c19]/10">
+          {number}
+        </span>
+      </div>
+      <div className="font-label text-3xl md:text-4xl font-bold text-[#BD402C] tracking-tighter mb-3">
         {value}
       </div>
-      <div className="text-white font-medium mb-1">{label}</div>
-      <div className="text-sm text-[#64748B]">{sub}</div>
+      <div className="h-px bg-[#1c1c19]/30 w-12 mb-4" />
+      <div className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19] mb-3 font-bold">
+        {label}
+      </div>
+      <div className="font-body text-sm text-[#1c1c19]/70 leading-relaxed">
+        {sub}
+      </div>
     </motion.div>
   );
 }
@@ -73,43 +80,58 @@ function InsightSection({ whitespaceCount }: { whitespaceCount: number }) {
   const inView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section className="py-16 px-4">
-      <div className="max-w-5xl mx-auto" ref={ref}>
+    <section className="relative bg-[#fcf9f4] border-t border-[#1c1c19] py-20 md:py-28 px-6 md:px-12 lg:px-16">
+      <div className="max-w-7xl mx-auto" ref={ref}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mb-12"
+          transition={{ duration: 0.7 }}
+          className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-16"
         >
-          <p className="text-[#F5A623] text-xs font-semibold tracking-widest uppercase mb-3">
-            Key Findings
-          </p>
-          <h2 className="font-display text-3xl md:text-4xl text-white">
-            What the data reveals
-          </h2>
+          <div className="md:col-span-3">
+            <span className="font-label text-[11px] uppercase tracking-[0.3em] text-[#BD402C] block mb-4">
+              03 / Findings
+            </span>
+            <div className="h-px bg-[#1c1c19] w-24" />
+          </div>
+          <div className="md:col-span-9">
+            <h2 className="font-headline text-4xl md:text-6xl lg:text-7xl headline-tight text-[#1c1c19] mb-6">
+              What the data <span className="italic font-light">reveals.</span>
+            </h2>
+            <p className="font-body text-base md:text-lg text-[#1c1c19]/75 leading-relaxed max-w-2xl">
+              Three signals from the ledger. Each points to a different kind of gap, and a different lever for philanthropic capital.
+            </p>
+          </div>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <DataInsightCard
-            value="₹72,319 Cr"
-            label="Invisible CSR"
-            sub="classified as Pan India - unattributable to any specific district"
-            delay={0}
-            accent="#F5A623"
-          />
-          <DataInsightCard
-            value="33.76%"
-            label="Bihar Poverty Rate"
-            sub="among India's highest, yet Bihar receives a fraction of Maharashtra's CSR per person"
-            delay={0.12}
-            accent="#7C3AED"
-          />
-          <DataInsightCard
-            value={String(whitespaceCount)}
-            label="Neglected Districts"
-            sub="high poverty and low funding - the philanthropic whitespaces"
-            delay={0.24}
-            accent="#EF4444"
-          />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 border border-[#1c1c19]">
+          <div className="border-b md:border-b-0 md:border-r border-[#1c1c19]">
+            <DataInsightCard
+              number="01"
+              value="₹1,29,660 Cr"
+              label="Unattributable CSR"
+              sub="Classified as Pan-India (FY2014-15 through FY2023-24). 60.7% of gross CSR, unattributable to any specific district."
+              delay={0}
+            />
+          </div>
+          <div className="border-b md:border-b-0 md:border-r border-[#1c1c19] bg-[#f6f3ee]">
+            <DataInsightCard
+              number="02"
+              value="33.76%"
+              label="Bihar Poverty Rate"
+              sub="NITI Aayog MPI 2023 state-level headcount ratio (2019-21). Bihar receives ₹66 per person in CSR vs Maharashtra’s ₹1,436."
+              delay={0.12}
+            />
+          </div>
+          <div>
+            <DataInsightCard
+              number="03"
+              value={String(whitespaceCount)}
+              label="Neglected Districts"
+              sub="High poverty meets low funding: the neglected districts awaiting capital."
+              delay={0.24}
+            />
+          </div>
         </div>
       </div>
     </section>
@@ -121,65 +143,74 @@ function BeyondSection() {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section className="py-14 px-4">
-      <div className="max-w-5xl mx-auto" ref={ref}>
+    <section className="relative bg-[#f6f3ee] border-t border-[#1c1c19] py-20 md:py-24 px-6 md:px-12 lg:px-16">
+      <div className="max-w-7xl mx-auto" ref={ref}>
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="border border-white/[0.08] rounded-2xl p-8 md:p-10 card-glow"
+          transition={{ duration: 0.7 }}
+          className="grid grid-cols-1 md:grid-cols-12 gap-10 items-center border border-[#1c1c19] bg-[#fcf9f4]"
         >
-          <div className="flex flex-col md:flex-row md:items-start gap-8">
-            <div className="flex-1">
-              <motion.h2
-                initial={{ opacity: 0, x: -12 }}
-                animate={inView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="font-display text-2xl text-white mb-3"
-              >
-                Beyond CSR
-              </motion.h2>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={inView ? { opacity: 1 } : {}}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-[#94A3B8] leading-relaxed mb-4"
-              >
-                The same methodology can surface whitespaces in other public-data domains. Education infrastructure gaps, health access disparities, and energy poverty are next.
-              </motion.p>
-              <div className="flex flex-wrap gap-2">
-                {["Education", "Health", "Energy"].map((v, i) => (
-                  <motion.span
-                    key={v}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={inView ? { opacity: 1, scale: 1 } : {}}
-                    transition={{ duration: 0.4, delay: 0.3 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                    className="text-xs text-[#64748B] border border-white/10 rounded-full px-3 py-1.5 hover:border-[#F5A623]/30 hover:text-[#F5A623] transition-all duration-300 cursor-default"
-                  >
-                    {v}
-                  </motion.span>
-                ))}
-              </div>
-            </div>
-            <motion.div
-              initial={{ opacity: 0, x: 12 }}
+          <div className="md:col-span-8 p-10 md:p-14 border-b md:border-b-0 md:border-r border-[#1c1c19]">
+            <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] block mb-6">
+              What Comes Next
+            </span>
+            <motion.h2
+              initial={{ opacity: 0, x: -12 }}
               animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="shrink-0"
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="font-headline text-3xl md:text-5xl headline-tight text-[#1c1c19] mb-6"
             >
-              <a
-                href="https://www.linkedin.com/in/souhardsharma/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 border border-[#F5A623]/40 text-[#F5A623] font-medium text-sm rounded-full px-5 py-2.5 hover:bg-[#F5A623]/10 hover:border-[#F5A623]/60 hover:shadow-[0_0_20px_rgba(245,166,35,0.15)] transition-all duration-300"
-              >
-                Follow updates
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </a>
-            </motion.div>
+              The same <span className="italic font-light">methodology</span> works anywhere there is public data.
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : {}}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="font-body text-base text-[#1c1c19]/75 leading-relaxed mb-6"
+            >
+              Education infrastructure gaps, health access disparities, and energy poverty are next in the investigation pipeline.
+            </motion.p>
+            <div className="flex flex-wrap gap-0 border border-[#1c1c19]">
+              {["Education", "Health", "Energy"].map((v, i) => (
+                <motion.span
+                  key={v}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.4, delay: 0.3 + i * 0.08 }}
+                  className={`font-label text-[10px] uppercase tracking-[0.2em] text-[#1c1c19] px-4 py-3 flex-1 text-center ${
+                    i > 0 ? "border-l border-[#1c1c19]" : ""
+                  }`}
+                >
+                  {v}
+                </motion.span>
+              ))}
+            </div>
           </div>
+          <motion.div
+            initial={{ opacity: 0, x: 12 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="md:col-span-4 p-10 md:p-14 flex flex-col gap-6"
+          >
+            <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60">
+              Updates
+            </span>
+            <p className="font-body text-sm text-[#1c1c19]/80 leading-relaxed">
+              Future research will apply this methodology to education, health, and energy infrastructure data.
+            </p>
+            <a
+              href="https://www.linkedin.com/in/souhardsharma/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-[#BD402C] text-white font-label uppercase tracking-[0.25em] text-[11px] py-4 px-6 flex justify-between items-center gap-6 hover:bg-[#1c1c19] transition-colors"
+            >
+              Follow updates
+              <svg width="16" height="10" viewBox="0 0 24 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M0 6h22M16 1l5 5-5 5" />
+              </svg>
+            </a>
+          </motion.div>
         </motion.div>
       </div>
     </section>
@@ -204,7 +235,6 @@ export default function HomePage() {
   const simulatorRef = useRef<HTMLDivElement>(null);
   const simulatorInView = useInView(simulatorRef, { once: true, margin: "-100px" });
 
-  // Load data on mount
   useEffect(() => {
     Promise.all([
       fetch("/data/whitespace_master.json").then((r) => r.json()),
@@ -232,14 +262,12 @@ export default function HomePage() {
     [districts, weights, sector, sectorScores, whitespaceOnly]
   );
 
-  // When a state filter is active, re-rank 1..N within that state
   const displayDistricts = useMemo(() => {
     if (!highlightedState) return rankedDistricts;
     const filtered = rankedDistricts.filter((d) => d.state_name === highlightedState);
     return filtered.map((d, i) => ({ ...d, rank: i + 1 }));
   }, [rankedDistricts, highlightedState]);
 
-  // Compute state averages for the map
   const stateAverages = useMemo(() => {
     const map: Record<string, { sum: number; count: number }> = {};
     for (const d of rankedDistricts) {
@@ -254,7 +282,6 @@ export default function HomePage() {
     return result;
   }, [rankedDistricts]);
 
-  // Count whitespace districts
   const whitespaceCount = useMemo(
     () => districts.filter((d) => d.is_whitespace).length,
     [districts]
@@ -303,16 +330,23 @@ export default function HomePage() {
     });
   }, []);
 
+  const safeJsonLd = (obj: unknown): string =>
+    JSON.stringify(obj).replace(/</g, '\\u003c');
+
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "https://whitespaceindia-csr.vercel.app";
+
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Whitespace India CSR",
-    url: "https://whitespaceindia-csr.vercel.app",
+    url: siteUrl,
     description:
-      "Interactive tool ranking 583 Indian districts by philanthropic opportunity. Combines NITI Aayog MPI poverty data with CSR spending to find where philanthropic capital can create the most impact.",
+      "Interactive tool ranking 569 Indian districts by philanthropic opportunity. Combines NITI Aayog MPI poverty data with CSR spending to find where philanthropic capital can create the most impact.",
     potentialAction: {
       "@type": "SearchAction",
-      target: "https://whitespaceindia-csr.vercel.app/#simulator",
+      target: `${siteUrl}/#simulator`,
     },
   };
 
@@ -321,102 +355,74 @@ export default function HomePage() {
     "@type": "Dataset",
     name: "India District Philanthropic Opportunity Scores",
     description:
-      "Composite Philanthropic Opportunity Score (POS) for 583 Indian districts, derived from NITI Aayog MPI 2023 poverty data and MCA CSR spending data.",
-    url: "https://whitespaceindia-csr.vercel.app",
-    creator: { "@type": "Organization", name: "Whitespace India CSR" },
+      "Composite Philanthropic Opportunity Score (POS) for 569 Indian districts, derived from NITI Aayog MPI 2023 poverty data and MCA CSR spending data.",
+    url: siteUrl,
+    creator: {
+      "@type": "Person",
+      name: "Souhard Sharma",
+      url: "https://www.linkedin.com/in/souhardsharma/",
+      sameAs: ["https://www.linkedin.com/in/souhardsharma/"],
+    },
     license: "https://creativecommons.org/licenses/by/4.0/",
     citation: [
       "National Multidimensional Poverty Index 2023 (NITI Aayog) - https://niti.gov.in/sites/default/files/2023-07/Final-MPI_7thJuly.pdf",
-      "CSR District-Level Spending Data (Ministry of Corporate Affairs) - https://www.csr.gov.in/"
+      "CSR District-Level Spending Data (Ministry of Corporate Affairs) - https://www.csr.gov.in/",
     ],
     temporalCoverage: "2014/2024",
     spatialCoverage: { "@type": "Place", name: "India" },
-  };
-
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "What is the Philanthropic Opportunity Score?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "The Philanthropic Opportunity Score (POS) is a composite index that ranks India's 583 districts by the gap between philanthropic need and existing funding. It combines three components: poverty severity (MPI headcount ratio from NITI Aayog), funding gap (how much less CSR per person a district receives vs. its population-tier median), and persistent poverty (what fraction of 2015-16 poverty remains in 2019-21). Districts are grouped into three population tiers for like-for-like CSR benchmarking. Default weights are 40% poverty severity, 40% funding gap, and 20% persistence, adjustable via the simulator's weight sliders.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "What data does Whitespace India use?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Whitespace India uses three public datasets: (1) NITI Aayog's National Multidimensional Poverty Index 2023, based on the National Family Health Survey 5 (2019-21), covering district-level MPI headcount ratios for 583 districts; (2) Ministry of Corporate Affairs CSR spending data via the National CSR Portal, covering 10 fiscal years (FY2014-15 through FY2023-24); and (3) Census of India 2011 district population data.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Who is this tool for?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Whitespace India is built for foundation program officers, CSR heads, and philanthropic advisors who need evidence-based guidance on where to deploy capital for maximum impact. The adjustable weight sliders allow different organisations with different theories of change to generate rankings aligned with their priorities.",
-        },
-      },
-    ],
   };
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteSchema) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(datasetSchema) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
-      <main className="bg-[#0B1526] min-h-screen">
+      <main id="main-content" className="bg-[#fcf9f4] min-h-screen">
         <Navbar />
         <Hero />
         <HowItWorks />
 
-        {/* Simulator Section */}
-        <section id="simulator" className="relative py-20 px-4">
-          {/* Subtle top gradient border */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#F5A623]/20 to-transparent" />
-
+        <section
+          id="simulator"
+          className="relative bg-[#fcf9f4] border-t border-[#1c1c19] py-20 md:py-28 px-6 md:px-12 lg:px-16"
+        >
           <div className="max-w-7xl mx-auto" ref={simulatorRef}>
-            {/* Section heading */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={simulatorInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.7 }}
-              className="text-center mb-12"
+              className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-16"
             >
-              <p className="text-[#F5A623] text-xs font-semibold tracking-widest uppercase mb-3">
-                Interactive Tool
-              </p>
-              <h2 className="font-display text-4xl md:text-5xl text-white">
-                Opportunity Simulator
-              </h2>
-              <p className="mt-3 text-[#94A3B8] max-w-xl mx-auto">
-                Adjust weights, select a sector, and click any state to surface your highest-opportunity districts.
-              </p>
-              <p className="mt-2 text-xs text-[#64748B] max-w-lg mx-auto">
-                All data sourced from NITI Aayog (MPI 2023), Ministry of Corporate Affairs (CSR), and Census 2011. Research briefs are AI-assisted and should be independently verified.
-              </p>
+              <div className="md:col-span-3">
+                <span className="font-label text-[11px] uppercase tracking-[0.3em] text-[#BD402C] block mb-4">
+                  02 / The Simulator
+                </span>
+                <div className="h-px bg-[#1c1c19] w-24" />
+              </div>
+              <div className="md:col-span-9">
+                <h2 className="font-headline text-4xl md:text-6xl lg:text-7xl headline-tight text-[#1c1c19] mb-6">
+                  Opportunity <span className="italic font-light">Simulator.</span>
+                </h2>
+                <p className="font-body text-base md:text-lg text-[#1c1c19]/75 leading-relaxed max-w-2xl">
+                  Adjust weights, select a sector, and click any state to surface your highest-opportunity districts.
+                </p>
+                <p className="mt-4 font-label text-[10px] uppercase tracking-[0.2em] text-[#1c1c19]/60 max-w-2xl">
+                  Source · NITI Aayog MPI 2023 · MCA CSR · Census 2011 · Briefs AI-assisted and require independent verification
+                </p>
+              </div>
             </motion.div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Weights Panel */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 border border-[#1c1c19]">
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={simulatorInView ? { opacity: 1, x: 0 } : {}}
+                initial={{ opacity: 0 }}
+                animate={simulatorInView ? { opacity: 1 } : {}}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="lg:col-span-1"
+                className="lg:col-span-1 lg:border-r border-[#1c1c19]"
               >
                 <WeightsPanel
                   onWeightsChange={handleWeightsChange}
@@ -427,54 +433,65 @@ export default function HomePage() {
                 />
               </motion.div>
 
-              {/* Map + Rankings */}
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={simulatorInView ? { opacity: 1, x: 0 } : {}}
+                initial={{ opacity: 0 }}
+                animate={simulatorInView ? { opacity: 1 } : {}}
                 transition={{ duration: 0.6, delay: 0.15 }}
-                className="lg:col-span-2 space-y-6"
+                className="lg:col-span-2"
               >
-                {/* Map */}
-                <div className="bg-[#0D1B2E]/80 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-display text-base text-white font-semibold">India Map</h3>
-                    <span className="text-xs text-[#64748B]">Click a state to filter rankings</span>
+                <div className="bg-[#fcf9f4] border-b border-[#1c1c19]">
+                  <div className="px-6 py-5 border-b border-[#1c1c19] bg-[#f6f3ee] flex items-center justify-between">
+                    <div>
+                      <h3 className="font-label text-[11px] uppercase tracking-[0.3em] font-bold text-[#1c1c19]">
+                        India · Territorial Atlas
+                      </h3>
+                      <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-2">
+                        Click a state to filter rankings
+                      </p>
+                    </div>
+                    <span className="font-label text-[10px] tracking-widest text-[#1c1c19]/40">
+                      Figure 01
+                    </span>
                   </div>
-                  <IndiaMap
-                    districtScores={stateAverages}
-                    onStateClick={handleStateClick}
-                    highlightedState={highlightedState}
-                  />
+                  <div className="p-4 md:p-6">
+                    <IndiaMap
+                      districtScores={stateAverages}
+                      onStateClick={handleStateClick}
+                      highlightedState={highlightedState}
+                    />
+                  </div>
                 </div>
 
-                {/* Rankings */}
-                <div className="bg-[#0D1B2E]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
-                  <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
-                    <h3 className="font-display text-base text-white font-semibold">
-                      District Rankings
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-[#64748B]">
-                        {displayDistricts.length}{" "}
-                        districts
+                <div className="bg-[#fcf9f4]">
+                  <div className="px-6 py-5 border-b border-[#1c1c19] bg-[#f6f3ee] flex items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-label text-[11px] uppercase tracking-[0.3em] font-bold text-[#1c1c19]">
+                        District Ledger
+                      </h3>
+                      <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-2">
+                        {displayDistricts.length} districts
                         {highlightedState && (
                           <>
-                            {" "}in{" "}
-                            <span className="text-[#F5A623]">{highlightedState}</span>
+                            {" "}· filter ·{" "}
+                            <span className="text-[#BD402C]">{highlightedState}</span>
                           </>
                         )}
-                      </span>
-                      {highlightedState && (
-                        <button
-                          onClick={() => setHighlightedState(null)}
-                          className="text-xs text-[#64748B] hover:text-[#F5A623] border border-white/10 px-2 py-1 rounded-lg transition-colors"
-                        >
-                          Clear state
-                        </button>
-                      )}
+                      </p>
                     </div>
+                    {highlightedState && (
+                      <button
+                        onClick={() => setHighlightedState(null)}
+                        className="font-label text-[10px] uppercase tracking-[0.2em] border border-[#1c1c19] text-[#1c1c19] px-3 py-2 hover:bg-[#1c1c19] hover:text-[#fcf9f4] transition-colors"
+                      >
+                        Clear
+                      </button>
+                    )}
                   </div>
-                  <div className={`p-4 transition-opacity duration-300 ${isPending ? 'opacity-40 select-none pointer-events-none' : 'opacity-100'}`}>
+                  <div
+                    className={`p-6 transition-opacity duration-300 ${
+                      isPending ? "opacity-40 select-none pointer-events-none" : "opacity-100"
+                    }`}
+                  >
                     <RankingList
                       districts={displayDistricts}
                       onSelectDistrict={handleSelectDistrict}
@@ -488,15 +505,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Data Insight Cards */}
         <InsightSection whitespaceCount={whitespaceCount} />
 
-        {/* What's Next */}
         <BeyondSection />
 
         <Footer />
 
-        {/* Brief Modal */}
         <BriefModal
           district={selectedDistrict}
           onClose={() => setSelectedDistrict(null)}

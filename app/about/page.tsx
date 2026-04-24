@@ -25,9 +25,9 @@ function AnimatedBar({ width, color, delay = 0 }: { width: string; color: string
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
   return (
-    <div ref={ref} className="h-3 rounded-full bg-white/5 overflow-hidden">
+    <div ref={ref} className="h-[2px] bg-[#1c1c19]/10 overflow-hidden">
       <motion.div
-        className="h-full rounded-full"
+        className="h-full"
         initial={{ width: "0%" }}
         animate={inView ? { width } : { width: "0%" }}
         transition={{ duration: 1, delay, ease: [0.16, 1, 0.3, 1] }}
@@ -39,46 +39,67 @@ function AnimatedBar({ width, color, delay = 0 }: { width: string; color: string
 
 function ComparisonChart() {
   return (
-    <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-6 md:p-8">
-      <p className="text-xs text-[#64748B] uppercase tracking-wider font-semibold mb-6">
-        The mismatch, illustrated
-      </p>
-      <div className="space-y-6">
+    <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#f6f3ee]">
+      <div className="flex items-center justify-between mb-8">
+        <p className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] font-bold">
+          Key Finding // The Mismatch
+        </p>
+        <span className="font-label text-[10px] tracking-widest text-[#1c1c19]/40">
+          Figure 01
+        </span>
+      </div>
+      <div className="space-y-10">
         <div>
-          <div className="flex items-baseline justify-between mb-2">
-            <span className="text-white font-medium">Bihar</span>
-            <span className="text-sm text-[#94A3B8]">Poverty rate ~33.8%</span>
+          <div className="flex items-baseline justify-between mb-4 border-b border-[#1c1c19] pb-3">
+            <span className="font-headline text-2xl italic font-light text-[#1c1c19]">
+              Bihar
+            </span>
+            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19]/60">
+              Poverty Rate · 33.76%
+            </span>
           </div>
-          <div className="flex gap-3 items-center">
-            <div className="flex-1">
-              <AnimatedBar width="33.8%" color="#EF4444" delay={0} />
-              <p className="text-xs text-[#64748B] mt-1">Poverty headcount</p>
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <AnimatedBar width="100%" color="#BD402C" delay={0} />
+              <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-3">
+                Poverty Headcount
+              </p>
             </div>
-            <div className="flex-1">
-              <AnimatedBar width="8%" color="rgba(245,166,35,0.6)" delay={0.2} />
-              <p className="text-xs text-[#64748B] mt-1">Relative CSR per person</p>
+            <div>
+              <AnimatedBar width="5%" color="#1c1c19" delay={0.2} />
+              <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-3">
+                Relative CSR / Person
+              </p>
             </div>
           </div>
         </div>
         <div>
-          <div className="flex items-baseline justify-between mb-2">
-            <span className="text-white font-medium">Maharashtra</span>
-            <span className="text-sm text-[#94A3B8]">Poverty rate ~3.5%</span>
+          <div className="flex items-baseline justify-between mb-4 border-b border-[#1c1c19] pb-3">
+            <span className="font-headline text-2xl italic font-light text-[#1c1c19]">
+              Maharashtra
+            </span>
+            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19]/60">
+              Poverty Rate · 7.81%
+            </span>
           </div>
-          <div className="flex gap-3 items-center">
-            <div className="flex-1">
-              <AnimatedBar width="3.5%" color="#EF4444" delay={0.4} />
-              <p className="text-xs text-[#64748B] mt-1">Poverty headcount</p>
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <AnimatedBar width="23%" color="#BD402C" delay={0.4} />
+              <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-3">
+                Poverty Headcount
+              </p>
             </div>
-            <div className="flex-1">
-              <AnimatedBar width="85%" color="#F5A623" delay={0.6} />
-              <p className="text-xs text-[#64748B] mt-1">Relative CSR per person</p>
+            <div>
+              <AnimatedBar width="100%" color="#1c1c19" delay={0.6} />
+              <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-3">
+                Relative CSR / Person
+              </p>
             </div>
           </div>
         </div>
       </div>
-      <p className="text-xs text-[#475569] mt-5 pt-4 border-t border-white/5">
-        Bihar has nearly ten times the poverty rate but receives a fraction of the CSR per person. This tool quantifies that gap for every district.
+      <p className="font-body text-sm text-[#1c1c19]/70 italic mt-8 pt-5 border-t border-[#1c1c19] leading-relaxed">
+        Bihar&apos;s poverty rate is more than five times Maharashtra&apos;s, yet Maharashtra receives roughly 22 times more CSR per person. This tool quantifies that gap for every district.
       </p>
     </div>
   );
@@ -90,107 +111,179 @@ const DIMENSIONS = [
     name: "Poverty Severity",
     desc: "MPI headcount ratio from NITI Aayog. What fraction of the district's population is multidimensionally poor.",
     weight: "40%",
-    color: "#EF4444",
   },
   {
     letter: "G",
     name: "Funding Gap",
     desc: "How much less CSR per person the district receives compared to its population-tier median. Benchmarked against similar-sized districts.",
     weight: "40%",
-    color: "#F5A623",
   },
   {
     letter: "U",
     name: "Persistence",
     desc: "What fraction of 2015-16 poverty remains in 2019-21. Districts where poverty has barely moved despite national progress.",
     weight: "20%",
-    color: "#7C3AED",
   },
 ];
 
 const PIPELINE_STEPS = [
-  { label: "NITI Aayog MPI", sub: "583 districts" },
+  { label: "NITI Aayog MPI", sub: "653 districts extracted" },
   { label: "MCA CSR Data", sub: "10 fiscal years" },
   { label: "Census 2011", sub: "Population baseline" },
 ];
 
+function SectionHeader({ num, tag, title, lead }: { num: string; tag: string; title: React.ReactNode; lead?: string }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-10">
+      <div className="md:col-span-3">
+        <span className="font-label text-[11px] uppercase tracking-[0.3em] text-[#BD402C] block mb-4">
+          {num} / {tag}
+        </span>
+        <div className="h-px bg-[#1c1c19] w-24" />
+      </div>
+      <div className="md:col-span-9">
+        <h2 className="font-headline text-3xl md:text-5xl headline-tight text-[#1c1c19] mb-4">
+          {title}
+        </h2>
+        {lead && (
+          <p className="font-body text-base text-[#1c1c19]/75 leading-relaxed max-w-2xl">
+            {lead}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AboutPage() {
   return (
-    <main className="bg-[#0B1526] min-h-screen">
+    <main id="main-content" className="bg-[#fcf9f4] min-h-screen">
       <Navbar />
 
       {/* Page header */}
-      <section className="relative pt-32 pb-16 px-4 overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/images/hero-bg.png')", opacity: 0.12 }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0B1526]/70 to-[#0B1526]" />
-        <div className="relative max-w-4xl mx-auto">
-          <h1 className="font-display text-5xl md:text-6xl text-white leading-tight mb-4">
-            About This Project
-          </h1>
-          <p className="text-xl text-[#94A3B8] max-w-2xl leading-relaxed">
-            Quantifying the gap between where philanthropic money goes and where people need it most.
-          </p>
+      <section className="relative bg-[#fcf9f4] pt-32 md:pt-40 pb-16 md:pb-20 px-6 md:px-12 lg:px-16 border-b border-[#1c1c19]">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-10">
+            <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.4em] text-[#BD402C]">
+              About This Project
+            </span>
+            <div className="h-px bg-[#1c1c19] mt-4 w-24" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
+            <div className="md:col-span-8">
+              <h1 className="font-headline text-5xl sm:text-6xl md:text-7xl lg:text-8xl headline-tight text-[#1c1c19]">
+                About the<br />
+                <span className="italic font-light">project.</span>
+              </h1>
+              <p className="mt-8 md:mt-10 max-w-2xl font-body text-lg md:text-xl leading-relaxed text-[#1c1c19]/90">
+                Quantifying the gap between where philanthropic money goes and where people need it most.
+              </p>
+            </div>
+            <div className="md:col-span-4 flex flex-col gap-6 md:mt-4">
+              <div className="border-t border-[#1c1c19] pt-6">
+                <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-3">
+                  Status
+                </span>
+                <p className="font-body text-sm text-[#1c1c19]/70">
+                  Open data. Reproducible methodology.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div className="max-w-4xl mx-auto px-4 pb-20">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-20 md:py-24 space-y-24">
 
-        {/* The Problem - visual comparison */}
+        {/* The Problem */}
         <FadeIn>
-          <section className="py-12">
-            <h2 className="font-display text-2xl text-white mb-6">The Problem</h2>
-            <p className="text-[#C8D3E0] text-lg leading-relaxed mb-8">
-              CSR spending in India reached thirty-five thousand crore in FY2023-24. Most of that money flows to districts where corporate offices sit. The districts with the deepest poverty receive the least funding per person.
-            </p>
-
-            {/* Bihar vs Maharashtra comparison */}
-            <ComparisonChart />
+          <section>
+            <SectionHeader
+              num="01"
+              tag="The Problem"
+              title={<>The <span className="italic font-light">mismatch.</span></>}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
+              <div className="md:col-span-5">
+                <p className="font-body text-base md:text-lg text-[#1c1c19]/85 leading-relaxed">
+                  CSR spending in India reached over twenty-one thousand crore rupees (district-attributable) in FY2023-24. Most of that money flows to districts where corporate offices sit. The districts with the deepest poverty receive the least funding per person.
+                </p>
+              </div>
+              <div className="md:col-span-7">
+                <ComparisonChart />
+              </div>
+            </div>
           </section>
         </FadeIn>
 
         {/* What the tool does */}
         <FadeIn>
-          <section className="py-8">
-            <h2 className="font-display text-2xl text-white mb-5">What This Tool Does</h2>
-            <p className="text-[#C8D3E0] text-lg leading-relaxed">
-              Whitespace India CSR ranks every Indian district by the gap between poverty and philanthropic funding. It produces a single composite score - the Philanthropic Opportunity Score - that tells you where capital is most absent relative to need. The simulator lets you adjust weights, filter by sector, and generate district-level research briefs.
-            </p>
+          <section>
+            <SectionHeader
+              num="02"
+              tag="The Tool"
+              title={<>What this <span className="italic font-light">tool does.</span></>}
+            />
+            <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#f6f3ee]">
+              <p className="font-body text-base md:text-lg text-[#1c1c19]/85 leading-relaxed">
+                Whitespace India CSR ranks every Indian district by the gap between poverty and philanthropic funding. It produces a single composite score, the Philanthropic Opportunity Score, that tells you where capital is most absent relative to need. The simulator lets you adjust weights, filter by sector, and generate district-level research briefs.
+              </p>
+            </div>
           </section>
         </FadeIn>
 
         {/* Data pipeline flow */}
         <FadeIn>
-          <section className="py-8">
-            <h2 className="font-display text-2xl text-white mb-6">Data Pipeline</h2>
-            <div className="flex flex-col md:flex-row items-stretch gap-3">
-              {/* Source cards */}
+          <section>
+            <SectionHeader
+              num="03"
+              tag="The Pipeline"
+              title={<>Three sources, <span className="italic font-light">one ledger.</span></>}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-4 border border-[#1c1c19]">
               {PIPELINE_STEPS.map((step, i) => (
-                <div key={step.label} className="flex-1 flex flex-col md:flex-row items-center gap-3">
-                  <div className="flex-1 w-full bg-white/[0.03] border border-white/[0.07] rounded-xl p-4 text-center">
-                    <div className="text-sm text-white font-medium">{step.label}</div>
-                    <div className="text-xs text-[#64748B] mt-0.5">{step.sub}</div>
+                <div
+                  key={step.label}
+                  className={`relative p-6 md:p-8 bg-[#fcf9f4] ${
+                    i < PIPELINE_STEPS.length - 1
+                      ? "border-b md:border-b-0 md:border-r border-[#1c1c19]"
+                      : ""
+                  } ${i % 2 === 1 ? "bg-[#f6f3ee]" : ""}`}
+                >
+                  <div className="flex items-start justify-between mb-5">
+                    <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C]">
+                      Source 0{i + 1}
+                    </span>
+                    <span className="font-headline text-4xl leading-none text-[#1c1c19]/10 italic font-light">
+                      →
+                    </span>
                   </div>
-                  {i < PIPELINE_STEPS.length - 1 && (
-                    <svg className="w-5 h-5 text-[#475569] shrink-0 rotate-90 md:rotate-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  )}
+                  <p className="font-label text-[12px] uppercase tracking-[0.2em] text-[#1c1c19] font-bold mb-2">
+                    {step.label}
+                  </p>
+                  <p className="font-body text-xs text-[#1c1c19]/60 italic">
+                    {step.sub}
+                  </p>
                 </div>
               ))}
-              {/* Arrow to merge */}
-              <svg className="w-5 h-5 text-[#475569] shrink-0 self-center rotate-90 md:rotate-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-              {/* Output */}
-              <div className="flex-1 bg-[#F5A623]/10 border border-[#F5A623]/20 rounded-xl p-4 text-center">
-                <div className="text-sm text-[#F5A623] font-medium">Merge & Score</div>
-                <div className="text-xs text-[#64748B] mt-0.5">583 district POS</div>
+              <div className="p-6 md:p-8 bg-[#BD402C] text-white">
+                <div className="flex items-start justify-between mb-5">
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-white/70">
+                    Output
+                  </span>
+                  <span className="font-headline text-4xl leading-none text-white/30 italic font-light">
+                    =
+                  </span>
+                </div>
+                <p className="font-label text-[12px] uppercase tracking-[0.2em] text-white font-bold mb-2">
+                  Merge &amp; Score
+                </p>
+                <p className="font-body text-xs text-white/80 italic">
+                  569 district POS
+                </p>
               </div>
             </div>
-            <p className="text-sm text-[#64748B] mt-4 leading-relaxed">
+            <p className="font-body text-sm text-[#1c1c19]/70 italic mt-6 leading-relaxed max-w-3xl">
               Districts are matched across datasets using fuzzy string matching, then grouped into three population tiers for like-for-like CSR benchmarking. Small rural districts are compared to other small districts, not to Mumbai.
             </p>
           </section>
@@ -198,53 +291,82 @@ export default function AboutPage() {
 
         {/* Three scoring dimensions */}
         <FadeIn>
-          <section className="py-8">
-            <h2 className="font-display text-2xl text-white mb-6">Three Scoring Dimensions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {DIMENSIONS.map((dim) => (
+          <section>
+            <SectionHeader
+              num="04"
+              tag="Dimensions"
+              title={<>The three <span className="italic font-light">axes.</span></>}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-3 border border-[#1c1c19]">
+              {DIMENSIONS.map((dim, i) => (
                 <div
                   key={dim.letter}
-                  className="border border-white/[0.07] rounded-xl p-5 relative overflow-hidden"
+                  className={`p-8 md:p-10 ${i % 2 === 1 ? "bg-[#f6f3ee]" : "bg-[#fcf9f4]"} ${
+                    i < 2 ? "border-b md:border-b-0 md:border-r border-[#1c1c19]" : ""
+                  }`}
                 >
-                  <div className="absolute top-0 left-0 w-10 h-0.5" style={{ background: dim.color }} />
-                  <div className="flex items-center gap-3 mb-3">
-                    <span
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
-                      style={{ background: `${dim.color}15`, color: dim.color }}
-                    >
+                  <div className="flex items-start justify-between mb-6">
+                    <span className="font-headline text-7xl md:text-8xl leading-none italic font-light text-[#BD402C]">
                       {dim.letter}
                     </span>
-                    <span className="text-xs text-[#64748B] font-medium">Weight: {dim.weight}</span>
+                    <span className="font-label text-xl font-bold text-[#BD402C] tracking-tighter">
+                      {dim.weight}
+                    </span>
                   </div>
-                  <h3 className="text-white font-medium mb-2">{dim.name}</h3>
-                  <p className="text-sm text-[#94A3B8] leading-relaxed">{dim.desc}</p>
+                  <h3 className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19] font-bold mb-3">
+                    {dim.name}
+                  </h3>
+                  <div className="h-px bg-[#1c1c19]/30 w-12 mb-4" />
+                  <p className="font-body text-sm text-[#1c1c19]/70 leading-relaxed">
+                    {dim.desc}
+                  </p>
                 </div>
               ))}
             </div>
-            <p className="text-sm text-[#64748B] mt-4 leading-relaxed">
-              Each dimension is min-max normalized within its population tier, then combined: POS = (0.40 x N + 0.40 x G + 0.20 x U) x 100. Weights are adjustable in the simulator.
+            <div className="mt-6 border border-[#1c1c19] bg-[#fcf9f4] p-6">
+              <p className="font-headline italic text-base md:text-lg text-center text-[#BD402C]">
+                POS = (0.40 × N̂ + 0.40 × Ĝ + 0.20 × Û) × 100
+              </p>
+            </div>
+            <p className="font-body text-sm text-[#1c1c19]/70 italic mt-4 leading-relaxed">
+              Each dimension is min-max normalized within its population tier, then combined. Weights are adjustable in the simulator.
             </p>
           </section>
         </FadeIn>
 
         {/* Who this is for */}
         <FadeIn>
-          <section className="py-8">
-            <h2 className="font-display text-2xl text-white mb-5">Who This Is For</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <section>
+            <SectionHeader
+              num="05"
+              tag="Audience"
+              title={<>Who this <span className="italic font-light">is for.</span></>}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 border border-[#1c1c19]">
               {[
                 { role: "Program Officers", context: "Deciding where to open a new grant window" },
                 { role: "CSR Heads", context: "Reporting geographic strategy to the board" },
                 { role: "Philanthropic Advisors", context: "Building investment cases for clients" },
                 { role: "Researchers", context: "Studying CSR allocation and equity patterns" },
-              ].map((item) => (
-                <div key={item.role} className="flex gap-3 items-start bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
-                  <svg className="w-4 h-4 text-[#F5A623] shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <div>
-                    <span className="text-white text-sm font-medium">{item.role}</span>
-                    <span className="text-sm text-[#64748B]"> - {item.context}</span>
+              ].map((item, i) => (
+                <div
+                  key={item.role}
+                  className={`p-6 md:p-8 ${
+                    i < 2 ? "border-b border-[#1c1c19]" : ""
+                  } ${i % 2 === 0 ? "md:border-r border-[#1c1c19] bg-[#fcf9f4]" : "bg-[#f6f3ee]"}`}
+                >
+                  <div className="flex items-start gap-5">
+                    <span className="font-headline text-4xl italic font-light text-[#BD402C]/30 leading-none">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <div className="flex-1">
+                      <p className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19] font-bold mb-2">
+                        {item.role}
+                      </p>
+                      <p className="font-body text-sm text-[#1c1c19]/70 leading-relaxed">
+                        {item.context}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -254,19 +376,34 @@ export default function AboutPage() {
 
         {/* Key numbers */}
         <FadeIn>
-          <section className="py-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <section>
+            <SectionHeader
+              num="06"
+              tag="Key Numbers"
+              title={<>The <span className="italic font-light">ledger line.</span></>}
+            />
+            <div className="grid grid-cols-2 md:grid-cols-4 border border-[#1c1c19]">
               {[
-                { value: "583", label: "districts scored" },
-                { value: "10", label: "years of CSR data" },
-                { value: "49", label: "whitespace districts" },
-                { value: "100%", label: "open public data" },
-              ].map(({ value, label }) => (
-                <div key={label} className="border border-white/[0.07] rounded-xl p-5 text-center">
-                  <div className="font-display text-3xl font-bold text-[#F5A623] mb-1">
+                { value: "569", label: "Districts Scored" },
+                { value: "10", label: "Years of CSR Data" },
+                { value: "49", label: "Whitespace Districts" },
+                { value: "FY14-24", label: "CSR Data Coverage" },
+              ].map(({ value, label }, i) => (
+                <div
+                  key={label}
+                  className={`p-6 md:p-8 ${i % 2 === 1 ? "bg-[#f6f3ee]" : "bg-[#fcf9f4]"} ${
+                    i < 2 ? "border-b md:border-b-0 border-[#1c1c19]" : ""
+                  } ${i < 3 ? "md:border-r border-[#1c1c19]" : ""} ${
+                    i === 0 ? "border-r border-[#1c1c19]" : ""
+                  } ${i === 2 ? "border-r border-[#1c1c19]" : ""}`}
+                >
+                  <div className="font-label text-4xl md:text-5xl font-bold text-[#BD402C] tracking-tighter mb-3">
                     {value}
                   </div>
-                  <div className="text-xs text-[#94A3B8] uppercase tracking-wider">{label}</div>
+                  <div className="h-px bg-[#1c1c19]/30 w-8 mb-3" />
+                  <div className="font-label text-[10px] uppercase tracking-[0.2em] text-[#1c1c19]/70">
+                    {label}
+                  </div>
                 </div>
               ))}
             </div>
@@ -275,9 +412,13 @@ export default function AboutPage() {
 
         {/* Data Acknowledgments */}
         <FadeIn>
-          <section className="py-8 border-t border-white/10 mt-4">
-            <h2 className="font-display text-2xl text-white mb-6">Data Sources</h2>
-            <div className="space-y-3">
+          <section>
+            <SectionHeader
+              num="07"
+              tag="Sources"
+              title={<>The <span className="italic font-light">citations.</span></>}
+            />
+            <div className="border border-[#1c1c19]">
               {[
                 {
                   tag: "Poverty",
@@ -291,12 +432,21 @@ export default function AboutPage() {
                   tag: "Population",
                   text: "Census of India 2011, Registrar General of India. Used for population-tier stratification.",
                 },
-              ].map((src) => (
-                <div key={src.tag} className="flex gap-4 items-start border border-white/[0.06] rounded-xl p-5">
-                  <span className="shrink-0 text-[#F5A623] font-semibold text-xs uppercase tracking-wider pt-0.5 w-20">
-                    {src.tag}
-                  </span>
-                  <p className="text-sm text-[#94A3B8] leading-relaxed">{src.text}</p>
+              ].map((src, i) => (
+                <div
+                  key={src.tag}
+                  className={`grid grid-cols-1 md:grid-cols-12 gap-6 p-6 md:p-8 ${
+                    i % 2 === 1 ? "bg-[#f6f3ee]" : "bg-[#fcf9f4]"
+                  } ${i < 2 ? "border-b border-[#1c1c19]" : ""}`}
+                >
+                  <div className="md:col-span-3">
+                    <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] font-bold">
+                      {src.tag}
+                    </span>
+                  </div>
+                  <p className="md:col-span-9 font-body text-sm md:text-base text-[#1c1c19]/80 leading-relaxed">
+                    {src.text}
+                  </p>
                 </div>
               ))}
             </div>
@@ -305,25 +455,37 @@ export default function AboutPage() {
 
         {/* Contact */}
         <FadeIn>
-          <section className="py-8 border-t border-white/10 mt-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-              <div>
-                <h2 className="font-display text-2xl text-white mb-2">Get in Touch</h2>
-                <p className="text-[#94A3B8]">
-                  Questions about the methodology, data, or applying this for your foundation?
-                </p>
+          <section>
+            <div className="border border-[#1c1c19] bg-[#1c1c19] p-8 md:p-12 text-[#fcf9f4]">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+                <div>
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#fcf9f4]/60 block mb-4">
+                    Contact
+                  </span>
+                  <h2 className="font-headline text-3xl md:text-4xl headline-tight mb-3">
+                    Get in <span className="italic font-light">touch.</span>
+                  </h2>
+                  <p className="font-body text-sm md:text-base text-[#fcf9f4]/80 max-w-md leading-relaxed">
+                    Questions about the methodology, data, or applying this for your foundation?
+                  </p>
+                </div>
+                <a
+                  href="https://www.linkedin.com/in/souhardsharma/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group bg-[#BD402C] text-white font-label uppercase tracking-[0.25em] text-[11px] py-5 px-8 flex justify-between items-center gap-8 hover:bg-[#fcf9f4] hover:text-[#1c1c19] transition-colors shrink-0 w-full sm:w-auto sm:min-w-[280px]"
+                >
+                  <span className="flex items-center gap-3">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                    </svg>
+                    LinkedIn
+                  </span>
+                  <svg width="16" height="10" viewBox="0 0 24 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M0 6h22M16 1l5 5-5 5" />
+                  </svg>
+                </a>
               </div>
-              <a
-                href="https://www.linkedin.com/in/souhardsharma/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 bg-[#F5A623] text-[#0B1526] font-bold px-6 py-3 rounded-full hover:bg-[#FBBF24] transition-colors shrink-0"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                </svg>
-                Contact on LinkedIn
-              </a>
             </div>
           </section>
         </FadeIn>

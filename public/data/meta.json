@@ -1,25 +1,35 @@
 {
-  "national_median_csr_per_person": 127.25,
+  "national_median_csr_per_person": 127.63,
+  "national_mean_csr": 680.25,
   "tier_medians": {
-    "Tier 1 (Small)": 112.37,
-    "Tier 2 (Medium)": 138.97,
-    "Tier 3 (Large)": 135.89
+    "Tier 1 (Small)": 107.72,
+    "Tier 2 (Medium)": 142.96,
+    "Tier 3 (Large)": 138.63
   },
-  "total_districts": 583,
+  "total_districts": 569,
   "methodology": "population-tertile-stratified benchmarking",
   "whitespace_thresholds": {
-    "csr_p25": 39.82,
-    "hr_p75_pct": 21.5
+    "csr_p25": 40.51,
+    "hr_p75_pct": 21.6
   },
   "whitespace_count": 49,
   "pos_range": {
-    "min": 1.6,
-    "max": 78.5
+    "min": 1.7,
+    "max": 78.3
   },
   "pop_tier_boundaries": {
-    "p33": 1066888,
-    "p67": 2090922
+    "p33": 1064519,
+    "p67": 2038889
   },
-  "national_mean_csr": 678.43,
-  "median_retention_ratio": 0.557
+  "median_retention_ratio": 0.557,
+  "weights": {
+    "w_N": 0.4,
+    "w_G": 0.4,
+    "w_U": 0.2
+  },
+  "csr_window_fy": [
+    "2021-22",
+    "2022-23",
+    "2023-24"
+  ]
 }

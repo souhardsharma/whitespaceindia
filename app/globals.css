@@ -2,28 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+  font-size: 14px;
+  padding: 12px 24px;
+  background: #1c1c19;
+  color: #fcf9f4;
+  text-decoration: none;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  letter-spacing: 0.05em;
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
 @layer base {
-  /* Smooth scroll globally */
   html {
     scroll-behavior: smooth;
+  }
+
+  [id] {
+    scroll-margin-top: 80px;
+  }
+
+  body {
+    font-family: var(--font-public-sans), system-ui, sans-serif;
+    background-color: #fcf9f4;
+    color: #1c1c19;
+    -webkit-font-smoothing: antialiased;
   }
 
   ::-webkit-scrollbar {
     width: 6px;
   }
+
   ::-webkit-scrollbar-track {
-    background: #0B1526;
+    background: #fcf9f4;
   }
+
   ::-webkit-scrollbar-thumb {
-    background: #1E293B;
-    border-radius: 3px;
+    background: #1c1c19;
   }
+
   ::-webkit-scrollbar-thumb:hover {
-    background: #374151;
+    background: #BD402C;
+  }
+
+  ::selection {
+    background: #BD402C;
+    color: #fcf9f4;
   }
 }
 
-/* Custom range slider */
+.headline-tight {
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+.serif-tight {
+  letter-spacing: -0.02em;
+}
+
+.ink-line {
+  border-top: 1px solid #1c1c19;
+}
+
+.flat-border {
+  border: 1px solid #1c1c19;
+}
+
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -33,139 +92,100 @@ input[type="range"] {
 }
 
 input[type="range"]::-webkit-slider-track {
-  background: #1E293B;
-  border-radius: 9999px;
-  height: 6px;
+  background: #1c1c19;
+  height: 2px;
+  border-radius: 0;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  background: #F5A623;
-  border-radius: 50%;
-  height: 18px;
-  width: 18px;
-  margin-top: -6px;
-  box-shadow: 0 0 8px rgba(245, 166, 35, 0.4);
+  background: #BD402C;
+  border-radius: 0;
+  height: 24px;
+  width: 24px;
+  margin-top: -11px;
+  border: 0;
+  cursor: pointer;
 }
 
 input[type="range"]::-moz-range-track {
-  background: #1E293B;
-  border-radius: 9999px;
-  height: 6px;
+  background: #1c1c19;
+  border-radius: 0;
+  height: 2px;
 }
 
 input[type="range"]::-moz-range-thumb {
-  background: #F5A623;
-  border-radius: 50%;
-  height: 18px;
-  width: 18px;
-  border: none;
-  box-shadow: 0 0 8px rgba(245, 166, 35, 0.4);
+  background: #BD402C;
+  border-radius: 0;
+  height: 24px;
+  width: 24px;
+  border: 0;
+  cursor: pointer;
 }
 
-/* Thin scrollbar for ranking list */
 .scrollbar-thin::-webkit-scrollbar {
-  width: 4px;
+  width: 2px;
 }
+
 .scrollbar-thin::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
+  background: #1c1c19;
 }
+
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #BD402C;
 }
 
-/* Noise texture overlay */
-.noise-overlay::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0.015;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-}
-
-/* ── Floating animation (used on decorative elements) ─────────────── */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* ── Subtle shimmer effect ────────────────────────────────────────── */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    rgba(255,255,255,0) 0%,
-    rgba(255,255,255,0.05) 50%,
-    rgba(255,255,255,0) 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 3s ease-in-out infinite;
-}
-
-/* ── Glow pulse (for key indicators) ──────────────────────────────── */
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(245, 166, 35, 0.15); }
-  50% { box-shadow: 0 0 24px rgba(245, 166, 35, 0.35); }
-}
-.animate-glow {
-  animation: glow-pulse 2.5s ease-in-out infinite;
-}
-
-/* ── Gradient border shift ────────────────────────────────────────── */
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient-shift 4s ease infinite;
-}
-
-/* ── Link hover lift ──────────────────────────────────────────────── */
-.hover-lift {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.3s ease;
-}
-.hover-lift:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-}
-
-/* ── Card interactive border glow ─────────────────────────────────── */
-.card-glow {
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-.card-glow:hover {
-  border-color: rgba(245, 166, 35, 0.25);
-  box-shadow: 0 0 20px rgba(245, 166, 35, 0.08),
-              0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* ── Staggered reveal for list items ──────────────────────────────── */
 @keyframes slide-up-fade {
   0% {
     opacity: 0;
     transform: translateY(16px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 .animate-slide-up {
   animation: slide-up-fade 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg,
+      rgba(28, 28, 25, 0) 0%,
+      rgba(28, 28, 25, 0.05) 50%,
+      rgba(28, 28, 25, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

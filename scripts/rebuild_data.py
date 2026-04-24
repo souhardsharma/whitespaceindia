@@ -1,391 +1,157 @@
 """
-Whitespace India - Data Analysis
-1. India-National-Multidimentional-Poverty-Index-2023.pdf (MPI data)
-2. csr_state_sector.xlsx (CSR spending data)
-3. census_2011_districts.csv (population data)
+Whitespace India CSR — Data Pipeline (single-file, reproducible)
+================================================================
 
-Outputs:
-- public/data/whitespace_master.json (valid JSON, no NaN)
-- public/data/sector_scores.json
+Reads the three source files and regenerates every data artifact the
+website consumes.
+
+Source files (hard-coded — the user keeps them at this exact path):
+  $WHITESPACE_DATA_DIR/
+    India-National-Multidimentional-Poverty-Index-2023.pdf   (MPI)
+    csr_state_sector.xlsx                                    (CSR MCA)
+    census_2011_districts.csv                                (population)
+
+Writes:
+  <project>/public/data/
+    whitespace_master.json       — per-district POS + inputs (consumed by UI)
+    sector_scores.json           — per-district × sector POS (consumed by UI)
+    meta.json                    — headline constants the UI reads
+  <project>/scripts/
+    verification_report.json     — local-only audit report (Bihar vs Maha,
+                                   national totals, top districts). Read by
+                                   show_examples.py; not shipped to the site.
+
+Methodology
+-----------
+  Need (N)         = MPI headcount ratio 2019–21, min-max normalised
+  Supply gap (G)   = max(0, tier_median_csr_per_person – district_csr_per_person),
+                     where the tier is the district's population tertile
+                     (33rd/67th pctile of 2011 population). Min-max normalised.
+  Unresolved (U)   = hr_2019_21 / hr_2015_16 (retention ratio). Min-max normalised.
+                     Districts lacking a 2015-16 baseline get the median
+                     retention ratio AND are flagged `u_imputed: true`.
+  POS              = (0.40·N̂ + 0.40·Ĝ + 0.20·Û) × 100
+
+  CSR window       = FY 2021-22, 2022-23, 2023-24 (three most recent)
+  Exclusions       = Pan India rows, rows lacking a district_lgd_code
+  Whitespace flag  = district_csr_per_person ≤ national 25th pctile
+                     AND hr_2019_21 ≥ national 75th pctile
+
+Matching
+--------
+  MPI is the spine. Each MPI district is joined against CSR and Census
+  via (normalised state, normalised district). Census 2011 predates
+  Telangana, Ladakh, and the D&NH+D&D merger, so state aliases are
+  resolved explicitly. Fuzzy matching uses rapidfuzz with a cutoff of
+  85 for CSR (names broadly consistent with MCA) and 80 for Census
+  (more historical/spelling drift). Every match keeps a score so the
+  verification report can flag low-confidence ones.
+
+Run: `python scripts/rebuild_data.py` from the project root.
 """
+
+from __future__ import annotations
 
 import json
 import math
-import os
 import re
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pdfplumber
 from rapidfuzz import fuzz, process
 
-# ── Paths ──────────────────────────────────────────────────────────────────
-DATA_DIR = "$WHITESPACE_DATA_DIR"
-OUT_DIR  = "$PROJECT_OUT_DIR"
+# ── Paths ─────────────────────────────────────────────────────────────────
+SRC_DIR = Path("$WHITESPACE_DATA_DIR")
+PDF_PATH = SRC_DIR / "India-National-Multidimentional-Poverty-Index-2023.pdf"
+EXCEL_PATH = SRC_DIR / "csr_state_sector.xlsx"
+CENSUS_PATH = SRC_DIR / "census_2011_districts.csv"
 
-PDF_PATH    = os.path.join(DATA_DIR, "India-National-Multidimentional-Poverty-Index-2023.pdf")
-EXCEL_PATH  = os.path.join(DATA_DIR, "csr_state_sector.xlsx")
-CENSUS_PATH = os.path.join(DATA_DIR, "census_2011_districts.csv")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+OUT_DIR = PROJECT_ROOT / "public" / "data"
+SCRIPTS_DIR = Path(__file__).resolve().parent
 
-# ── Sectors used for sector-specific scoring ───────────────────────────────
+# ── Constants ─────────────────────────────────────────────────────────────
+W_N, W_G, W_U = 0.40, 0.40, 0.20
+CSR_RECENT_YEARS = ["2021-22", "2022-23", "2023-24"]
+
 SCORE_SECTORS = [
-    "Education", "Health Care", "Rural Development Projects",
-    "Livelihood Enhancement Projects", "Environmental Sustainability",
+    "Education",
+    "Health Care",
+    "Rural Development Projects",
+    "Livelihood Enhancement Projects",
+    "Environmental Sustainability",
     "Poverty, Eradicating Hunger, Malnutrition",
-    "Safe Drinking Water", "Sanitation", "Vocational Skills",
+    "Safe Drinking Water",
+    "Sanitation",
+    "Vocational Skills",
     "Women Empowerment",
 ]
 
-# ── Default weights ────────────────────────────────────────────────────────
-W_N, W_G, W_U = 0.40, 0.40, 0.20
+INDIAN_STATES = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+    "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
+    "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim",
+    "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
+    "West Bengal", "Andaman & Nicobar Islands", "Andaman and Nicobar Islands",
+    "Chandigarh", "Dadra and Nagar Haveli", "Daman and Diu", "Delhi",
+    "Jammu & Kashmir", "Jammu and Kashmir", "Ladakh", "Lakshadweep",
+    "Puducherry", "NCT of Delhi",
+    "Dadra & Nagar Haveli & Daman & Diu",
+    "Dadra & Nagar Haveli and Daman & Diu",
+]
 
-
-# ═══════════════════════════════════════════════════════════════════════════
-# STEP 1: Extract MPI data from PDF
-# ═══════════════════════════════════════════════════════════════════════════
-
-def extract_mpi_from_pdf(pdf_path):
-    """Extract district-level MPI tables from the NITI Aayog PDF."""
-    print("=" * 60)
-    print("STEP 1: Extracting MPI data from PDF...")
-    print("=" * 60)
-
-    all_rows = []
-    current_state = None
-
-    with pdfplumber.open(pdf_path) as pdf:
-        total_pages = len(pdf.pages)
-        print(f"  Total pages in PDF: {total_pages}")
-
-        # MPI district tables start around page 100+ and go to ~400
-        for page_num in range(90, min(total_pages, 420)):
-            page = pdf.pages[page_num]
-            text = page.extract_text() or ""
-
-            # Try to detect state name from page headers
-            # State names typically appear as standalone lines before tables
-            lines = text.split("\n")
-            for line in lines:
-                stripped = line.strip()
-                # Heuristic: state names are title-cased, not too long, not a table row
-                if (stripped and len(stripped) < 40 and
-                    not any(c.isdigit() for c in stripped[:5]) and
-                    stripped[0].isupper() and
-                    stripped not in ("District", "Headcount", "Intensity", "MPI") and
-                    "ratio" not in stripped.lower() and
-                    "table" not in stripped.lower() and
-                    "figure" not in stripped.lower() and
-                    "source" not in stripped.lower() and
-                    "note" not in stripped.lower() and
-                    "contd" not in stripped.lower() and
-                    "national" not in stripped.lower() and
-                    len(stripped.split()) <= 6):
-                    # Check if it looks like a known Indian state
-                    potential_state = stripped.replace("&", "and").strip()
-                    if is_known_state(potential_state):
-                        current_state = stripped
-
-            # Extract tables from the page
-            tables = page.extract_tables()
-            for table in tables:
-                if not table:
-                    continue
-                for row in table:
-                    if not row or len(row) < 7:
-                        continue
-                    # Skip header rows
-                    first_cell = str(row[0] or "").strip()
-                    if first_cell.lower() in ("district", "districts", "", "none"):
-                        continue
-                    if "headcount" in first_cell.lower() or "ratio" in first_cell.lower():
-                        continue
-
-                    # Try to parse as a data row
-                    parsed = parse_mpi_row(row, current_state)
-                    if parsed:
-                        all_rows.append(parsed)
-
-    df = pd.DataFrame(all_rows, columns=[
-        "state", "district",
-        "hr_2016", "intensity_2016", "mpi_2016",
-        "hr_2021", "intensity_2021", "mpi_2021"
-    ])
-
-    # Remove duplicates (keep last - later pages may have corrections)
-    df = df.drop_duplicates(subset=["state", "district"], keep="last")
-
-    print(f"  Extracted {len(df)} districts from PDF")
-    print(f"  States found: {df['state'].nunique()}")
-
-    # If we got fewer than 600, fall back to the existing extracted CSV
-    if len(df) < 600:
-        print(f"  WARNING: Only {len(df)} districts extracted. Falling back to existing mpi_districts.csv")
-        df = load_mpi_fallback()
-
-    return df
-
-
-KNOWN_STATES = {
-    "andhra pradesh", "arunachal pradesh", "assam", "bihar", "chhattisgarh",
-    "goa", "gujarat", "haryana", "himachal pradesh", "jharkhand", "karnataka",
-    "kerala", "madhya pradesh", "maharashtra", "manipur", "meghalaya", "mizoram",
-    "nagaland", "odisha", "punjab", "rajasthan", "sikkim", "tamil nadu",
-    "telangana", "tripura", "uttar pradesh", "uttarakhand", "west bengal",
-    "andaman and nicobar islands", "chandigarh", "dadra and nagar haveli",
-    "dadra and nagar haveli and daman and diu", "daman and diu", "delhi",
-    "jammu and kashmir", "jammu & kashmir", "ladakh", "lakshadweep",
-    "puducherry", "nct of delhi",
-}
-
-def is_known_state(name):
-    return name.strip().lower().replace("&", "and") in KNOWN_STATES
-
-
-def safe_float(val):
-    """Convert a string to float, returning None if not possible."""
-    if val is None:
-        return None
-    s = str(val).strip().replace(",", "")
-    if s in ("", "-", "NA", "N/A", "nan", "None", ".."):
-        return None
-    try:
-        return float(s)
-    except ValueError:
-        return None
-
-
-def parse_mpi_row(row, current_state):
-    """Try to parse a table row as MPI district data."""
-    cells = [str(c or "").strip() for c in row]
-
-    # Expect: district_name, then 3 values for 2015-16, then 3 values for 2019-21
-    district_name = cells[0]
-
-    # District name should be mostly alphabetic
-    if not district_name or len(district_name) < 2:
-        return None
-    if sum(c.isdigit() for c in district_name) > len(district_name) * 0.5:
-        return None
-
-    # Try to extract 6 numeric values from the remaining cells
-    nums = []
-    for c in cells[1:]:
-        f = safe_float(c)
-        nums.append(f)
-
-    # We need at least the last 3 values (2019-21 data)
-    if len(nums) < 6:
-        # Pad with None at the beginning
-        nums = [None] * (6 - len(nums)) + nums
-
-    hr_2016 = nums[0]
-    int_2016 = nums[1]
-    mpi_2016 = nums[2]
-    hr_2021 = nums[3]
-    int_2021 = nums[4]
-    mpi_2021 = nums[5]
-
-    # At minimum, the 2019-21 headcount ratio must be a valid number
-    if hr_2021 is None or int_2021 is None:
-        return None
-
-    # Headcount ratios should be in percentage form (0-100)
-    if hr_2021 > 100 or hr_2021 < 0:
-        return None
-
-    return [
-        current_state, district_name,
-        hr_2016, int_2016, mpi_2016,
-        hr_2021, int_2021, mpi_2021
-    ]
-
-
-def load_mpi_fallback():
-    """Load from the existing extracted CSV as fallback."""
-    csv_path = os.path.join(DATA_DIR, "data", "mpi_districts.csv")
-    print(f"  Loading fallback from {csv_path}")
-    df = pd.read_csv(csv_path)
-    df.columns = ["state", "district", "hr_2016", "intensity_2016", "mpi_2016",
-                   "hr_2021", "intensity_2021", "mpi_2021"]
-    # Convert percentage values to proportions (0-1 scale)
-    for col in ["hr_2016", "hr_2021"]:
-        df[col] = pd.to_numeric(df[col], errors="coerce") / 100.0
-    for col in ["intensity_2016", "intensity_2021"]:
-        df[col] = pd.to_numeric(df[col], errors="coerce")
-    for col in ["mpi_2016", "mpi_2021"]:
-        df[col] = pd.to_numeric(df[col], errors="coerce")
-
-    # ── Fix state misattributions in the CSV ──
-    # West Bengal districts are mislabeled as "Bihar" (rows ~599-613)
-    WEST_BENGAL_DISTRICTS = {
-        "bankura", "barddhaman", "birbhum", "darjeeling", "howrah",
-        "hugli (hooghly)", "jalpaiguri", "koch bihar (coochbehar)",
-        "kolkata", "maldah", "murshidabad", "nadia",
-        "paschim bardhaman", "purba bardhaman", "puruliya",
-        "north twenty four parganas", "south twenty four parganas",
-        "paschim medinipur", "purba medinipur", "uttar dinajpur",
-        "dakshin dinajpur", "alipurduar", "cooch behar",
-    }
-    # Morigaon is an Assam district mislabeled as Bihar
-    ASSAM_DISTRICTS = {"morigaon"}
-
-    for idx, row in df.iterrows():
-        dist_lower = str(row["district"]).lower().strip()
-        if row["state"] == "Bihar" and dist_lower in WEST_BENGAL_DISTRICTS:
-            df.at[idx, "state"] = "West Bengal"
-        elif row["state"] == "Bihar" and dist_lower in ASSAM_DISTRICTS:
-            df.at[idx, "state"] = "Assam"
-
-    corrections = (df["state"] != pd.read_csv(csv_path).iloc[:, 0]).sum()
-    print(f"  Fixed {corrections} state misattributions")
-    print(f"  States after fix: {df['state'].nunique()}")
-
-    return df
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# STEP 2: Process CSR Excel
-# ═══════════════════════════════════════════════════════════════════════════
-
-def process_csr_excel(excel_path):
-    """Process the original CSR Excel file."""
-    print("\n" + "=" * 60)
-    print("STEP 2: Processing CSR Excel...")
-    print("=" * 60)
-
-    df = pd.read_excel(excel_path)
-    print(f"  Total rows in Excel: {len(df)}")
-
-    # Exclude Pan India and unattributable rows
-    exclude_states = ["Pan India", "Pan India (Other Centralized Funds)", "Nec/ Not Mentioned"]
-    df = df[~df["state"].isin(exclude_states)]
-    df = df[df["district_lgd_code"].notna()]
-    df = df[df["district_lgd_code"] != "Not Applicable"]
-
-    print(f"  Rows after excluding Pan India/Nec/no-LGD: {len(df)}")
-
-    # Filter to recent 3 fiscal years for scoring
-    recent_years = ["2021-22", "2022-23", "2023-24"]
-    df_recent = df[df["fiscal_year"].isin(recent_years)]
-    print(f"  Rows in recent 3 years: {len(df_recent)}")
-
-    # District totals
-    csr_district = df_recent.groupby(
-        ["state", "district_as_per_lgd", "district_lgd_code"]
-    ).agg(total_csr_recent=("amount_spent", "sum")).reset_index()
-    csr_district.rename(columns={"district_as_per_lgd": "district_name"}, inplace=True)
-
-    print(f"  Unique districts with CSR data: {len(csr_district)}")
-    print(f"  Total attributable CSR (recent 3yr): {csr_district['total_csr_recent'].sum():.2f} crore")
-
-    # Sector-level breakdowns
-    csr_sector = df_recent.groupby(
-        ["state", "district_as_per_lgd", "district_lgd_code", "sector"]
-    ).agg(amount=("amount_spent", "sum")).reset_index()
-
-    # Pivot to get sectors as columns
-    csr_sector_pivot = csr_sector.pivot_table(
-        index=["state", "district_as_per_lgd", "district_lgd_code"],
-        columns="sector",
-        values="amount",
-        fill_value=0
-    ).reset_index()
-
-    return csr_district, csr_sector_pivot
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# STEP 3: Process Census data
-# ═══════════════════════════════════════════════════════════════════════════
-
-def process_census(census_path):
-    """Process Census 2011 district population data."""
-    print("\n" + "=" * 60)
-    print("STEP 3: Processing Census 2011 data...")
-    print("=" * 60)
-
-    df = pd.read_csv(census_path)
-    print(f"  Total census districts: {len(df)}")
-    print(f"  Columns: {list(df.columns[:10])}...")
-
-    # Identify key columns
-    # The CSV has: District code, State name, District name, Population, etc.
-    col_map = {}
-    for col in df.columns:
-        cl = col.lower().strip()
-        if "state" in cl and "name" in cl:
-            col_map["state"] = col
-        elif "district" in cl and "name" in cl:
-            col_map["district"] = col
-        elif "district" in cl and "code" in cl:
-            col_map["district_code"] = col
-        elif cl == "population" or cl == "total population":
-            col_map["population"] = col
-
-    # If standard column detection fails, use positional
-    if "state" not in col_map:
-        # Try common column names
-        for col in df.columns:
-            if col.strip().lower() in ("state", "state name", "state_name"):
-                col_map["state"] = col
-                break
-    if "district" not in col_map:
-        for col in df.columns:
-            if col.strip().lower() in ("district", "district name", "district_name"):
-                col_map["district"] = col
-                break
-    if "population" not in col_map:
-        for col in df.columns:
-            if col.strip().lower() in ("population", "total_population"):
-                col_map["population"] = col
-                break
-
-    print(f"  Column mapping: {col_map}")
-
-    census = df[[col_map.get("state", df.columns[1]),
-                 col_map.get("district", df.columns[2]),
-                 col_map.get("population", df.columns[3])]].copy()
-    census.columns = ["state", "district", "population"]
-    census["population"] = pd.to_numeric(census["population"], errors="coerce")
-    census = census.dropna(subset=["population"])
-
-    # Total India population
-    total_pop = census["population"].sum()
-    print(f"  Total India population (Census 2011): {total_pop:,.0f}")
-
-    return census, total_pop
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# STEP 4: Merge datasets
-# ═══════════════════════════════════════════════════════════════════════════
-
-
-# ── State Name Aliases ────────────────────────────────────────────────────
-# Maps MPI state names (normalized) to Census 2011 state names (normalized).
-# Census 2011 predates: Telangana (2014, from AP), Ladakh (2019, from J&K),
-# and the D&NH + D&D merger (2020).
+# Census 2011 used "Orissa", "Pondicherry" and did not yet include Telangana
+# (formed 2014 from AP) or Ladakh (formed 2019 from J&K). Map MPI state names
+# to the Census 2011 equivalent(s). "Dadra and Nagar Haveli and Daman and Diu"
+# is merged in the MPI document but separate in Census 2011.
 MPI_TO_CENSUS_STATE = {
-    "odisha": "orissa",
-    "delhi": "nct of delhi",
-    "puducherry": "pondicherry",
-    "telangana": "andhra pradesh",  # Telangana districts were in AP in Census 2011
-    "ladakh": "jammu and kashmir",  # Ladakh was part of J&K in Census 2011
-    "andaman and nicobar islands": "andaman and nicobar islands",
-    "dadra and nagar haveli and daman and diu": "dadra and nagar haveli",  # merged UT; try DNH first
-    "jammu and kashmir": "jammu and kashmir",
+    "odisha": ["orissa"],
+    "delhi": ["nct of delhi"],
+    "puducherry": ["pondicherry"],
+    "telangana": ["andhra pradesh"],
+    "ladakh": ["jammu and kashmir"],
+    "dadra and nagar haveli and daman and diu": [
+        "dadra and nagar haveli", "daman and diu",
+    ],
 }
 
-# Reverse map: Census names that could also match a second MPI UT
-# (Daman & Diu is separate in Census but merged into DNH&DD in MPI)
-CENSUS_EXTRA_STATES_FOR_MPI = {
-    "dadra and nagar haveli and daman and diu": ["dadra and nagar haveli", "daman and diu"],
+# Districts the MPI PDF occasionally misattributes when a page header is
+# missing or ambiguous.
+STATE_MISATTRIBUTION_FIX = {
+    # West Bengal districts sometimes absorbed into the Bihar block
+    ("bihar", "bankura"): "West Bengal",
+    ("bihar", "barddhaman"): "West Bengal",
+    ("bihar", "birbhum"): "West Bengal",
+    ("bihar", "darjeeling"): "West Bengal",
+    ("bihar", "howrah"): "West Bengal",
+    ("bihar", "hugli (hooghly)"): "West Bengal",
+    ("bihar", "jalpaiguri"): "West Bengal",
+    ("bihar", "koch bihar (coochbehar)"): "West Bengal",
+    ("bihar", "kolkata"): "West Bengal",
+    ("bihar", "maldah"): "West Bengal",
+    ("bihar", "murshidabad"): "West Bengal",
+    ("bihar", "nadia"): "West Bengal",
+    ("bihar", "paschim bardhaman"): "West Bengal",
+    ("bihar", "purba bardhaman"): "West Bengal",
+    ("bihar", "puruliya"): "West Bengal",
+    ("bihar", "north twenty four parganas"): "West Bengal",
+    ("bihar", "south twenty four parganas"): "West Bengal",
+    ("bihar", "paschim medinipur"): "West Bengal",
+    ("bihar", "purba medinipur"): "West Bengal",
+    ("bihar", "uttar dinajpur"): "West Bengal",
+    ("bihar", "dakshin dinajpur"): "West Bengal",
+    ("bihar", "alipurduar"): "West Bengal",
+    ("bihar", "cooch behar"): "West Bengal",
+    ("bihar", "morigaon"): "Assam",
 }
 
 
-def normalize_name(name):
-    """Normalize district/state names for matching."""
+# ── Helpers ───────────────────────────────────────────────────────────────
+def normalize_name(name: object) -> str:
     if not isinstance(name, str):
         return ""
     s = name.lower().strip()
@@ -397,531 +163,646 @@ def normalize_name(name):
     return s
 
 
-def resolve_census_state(mpi_state_norm):
-    """Map a normalized MPI state name to the Census 2011 equivalent(s)."""
+def safe_float(val: object) -> float | None:
+    if val is None:
+        return None
+    s = str(val).strip().replace(",", "").replace("%", "")
+    if s in ("", "-", "–", "—", "\u2013", "\u2014", "NA", "ND", "N/A", "nan", "None", ".."):
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def safe_json(val: object) -> object:
+    if val is None:
+        return None
+    if isinstance(val, (np.integer,)):
+        return int(val)
+    if isinstance(val, (np.floating, float)):
+        f = float(val)
+        if math.isnan(f) or math.isinf(f):
+            return None
+        return round(f, 6)
+    if isinstance(val, (np.bool_, bool)):
+        return bool(val)
+    return val
+
+
+# ═════════════════════════════════════════════════════════════════════════
+# STEP 1 — Extract MPI directly from the NITI Aayog PDF
+# ═════════════════════════════════════════════════════════════════════════
+def extract_mpi(pdf_path: Path) -> pd.DataFrame:
+    print("=" * 72)
+    print("STEP 1  Extracting MPI districts from PDF")
+    print("=" * 72)
+
+    data: list[dict] = []
+    current_state = "Unknown"
+    pattern = re.compile(
+        r"^(.+?)\s+"
+        r"([\d\.\,]+%?|NA|ND|\-|\u2013|\u2014)\s+"
+        r"([\d\.\,]+%?|NA|ND|\-|\u2013|\u2014)\s+"
+        r"([\d\.\,]+%?|NA|ND|\-|\u2013|\u2014)\s+"
+        r"([\d\.\,]+%?|NA|ND|\-|\u2013|\u2014)\s+"
+        r"([\d\.\,]+%?|NA|ND|\-|\u2013|\u2014)\s+"
+        r"([\d\.\,]+%?|NA|ND|\-|\u2013|\u2014)$"
+    )
+
+    with pdfplumber.open(pdf_path) as pdf:
+        total = len(pdf.pages)
+        print(f"  PDF pages: {total}")
+        for i in range(80, min(360, total)):
+            page = pdf.pages[i]
+            text = page.extract_text(x_tolerance=2, y_tolerance=2)
+            if not text:
+                continue
+            lines = text.split("\n")
+
+            # State detection — look at the first 30 lines of the page
+            for line in lines[:30]:
+                upper = line.strip().upper()
+                for state in INDIAN_STATES:
+                    if re.search(r"\b" + re.escape(state.upper()) + r"\b", upper):
+                        current_state = state
+                        break
+
+            # Data row extraction
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                m = pattern.match(line)
+                if not m:
+                    continue
+                dist = m.group(1).strip()
+                if any(tok in dist for tok in ("Total", "Average", "State")):
+                    continue
+                if len(dist) < 3 and dist.lower() != "diu":
+                    continue
+                if any(c.isdigit() for c in dist):
+                    continue
+
+                data.append({
+                    "state": current_state,
+                    "district": dist,
+                    "hr_2016": safe_float(m.group(2)),
+                    "intensity_2016": safe_float(m.group(3)),
+                    "mpi_2016": safe_float(m.group(4)),
+                    "hr_2021": safe_float(m.group(5)),
+                    "intensity_2021": safe_float(m.group(6)),
+                    "mpi_2021": safe_float(m.group(7)),
+                })
+
+    df = pd.DataFrame(data)
+    df = df.drop_duplicates(subset=["district", "hr_2021"])
+
+    # Apply state-attribution corrections
+    fixes = 0
+    for idx, row in df.iterrows():
+        key = (row["state"].lower().strip(), str(row["district"]).lower().strip())
+        if key in STATE_MISATTRIBUTION_FIX:
+            df.at[idx, "state"] = STATE_MISATTRIBUTION_FIX[key]
+            fixes += 1
+    # Assam districts sometimes lose the header
+    df.loc[df["district"].isin(["Kamrup Metropolitan", "Kamrup Metro"]), "state"] = "Assam"
+
+    # Convert HR from percent to proportion (0-1) to match internal maths
+    df["hr_2016"] = df["hr_2016"] / 100.0
+    df["hr_2021"] = df["hr_2021"] / 100.0
+
+    # Drop rows where the spine data (2019-21 HR) is missing
+    before = len(df)
+    df = df[df["hr_2021"].notna() & (df["hr_2021"] > 0)].reset_index(drop=True)
+
+    print(f"  Extracted {before} rows, dropped {before - len(df)} with null hr_2021")
+    print(f"  State corrections applied: {fixes}")
+    print(f"  Final MPI rows: {len(df)}  states: {df['state'].nunique()}")
+    return df
+
+
+# ═════════════════════════════════════════════════════════════════════════
+# STEP 2 — Load + aggregate CSR Excel
+# ═════════════════════════════════════════════════════════════════════════
+def load_csr(excel_path: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
+    print("\n" + "=" * 72)
+    print("STEP 2  Loading CSR Excel (MCA)")
+    print("=" * 72)
+
+    raw = pd.read_excel(excel_path)
+    print(f"  Raw rows: {len(raw)}")
+
+    # Compute Pan India / unattributable CSR BEFORE filtering
+    exclude_states = {"Pan India", "Pan India (Other Centralized Funds)", "Nec/ Not Mentioned"}
+    pan_india_mask = raw["state"].isin(exclude_states) | raw["district_lgd_code"].isna() | (raw["district_lgd_code"].astype(str) == "Not Applicable")
+    pan_india_all_years = float(pd.to_numeric(raw.loc[pan_india_mask, "amount_spent"], errors="coerce").fillna(0).sum())
+    total_all_years_gross = float(pd.to_numeric(raw["amount_spent"], errors="coerce").fillna(0).sum())
+
+    df = raw[~raw["state"].isin(exclude_states)]
+    df = df[df["district_lgd_code"].notna()]
+    df = df[df["district_lgd_code"].astype(str) != "Not Applicable"]
+    print(f"  After excluding Pan-India / missing LGD: {len(df)}")
+
+    df_recent = df[df["fiscal_year"].isin(CSR_RECENT_YEARS)].copy()
+    df_recent["amount_spent"] = pd.to_numeric(df_recent["amount_spent"], errors="coerce").fillna(0)
+    print(f"  FY{CSR_RECENT_YEARS[0]}–FY{CSR_RECENT_YEARS[-1]}: {len(df_recent)} rows")
+
+    total_by_year = df.groupby("fiscal_year")["amount_spent"].sum()
+    print("  Total CSR by FY (Rs  crore):")
+    for fy, amt in total_by_year.items():
+        print(f"    {fy}: {amt:>12,.2f}")
+
+    csr_district = (
+        df_recent.groupby(["state", "district_as_per_lgd", "district_lgd_code"])
+        .agg(total_csr_recent=("amount_spent", "sum"))
+        .reset_index()
+        .rename(columns={"district_as_per_lgd": "district_name"})
+    )
+    print(f"  Unique (state, district) with CSR in window: {len(csr_district)}")
+    print(f"  Total CSR in 3-yr window: Rs {csr_district['total_csr_recent'].sum():,.2f} crore")
+
+    csr_sector_pivot = (
+        df_recent.groupby(["state", "district_as_per_lgd", "district_lgd_code", "sector"])
+        .agg(amount=("amount_spent", "sum"))
+        .reset_index()
+        .pivot_table(
+            index=["state", "district_as_per_lgd", "district_lgd_code"],
+            columns="sector",
+            values="amount",
+            fill_value=0,
+        )
+        .reset_index()
+    )
+
+    # Totals across the entire dataset, used by site copy
+    overview = {
+        "total_csr_all_years_gross": round(total_all_years_gross, 2),
+        "total_csr_all_years": float(df["amount_spent"].sum()),
+        "total_csr_fy23_24": float(total_by_year.get("2023-24", 0.0)),
+        "total_csr_recent_3yr": float(df_recent["amount_spent"].sum()),
+        "pan_india_csr_all_years": round(pan_india_all_years, 2),
+        "pan_india_pct": round(pan_india_all_years / total_all_years_gross * 100, 1) if total_all_years_gross else 0,
+        "total_rows_raw": int(len(df)),
+        "unique_districts_all_years": int(
+            df.groupby(["state", "district_as_per_lgd"]).ngroups
+        ),
+    }
+    return csr_district, csr_sector_pivot, overview
+
+
+# ═════════════════════════════════════════════════════════════════════════
+# STEP 3 — Load Census 2011 populations
+# ═════════════════════════════════════════════════════════════════════════
+def load_census(census_path: Path) -> tuple[pd.DataFrame, int]:
+    print("\n" + "=" * 72)
+    print("STEP 3  Loading Census 2011 populations")
+    print("=" * 72)
+
+    df = pd.read_csv(census_path)
+    census = df[["State name", "District name", "Population"]].copy()
+    census.columns = ["state", "district", "population"]
+    census["population"] = pd.to_numeric(census["population"], errors="coerce")
+    census = census.dropna(subset=["population"])
+    total = int(census["population"].sum())
+    print(f"  Districts: {len(census)}")
+    print(f"  Total Census 2011 population: {total:,}")
+    return census, total
+
+
+# ═════════════════════════════════════════════════════════════════════════
+# STEP 4 — Match MPI → CSR and Census
+# ═════════════════════════════════════════════════════════════════════════
+def resolve_census_state(mpi_state_norm: str) -> list[str]:
     if mpi_state_norm in MPI_TO_CENSUS_STATE:
-        primary = MPI_TO_CENSUS_STATE[mpi_state_norm]
-        extras = CENSUS_EXTRA_STATES_FOR_MPI.get(mpi_state_norm, [])
-        return [primary] + extras
+        return MPI_TO_CENSUS_STATE[mpi_state_norm]
     return [mpi_state_norm]
 
 
-def fuzzy_match_districts(mpi_df, csr_df, census_df):
-    """Merge MPI, CSR, and Census data using fuzzy matching."""
-    print("\n" + "=" * 60)
-    print("STEP 4: Merging datasets...")
-    print("=" * 60)
+def best_match(
+    dist_norm: str,
+    lookup: dict,
+    keys: list,
+    allowed_states: list[str],
+    cutoff: int,
+) -> tuple[object, float | None]:
+    """Exact match first; else fuzzy within the allowed states. Returns (value, score)."""
+    for st in allowed_states:
+        if (st, dist_norm) in lookup:
+            return lookup[(st, dist_norm)], 100.0
+    candidates = [(s, d) for (s, d) in keys if s in allowed_states]
+    if not candidates:
+        return None, None
+    names = [d for _, d in candidates]
+    result = process.extractOne(dist_norm, names, scorer=fuzz.ratio, score_cutoff=cutoff)
+    if not result:
+        return None, None
+    matched, score, _ = result
+    for (s, d) in candidates:
+        if d == matched:
+            return lookup[(s, d)], float(score)
+    return None, None
 
-    # Start from MPI as the base (these are the districts we score)
-    master = mpi_df.copy()
 
-    # First, try to match CSR data by LGD code where possible
-    # Also match by state + district name using fuzzy matching
+def join_datasets(
+    mpi: pd.DataFrame, csr: pd.DataFrame, census: pd.DataFrame,
+) -> pd.DataFrame:
+    print("\n" + "=" * 72)
+    print("STEP 4  Joining MPI x CSR x Census")
+    print("=" * 72)
 
-    # Build lookup for CSR: (normalized_state, normalized_district) -> row
-    csr_lookup = {}
-    for _, row in csr_df.iterrows():
-        key = (normalize_name(row["state"]), normalize_name(row["district_name"]))
-        csr_lookup[key] = row
-
-    # Build lookup for Census: (normalized_state, normalized_district) -> population
-    census_lookup = {}
-    for _, row in census_df.iterrows():
-        key = (normalize_name(row["state"]), normalize_name(row["district"]))
-        census_lookup[key] = row["population"]
-
-    # Also build flat lists for fuzzy matching
+    csr_lookup = {
+        (normalize_name(r["state"]), normalize_name(r["district_name"])): r
+        for _, r in csr.iterrows()
+    }
+    census_lookup = {
+        (normalize_name(r["state"]), normalize_name(r["district"])): r["population"]
+        for _, r in census.iterrows()
+    }
     csr_keys = list(csr_lookup.keys())
     census_keys = list(census_lookup.keys())
 
-    matched_csr = 0
-    matched_census = 0
-    master["total_csr_recent"] = 0.0
-    master["total_population"] = np.nan
-    master["district_lgd_code"] = ""
+    out = mpi.copy()
+    out["total_csr_recent"] = 0.0
+    out["total_population"] = np.nan
+    out["district_lgd_code"] = ""
+    out["csr_match_score"] = np.nan
+    out["census_match_score"] = np.nan
+    matched_csr = matched_census = 0
 
-    for idx, row in master.iterrows():
+    for idx, row in out.iterrows():
         state_norm = normalize_name(row["state"])
         dist_norm = normalize_name(row["district"])
 
-        # Match CSR
-        csr_match = find_best_match(state_norm, dist_norm, csr_lookup, csr_keys)
-        if csr_match is not None:
-            master.at[idx, "total_csr_recent"] = csr_match["total_csr_recent"]
-            master.at[idx, "district_lgd_code"] = str(csr_match["district_lgd_code"])
+        # CSR — MCA uses modern state names, so prefer the MPI state directly
+        csr_states = [state_norm] + [
+            s for s in resolve_census_state(state_norm) if s != state_norm
+        ]
+        csr_val, csr_score = best_match(
+            dist_norm, csr_lookup, csr_keys, csr_states, cutoff=85,
+        )
+        if csr_val is not None:
+            out.at[idx, "total_csr_recent"] = float(csr_val["total_csr_recent"])
+            out.at[idx, "district_lgd_code"] = str(csr_val["district_lgd_code"])
+            out.at[idx, "csr_match_score"] = csr_score
             matched_csr += 1
 
-        # Match Census
-        census_match = find_best_census_match(state_norm, dist_norm, census_lookup, census_keys)
-        if census_match is not None:
-            master.at[idx, "total_population"] = census_match
+        # Census — may require alias mapping (Odisha→Orissa, Telangana→AP…)
+        census_states = resolve_census_state(state_norm)
+        pop_val, pop_score = best_match(
+            dist_norm, census_lookup, census_keys, census_states, cutoff=80,
+        )
+        if pop_val is not None:
+            out.at[idx, "total_population"] = float(pop_val)
+            out.at[idx, "census_match_score"] = pop_score
             matched_census += 1
 
-    print(f"  MPI districts: {len(master)}")
-    print(f"  Matched to CSR: {matched_csr} ({matched_csr/len(master)*100:.1f}%)")
-    print(f"  Matched to Census: {matched_census} ({matched_census/len(master)*100:.1f}%)")
+    # Generate synthetic LGD codes for MPI-only districts
+    mask = out["district_lgd_code"] == ""
+    for idx in out[mask].index:
+        out.at[idx, "district_lgd_code"] = f"MPI_{idx}"
 
-    # Diagnostic: show unmatched states
-    unmatched = master[master["total_population"].isna()]
-    if len(unmatched) > 0:
-        unmatched_states = unmatched["state"].value_counts()
-        print(f"\n  UNMATCHED by state ({len(unmatched)} total):")
-        for state, cnt in unmatched_states.items():
-            print(f"    {state}: {cnt} districts")
+    print(f"  MPI districts in:           {len(out)}")
+    print(f"  Matched to CSR (cutoff 85): {matched_csr} ({matched_csr/len(out)*100:.1f} %)")
+    print(f"  Matched to Census (cut 80): {matched_census} ({matched_census/len(out)*100:.1f} %)")
 
-    # For districts without LGD code, generate a synthetic one
-    no_lgd = master["district_lgd_code"] == ""
-    for idx in master[no_lgd].index:
-        master.at[idx, "district_lgd_code"] = f"MPI_{idx}"
-
-    # Drop rows with no population (can't compute CSR density)
-    before = len(master)
-    master = master.dropna(subset=["total_population"])
-    master = master[master["total_population"] > 0]
-    print(f"  Dropped {before - len(master)} districts with no population match")
-    print(f"  Final dataset: {len(master)} districts")
-
-    return master
+    before = len(out)
+    out = out.dropna(subset=["total_population"])
+    out = out[out["total_population"] > 0].reset_index(drop=True)
+    print(f"  Dropped {before - len(out)} districts without a population match")
+    print(f"  Final scoreable districts:  {len(out)}")
+    return out
 
 
-def find_best_match(state_norm, dist_norm, lookup, keys):
-    """Find best match in CSR lookup using exact then fuzzy matching."""
-    # CSR Excel uses modern state names, so try direct match first
-    exact_key = (state_norm, dist_norm)
-    if exact_key in lookup:
-        return lookup[exact_key]
+# ═════════════════════════════════════════════════════════════════════════
+# STEP 5 — Compute POS + whitespace flag
+# ═════════════════════════════════════════════════════════════════════════
+def compute_scores(master: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    print("\n" + "=" * 72)
+    print("STEP 5  Computing Philanthropic Opportunity Score")
+    print("=" * 72)
 
-    # Also try with aliases (CSR may use different spellings)
-    for alias in resolve_census_state(state_norm):
-        alias_key = (alias, dist_norm)
-        if alias_key in lookup:
-            return lookup[alias_key]
-
-    # Fuzzy match within same state (try all aliases)
-    same_state_keys = [(s, d) for s, d in keys if s == state_norm]
-    for alias in resolve_census_state(state_norm):
-        if alias != state_norm:
-            same_state_keys += [(s, d) for s, d in keys if s == alias]
-
-    if not same_state_keys:
-        # Try fuzzy state match
-        same_state_keys = [(s, d) for s, d in keys if fuzz.ratio(s, state_norm) > 85]
-
-    if same_state_keys:
-        dist_names = [d for _, d in same_state_keys]
-        result = process.extractOne(dist_norm, dist_names, scorer=fuzz.ratio, score_cutoff=75)
-        if result:
-            matched_dist = result[0]
-            for s, d in same_state_keys:
-                if d == matched_dist:
-                    return lookup[(s, d)]
-    return None
-
-
-def find_best_census_match(state_norm, dist_norm, lookup, keys):
-    """Find best match in Census lookup, using state alias mapping."""
-    # Resolve MPI state name to Census state name(s)
-    census_states = resolve_census_state(state_norm)
-
-    # Try exact match with each alias
-    for cs in census_states:
-        exact_key = (cs, dist_norm)
-        if exact_key in lookup:
-            return lookup[exact_key]
-
-    # Collect candidate districts from all aliased Census states
-    same_state_keys = []
-    for cs in census_states:
-        same_state_keys += [(s, d) for s, d in keys if s == cs]
-
-    # If still nothing, try fuzzy state match as last resort
-    if not same_state_keys:
-        same_state_keys = [(s, d) for s, d in keys if fuzz.ratio(s, state_norm) > 85]
-
-    if same_state_keys:
-        dist_names = [d for _, d in same_state_keys]
-        result = process.extractOne(dist_norm, dist_names, scorer=fuzz.ratio, score_cutoff=70)
-        if result:
-            matched_dist = result[0]
-            for s, d in same_state_keys:
-                if d == matched_dist:
-                    return lookup[(s, d)]
-    return None
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# STEP 5: Compute Philanthropic Opportunity Score
-# ═══════════════════════════════════════════════════════════════════════════
-
-def compute_scores(master, total_pop):
-    """Compute POS using population-tertile-stratified CSR benchmarking.
-
-    Instead of a single national median, districts are grouped into 3 tiers
-    by population (as an exogenous proxy for urbanization/corporate presence).
-    Each tier's median CSR per person serves as the benchmark for that tier's
-    districts, ensuring like-for-like comparison.
-
-    Tier boundaries: 33rd and 67th percentile of district population.
-    """
-    print("\n" + "=" * 60)
-    print("STEP 5: Computing Philanthropic Opportunity Scores...")
-    print("        (Population-tertile-stratified benchmarking)")
-    print("=" * 60)
-
-    # Drop districts with missing 2019-21 headcount (can't score without it)
-    before = len(master)
-    master = master[master["hr_2021"].notna() & (master["hr_2021"] > 0)].copy()
-    if len(master) < before:
-        print(f"  Dropped {before - len(master)} districts with missing hr_2021")
-
-    # ── Component A: NEED (N) ──
+    # Need — 2019-21 headcount ratio (proportion)
     master["N_raw"] = master["hr_2021"]
 
-    # ── Component B: SUPPLY GAP (G) - Tiered Approach ──
-    # CSR per person = (total_csr_recent * 1e7) / total_population
+    # CSR per person (rupees) — total_csr_recent is in Rs  crore (× 1e7 = Rs )
     master["district_csr_per_person"] = (
         master["total_csr_recent"] * 1e7 / master["total_population"]
     )
 
-    # Population tertile boundaries (33rd and 67th percentile)
-    pop_p33 = master["total_population"].quantile(1/3)
-    pop_p67 = master["total_population"].quantile(2/3)
-
-    # Assign population tier
-    # Tier 1: Small districts (bottom third by population)
-    # Tier 2: Medium districts (middle third)
-    # Tier 3: Large districts (top third)
+    # Population tertiles
+    p33 = master["total_population"].quantile(1 / 3)
+    p67 = master["total_population"].quantile(2 / 3)
     master["pop_tier"] = pd.cut(
         master["total_population"],
-        bins=[-np.inf, pop_p33, pop_p67, np.inf],
+        bins=[-np.inf, p33, p67, np.inf],
         labels=["Tier 1 (Small)", "Tier 2 (Medium)", "Tier 3 (Large)"],
     )
 
-    print(f"\n  Population tertile boundaries:")
-    print(f"    Tier 1 (Small):  pop <= {pop_p33:,.0f}")
-    print(f"    Tier 2 (Medium): {pop_p33:,.0f} < pop <= {pop_p67:,.0f}")
-    print(f"    Tier 3 (Large):  pop > {pop_p67:,.0f}")
-    print(f"    Tier counts: {master['pop_tier'].value_counts().to_dict()}")
+    print(f"  Tier 1 (Small)  pop <= {p33:>12,.0f}")
+    print(f"  Tier 2 (Medium) pop <= {p67:>12,.0f}")
+    print(f"  Tier 3 (Large)  pop >  {p67:>12,.0f}")
+    print(f"  Tier counts: {master['pop_tier'].value_counts().to_dict()}")
 
-    # Compute tier-specific median CSR per person
     tier_medians = master.groupby("pop_tier", observed=True)["district_csr_per_person"].median()
-    print(f"\n  Tier CSR medians (INR/person):")
-    for tier, med in tier_medians.items():
-        print(f"    {tier}: {med:.2f}")
-
-    # Store tier median for each district (convert to float to avoid categorical dtype)
     master["tier_median_csr"] = master["pop_tier"].map(tier_medians).astype(float)
-
-    # G_raw = max(0, tier_median - district_csr) for each district
-    # This measures the gap relative to each district's own peer group
     master["G_raw"] = (master["tier_median_csr"] - master["district_csr_per_person"]).clip(lower=0)
 
-    # Also compute overall national median for reference (used in UI display)
-    national_median = master["district_csr_per_person"].median()
-    national_mean = master["district_csr_per_person"].mean()
-    print(f"\n  National CSR density - Mean: {national_mean:.2f} INR/person")
-    print(f"  National CSR density - Median: {national_median:.2f} INR/person")
+    national_median = float(master["district_csr_per_person"].median())
+    national_mean = float(master["district_csr_per_person"].mean())
 
-    # ── Component C: UNRESOLVED POVERTY (U) ──
-    has_baseline = master["hr_2016"].notna() & (master["hr_2016"] > 0)
-    master.loc[has_baseline, "U_raw"] = (
-        master.loc[has_baseline, "hr_2021"] / master.loc[has_baseline, "hr_2016"]
-    )
-    median_retention = master.loc[has_baseline, "U_raw"].median()
-    print(f"  Median retention ratio: {median_retention:.3f}")
-    master.loc[~has_baseline, "U_raw"] = median_retention
+    print(f"  National CSR density — mean   Rs {national_mean:,.2f} /person")
+    print(f"  National CSR density — median Rs {national_median:,.2f} /person")
+    for t, m in tier_medians.items():
+        print(f"    {t:<18} median Rs {m:,.2f} /person")
 
-    # ── Min-Max Normalization ──
-    for comp in ["N_raw", "G_raw", "U_raw"]:
-        norm_col = comp.replace("_raw", "_norm")
-        vals = master[comp]
-        vmin, vmax = vals.min(), vals.max()
-        if vmax > vmin:
-            master[norm_col] = (vals - vmin) / (vmax - vmin)
-        else:
-            master[norm_col] = 0.5
+    # Unresolved poverty — retention ratio (hr_2021 / hr_2016)
+    baseline = master["hr_2016"].notna() & (master["hr_2016"] > 0)
+    master.loc[baseline, "U_raw"] = master.loc[baseline, "hr_2021"] / master.loc[baseline, "hr_2016"]
+    median_retention = float(master.loc[baseline, "U_raw"].median())
+    master.loc[~baseline, "U_raw"] = median_retention
+    master["u_imputed"] = ~baseline
+    print(f"  Median retention ratio: {median_retention:.3f}   imputed for {(~baseline).sum()} districts")
 
-    # ── Compute POS ──
-    master["POS"] = (
-        W_N * master["N_norm"] +
-        W_G * master["G_norm"] +
-        W_U * master["U_norm"]
-    ) * 100
+    # Min-max normalisation
+    for raw in ["N_raw", "G_raw", "U_raw"]:
+        norm = raw.replace("_raw", "_norm")
+        v = master[raw]
+        lo, hi = float(v.min()), float(v.max())
+        master[norm] = (v - lo) / (hi - lo) if hi > lo else 0.5
 
-    # ── Whitespace flag ──
-    # Bottom 25% CSR per person (within their tier) AND top 25% headcount ratio
-    csr_p25 = master["district_csr_per_person"].quantile(0.25)
-    hr_p75 = master["N_raw"].quantile(0.75)
-    master["is_whitespace"] = (
-        (master["district_csr_per_person"] <= csr_p25) &
-        (master["N_raw"] >= hr_p75)
-    )
+    # POS
+    master["POS"] = (W_N * master["N_norm"] + W_G * master["G_norm"] + W_U * master["U_norm"]) * 100
 
-    print(f"\n  POS range: {master['POS'].min():.1f} - {master['POS'].max():.1f}")
-    print(f"  Whitespace districts: {master['is_whitespace'].sum()}")
-    print(f"  CSR 25th percentile: {csr_p25:.2f} INR/person")
-    print(f"  MPI headcount 75th percentile: {hr_p75:.4f}")
+    # Whitespace: national 25th pctile CSR + national 75th pctile HR
+    csr_p25 = float(master["district_csr_per_person"].quantile(0.25))
+    hr_p75 = float(master["N_raw"].quantile(0.75))
+    master["is_whitespace"] = (master["district_csr_per_person"] <= csr_p25) & (master["N_raw"] >= hr_p75)
 
-    # Return tier medians dict and extra metadata for downstream use
-    tier_medians_dict = {str(k): round(float(v), 2) for k, v in tier_medians.items()}
-    extra_meta = {
+    print(f"  POS range: {master['POS'].min():.2f} – {master['POS'].max():.2f}")
+    print(f"  Whitespace districts: {int(master['is_whitespace'].sum())}")
+    print(f"  Whitespace thresholds: CSR p25 Rs {csr_p25:,.2f}, HR p75 {hr_p75*100:.2f} %")
+
+    meta = {
+        "national_median_csr_per_person": round(national_median, 2),
+        "national_mean_csr": round(national_mean, 2),
+        "tier_medians": {str(k): round(float(v), 2) for k, v in tier_medians.items()},
+        "total_districts": int(len(master)),
+        "methodology": "population-tertile-stratified benchmarking",
         "whitespace_thresholds": {
-            "csr_p25": round(float(csr_p25), 2),
-            "hr_p75_pct": round(float(hr_p75 * 100), 1),
+            "csr_p25": round(csr_p25, 2),
+            "hr_p75_pct": round(hr_p75 * 100, 1),
         },
         "whitespace_count": int(master["is_whitespace"].sum()),
         "pos_range": {
             "min": round(float(master["POS"].min()), 1),
             "max": round(float(master["POS"].max()), 1),
         },
-        "pop_tier_boundaries": {
-            "p33": int(round(float(pop_p33))),
-            "p67": int(round(float(pop_p67))),
-        },
-        "national_mean_csr": round(float(national_mean), 2),
-        "median_retention_ratio": round(float(median_retention), 3),
+        "pop_tier_boundaries": {"p33": int(round(p33)), "p67": int(round(p67))},
+        "median_retention_ratio": round(median_retention, 3),
+        "weights": {"w_N": W_N, "w_G": W_G, "w_U": W_U},
+        "csr_window_fy": CSR_RECENT_YEARS,
     }
-    return master, national_median, tier_medians_dict, extra_meta
+    return master, meta
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# STEP 6: Compute sector-specific scores
-# ═══════════════════════════════════════════════════════════════════════════
+# ═════════════════════════════════════════════════════════════════════════
+# STEP 6 — Sector-specific scores
+# ═════════════════════════════════════════════════════════════════════════
+def compute_sector_scores(master: pd.DataFrame, pivot: pd.DataFrame) -> dict:
+    print("\n" + "=" * 72)
+    print("STEP 6  Sector-specific G_norm")
+    print("=" * 72)
 
-def compute_sector_scores(master, csr_sector_pivot):
-    """Compute sector-specific POS for each district."""
-    print("\n" + "=" * 60)
-    print("STEP 6: Computing sector-specific scores...")
-    print("=" * 60)
-
-    sector_scores = {}
-
-    for _, row in master.iterrows():
-        lgd = row["district_lgd_code"]
-        sector_scores[lgd] = {}
+    scores: dict[str, dict] = {row["district_lgd_code"]: {} for _, row in master.iterrows()}
 
     for sector in SCORE_SECTORS:
-        # Find matching sector column in pivot table
-        matching_col = None
-        for col in csr_sector_pivot.columns:
-            if isinstance(col, str) and fuzz.ratio(col.lower(), sector.lower()) > 80:
-                matching_col = col
-                break
-
-        if matching_col is None:
-            print(f"  WARNING: Sector '{sector}' not found in CSR data")
+        col = next(
+            (c for c in pivot.columns if isinstance(c, str) and fuzz.ratio(c.lower(), sector.lower()) > 80),
+            None,
+        )
+        if col is None:
+            print(f"  WARN  sector '{sector}' not in CSR data")
             continue
 
-        # Build sector CSR per person for each district
-        sector_csr = {}
-        for _, srow in csr_sector_pivot.iterrows():
-            lgd = str(srow.get("district_lgd_code", ""))
-            if lgd and lgd != "nan":
-                sector_csr[lgd] = srow.get(matching_col, 0)
-
-        # Compute sector density for matched master districts
-        sector_densities = []
-        for _, mrow in master.iterrows():
-            lgd = mrow["district_lgd_code"]
-            csr_amount = sector_csr.get(lgd, 0)
-            density = (csr_amount * 1e7) / mrow["total_population"] if mrow["total_population"] > 0 else 0
-            sector_densities.append(density)
-
-        master_temp = master.copy()
-        master_temp["sector_density"] = sector_densities
-
-        # Tier-specific median sector density as benchmark
-        tier_sector_medians = master_temp.groupby("pop_tier", observed=True)["sector_density"].median()
-        master_temp["tier_sector_median"] = master_temp["pop_tier"].map(tier_sector_medians).astype(float)
-
-        # Sector gap (tiered)
-        master_temp["sector_gap"] = (master_temp["tier_sector_median"] - master_temp["sector_density"]).clip(lower=0)
-
-        # Normalize sector gap
-        sg_min, sg_max = master_temp["sector_gap"].min(), master_temp["sector_gap"].max()
-        if sg_max > sg_min:
-            master_temp["sector_G_norm"] = (master_temp["sector_gap"] - sg_min) / (sg_max - sg_min)
-        else:
-            master_temp["sector_G_norm"] = 0.5
-
-        # Sector POS
-        sector_pos = (
-            W_N * master_temp["N_norm"] +
-            W_G * master_temp["sector_G_norm"] +
-            W_U * master_temp["U_norm"]
-        ) * 100
-
-        for i, (_, mrow) in enumerate(master.iterrows()):
-            lgd = mrow["district_lgd_code"]
-            score = float(sector_pos.iloc[i])
-            if math.isfinite(score):
-                sector_scores[lgd][sector] = round(score, 2)
-            else:
-                sector_scores[lgd][sector] = 50.0  # neutral fallback
-
-        print(f"  {sector}: computed for {len(master)} districts")
-
-    return sector_scores
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# STEP 7: Output to JSON
-# ═══════════════════════════════════════════════════════════════════════════
-
-def safe_json_value(val):
-    """Convert a value to JSON-safe format."""
-    if val is None:
-        return None
-    if isinstance(val, (np.integer,)):
-        return int(val)
-    if isinstance(val, (np.floating, float)):
-        if math.isnan(val) or math.isinf(val):
-            return None
-        return round(float(val), 6)
-    if isinstance(val, (np.bool_,)):
-        return bool(val)
-    if isinstance(val, bool):
-        return val
-    return val
-
-
-def output_json(master, sector_scores, median_csr, tier_medians, out_dir, extra_meta=None):
-    """Write validated JSON files."""
-    print("\n" + "=" * 60)
-    print("STEP 7: Writing output JSON...")
-    print("=" * 60)
-
-    os.makedirs(out_dir, exist_ok=True)
-
-    # Master JSON
-    records = []
-    for _, row in master.iterrows():
-        record = {
-            "state_name": str(row["state"]),
-            "district_name": str(row["district"]),
-            "district_lgd_code": str(row["district_lgd_code"]),
-            "headcount_ratio_2016": safe_json_value(row["hr_2016"]),
-            "headcount_ratio_2021": safe_json_value(row["hr_2021"]),
-            "intensity_2021": safe_json_value(row["intensity_2021"]),
-            "mpi_2021": safe_json_value(row["mpi_2021"]),
-            "total_csr_recent": safe_json_value(row["total_csr_recent"]),
-            "total_population": safe_json_value(row["total_population"]),
-            "district_csr_per_person": safe_json_value(row["district_csr_per_person"]),
-            "pop_tier": str(row["pop_tier"]),
-            "tier_median_csr": safe_json_value(row["tier_median_csr"]),
-            "N_raw": safe_json_value(row["N_raw"]),
-            "G_raw": safe_json_value(row["G_raw"]),
-            "U_raw": safe_json_value(row["U_raw"]),
-            "N_norm": safe_json_value(row["N_norm"]),
-            "G_norm": safe_json_value(row["G_norm"]),
-            "U_norm": safe_json_value(row["U_norm"]),
-            "POS": safe_json_value(row["POS"]),
-            "is_whitespace": safe_json_value(row["is_whitespace"]),
+        sector_csr = {
+            str(r.get("district_lgd_code", "")): float(r.get(col, 0) or 0)
+            for _, r in pivot.iterrows()
         }
-        records.append(record)
 
-    master_path = os.path.join(out_dir, "whitespace_master.json")
-    with open(master_path, "w", encoding="utf-8") as f:
-        json.dump(records, f, indent=2, ensure_ascii=False)
+        m = master.copy()
+        m["sector_density"] = [
+            (sector_csr.get(r["district_lgd_code"], 0) * 1e7) / r["total_population"]
+            if r["total_population"] > 0 else 0
+            for _, r in m.iterrows()
+        ]
+        tier_sec_med = m.groupby("pop_tier", observed=True)["sector_density"].median()
+        m["tier_sec_med"] = m["pop_tier"].map(tier_sec_med).astype(float)
+        m["sector_gap"] = (m["tier_sec_med"] - m["sector_density"]).clip(lower=0)
 
-    # Validate: re-read and check
-    with open(master_path, "r") as f:
-        test = json.load(f)
-    print(f"  whitespace_master.json: {len(test)} records, valid JSON confirmed")
+        lo, hi = float(m["sector_gap"].min()), float(m["sector_gap"].max())
+        m["sector_G_norm"] = (m["sector_gap"] - lo) / (hi - lo) if hi > lo else 0.5
 
-    # Sector scores JSON
-    sector_path = os.path.join(out_dir, "sector_scores.json")
-    with open(sector_path, "w", encoding="utf-8") as f:
-        json.dump(sector_scores, f, indent=2, ensure_ascii=False)
+        # Store the sector-specific G_norm (not the composite POS) so the
+        # frontend can apply arbitrary user weights correctly.
+        for i, (_, r) in enumerate(master.iterrows()):
+            v = float(m["sector_G_norm"].iloc[i])
+            scores[r["district_lgd_code"]][sector] = round(v, 6) if math.isfinite(v) else 0.5
 
-    with open(sector_path, "r") as f:
-        test_s = json.load(f)
-    print(f"  sector_scores.json: {len(test_s)} districts, valid JSON confirmed")
+        print(f"  {sector:<42} scored {len(master)} districts")
+    return scores
 
-    # Store meta information
-    meta = {
-        "national_median_csr_per_person": round(median_csr, 2),
-        "tier_medians": tier_medians,
-        "total_districts": len(records),
-        "methodology": "population-tertile-stratified benchmarking",
+
+# ═════════════════════════════════════════════════════════════════════════
+# STEP 7 — Write outputs + verification report
+# ═════════════════════════════════════════════════════════════════════════
+def write_outputs(
+    master: pd.DataFrame,
+    sector_scores: dict,
+    meta: dict,
+    csr_overview: dict,
+    out_dir: Path,
+    mpi_total_extracted: int = 0,
+) -> None:
+    print("\n" + "=" * 72)
+    print("STEP 7  Writing JSON outputs")
+    print("=" * 72)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    records = []
+    for _, r in master.iterrows():
+        records.append({
+            "state_name": str(r["state"]),
+            "district_name": str(r["district"]),
+            "district_lgd_code": str(r["district_lgd_code"]),
+            "headcount_ratio_2016": safe_json(r["hr_2016"]),
+            "headcount_ratio_2021": safe_json(r["hr_2021"]),
+            "mpi_2021": safe_json(r["mpi_2021"]),
+            "total_csr_recent": safe_json(r["total_csr_recent"]),
+            "total_population": safe_json(r["total_population"]),
+            "district_csr_per_person": safe_json(r["district_csr_per_person"]),
+            "pop_tier": str(r["pop_tier"]),
+            "tier_median_csr": safe_json(r["tier_median_csr"]),
+            "N_raw": safe_json(r["N_raw"]),
+            "G_raw": safe_json(r["G_raw"]),
+            "U_raw": safe_json(r["U_raw"]),
+            "N_norm": safe_json(r["N_norm"]),
+            "G_norm": safe_json(r["G_norm"]),
+            "U_norm": safe_json(r["U_norm"]),
+            "POS": safe_json(r["POS"]),
+            "is_whitespace": safe_json(r["is_whitespace"]),
+        })
+
+    (out_dir / "whitespace_master.json").write_text(
+        json.dumps(records, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    (out_dir / "sector_scores.json").write_text(
+        json.dumps(sector_scores, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    (out_dir / "meta.json").write_text(
+        json.dumps(meta, indent=2), encoding="utf-8"
+    )
+    print(f"  wrote whitespace_master.json ({len(records)} districts)")
+    print(f"  wrote sector_scores.json     ({len(sector_scores)} districts)")
+    print(f"  wrote meta.json")
+
+    # ── Verification report: local-only audit artifact ───────────────────
+    report = build_verification_report(master, meta, csr_overview, mpi_total_extracted)
+    (SCRIPTS_DIR / "verification_report.json").write_text(
+        json.dumps(report, indent=2), encoding="utf-8"
+    )
+    print(f"  wrote verification_report.json (scripts/)")
+
+
+def build_verification_report(
+    master: pd.DataFrame, meta: dict, csr_overview: dict,
+    mpi_total_extracted: int = 0,
+) -> dict:
+    """Produce the numbers the website copy quotes, so we can reconcile each one."""
+
+    def state_row(state: str) -> dict:
+        s = master[master["state"].str.lower() == state.lower()]
+        if len(s) == 0:
+            return {"state": state, "error": "no districts matched"}
+        pop = float(s["total_population"].sum())
+        hr_pop_weighted = float(
+            (s["hr_2021"] * s["total_population"]).sum() / pop
+        )
+        hr_simple_avg = float(s["hr_2021"].mean())
+        csr_total = float(s["total_csr_recent"].sum())
+        csr_per_person = (csr_total * 1e7) / pop if pop else 0.0
+        return {
+            "state": state,
+            "districts_matched": int(len(s)),
+            "population_2011": int(round(pop)),
+            "hr_2019_21_pop_weighted_pct": round(hr_pop_weighted * 100, 2),
+            "hr_2019_21_simple_avg_pct": round(hr_simple_avg * 100, 2),
+            "csr_3yr_crore": round(csr_total, 2),
+            "csr_per_person_inr": round(csr_per_person, 2),
+        }
+
+    bihar = state_row("Bihar")
+    maha = state_row("Maharashtra")
+    ratios = {
+        "bihar_vs_maharashtra_hr_pop_weighted": round(
+            bihar["hr_2019_21_pop_weighted_pct"] / maha["hr_2019_21_pop_weighted_pct"], 2
+        ),
+        "bihar_vs_maharashtra_hr_simple_avg": round(
+            bihar["hr_2019_21_simple_avg_pct"] / maha["hr_2019_21_simple_avg_pct"], 2
+        ),
+        "maharashtra_vs_bihar_csr_per_person": round(
+            maha["csr_per_person_inr"] / bihar["csr_per_person_inr"], 2
+        ) if bihar.get("csr_per_person_inr") else None,
     }
-    if extra_meta:
-        meta.update(extra_meta)
-    meta_path = os.path.join(out_dir, "meta.json")
-    with open(meta_path, "w") as f:
-        json.dump(meta, f, indent=2)
+
+    # National headcount ratio: population-weighted across all matched districts
+    total_pop = float(master["total_population"].sum())
+    national_hr_pct = round(
+        float((master["hr_2021"] * master["total_population"]).sum() / total_pop) * 100, 2
+    )
+
+    top10 = (
+        master.nlargest(10, "POS")
+        [["district", "state", "POS", "hr_2021", "district_csr_per_person", "is_whitespace"]]
+        .assign(hr_2021_pct=lambda d: (d["hr_2021"] * 100).round(2))
+        .drop(columns=["hr_2021"])
+        .to_dict(orient="records")
+    )
+
+    ws_by_state = (
+        master[master["is_whitespace"]]
+        .groupby("state")
+        .size()
+        .sort_values(ascending=False)
+        .to_dict()
+    )
+
+    baseline_mask = master["hr_2016"].notna() & (master["hr_2016"] > 0)
+    u_raw_observed = master.loc[baseline_mask, "U_raw"]
+    retention_stats = {
+        "median": round(float(u_raw_observed.median()), 3),
+        "mean": round(float(u_raw_observed.mean()), 3),
+        "std": round(float(u_raw_observed.std()), 3),
+        "p25": round(float(u_raw_observed.quantile(0.25)), 3),
+        "p75": round(float(u_raw_observed.quantile(0.75)), 3),
+        "n_observed": int(baseline_mask.sum()),
+        "n_imputed": int((~baseline_mask).sum()),
+    }
+
+    return {
+        "national": {
+            "total_districts_scored": int(len(master)),
+            "mpi_districts_extracted": mpi_total_extracted,
+            "mpi_districts_excluded": mpi_total_extracted - int(len(master)),
+            "total_population_2011": int(round(total_pop)),
+            "national_hr_2019_21_pop_weighted_pct": national_hr_pct,
+            "pos_range": meta["pos_range"],
+            "whitespace_count": meta["whitespace_count"],
+        },
+        "csr_totals": {
+            "total_all_years_gross_crore": round(csr_overview.get("total_csr_all_years_gross", 0), 2),
+            "total_all_years_attributable_crore": round(csr_overview["total_csr_all_years"], 2),
+            "total_fy23_24_crore": round(csr_overview["total_csr_fy23_24"], 2),
+            "total_3yr_window_crore": round(csr_overview["total_csr_recent_3yr"], 2),
+            "pan_india_csr_all_years_crore": round(csr_overview.get("pan_india_csr_all_years", 0), 2),
+            "pan_india_pct": csr_overview.get("pan_india_pct", 0),
+        },
+        "bihar": bihar,
+        "maharashtra": maha,
+        "ratios": ratios,
+        "whitespace_by_state": ws_by_state,
+        "retention_ratio_stats": retention_stats,
+        "top_10_districts_by_pos": top10,
+    }
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# STEP 8: Print verification report
-# ═══════════════════════════════════════════════════════════════════════════
+# ═════════════════════════════════════════════════════════════════════════
+# Main
+# ═════════════════════════════════════════════════════════════════════════
+def main() -> None:
+    print("Whitespace India CSR — data pipeline")
+    print(f"Source: {SRC_DIR}")
+    print(f"Output: {OUT_DIR}")
+    print()
 
-def print_report(master):
-    """Print verification data."""
-    print("\n" + "=" * 60)
-    print("VERIFICATION REPORT")
-    print("=" * 60)
+    for p in (PDF_PATH, EXCEL_PATH, CENSUS_PATH):
+        if not p.exists():
+            print(f"ERROR: missing source file {p}", file=sys.stderr)
+            sys.exit(1)
 
-    print(f"\n  Total districts: {len(master)}")
-    print(f"  POS range: {master['POS'].min():.1f} - {master['POS'].max():.1f}")
-    print(f"  Whitespace districts: {master['is_whitespace'].sum()}")
-
-    print(f"\n  TOP 20 DISTRICTS BY POS:")
-    top20 = master.nlargest(20, "POS")
-    for i, (_, row) in enumerate(top20.iterrows()):
-        print(f"    {i+1:3d}. {row['district']:<25s} {row['state']:<20s}  "
-              f"POS={row['POS']:5.1f}  HR={row['hr_2021']:.4f}  "
-              f"CSR/pp={row['district_csr_per_person']:.0f}  "
-              f"WS={'YES' if row['is_whitespace'] else 'no'}")
-
-    print(f"\n  DISTRICTS BY STATE (top 10 by count):")
-    state_counts = master.groupby("state").size().sort_values(ascending=False).head(10)
-    for state, count in state_counts.items():
-        avg_pos = master[master["state"] == state]["POS"].mean()
-        print(f"    {state:<30s} {count:3d} districts  avg POS={avg_pos:.1f}")
-
-    # Check for any remaining NaN/Infinity issues
-    for col in ["POS", "N_norm", "G_norm", "U_norm", "district_csr_per_person"]:
-        bad = master[col].isna().sum() + np.isinf(master[col]).sum()
-        if bad > 0:
-            print(f"  WARNING: {col} has {bad} NaN/Inf values!")
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# MAIN
-# ═══════════════════════════════════════════════════════════════════════════
-
-def main():
-    print("Whitespace India - Data Pipeline")
-    print("================================\n")
-
-    # Step 1: Extract MPI from PDF
-    mpi_df = extract_mpi_from_pdf(PDF_PATH)
-
-    # Step 2: Process CSR Excel
-    csr_district, csr_sector_pivot = process_csr_excel(EXCEL_PATH)
-
-    # Step 3: Process Census
-    census, total_pop = process_census(CENSUS_PATH)
-
-    # Step 4: Merge
-    master = fuzzy_match_districts(mpi_df, csr_district, census)
-
-    # Step 5: Compute scores (population-tertile-stratified)
-    master, median_csr, tier_medians, extra_meta = compute_scores(master, total_pop)
-
-    # Step 6: Sector scores (also tiered)
+    mpi = extract_mpi(PDF_PATH)
+    mpi_total_extracted = len(mpi)
+    csr_district, csr_sector_pivot, csr_overview = load_csr(EXCEL_PATH)
+    census, _ = load_census(CENSUS_PATH)
+    master = join_datasets(mpi, csr_district, census)
+    master, meta = compute_scores(master)
     sector_scores = compute_sector_scores(master, csr_sector_pivot)
+    write_outputs(master, sector_scores, meta, csr_overview, OUT_DIR, mpi_total_extracted)
 
-    # Step 7: Output
-    output_json(master, sector_scores, median_csr, tier_medians, OUT_DIR, extra_meta)
-
-    # Step 8: Report
-    print_report(master)
-
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 72)
     print("PIPELINE COMPLETE")
-    print("=" * 60)
+    print("=" * 72)
+    print(f"Artifacts in: {OUT_DIR}")
 
 
 if __name__ == "__main__":
