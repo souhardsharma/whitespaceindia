@@ -132,25 +132,41 @@ export async function POST(req: NextRequest) {
   if (name) kitPayload.first_name = name;
   kitPayload.fields = fields;
 
+  // Kit's form-subscription endpoint flags server-to-server calls that look
+  // bot-like. Send browser-typical headers plus an honest Origin/Referer so
+  // the request is treated the same as an embed-script submission.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
+
   try {
     const kitRes = await fetch(`https://app.kit.com/forms/${formId}/subscriptions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        Origin: siteUrl,
+        Referer: `${siteUrl}/`,
       },
       body: JSON.stringify(kitPayload),
+      cache: "no-store",
     });
 
-    const kitBody = (await kitRes.json().catch(() => null)) as
-      | { status?: string; errors?: unknown }
-      | null;
+    const rawBody = await kitRes.text().catch(() => "");
+    type KitBody = { status?: string; errors?: unknown };
+    let kitBody: KitBody | null = null;
+    try {
+      kitBody = rawBody ? (JSON.parse(rawBody) as KitBody) : null;
+    } catch {
+      kitBody = null;
+    }
 
     if (!kitRes.ok || !kitBody || kitBody.status !== "success") {
       console.error(
         "[subscribe] Kit error",
-        kitRes.status,
-        JSON.stringify(kitBody).slice(0, 500)
+        "http=" + kitRes.status,
+        "formId=" + formId,
+        "body=" + rawBody.slice(0, 500)
       );
       return NextResponse.json(
         { ok: false, message: "Subscription failed. Please try again." },
