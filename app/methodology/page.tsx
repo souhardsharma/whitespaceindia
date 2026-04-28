@@ -73,6 +73,400 @@ function formatLakh(n: number): string {
   return lakh >= 10 ? `${lakh.toFixed(1)} lakh` : `${lakh.toFixed(2)} lakh`;
 }
 
+function PipelineConnector() {
+  return (
+    <div className="flex justify-center py-1.5 border-y border-[#1c1c19]/15 bg-[#f6f3ee]/40">
+      <svg width="14" height="20" viewBox="0 0 14 20" className="text-[#1c1c19]/45" aria-hidden>
+        <path d="M7 0 V17 M2 12 L7 17 L12 12" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+}
+
+function PipelineStep({ number, title, children }: { number: string; title: string; children: React.ReactNode }) {
+  return (
+    <div className="px-6 md:px-8 py-6 grid grid-cols-12 gap-4 md:gap-6">
+      <div className="col-span-12 md:col-span-3">
+        <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] font-bold block">
+          Step {number}
+        </span>
+        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19] font-bold mt-1.5 leading-snug">
+          {title}
+        </p>
+      </div>
+      <div className="col-span-12 md:col-span-9">{children}</div>
+    </div>
+  );
+}
+
+function JoinPipeline({ totalDistricts }: { totalDistricts: number }) {
+  // Palghar / Thane proportional split. 2,990,116 / 11,060,148 = 27.04%
+  const palgharPct = (2990116 / 11060148) * 100;
+  const thaneResidualPct = 100 - palgharPct;
+  const matched = totalDistricts;
+  const dropped = 653 - matched;
+
+  return (
+    <div className="border border-[#1c1c19] bg-[#fcf9f4]">
+      {/* Frame header */}
+      <div className="border-b border-[#1c1c19] px-6 md:px-8 py-5 flex items-baseline justify-between gap-4 flex-wrap">
+        <div>
+          <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.3em] text-[#BD402C] font-bold block">
+            The Join Pipeline
+          </span>
+          <p className="font-body text-xs text-[#1c1c19]/65 mt-1.5 max-w-xl">
+            Three independently maintained datasets, none of which agrees on district names or boundaries. The MPI is the spine; CSR and Census are joined onto it.
+          </p>
+        </div>
+        <span className="font-label text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/55 self-end">
+          MCA / NITI Aayog / RGI
+        </span>
+      </div>
+
+      {/* Step 0: three sources -> one matched record */}
+      <div className="px-6 md:px-8 py-6 md:py-8">
+        <div className="grid grid-cols-3 border border-[#1c1c19]/30">
+          {[
+            { dataset: "Census 2011", source: "Registrar General of India", spelling: "Hooghly", subline: "640 districts" },
+            { dataset: "MPI 2023", source: "NITI Aayog (NFHS-5)", spelling: "Hugli (Hooghly)", subline: "653 districts" },
+            { dataset: "CSR / MCA", source: "Ministry of Corporate Affairs", spelling: "Hugli", subline: "663 (state, district) keys" },
+          ].map((s, i) => (
+            <div
+              key={s.dataset}
+              className={`p-4 md:p-5 ${i < 2 ? "border-r border-[#1c1c19]/30" : ""}`}
+            >
+              <p className="font-label text-[9px] uppercase tracking-[0.25em] text-[#BD402C] font-bold mb-1">
+                {s.dataset}
+              </p>
+              <p className="font-label text-[8px] uppercase tracking-[0.2em] text-[#1c1c19]/45 mb-3">
+                {s.source}
+              </p>
+              <p className="font-mono text-sm md:text-base text-[#1c1c19] mb-2 break-words">
+                &quot;{s.spelling}&quot;
+              </p>
+              <p className="font-label text-[9px] uppercase tracking-[0.2em] text-[#1c1c19]/55">
+                {s.subline}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Convergence diagram: 3 lines merging into 1 matched record */}
+        <div className="mt-4 grid grid-cols-3">
+          <svg viewBox="0 0 100 36" preserveAspectRatio="none" className="w-full h-9 text-[#BD402C]/60">
+            <path d="M16.6 0 V18 Q16.6 30 50 30 L100 30" stroke="currentColor" strokeWidth="0.6" fill="none" />
+          </svg>
+          <svg viewBox="0 0 100 36" preserveAspectRatio="none" className="w-full h-9 text-[#BD402C]/60">
+            <path d="M50 0 V30 M44 24 L50 30 L56 24" stroke="currentColor" strokeWidth="0.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <svg viewBox="0 0 100 36" preserveAspectRatio="none" className="w-full h-9 text-[#BD402C]/60">
+            <path d="M83.3 0 V18 Q83.3 30 50 30 L0 30" stroke="currentColor" strokeWidth="0.6" fill="none" />
+          </svg>
+        </div>
+
+        <div className="mx-auto max-w-md border border-[#1c1c19] bg-white px-4 py-3 text-center">
+          <p className="font-label text-[9px] uppercase tracking-[0.25em] text-[#1c1c19]/55 mb-1">
+            One canonical district record
+          </p>
+          <p className="font-mono text-sm md:text-base text-[#1c1c19]">
+            West Bengal / Hugli
+          </p>
+        </div>
+      </div>
+
+      <PipelineConnector />
+
+      {/* Step 01: fuzzy match algorithm */}
+      <PipelineStep number="01" title="State-scoped fuzzy match">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
+          <div>
+            <span className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/60 block mb-1">
+              Algorithm
+            </span>
+            <p className="font-mono text-base text-[#1c1c19]">rapidfuzz.fuzz.ratio</p>
+          </div>
+          <div>
+            <span className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/60 block mb-1">
+              Threshold
+            </span>
+            <p className="font-mono text-base text-[#1c1c19]">{`>= 75% similarity`}</p>
+            <p className="font-body text-xs text-[#1c1c19]/55 italic mt-1">
+              Conservative, set low to maximize coverage.
+            </p>
+          </div>
+          <div>
+            <span className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/60 block mb-1">
+              Caution band
+            </span>
+            <p className="font-mono text-base text-[#1c1c19]">75 to 90%</p>
+            <p className="font-body text-xs text-[#1c1c19]/55 italic mt-1">
+              Listed in the verification report for reviewer inspection.
+            </p>
+          </div>
+          <div>
+            <span className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/60 block mb-1">
+              State scoping
+            </span>
+            <p className="font-mono text-base text-[#1c1c19]">match never crosses states</p>
+          </div>
+        </div>
+
+        {/* False-positive visualization: state scoping diagram */}
+        <div className="mt-5 border border-[#1c1c19]/30 bg-white/40 p-4">
+          <p className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/60 mb-3">
+            Why state scoping matters
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-4">
+            <div className="border border-[#1c1c19]/40 bg-white p-3">
+              <p className="font-label text-[9px] uppercase tracking-[0.2em] text-[#BD402C] font-bold mb-1">
+                Himachal Pradesh
+              </p>
+              <p className="font-mono text-sm text-[#1c1c19]">Hamirpur</p>
+              <p className="font-label text-[8px] uppercase tracking-[0.15em] text-[#1c1c19]/45 mt-1">
+                pop ~454k
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="font-mono text-[#BD402C]/70 text-base">|| 100% ||</p>
+              <p className="font-label text-[8px] uppercase tracking-[0.2em] text-[#1c1c19]/55 mt-1">
+                names identical
+              </p>
+              <p className="font-label text-[8px] uppercase tracking-[0.2em] text-[#BD402C] font-bold mt-2">
+                BUT
+              </p>
+              <p className="font-label text-[8px] uppercase tracking-[0.2em] text-[#1c1c19]/55 mt-1">
+                state border blocks the match
+              </p>
+            </div>
+            <div className="border border-[#1c1c19]/40 bg-white p-3">
+              <p className="font-label text-[9px] uppercase tracking-[0.2em] text-[#BD402C] font-bold mb-1">
+                Uttar Pradesh
+              </p>
+              <p className="font-mono text-sm text-[#1c1c19]">Hamirpur</p>
+              <p className="font-label text-[8px] uppercase tracking-[0.15em] text-[#1c1c19]/45 mt-1">
+                pop ~1.1M (different district)
+              </p>
+            </div>
+          </div>
+        </div>
+      </PipelineStep>
+
+      <PipelineConnector />
+
+      {/* Step 02: renames */}
+      <PipelineStep number="02" title="Rename aliases (no boundary change)">
+        <div className="flex flex-wrap gap-2">
+          {[
+            "Gurgaon to Gurugram",
+            "Mysore to Mysuru",
+            "Allahabad to Prayagraj",
+            "Belgaum to Belagavi",
+            "Faizabad to Ayodhya",
+            "Sikkim 2021 (x4)",
+          ].map((p) => (
+            <span
+              key={p}
+              className="font-mono text-[12px] text-[#1c1c19] border border-[#1c1c19]/40 px-3 py-1.5 bg-white/60"
+            >
+              {p}
+            </span>
+          ))}
+          <span className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/55 px-2 py-1.5 self-center">
+            + 20 more
+          </span>
+        </div>
+        <p className="font-body text-xs text-[#1c1c19]/60 italic mt-3">
+          A pure rename keeps the Census 2011 population unchanged; only the district label is updated.
+        </p>
+      </PipelineStep>
+
+      <PipelineConnector />
+
+      {/* Step 03: post-2011 carve-out recast - the centerpiece */}
+      <PipelineStep number="03" title="Post-2011 carve-out recast">
+        <p className="font-body text-sm text-[#1c1c19]/75 leading-relaxed mb-4">
+          Over fifty districts in the MPI list <span className="italic">did not exist in Census 2011</span>. They were carved from older parent districts after the census was taken, so the parent population must be split, never inherited whole.
+        </p>
+
+        {/* Conservation bar - the proportional split */}
+        <div className="border border-[#1c1c19]/30 bg-white/40 p-5">
+          <p className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/60 mb-4">
+            Worked example: Maharashtra Thane, split into Palghar (2014) and a residual Thane
+          </p>
+
+          <div className="mb-3 flex items-baseline justify-between gap-2 flex-wrap">
+            <span className="font-label text-[10px] uppercase tracking-[0.2em] text-[#1c1c19]/65">
+              Census 2011 Thane (pre-carve-out)
+            </span>
+            <span className="font-mono text-base md:text-lg text-[#1c1c19]">11,060,148</span>
+          </div>
+          <div className="h-2.5 bg-[#1c1c19]/15 w-full mb-2" />
+
+          <div className="flex justify-center my-2">
+            <svg width="14" height="14" viewBox="0 0 14 14" className="text-[#BD402C]" aria-hidden>
+              <path d="M7 0 V12 M2 7 L7 12 L12 7" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+
+          {/* Proportional split bar */}
+          <div className="flex h-12 border border-[#1c1c19]/40 overflow-hidden" aria-label="Conservation bar showing Palghar 27% and Thane residual 73% of original Thane">
+            <div
+              className="bg-[#BD402C] flex items-center justify-center min-w-0"
+              style={{ width: `${palgharPct}%` }}
+            >
+              <span className="font-mono text-[11px] md:text-xs text-white px-1 truncate">2,990,116</span>
+            </div>
+            <div
+              className="bg-[#1c1c19] flex items-center justify-center min-w-0"
+              style={{ width: `${thaneResidualPct}%` }}
+            >
+              <span className="font-mono text-[11px] md:text-xs text-white px-1 truncate">8,070,032</span>
+            </div>
+          </div>
+          <div className="flex mt-2">
+            <div style={{ width: `${palgharPct}%` }} className="text-center px-1">
+              <p className="font-label text-[9px] uppercase tracking-[0.2em] text-[#BD402C] font-bold">
+                Palghar
+              </p>
+              <p className="font-label text-[8px] uppercase tracking-[0.15em] text-[#1c1c19]/55 mt-0.5">
+                gazette / DCHB sourced
+              </p>
+            </div>
+            <div style={{ width: `${thaneResidualPct}%` }} className="text-center px-1">
+              <p className="font-label text-[9px] uppercase tracking-[0.2em] text-[#1c1c19] font-bold">
+                Thane (residual)
+              </p>
+              <p className="font-label text-[8px] uppercase tracking-[0.15em] text-[#1c1c19]/55 mt-0.5">
+                computed: parent minus child
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 pt-4 border-t border-[#1c1c19]/20 text-center">
+            <span className="font-mono text-sm md:text-base text-[#1c1c19]">
+              2,990,116 + 8,070,032 = 11,060,148
+            </span>
+            <span className="font-label text-[10px] uppercase tracking-[0.25em] text-[#BD402C] font-bold ml-3">
+              conserved
+            </span>
+            <p className="font-body text-xs text-[#1c1c19]/55 italic mt-2">
+              The residual is never the full pre-carve-out total, so Thane is not double-counted with Palghar.
+            </p>
+          </div>
+        </div>
+
+        {/* Catalogue + coverage */}
+        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <p className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/60 mb-2">
+              Source-cited catalogue
+            </p>
+            <p className="font-mono text-[12px] text-[#1c1c19] mb-2 break-all">
+              data/external/population_recast_2011.csv
+            </p>
+            <p className="font-body text-sm text-[#1c1c19]/70 leading-relaxed">
+              Each row carries a clickable URL pointing to a Census District Census Handbook (DCHB), the relevant state gazette notification, or a Wikipedia article that itself cites those primary sources.
+            </p>
+          </div>
+          <div>
+            <p className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/60 mb-2">
+              Coverage (50+ districts)
+            </p>
+            <ul className="font-body text-sm text-[#1c1c19]/75 leading-relaxed space-y-1">
+              <li>Telangana 2014 (21 children + 9 residual parents)</li>
+              <li>Ladakh 2019</li>
+              <li>Bardhaman split 2017 (Paschim + Purba)</li>
+              <li>Jaintia Hills bifurcation 2012</li>
+              <li>Palghar, Kondagaon, Gariyaband, and others</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-5 border-l-2 border-[#BD402C] bg-[#BD402C]/5 px-4 py-3">
+          <p className="font-label text-[10px] uppercase tracking-[0.25em] text-[#BD402C] font-bold mb-1">
+            Hard fail (no silent fallback)
+          </p>
+          <p className="font-body text-sm text-[#1c1c19]/85 leading-relaxed">
+            If any post-2011 district lacks a recast row, the pipeline aborts and names the missing district. There is no fallback to summing parent populations.
+          </p>
+        </div>
+      </PipelineStep>
+
+      <PipelineConnector />
+
+      {/* Step 04: invariants */}
+      <PipelineStep number="04" title="Three conservation invariants (fatal on violation)">
+        <div className="border border-[#1c1c19]/30 divide-y divide-[#1c1c19]/30">
+          {[
+            {
+              name: "Per parent",
+              check: "sum of children + residual within 0.5% of Census parent total",
+              guards: "catches a wrong recast number",
+            },
+            {
+              name: "Per state",
+              check: "matched population within minus 5% to plus 0.5% of Census state total",
+              guards: "catches a state-level double-count",
+            },
+            {
+              name: "National",
+              check: "matched population at most Census 2011 total + 0.5%",
+              guards: "catches an overall over-count",
+            },
+          ].map((inv) => (
+            <div key={inv.name} className="grid grid-cols-12 gap-3 px-4 py-3 items-baseline">
+              <div className="col-span-12 sm:col-span-3 flex items-center gap-2">
+                <span className="text-[#BD402C] text-base font-bold">{"✓"}</span>
+                <span className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19] font-bold">
+                  {inv.name}
+                </span>
+              </div>
+              <p className="col-span-12 sm:col-span-6 font-mono text-[12px] md:text-[13px] text-[#1c1c19]/85">
+                {inv.check}
+              </p>
+              <p className="col-span-12 sm:col-span-3 font-body text-[11px] text-[#1c1c19]/55 italic">
+                {inv.guards}
+              </p>
+            </div>
+          ))}
+        </div>
+      </PipelineStep>
+
+      <PipelineConnector />
+
+      {/* Outcome */}
+      <div className="px-6 md:px-8 py-6 md:py-8 border-t border-[#1c1c19] bg-[#f6f3ee]">
+        <div className="flex items-baseline justify-between flex-wrap gap-4 mb-4">
+          <div>
+            <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] font-bold">
+              Coverage
+            </span>
+            <p className="font-headline text-3xl md:text-4xl headline-tight text-[#1c1c19] mt-1">
+              <span className="text-[#BD402C]">{matched}</span>{" "}
+              <span className="text-[#1c1c19]/50">/ 653</span>
+              <span className="font-body font-normal text-base text-[#1c1c19]/70 ml-3">
+                MPI districts scored
+              </span>
+            </p>
+          </div>
+        </div>
+        {/* Coverage bar */}
+        <div className="flex h-3 border border-[#1c1c19]/40">
+          <div className="bg-[#BD402C]" style={{ width: `${(matched / 653) * 100}%` }} />
+          <div className="bg-[#1c1c19]/15" style={{ width: `${(dropped / 653) * 100}%` }} />
+        </div>
+        <div className="flex justify-between mt-2 font-label text-[9px] uppercase tracking-[0.2em] text-[#1c1c19]/60">
+          <span>{matched} matched and scored</span>
+          <span>{dropped} unmatched</span>
+        </div>
+        <p className="font-body text-xs text-[#1c1c19]/60 italic mt-3">
+          Unmatched districts lack a CSR record entirely or name-collide irrecoverably across parent states.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function SectionHeader({ num, tag, title, lead }: { num: string; tag: string; title: React.ReactNode; lead?: string }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-10">
@@ -353,14 +747,7 @@ export default function MethodologyPage() {
               tag="Integration"
               title={<>Reconciling the <span className="italic font-light">joins.</span></>}
             />
-            <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#fcf9f4] space-y-5">
-              <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
-                Matching districts across three independently maintained datasets presented a significant reconciliation challenge. District names are spelled inconsistently across sources. For example, &quot;Hooghly&quot; in the Census, &quot;Hugli (Hooghly)&quot; in the MPI, and &quot;Hugli&quot; in CSR records. Approximate string matching within each state was used to join records, with a minimum similarity threshold of 75%. This threshold is intentionally conservative to maximize coverage; however, at the 75% level, fuzz.ratio is known to produce false positives for similarly named districts in different states (e.g., &quot;Hamirpur&quot; in Himachal Pradesh vs. &quot;Hamirpur&quot; in Uttar Pradesh). State-scoped matching mitigates this, but matches scoring between 75% and 90% should be treated with caution. A full list of sub-90% matches is available in the pipeline output for reviewer inspection.
-              </p>
-              <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
-                State boundary changes required additional handling. Telangana (created 2014), Ladakh (created 2019), and over fifty post-Census-2011 carve-outs (Palghar, Kondagaon, Gariyaband, the 21 new Telangana districts, the 2017 Bardhaman split, the 2012 Jaintia Hills bifurcation, and others) did not exist in Census 2011. Each such district is resolved against a separate <span className="italic">recast catalogue</span> at <span className="font-mono text-sm">data/external/population_recast_2011.csv</span>. Every row in that file carries a clickable URL pointing to the Census of India District Census Handbook, the relevant state gazette notification, or a Wikipedia article that itself cites those primary sources. The 2011 boundary-adjusted population for each carve-out child is taken from that source; the residual population in each carved parent is computed as <span className="font-mono text-sm">parent_2011 minus the sum of its children</span>, never as the parent&apos;s full pre-carve-out total. The pipeline aborts with the offending district name if any post-2011 district lacks a recast row, so a missing entry can never silently fall back to summing parent populations. A further set of rename-style aliases (Gurgaon to Gurugram, Mysore to Mysuru, Allahabad to Prayagraj, Belgaum to Belagavi, Faizabad to Ayodhya, the 2021 Sikkim single-word renames, and 20 more) join MPI names to Census names directly without a boundary change. Three population-conservation invariants are enforced after every pipeline run: per parent (sum of children plus residual within 0.5% of the Census parent total), per state (matched population within minus 5% to plus 0.5% of the Census state total), and national (capped at the Census 2011 total plus 0.5%). Of the 653 MPI districts, <span className="text-[#BD402C] font-bold">{totalDistricts}</span> are successfully scored; the handful that remain unmatched lack a CSR record entirely or name-collide irrecoverably across parent states.
-              </p>
-            </div>
+            <JoinPipeline totalDistricts={totalDistricts} />
           </section>
         </FadeIn>
 
