@@ -242,6 +242,10 @@ interface BriefInput {
   computed_pos: number;
   pop_tier: string;
   tier_median_csr: number;
+  population_imputed?: boolean;
+  population_source?: string;
+  population_citation?: string;
+  population_parent_districts?: string;
 }
 
 function buildPrompt(d: BriefInput): string {
@@ -260,7 +264,7 @@ DATA FOR ${d.district_name.toUpperCase()} DISTRICT, ${d.state_name.toUpperCase()
 - Headcount Ratio baseline (2015-16): ${d.headcount_ratio_2016 ? (d.headcount_ratio_2016 * 100).toFixed(1) + '%' : 'not available'}
 - Change from baseline: ${povChange} percentage points
 - Poverty retention ratio: ${retentionRatio} (1.0 = no improvement, >1.0 = worsening)
-- Total population (Census 2011): ${d.total_population ? Number(d.total_population).toLocaleString('en-IN') : 'not available'}
+- Total population (Census 2011${d.population_imputed && d.population_source ? `, ${d.population_source.replace(/_/g, ' ')}` : ''}): ${d.total_population ? Number(d.total_population).toLocaleString('en-IN') : 'not available'}${d.population_imputed && d.population_parent_districts ? ` (district carved from ${d.population_parent_districts} after Census 2011; recast to current boundary)` : ''}
 - Population tier: ${d.pop_tier || 'N/A'}
 - CSR received FY2021-24: INR ${Number(d.total_csr_recent).toFixed(2)} crore
 - CSR per person: INR ${Math.round(d.district_csr_per_person)}

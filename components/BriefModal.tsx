@@ -278,6 +278,10 @@ export default function BriefModal({ district, onClose }: Props) {
           computed_pos: district.computed_pos,
           pop_tier: district.pop_tier,
           tier_median_csr: district.tier_median_csr,
+          population_imputed: district.population_imputed,
+          population_source: district.population_source,
+          population_citation: district.population_citation,
+          population_parent_districts: district.population_parent_districts,
         }),
       });
 
@@ -389,17 +393,38 @@ export default function BriefModal({ district, onClose }: Props) {
                       {district.pop_tier.replace(/\s*\(.*?\)/, "")}
                     </motion.span>
                   )}
-                  {district.population_imputed && (
-                    <motion.span
-                      initial={{ opacity: 0, x: -6 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.4, delay: 0.4 }}
-                      title={`Carved from ${district.population_parent_districts || "parent district"} after Census 2011 — population inherited from parent; per-capita CSR is conservatively low.`}
-                      className="font-label text-xs uppercase tracking-[0.2em] border border-dashed border-[#1c1c19]/60 text-[#1c1c19]/70 px-4 py-2"
-                    >
-                      Pop imputed
-                    </motion.span>
-                  )}
+                  {district.population_imputed && (() => {
+                    const method = district.population_source || "imputed";
+                    const labelByMethod: Record<string, string> = {
+                      gazette_2011_table: "Pop · Gazette 2011",
+                      subdistrict_sum: "Pop · Sub-district sum",
+                      residual_subtraction: "Pop · Residual",
+                      areal_allocation: "Pop · Areal estimate",
+                      census_exact_rename: "Pop · Renamed",
+                    };
+                    const pillLabel = labelByMethod[method] || "Pop · Imputed";
+                    const parents = district.population_parent_districts;
+                    const cite = district.population_citation;
+                    const tooltip = parents
+                      ? `Carved from ${parents} after Census 2011. Population (${method.replace(/_/g, " ")}) sourced from: ${cite || "primary 2011 source"}.`
+                      : `Population (${method.replace(/_/g, " ")}) sourced from: ${cite || "primary 2011 source"}.`;
+                    const pillNode = (
+                      <motion.span
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 0.4 }}
+                        title={tooltip}
+                        className="font-label text-xs uppercase tracking-[0.2em] border border-dashed border-[#1c1c19]/60 text-[#1c1c19]/70 px-4 py-2"
+                      >
+                        {pillLabel}
+                      </motion.span>
+                    );
+                    return cite && cite.startsWith("http") ? (
+                      <a key="pop-pill" href={cite} target="_blank" rel="noopener noreferrer" className="no-underline">
+                        {pillNode}
+                      </a>
+                    ) : pillNode;
+                  })()}
                 </div>
               </motion.div>
 

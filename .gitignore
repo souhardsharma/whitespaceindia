@@ -50,3 +50,4 @@ __pycache__/
 
 # Local-only diagnostic artifacts
 scripts/verification_report.json
+scripts/_baseline/

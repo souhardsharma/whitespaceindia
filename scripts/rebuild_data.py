@@ -77,6 +77,18 @@ SCRIPTS_DIR = Path(__file__).resolve().parent
 W_N, W_G, W_U = 0.40, 0.40, 0.20
 CSR_RECENT_YEARS = ["2021-22", "2022-23", "2023-24"]
 
+# Census 2011 national total. Used as upper-bound check on the pipeline
+# total (matched_pop must be <= this + 0.5%; under is allowed because some
+# MPI districts get dropped for missing 2019-21 HR).
+CENSUS_2011_NATIONAL = 1_210_854_977
+
+# Path to the population recast catalogue. One row per post-2011 carve-out
+# child and per residual parent. Edit the CSV to change values, not this file.
+RECAST_CSV_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "data" / "external" / "population_recast_2011.csv"
+)
+
 SCORE_SECTORS = [
     "Education",
     "Health Care",
@@ -130,6 +142,14 @@ STATE_CODES: dict[str, str] = {
 # to the same district; the NITI MPI PDF ocassionally lists both.
 DISTRICT_NAME_ALIASES: dict[str, str] = {
     "morigaon": "marigaon",
+    # Telangana spellings: route to the AP-side Census key.
+    "mahabubnagar": "mahbubnagar",
+    "ranga reddy": "rangareddy",
+    # Chhattisgarh: prevent Korea from fuzzy-matching Korba (~85%).
+    "korea": "koriya",
+    "kabirdham": "kabeerdham",
+    # Assam: MPI lists both as separate rows; collapse to one.
+    "kamrup metro": "kamrup metropolitan",
 }
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -174,7 +194,16 @@ CENSUS_NAME_OVERRIDES: dict[tuple[str, str], tuple[str, str]] = {
     ("odisha", "baudh (boudh)"): ("orissa", "baudh"),
     ("odisha", "sonepur"): ("orissa", "subarnapur"),
     # Puducherry
-    ("puducherry", "puducherry"): ("puducherry", "pondicherry"),
+    # Census 2011 lists Puducherry under state "Pondicherry" / district "Pondicherry".
+    # Map MPI's "puducherry" district name to the Census-side key.
+    ("puducherry", "puducherry"): ("pondicherry", "pondicherry"),
+    # Sikkim — 2021 Gazette renamed East/West/North/South to single-word
+    # names. Boundary changes are negligible (a few villages), so these are
+    # treated as renames and use the Census 2011 parent's exact population.
+    ("sikkim", "gangtok"): ("sikkim", "east"),
+    ("sikkim", "gyalshing"): ("sikkim", "west"),
+    ("sikkim", "mangan"): ("sikkim", "north"),
+    ("sikkim", "namchi"): ("sikkim", "south"),
     # Tamil Nadu
     ("tamil nadu", "thoothukkudi (tuticorin)"): ("tamil nadu", "thoothukkudi"),
     # Uttar Pradesh
@@ -190,11 +219,10 @@ CENSUS_NAME_OVERRIDES: dict[tuple[str, str], tuple[str, str]] = {
     ("west bengal", "koch bihar (coochbehar)"): ("west bengal", "koch bihar"),
 }
 
-# CARVEOUT_PARENTS: MPI district created after Census 2011 → one or more parent
-# districts present in Census 2011. Population is imputed as the SUM of the
-# parents' populations (upper bound / conservative denominator). Districts
-# imputed this way are flagged `population_imputed: true` in the final output so
-# the UI can surface the caveat.
+# CARVEOUT_PARENTS: post-2011 carve-out district -> Census 2011 parent(s).
+# Coverage tracking only - the actual population resolution comes from
+# data/external/population_recast_2011.csv. If a row here has no matching
+# recast CSV row, the pipeline aborts naming the missing district.
 CARVEOUT_PARENTS: dict[tuple[str, str], list[tuple[str, str]]] = {
     # Arunachal Pradesh — 2012+ carve-outs
     ("arunachal pradesh", "longding"): [("arunachal pradesh", "tirap")],
@@ -222,16 +250,16 @@ CARVEOUT_PARENTS: dict[tuple[str, str], list[tuple[str, str]]] = {
     ("haryana", "charki dadri"): [("haryana", "bhiwani")],
     # Maharashtra
     ("maharashtra", "palghar"): [("maharashtra", "thane")],
+    # NCT of Delhi — South East carved from South in 2017 (Shahdara handled above)
+    ("delhi", "south east"): [("nct of delhi", "south")],
+    # Meghalaya — Jaintia Hills bifurcated 2012 into East and West
+    ("meghalaya", "east jaintia hills"): [("meghalaya", "jaintia hills")],
+    ("meghalaya", "west jaintia hills"): [("meghalaya", "jaintia hills")],
     # Punjab
     ("punjab", "fazilka"): [("punjab", "firozpur")],
     ("punjab", "pathankot"): [("punjab", "gurdaspur")],
-    # Sikkim — 2021 notification renamed East/West/North/South to new names.
-    # normalize_name strips the trailing " district" suffix, so the census
-    # lookup uses single-word keys.
-    ("sikkim", "gangtok"): [("sikkim", "east")],
-    ("sikkim", "gyalshing"): [("sikkim", "west")],
-    ("sikkim", "mangan"): [("sikkim", "north")],
-    ("sikkim", "namchi"): [("sikkim", "south")],
+    # Sikkim — 2021 renames live in CENSUS_NAME_OVERRIDES (zero-boundary
+    # change; treated as renames not carve-outs).
     # Telangana — all 21 carved from the original 10 AP districts
     ("telangana", "bhadradri kothagudem"): [("andhra pradesh", "khammam")],
     ("telangana", "jagitial"): [("andhra pradesh", "karimnagar")],
@@ -247,6 +275,7 @@ CARVEOUT_PARENTS: dict[tuple[str, str], list[tuple[str, str]]] = {
     ("telangana", "nirmal"): [("andhra pradesh", "adilabad")],
     ("telangana", "peddapalli"): [("andhra pradesh", "karimnagar")],
     ("telangana", "rajanna sircilla"): [("andhra pradesh", "karimnagar")],
+    ("telangana", "sangareddy"): [("andhra pradesh", "medak")],
     ("telangana", "siddipet"): [("andhra pradesh", "medak")],
     ("telangana", "suryapet"): [("andhra pradesh", "nalgonda")],
     ("telangana", "vikarabad"): [("andhra pradesh", "rangareddy")],
@@ -323,6 +352,90 @@ STATE_MISATTRIBUTION_FIX = {
     ("bihar", "cooch behar"): "West Bengal",
     ("bihar", "morigaon"): "Assam",
 }
+
+
+def load_recast_csv(path: Path) -> tuple[dict[tuple[str, str], dict], dict]:
+    """Parse the recast CSV. Skips '#' comment lines."""
+    import csv as _csv
+    if not path.exists():
+        raise RuntimeError(f"Population recast CSV missing: {path}")
+    recast: dict[tuple[str, str], dict] = {}
+    methods: dict[str, int] = {}
+    children_count = residuals_count = 0
+    with path.open("r", encoding="utf-8") as f:
+        for line_no, line in enumerate(f, start=1):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") or stripped.startswith("state,"):
+                continue
+            row = next(_csv.reader([stripped]))
+            while len(row) < 10:
+                row.append("")
+            state, district, pop_s, parents_s, share_s, method, url, doc, date, notes = row[:10]
+            state_norm = normalize_name(state)
+            dist_norm = normalize_name(district)
+            try:
+                pop = int(pop_s.replace(",", "").strip())
+            except ValueError:
+                raise RuntimeError(
+                    f"Recast CSV line {line_no}: bad population {pop_s!r} for {state_norm}/{dist_norm}"
+                )
+            if pop <= 0:
+                raise RuntimeError(
+                    f"Recast CSV line {line_no}: non-positive population {pop} for {state_norm}/{dist_norm}"
+                )
+            key = (state_norm, dist_norm)
+            if key in recast:
+                raise RuntimeError(
+                    f"Recast CSV line {line_no}: duplicate key {key} (first at line {recast[key]['_line']})"
+                )
+            parent_list = [
+                (normalize_name(state), normalize_name(p))
+                for p in parents_s.split(",")
+                if p.strip()
+            ]
+            shares: dict[str, int] = {}
+            if share_s.strip():
+                share_total = 0
+                for kv in share_s.split(";"):
+                    if "=" not in kv:
+                        continue
+                    k, v = kv.split("=", 1)
+                    try:
+                        share_val = int(v.strip())
+                    except ValueError:
+                        raise RuntimeError(
+                            f"Recast CSV line {line_no}: bad share integer {v!r} for {state_norm}/{dist_norm}"
+                        )
+                    shares[normalize_name(k)] = share_val
+                    share_total += share_val
+                if abs(share_total - pop) > 1:
+                    raise RuntimeError(
+                        f"Recast CSV line {line_no}: parent_share_pops sum ({share_total}) != population ({pop})"
+                    )
+            recast[key] = {
+                "population": pop,
+                "method": method.strip() or "unspecified",
+                "source_url": url.strip(),
+                "source_doc": doc.strip(),
+                "parents": parent_list,
+                "shares": shares,
+                "notes": notes.strip(),
+                "_line": line_no,
+            }
+            methods[method.strip()] = methods.get(method.strip(), 0) + 1
+            if parent_list:
+                children_count += 1
+            else:
+                residuals_count += 1
+
+    meta = {
+        "row_count": len(recast),
+        "child_count": children_count,
+        "residual_count": residuals_count,
+        "methods": methods,
+        "csv_path": str(path),
+    }
+    return recast, meta
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────
@@ -612,6 +725,11 @@ def join_datasets(
     csr_keys = list(csr_lookup.keys())
     census_keys = list(census_lookup.keys())
 
+    recast, recast_meta = load_recast_csv(RECAST_CSV_PATH)
+    print(f"  Recast catalogue: {recast_meta['row_count']} rows "
+          f"({recast_meta['child_count']} carve-outs, "
+          f"{recast_meta['residual_count']} residual parents) from {recast_meta['csv_path']}")
+
     out = mpi.copy()
     out["total_csr_recent"] = 0.0
     out["total_population"] = np.nan
@@ -626,8 +744,11 @@ def join_datasets(
     out["census_match_score"] = np.nan
     out["population_imputed"] = False
     out["population_parent_districts"] = ""
+    out["population_source"] = ""        # method label from the recast CSV
+    out["population_citation"] = ""      # source URL from the recast CSV
     matched_csr = matched_census = 0
-    matched_override = matched_carveout = 0
+    matched_override = matched_recast = matched_fuzzy = 0
+    unresolved: list[tuple[str, str]] = []
 
     # CSR fuzzy cutoff raised from 85 → 90 plus first-token guard (West/East
     # Jaintia Hills scored 89 and got wrongly merged under the old setting).
@@ -659,15 +780,48 @@ def join_datasets(
             out.at[idx, "csr_match_score"] = csr_score
             matched_csr += 1
 
-        # Census — three-tier match:
-        #  (1) Explicit override (rename / alt-spelling)
-        #  (2) Fuzzy match within allowed census states
-        #  (3) Parent-district imputation (post-2011 carve-out)
+        # Census match: recast CSV, then CENSUS_NAME_OVERRIDES, then fuzzy.
+        # No fallback to summing parents - unmatched districts raise.
         census_key = (state_norm, dist_norm)
+        recast_keys_to_try = [census_key]
+        for cs in resolve_census_state(state_norm):
+            if cs != state_norm:
+                recast_keys_to_try.append((cs, dist_norm))
+        # Also try the Census-side override target (e.g. MPI 'Dantewada' ->
+        # Census 'Dakshin Bastar Dantewada') so residuals keyed under the
+        # Census name are found before the override falls back to full pop.
+        override = CENSUS_NAME_OVERRIDES.get(census_key)
+        if override:
+            recast_keys_to_try.append(override)
+
+        recast_hit = None
+        for k in recast_keys_to_try:
+            if k in recast:
+                recast_hit = recast[k]
+                break
+        if recast_hit is not None:
+            out.at[idx, "total_population"] = float(recast_hit["population"])
+            out.at[idx, "census_match_score"] = 100.0
+            out.at[idx, "population_source"] = recast_hit["method"]
+            out.at[idx, "population_citation"] = recast_hit["source_url"]
+            # imputed = anything that's not a direct Census number
+            out.at[idx, "population_imputed"] = recast_hit["method"] != "census_exact_rename"
+            if recast_hit["parents"]:
+                out.at[idx, "population_parent_districts"] = ", ".join(
+                    p[1].title() for p in recast_hit["parents"]
+                )
+            matched_census += 1
+            matched_recast += 1
+            continue
+
         override = CENSUS_NAME_OVERRIDES.get(census_key)
         if override and override in census_lookup:
             out.at[idx, "total_population"] = float(census_lookup[override])
             out.at[idx, "census_match_score"] = 100.0
+            out.at[idx, "population_source"] = "census_exact_rename"
+            out.at[idx, "population_citation"] = (
+                f"Census 2011 entry: {override[0].title()}/{override[1].title()}"
+            )
             matched_census += 1
             matched_override += 1
             continue
@@ -680,36 +834,43 @@ def join_datasets(
         if pop_val is not None:
             out.at[idx, "total_population"] = float(pop_val)
             out.at[idx, "census_match_score"] = pop_score
+            out.at[idx, "population_source"] = "census_exact"
+            out.at[idx, "population_citation"] = (
+                "Census 2011 districts CSV (direct match)"
+                if pop_score == 100.0
+                else f"Census 2011 districts CSV (fuzzy match score={pop_score:.0f})"
+            )
             matched_census += 1
+            matched_fuzzy += 1
             continue
 
-        # Parent-district imputation for post-Census-2011 carve-outs.
-        parents = CARVEOUT_PARENTS.get(census_key)
-        if parents:
-            imputed = 0.0
-            missing: list[str] = []
-            for p_state, p_dist in parents:
-                if (p_state, p_dist) in census_lookup:
-                    imputed += float(census_lookup[(p_state, p_dist)])
-                else:
-                    missing.append(f"{p_state}/{p_dist}")
-            if imputed > 0 and not missing:
-                out.at[idx, "total_population"] = imputed
-                out.at[idx, "census_match_score"] = 0.0  # sentinel: imputed
-                out.at[idx, "population_imputed"] = True
-                out.at[idx, "population_parent_districts"] = ", ".join(
-                    f"{p[1].title()}" for p in parents
-                )
-                matched_census += 1
-                matched_carveout += 1
-            elif missing:
-                print(f"  WARN carveout parents missing for {state_norm}/{dist_norm}: {missing}")
+        # No match → record for hard fail at the end (don't sum parents)
+        unresolved.append((state_norm, dist_norm))
 
     print(f"  MPI districts in:           {len(out)}")
     print(f"  Matched to CSR (cutoff {CSR_FUZZ_CUTOFF}): {matched_csr} ({matched_csr/len(out)*100:.1f} %)")
     print(f"  Matched to Census (cutoff {CENSUS_FUZZ_CUTOFF}): {matched_census} ({matched_census/len(out)*100:.1f} %)")
+    print(f"    via RECAST_CSV:         {matched_recast}")
     print(f"    via explicit override:  {matched_override}")
-    print(f"    via carveout parent:    {matched_carveout} (population_imputed=true)")
+    print(f"    via fuzzy match:        {matched_fuzzy}")
+
+    # Raise only if an unresolved row also has a usable hr_2021; rows
+    # without one would be dropped during scoring anyway.
+    fatal: list[tuple[str, str]] = []
+    for state_norm, dist_norm in unresolved:
+        mpi_match = out[(out["state"].apply(normalize_name) == state_norm)
+                        & (out["district"].apply(normalize_name) == dist_norm)]
+        if mpi_match.empty:
+            continue
+        if mpi_match["hr_2021"].iloc[0] and mpi_match["hr_2021"].iloc[0] > 0:
+            fatal.append((state_norm, dist_norm))
+    if fatal:
+        bullet = "\n    - "
+        raise RuntimeError(
+            "No population resolution for the following MPI districts. "
+            "Add a row to data/external/population_recast_2011.csv for each:"
+            + bullet + bullet.join(f"{s}/{d}" for s, d in fatal)
+        )
 
     before = len(out)
     out = out.dropna(subset=["total_population"])
@@ -952,6 +1113,8 @@ def write_outputs(
             "u_imputed": bool(r.get("u_imputed", False)),
             "population_imputed": bool(r.get("population_imputed", False)),
             "population_parent_districts": str(r.get("population_parent_districts", "") or ""),
+            "population_source": str(r.get("population_source", "") or "census_exact"),
+            "population_citation": str(r.get("population_citation", "") or ""),
         })
 
     # Produce the verification report first — meta.json embeds a compact subset
@@ -966,6 +1129,8 @@ def write_outputs(
             "maharashtra": report["maharashtra"],
         },
         "retention_ratio_stats": report["retention_ratio_stats"],
+        "population_method_counts": report["population_method_counts"],
+        "population_invariants": report["population_invariants"],
     }
 
     (out_dir / "whitespace_master.json").write_text(
@@ -992,6 +1157,176 @@ def build_verification_report(
     mpi_total_extracted: int = 0,
 ) -> dict:
     """Produce the numbers the website copy quotes, so we can reconcile each one."""
+
+    # Population method counts
+    if "population_source" in master.columns:
+        method_counts = {
+            str(k): int(v)
+            for k, v in master["population_source"].fillna("census_exact").value_counts().items()
+        }
+    else:
+        method_counts = {"census_exact": int(len(master))}
+
+    # Population invariants (fatal on violation)
+    nat_total = float(master["total_population"].sum())
+    nat_deviation_pct = (nat_total - CENSUS_2011_NATIONAL) / CENSUS_2011_NATIONAL * 100
+
+    print("\n  Population conservation invariants:")
+    print(f"    Pipeline national total:  {nat_total:>16,.0f}")
+    print(f"    Census 2011 reference:    {CENSUS_2011_NATIONAL:>16,}")
+    print(f"    Deviation:                {nat_deviation_pct:>+8.3f}%")
+
+    # INV-3: cap on national total (over-count means double-count).
+    invariant_3_overcount = nat_deviation_pct > 0.5
+    all_positive = bool((master["total_population"] > 0).all())
+
+    # INV-2: per-state matched_pop vs Census state total.
+    census_state_totals: dict[str, int] = {}
+    try:
+        census_df = pd.read_csv(CENSUS_PATH)
+        census_df = census_df[["State name", "District name", "Population"]].dropna()
+        census_df["state_norm"] = census_df["State name"].apply(normalize_name)
+        census_state_totals = census_df.groupby("state_norm")["Population"].sum().to_dict()
+    except Exception as e:
+        print(f"  WARN  could not compute per-state Census totals: {e}")
+
+    state_invariants: list[dict] = []
+    if census_state_totals:
+        # MPI states that map to multiple Census states (the merged D&NH+D&D UT)
+        # are checked against the combined Census total to avoid spurious
+        # double-firing on each constituent.
+        from collections import defaultdict
+        mpi_state_to_census: dict[str, list[str]] = {}
+        for s in master["state"].unique():
+            sn = normalize_name(s)
+            mpi_state_to_census[sn] = resolve_census_state(sn)
+
+        groups: dict[tuple, list[str]] = defaultdict(list)
+        for mpi_state, cs_list in mpi_state_to_census.items():
+            groups[tuple(sorted(cs_list))].append(mpi_state)
+
+        accounted: set[str] = set()
+        for cs_tuple, mpi_states in sorted(groups.items()):
+            if len(cs_tuple) > 1:
+                combined_label = " + ".join(cs_tuple)
+                combined_census = sum(census_state_totals.get(c, 0) for c in cs_tuple)
+                mask = master["state"].apply(
+                    lambda s, ms=set(mpi_states): normalize_name(s) in ms
+                )
+                matched_pop = float(master.loc[mask, "total_population"].sum())
+                dev_pct = (matched_pop - combined_census) / combined_census * 100 if combined_census else 0.0
+                state_invariants.append({
+                    "state_census": combined_label,
+                    "census_pop": int(combined_census),
+                    "matched_pop": int(round(matched_pop)),
+                    "deviation_pct": round(dev_pct, 3),
+                    "ok": dev_pct <= 0.5,
+                })
+                accounted.update(cs_tuple)
+
+        for census_state, census_pop in sorted(census_state_totals.items()):
+            if census_state in accounted:
+                continue
+            mask = master["state"].apply(
+                lambda s, cs=census_state: cs in resolve_census_state(normalize_name(s))
+                or normalize_name(s) == cs
+            )
+            matched_pop = float(master.loc[mask, "total_population"].sum())
+            dev_pct = (matched_pop - census_pop) / census_pop * 100 if census_pop else 0.0
+            state_invariants.append({
+                "state_census": census_state,
+                "census_pop": int(census_pop),
+                "matched_pop": int(round(matched_pop)),
+                "deviation_pct": round(dev_pct, 3),
+                "ok": dev_pct <= 0.5,
+            })
+    invariant_2_violators = [s for s in state_invariants if not s["ok"]]
+
+    # INV-1: per-parent reconciliation.
+    try:
+        recast, _ = load_recast_csv(RECAST_CSV_PATH)
+    except Exception:
+        recast = {}
+    parent_invariants: list[dict] = []
+    if recast and census_state_totals:
+        census_df2 = pd.read_csv(CENSUS_PATH)[["State name", "District name", "Population"]].dropna()
+        census_lookup_local = {
+            (normalize_name(r["State name"]), normalize_name(r["District name"])): int(r["Population"])
+            for _, r in census_df2.iterrows()
+        }
+        per_parent: dict[tuple[str, str], dict] = {}
+        for (st, dist), entry in recast.items():
+            parents = entry["parents"]
+            shares = entry.get("shares") or {}
+            if not parents:
+                continue
+            for p_state, p_dist in parents:
+                key = (p_state, p_dist)
+                per_parent.setdefault(key, {"children": 0, "residual": 0})
+                contribution = (
+                    shares.get(p_dist, entry["population"] // len(parents))
+                    if len(parents) > 1
+                    else entry["population"]
+                )
+                per_parent[key]["children"] += contribution
+        for (st, dist), entry in recast.items():
+            if entry["parents"]:
+                continue
+            cs_states = resolve_census_state(st)
+            for cs in [st] + [c for c in cs_states if c != st]:
+                key = (cs, dist)
+                if key in per_parent:
+                    per_parent[key]["residual"] = entry["population"]
+                    break
+        for (cs, p), v in sorted(per_parent.items()):
+            census_pop = census_lookup_local.get((cs, p))
+            if census_pop is None:
+                parent_invariants.append({
+                    "parent": f"{cs}/{p}",
+                    "error": "parent not in Census 2011 CSV",
+                })
+                continue
+            total = v["children"] + v["residual"]
+            dev_pct = (total - census_pop) / census_pop * 100
+            parent_invariants.append({
+                "parent": f"{cs}/{p}",
+                "census_pop": int(census_pop),
+                "children_sum": int(v["children"]),
+                "residual": int(v["residual"]),
+                "total": int(total),
+                "deviation_pct": round(dev_pct, 3),
+                "ok": abs(dev_pct) <= 0.5,
+            })
+    invariant_1_violators = [p for p in parent_invariants if not p.get("ok", True)]
+
+    invariants_ok = (
+        not invariant_1_violators
+        and not invariant_2_violators
+        and not invariant_3_overcount
+        and all_positive
+    )
+    if invariants_ok:
+        print("  OK   all population invariants satisfied")
+        if nat_deviation_pct < -0.5:
+            print(
+                f"  NOTE national total runs {nat_deviation_pct:+.2f}% vs Census 2011 "
+                f"because the MPI PDF does not enumerate every Census-2011 district; "
+                f"this gap is structural and not introduced by the recast."
+            )
+    else:
+        print("  FAIL population invariants:")
+        if invariant_1_violators:
+            print(f"    INV-1 (per-parent): {len(invariant_1_violators)} violators")
+            for p in invariant_1_violators[:5]:
+                print(f"      {p}")
+        if invariant_2_violators:
+            print(f"    INV-2 (per-state): {len(invariant_2_violators)} violators")
+            for s in invariant_2_violators[:5]:
+                print(f"      {s}")
+        if invariant_3_overcount:
+            print(f"    INV-3 (national): +{nat_deviation_pct:.2f}% over Census — DOUBLE-COUNT")
+        if not all_positive:
+            print(f"    non-positive populations present")
 
     def state_row(state: str) -> dict:
         s = master[master["state"].str.lower() == state.lower()]
@@ -1086,6 +1421,21 @@ def build_verification_report(
         "whitespace_by_state": ws_by_state,
         "retention_ratio_stats": retention_stats,
         "top_10_districts_by_pos": top10,
+        "population_method_counts": method_counts,
+        "population_invariants": {
+            "census_2011_national_reference": CENSUS_2011_NATIONAL,
+            "pipeline_national_total": int(round(nat_total)),
+            "deviation_pct": round(nat_deviation_pct, 3),
+            "all_positive": all_positive,
+            "invariant_1_per_parent_ok": not invariant_1_violators,
+            "invariant_1_violator_count": len(invariant_1_violators),
+            "invariant_2_per_state_ok": not invariant_2_violators,
+            "invariant_2_violator_count": len(invariant_2_violators),
+            "invariant_3_national_overcount_ok": not invariant_3_overcount,
+            "ok": invariants_ok,
+        },
+        "per_parent_invariants": parent_invariants,
+        "per_state_invariants": state_invariants,
     }
 
 

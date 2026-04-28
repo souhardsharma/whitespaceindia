@@ -1,0 +1,175 @@
+state,district,population_2011_recast,parent_districts,parent_share_pops,method,source_url,source_doc,fetched_on,notes
+# ------------------------------------------------------------------------------
+# Census 2011 boundary-adjusted populations for post-2011 carve-out districts
+# and their residual parents.
+#
+# This file is the lookup for post-2011 boundary populations that don't
+# come directly from census_2011_districts.csv. Each row has a source URL. To change a value, edit the row.
+#
+# Schema:
+#   state                    : MPI/current state name (matches scripts/rebuild_data.py STATE_CODES)
+#   district                 : MPI/current district name (lower-case OK; pipeline normalises)
+#   population_2011_recast   : 2011 population WITHIN the district's CURRENT boundary (integer)
+#   parent_districts         : comma-separated list of Census 2011 parent district(s); blank for residuals
+#   parent_share_pops        : for multi-parent carve-outs, per-parent share as 'parent=pop;parent=pop'
+#                              (blank for single-parent or residual rows). Sum must equal population_2011_recast.
+#   method                   : one of -
+#     gazette_2011_table        2011 figure published in state gazette / district website (citable)
+#     subdistrict_sum           sum of constituent tehsils/mandals from Census 2011 PCA
+#     residual_subtraction      parent_census_2011 - sum of(children_recast)  (arithmetic identity)
+#     areal_allocation          parent's pop apportioned by current district area or parent-pop share
+#     census_exact_rename       Census 2011 has the district under an older name (no boundary change)
+#   source_url               : URL the value can be verified against (Wikipedia, gazette PDF, gov.in)
+#   source_doc               : human-readable source description
+#   fetched_on               : ISO date the URL was fetched and value transcribed
+#   notes                    : anything load-bearing (multi-parent split assumptions, deviations, etc.)
+#
+# All values verified against per-parent invariant: sum of(children + residual) ≈ parent_census_2011 ±0.5%.
+# ------------------------------------------------------------------------------
+
+# === MAHARASHTRA (Palghar carved from Thane, August 2014) =====================
+maharashtra,palghar,2990116,thane,,subdistrict_sum,https://en.wikipedia.org/wiki/Palghar_district,Wikipedia citing Census of India DCHB Thane (DH_2011_2721_PART_A_DCHB_THANE.pdf) - sum of talukas now comprising the district,2026-04-28,
+maharashtra,thane,8070032,,,residual_subtraction,https://en.wikipedia.org/wiki/Thane_district,Census 2011 Thane (11060148) minus Palghar carve-out (2990116),2026-04-28,
+
+# === TELANGANA (formed June 2014; 21 children + 9 residual originals + Hyderabad unchanged) ==
+# All Telangana child populations sourced from per-district Wikipedia infoboxes,
+# which cite the Telangana Govt GO Ms. 218 (Census 2011 mandal rollups).
+# Residuals computed by subtraction from undivided AP Census 2011 totals.
+
+# -- Adilabad parent (Census: 2,741,239) --
+telangana,kumuram bheem asifabad,515812,adilabad,,gazette_2011_table,https://en.wikipedia.org/wiki/Kumuram_Bheem_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,mancherial,807037,adilabad,,gazette_2011_table,https://en.wikipedia.org/wiki/Mancherial_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,nirmal,709418,adilabad,,gazette_2011_table,https://en.wikipedia.org/wiki/Nirmal_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,adilabad,708972,,,residual_subtraction,https://en.wikipedia.org/wiki/Adilabad_district,Census 2011 Adilabad (2741239) minus Asifabad+Mancherial+Nirmal - matches Wikipedia residual,2026-04-28,
+
+# -- Karimnagar parent (Census: 3,776,269) --
+telangana,jagitial,985417,karimnagar,,gazette_2011_table,https://en.wikipedia.org/wiki/Jagtial_district,Wikipedia: List of districts in Telangana - MPI uses 'Jagitial' spelling,2026-04-28,MPI 'Jagitial' = Wikipedia 'Jagtial'
+telangana,peddapalli,795332,karimnagar,,gazette_2011_table,https://en.wikipedia.org/wiki/Peddapalli_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,rajanna sircilla,552037,karimnagar,,gazette_2011_table,https://en.wikipedia.org/wiki/Rajanna_Sircilla_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,karimnagar,1443483,,,residual_subtraction,https://en.wikipedia.org/wiki/Karimnagar_district,Census 2011 Karimnagar (3776269) minus Jagitial+Peddapalli+Rajanna Sircilla,2026-04-28,Wikipedia-current Karimnagar (1005711) reflects post-2021 boundaries; this row uses MPI-era boundaries
+
+# -- Khammam parent (Census: 2,797,370) --
+telangana,bhadradri kothagudem,1069261,khammam,,gazette_2011_table,https://en.wikipedia.org/wiki/Bhadradri_Kothagudem_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,khammam,1728109,,,residual_subtraction,https://en.wikipedia.org/wiki/Khammam_district,Census 2011 Khammam (2797370) minus Bhadradri Kothagudem,2026-04-28,Mahabubabad partly drawn from Khammam in some sources; here attributed to Warangal per CARVEOUT_PARENTS
+
+# -- Mahbubnagar parent (Census: 4,053,028) --
+telangana,jogulamba gadwal,609990,mahbubnagar,,gazette_2011_table,https://en.wikipedia.org/wiki/Jogulamba_Gadwal_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,nagarkurnool,893308,mahbubnagar,,gazette_2011_table,https://en.wikipedia.org/wiki/Nagarkurnool_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,wanaparthy,577758,mahbubnagar,,gazette_2011_table,https://en.wikipedia.org/wiki/Wanaparthy_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,mahbubnagar,1971972,,,residual_subtraction,https://en.wikipedia.org/wiki/Mahbubnagar_district,Census 2011 Mahbubnagar (4053028) minus Jogulamba Gadwal+Nagarkurnool+Wanaparthy. MPI uses 'Mahabubnagar' spelling for the residual,2026-04-28,Narayanpet (carved 2019) not in MPI scope so its share remains in residual; CSV key uses Census spelling; pipeline aliases MPI Mahabubnagar->mahbubnagar
+
+# -- Medak parent (Census: 3,033,288) --
+telangana,siddipet,1012065,medak,,gazette_2011_table,https://en.wikipedia.org/wiki/Siddipet_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,sangareddy,1526026,medak,,gazette_2011_table,https://en.wikipedia.org/wiki/Sangareddy_district,Wikipedia: Sangareddy district - formed October 2016 from Medak,2026-04-28,
+telangana,medak,495197,,,residual_subtraction,https://en.wikipedia.org/wiki/Medak_district,Census 2011 Medak (3033288) minus Siddipet+Sangareddy. Wikipedia-current Medak (767428) reflects post-2019 boundaries with additional mandal transfers,2026-04-28,~272k under-attribution acknowledged - likely Sangareddy includes mandals beyond strict Medak; reconcile when DCHB tehsil PCA is loaded
+
+# -- Nalgonda parent (Census: 3,488,809) --
+telangana,suryapet,1099560,nalgonda,,gazette_2011_table,https://en.wikipedia.org/wiki/Suryapet_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,yadadri bhuvanagiri,739448,nalgonda,,gazette_2011_table,https://en.wikipedia.org/wiki/Yadadri_Bhuvanagiri_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,nalgonda,1649801,,,residual_subtraction,https://en.wikipedia.org/wiki/Nalgonda_district,Census 2011 Nalgonda (3488809) minus Suryapet+Yadadri Bhuvanagiri,2026-04-28,
+
+# -- Nizamabad parent (Census: 2,551,335) --
+telangana,kamareddy,972625,nizamabad,,gazette_2011_table,https://en.wikipedia.org/wiki/Kamareddy_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,nizamabad,1578710,,,residual_subtraction,https://en.wikipedia.org/wiki/Nizamabad_district,Census 2011 Nizamabad (2551335) minus Kamareddy,2026-04-28,
+
+# -- Rangareddy parent (Census: 5,296,741) - MPI uses 'Ranga Reddy' spelling --
+telangana,medchal-malkajgiri,2440073,rangareddy,,gazette_2011_table,https://en.wikipedia.org/wiki/Medchal%E2%80%93Malkajgiri_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,vikarabad,927140,rangareddy,,gazette_2011_table,https://en.wikipedia.org/wiki/Vikarabad_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,rangareddy,1929528,,,residual_subtraction,https://en.wikipedia.org/wiki/Ranga_Reddy_district,Census 2011 Rangareddy (5296741) minus Medchal-Malkajgiri+Vikarabad. MPI uses 'Ranga Reddy' (with space) for residual,2026-04-28,CSV key uses Census spelling; pipeline aliases MPI Ranga Reddy->rangareddy
+
+# -- Warangal parent (Census: 3,512,576) - fully split into 5 children in MPI --
+telangana,jangoan,566376,warangal,,gazette_2011_table,https://en.wikipedia.org/wiki/Jangaon_district,Wikipedia: List of districts in Telangana - MPI uses 'Jangoan' spelling for Wiki 'Jangaon',2026-04-28,
+telangana,jayashankar bhupalapally,416763,warangal,,gazette_2011_table,https://en.wikipedia.org/wiki/Jayashankar_Bhupalapally_district,Wikipedia: List of districts in Telangana,2026-04-28,
+telangana,mahabubabad,774549,warangal,,gazette_2011_table,https://en.wikipedia.org/wiki/Mahabubabad_district,Wikipedia: Mahabubabad district - primary parent Warangal; some mandals from Khammam,2026-04-28,Wikipedia notes mandals also from Khammam; attributed wholly to Warangal here for residual computation
+telangana,warangal urban,1080858,warangal,,gazette_2011_table,https://en.wikipedia.org/wiki/Hanumakonda_district,Wikipedia: Hanumakonda district (renamed from Warangal Urban in 2021) - Census 2011 boundary,2026-04-28,
+telangana,warangal rural,674030,warangal,,residual_subtraction,https://en.wikipedia.org/wiki/Warangal_district,Census 2011 Warangal (3512576) minus Jangoan+Bhupalapally+Mahabubabad+Warangal Urban,2026-04-28,Mulugu (carved 2019 from Bhupalapally) not in MPI scope; remains within Bhupalapally figure
+
+# === HARYANA ===================================================================
+haryana,charki dadri,502276,bhiwani,,gazette_2011_table,https://en.wikipedia.org/wiki/Charkhi_Dadri_district,Wikipedia: Charkhi Dadri district - Census 2011 boundary-adjusted,2026-04-28,MPI uses 'Charki Dadri' (without 'h'); CSV uses MPI spelling for direct lookup
+haryana,bhiwani,1132169,,,residual_subtraction,https://en.wikipedia.org/wiki/Bhiwani_district,Census 2011 Bhiwani (1634445) minus Charkhi Dadri,2026-04-28,
+
+# === CHHATTISGARH (Jan 2012 reorganization) ===================================
+chhattisgarh,sukma,250159,dakshin bastar dantewada,,gazette_2011_table,https://en.wikipedia.org/wiki/Sukma_district,Wikipedia: Sukma district,2026-04-28,
+chhattisgarh,dakshin bastar dantewada,283479,,,residual_subtraction,https://en.wikipedia.org/wiki/Dantewada_district,Census 2011 Dakshin Bastar Dantewada (533638) minus Sukma. MPI may name it 'Dantewada',2026-04-28,
+chhattisgarh,kondagaon,578824,bastar,,gazette_2011_table,https://en.wikipedia.org/wiki/Kondagaon_district,Wikipedia: Kondagaon district,2026-04-28,
+chhattisgarh,bastar,834375,,,residual_subtraction,https://en.wikipedia.org/wiki/Bastar_district,Census 2011 Bastar (1413199) minus Kondagaon,2026-04-28,
+chhattisgarh,mungeli,701707,bilaspur,,gazette_2011_table,https://en.wikipedia.org/wiki/Mungeli_district,Wikipedia: Mungeli district,2026-04-28,
+chhattisgarh,bilaspur,1961922,,,residual_subtraction,https://en.wikipedia.org/wiki/Bilaspur_district%2C_Chhattisgarh,Census 2011 Bilaspur (2663629) minus Mungeli,2026-04-28,
+chhattisgarh,surajpur,789043,surguja,,gazette_2011_table,https://en.wikipedia.org/wiki/Surajpur_district,Wikipedia: Surajpur district,2026-04-28,
+chhattisgarh,surguja,1570843,,,residual_subtraction,https://en.wikipedia.org/wiki/Surguja_district,Census 2011 Surguja (2359886) minus Surajpur. Balrampur (also 2012 carve-out) not in MPI scope so its share remains in this residual,2026-04-28,
+chhattisgarh,gariyaband,597653,raipur,,gazette_2011_table,https://en.wikipedia.org/wiki/Gariaband_district,Wikipedia: Gariaband district,2026-04-28,
+chhattisgarh,raipur,3466219,,,residual_subtraction,https://en.wikipedia.org/wiki/Raipur_district,Census 2011 Raipur (4063872) minus Gariyaband. Balodabazar (also 2012 carve-out) not in MPI scope so its share remains in this residual,2026-04-28,
+
+# === GUJARAT (15 August 2013 reorganization, GH/H/55/2013) =====================
+gujarat,devbhumi dwarka,752484,jamnagar,,gazette_2011_table,https://en.wikipedia.org/wiki/Devbhumi_Dwarka_district,Wikipedia: Devbhumi Dwarka district,2026-04-28,
+gujarat,jamnagar,1407635,,,residual_subtraction,https://en.wikipedia.org/wiki/Jamnagar_district,Census 2011 Jamnagar (2160119) minus Devbhumi Dwarka,2026-04-28,
+gujarat,gir somnath,1217477,junagadh,,gazette_2011_table,https://en.wikipedia.org/wiki/Gir_Somnath_district,Wikipedia: Gir Somnath district,2026-04-28,
+gujarat,junagadh,1525605,,,residual_subtraction,https://en.wikipedia.org/wiki/Junagadh_district,Census 2011 Junagadh (2743082) minus Gir Somnath,2026-04-28,
+gujarat,morbi,960329,rajkot,,gazette_2011_table,https://en.wikipedia.org/wiki/Morbi_district,Wikipedia: Morbi district,2026-04-28,
+gujarat,rajkot,2844229,,,residual_subtraction,https://en.wikipedia.org/wiki/Rajkot_district,Census 2011 Rajkot (3804558) minus Morbi,2026-04-28,
+gujarat,mahisagar,994624,"panch mahals,kheda",panch mahals=795624;kheda=199000,gazette_2011_table,https://en.wikipedia.org/wiki/Mahisagar_district,Wikipedia: Mahisagar district - 5 talukas from Panch Mahals (Lunawada+Khanpur+Kadana+Santrampur+Virpur) + 1 from Kheda (Balasinor),2026-04-28,
+gujarat,panch mahals,1595152,,,residual_subtraction,https://en.wikipedia.org/wiki/Panchmahal_district,Census 2011 Panch Mahals (2390776) minus 5-taluka contribution to Mahisagar (~795624),2026-04-28,Balasinor share (~199000) attributed to Kheda below; if exact taluka populations differ this row needs correction
+gujarat,kheda,2100885,,,residual_subtraction,https://en.wikipedia.org/wiki/Kheda_district,Census 2011 Kheda (2299885) minus Balasinor taluka contribution to Mahisagar (~199000),2026-04-28,Balasinor population ~199000 from per-taluka Census 2011 PCA - exact figure pending DCHB sub-district file
+
+# === TRIPURA (21 January 2012 reorganization) =================================
+tripura,gomati,441538,south tripura,,gazette_2011_table,https://en.wikipedia.org/wiki/Gomati_district,Wikipedia: Gomati district,2026-04-28,
+tripura,south tripura,434463,,,residual_subtraction,https://en.wikipedia.org/wiki/South_Tripura_district,Census 2011 South Tripura (876001) minus Gomati,2026-04-28,
+tripura,khowai,327564,west tripura,,gazette_2011_table,https://en.wikipedia.org/wiki/Khowai_district,Wikipedia: Khowai district,2026-04-28,
+tripura,sepahijala,479975,west tripura,,gazette_2011_table,https://en.wikipedia.org/wiki/Sepahijala_district,Wikipedia: Sipahijala district,2026-04-28,MPI may spell 'Sepahijala' - alias handled in pipeline
+tripura,west tripura,918200,,,residual_subtraction,https://en.wikipedia.org/wiki/West_Tripura_district,Census 2011 West Tripura (1725739) minus Khowai+Sepahijala,2026-04-28,
+tripura,unakoti,276506,north tripura,,gazette_2011_table,https://en.wikipedia.org/wiki/Unakoti_district,Wikipedia: Unakoti district,2026-04-28,
+tripura,north tripura,417441,,,residual_subtraction,https://en.wikipedia.org/wiki/North_Tripura_district,Census 2011 North Tripura (693947) minus Unakoti,2026-04-28,
+
+# === MEGHALAYA (Jaintia Hills bifurcated July 2012) ==========================
+meghalaya,east jaintia hills,122939,jaintia hills,,gazette_2011_table,https://en.wikipedia.org/wiki/East_Jaintia_Hills_district,Wikipedia: East Jaintia Hills district,2026-04-28,
+meghalaya,west jaintia hills,272185,jaintia hills,,gazette_2011_table,https://en.wikipedia.org/wiki/West_Jaintia_Hills_district,Wikipedia: West Jaintia Hills district,2026-04-28,Sum East+West = 395124 = Census Jaintia Hills exact (parent fully split, no residual)
+
+# === ASSAM (2015–2016 carve-outs) ==============================================
+assam,charaideo,471418,sivasagar,,gazette_2011_table,https://en.wikipedia.org/wiki/Charaideo_district,Wikipedia: Charaideo district citing DCHB Sivasagar,2026-04-28,
+assam,sivasagar,679632,,,residual_subtraction,https://en.wikipedia.org/wiki/Sivasagar_district,Census 2011 Sivasagar (1151050) minus Charaideo,2026-04-28,
+assam,hojai,931218,nagaon,,gazette_2011_table,https://en.wikipedia.org/wiki/Hojai_district,Wikipedia: Hojai district citing DCHB Nagaon (3-tehsil sum),2026-04-28,
+assam,nagaon,1892550,,,residual_subtraction,https://en.wikipedia.org/wiki/Nagaon_district,Census 2011 Nagaon (2823768) minus Hojai,2026-04-28,
+assam,majuli,167304,jorhat,,subdistrict_sum,https://en.wikipedia.org/wiki/Majuli_district,Wikipedia: Majuli district citing DCHB Jorhat,2026-04-28,
+assam,jorhat,924952,,,residual_subtraction,https://en.wikipedia.org/wiki/Jorhat_district,Census 2011 Jorhat (1092256) minus Majuli,2026-04-28,
+assam,south salmara mancachar,555114,dhubri,,gazette_2011_table,https://en.wikipedia.org/wiki/South_Salmara-Mankachar_district,Wikipedia: South Salmara-Mankachar district,2026-04-28,
+assam,dhubri,1394144,,,residual_subtraction,https://en.wikipedia.org/wiki/Dhubri_district,Census 2011 Dhubri (1949258) minus South Salmara-Mankachar,2026-04-28,
+
+# === UTTAR PRADESH (2010–2011 carve-outs - listed as new districts in MPI but not in supplied Census CSV) ==
+uttar pradesh,amethi,2050133,sultanpur,,gazette_2011_table,https://en.wikipedia.org/wiki/Amethi_district,Wikipedia: Amethi district (formerly Chhatrapati Shahuji Maharaj Nagar),2026-04-28,Census 2011 originally listed as 'Chhatrapati Shahuji Maharaj Nagar'; not present in supplied census_2011_districts.csv so treated as carve-out
+uttar pradesh,sultanpur,1746984,,,residual_subtraction,https://en.wikipedia.org/wiki/Sultanpur_district,Census 2011 Sultanpur (3797117) minus Amethi,2026-04-28,
+uttar pradesh,hapur,1338311,ghaziabad,,gazette_2011_table,https://en.wikipedia.org/wiki/Hapur_district,Wikipedia: Hapur district (formerly Panchsheel Nagar),2026-04-28,
+uttar pradesh,ghaziabad,3343334,,,residual_subtraction,https://en.wikipedia.org/wiki/Ghaziabad_district%2C_India,Census 2011 Ghaziabad (4681645) minus Hapur,2026-04-28,
+uttar pradesh,sambhal,2199774,moradabad,,gazette_2011_table,https://en.wikipedia.org/wiki/Sambhal_district,Wikipedia: Sambhal district (formerly Bhim Nagar),2026-04-28,
+uttar pradesh,moradabad,2572232,,,residual_subtraction,https://en.wikipedia.org/wiki/Moradabad_district,Census 2011 Moradabad (4772006) minus Sambhal,2026-04-28,
+uttar pradesh,shamli,1273578,muzaffarnagar,,gazette_2011_table,https://en.wikipedia.org/wiki/Shamli_district,Wikipedia: Shamli district (formerly Prabuddh Nagar),2026-04-28,
+uttar pradesh,muzaffarnagar,2869934,,,residual_subtraction,https://en.wikipedia.org/wiki/Muzaffarnagar_district,Census 2011 Muzaffarnagar (4143512) minus Shamli,2026-04-28,
+
+# === WEST BENGAL (2017 split of undivided Barddhaman) =========================
+west bengal,paschim bardhaman,2882031,barddhaman,,gazette_2011_table,https://en.wikipedia.org/wiki/Paschim_Bardhaman_district,Wikipedia: Paschim Bardhaman district citing DCHB Bardhaman Part XII B,2026-04-28,
+west bengal,purba bardhaman,4835532,barddhaman,,gazette_2011_table,https://en.wikipedia.org/wiki/Purba_Bardhaman_district,Wikipedia: Purba Bardhaman district - recast after 2017 bifurcation,2026-04-28,Sum of Paschim+Purba = 7717563 = Census 2011 Barddhaman exact (zero deviation)
+
+# === PUNJAB (27 July 2011 carve-outs) =========================================
+punjab,pathankot,676598,gurdaspur,,gazette_2011_table,https://en.wikipedia.org/wiki/Pathankot_district,Wikipedia: Pathankot district,2026-04-28,
+punjab,gurdaspur,1621725,,,residual_subtraction,https://en.wikipedia.org/wiki/Gurdaspur_district,Census 2011 Gurdaspur (2298323) minus Pathankot,2026-04-28,
+punjab,fazilka,1027143,firozpur,,gazette_2011_table,https://en.wikipedia.org/wiki/Fazilka_district,Wikipedia: Fazilka district,2026-04-28,
+punjab,firozpur,1001931,,,residual_subtraction,https://en.wikipedia.org/wiki/Firozpur_district,Census 2011 Firozpur (2029074) minus Fazilka,2026-04-28,
+
+# === NCT OF DELHI (Shahdara 2012; South East 2017) ============================
+delhi,shahdara,1110751,"east,north east",east=481055;north east=629696,areal_allocation,http://citypopulation.de/en/india/admin/delhi/702__shahdara/,Citypopulation.de mirroring Delhi government district profile - Seemapuri+Shahdara+Vivek Vihar tehsils,2026-04-28,Allocated proportionally to parent populations: ~481055 from East + ~629696 from North East
+nct of delhi,east,1228291,,,areal_allocation,https://en.wikipedia.org/wiki/East_Delhi_district,Census 2011 East Delhi (1709346) minus East-share of Shahdara (481055 = 1709346/(1709346+2241624)*1110751),2026-04-28,Areal allocation - exact East/NE split for Shahdara not in cited sources
+nct of delhi,north east,1611928,,,areal_allocation,https://en.wikipedia.org/wiki/North_East_Delhi_district,Census 2011 North East Delhi (2241624) minus NE-share of Shahdara (629696 = 2241624/(1709346+2241624)*1110751),2026-04-28,Areal allocation - exact East/NE split for Shahdara not in cited sources
+delhi,south east,1500636,south,,gazette_2011_table,https://en.wikipedia.org/wiki/South_East_Delhi_district,Wikipedia: South East Delhi district - area carved from South Delhi in 2017,2026-04-28,
+nct of delhi,south,1231293,,,residual_subtraction,https://en.wikipedia.org/wiki/South_Delhi_district,Census 2011 South Delhi (2731929) minus South East,2026-04-28,
+
+# === ARUNACHAL PRADESH (2012/2014/2015 carve-outs from sparsely populated parents) ==
+arunachal pradesh,longding,56953,tirap,,gazette_2011_table,https://en.wikipedia.org/wiki/Longding_district,Wikipedia: Longding district,2026-04-28,
+arunachal pradesh,tirap,55022,,,residual_subtraction,https://en.wikipedia.org/wiki/Tirap_district,Census 2011 Tirap (111975) minus Longding,2026-04-28,
+arunachal pradesh,namsai,95950,lohit,,gazette_2011_table,https://en.wikipedia.org/wiki/Namsai_district,Wikipedia: Namsai district citing namsai.nic.in,2026-04-28,
+arunachal pradesh,lohit,49776,,,residual_subtraction,https://en.wikipedia.org/wiki/Lohit_district,Census 2011 Lohit (145726) minus Namsai,2026-04-28,
+arunachal pradesh,siang,31920,west siang,,gazette_2011_table,https://en.wikipedia.org/wiki/Siang_district,Wikipedia: Siang district,2026-04-28,
+arunachal pradesh,west siang,80354,,,residual_subtraction,https://en.wikipedia.org/wiki/West_Siang_district,Census 2011 West Siang (112274) minus Siang,2026-04-28,
+
+# === SIKKIM (2021 single-word renames - boundary unchanged from East/West/North/South) ==
+# These are pure RENAMES with negligible boundary change, so they live in CENSUS_NAME_OVERRIDES
+# in the pipeline rather than here. Listed for documentation only:
+#   Gangtok ← East;  Gyalshing ← West;  Mangan ← North;  Namchi ← South

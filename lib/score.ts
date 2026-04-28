@@ -21,6 +21,8 @@ export interface District {
   u_imputed?: boolean;
   population_imputed?: boolean;
   population_parent_districts?: string;
+  population_source?: string;
+  population_citation?: string;
 }
 
 export interface Weights {
