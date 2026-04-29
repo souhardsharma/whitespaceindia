@@ -23,13 +23,15 @@ export default function Footer() {
           className="md:col-span-5"
         >
           <div className="flex items-baseline gap-2 mb-4">
-            <Image src="/logo.svg" alt="" aria-hidden="true" width={32} height={32} className="w-[24px] h-[24px] md:w-[26px] md:h-[26px] shrink-0 translate-y-[2px]" />
-            <span className="font-headline font-bold text-[30px] md:text-[34px] leading-none tracking-[-0.02em] text-[#1c1c19]">
-              Whitespace India
-            </span>
-            <span className="font-headline italic font-bold text-[22px] md:text-[26px] leading-none tracking-[-0.01em] text-[#BD402C]">
+            <Link href="/" aria-label="Whitespace India home" className="flex items-baseline gap-2 hover:opacity-80 transition-opacity">
+              <Image src="/logo.svg" alt="" aria-hidden="true" width={32} height={32} className="w-[24px] h-[24px] md:w-[26px] md:h-[26px] shrink-0 translate-y-[2px]" />
+              <span className="font-headline font-bold text-[30px] md:text-[34px] leading-none tracking-[-0.02em] text-[#1c1c19]">
+                Whitespace India
+              </span>
+            </Link>
+            <Link href="/csr" aria-label="CSR home" className="font-headline italic font-bold text-[22px] md:text-[26px] leading-none tracking-[-0.01em] text-[#BD402C] hover:text-[#9b2817] transition-colors">
               CSR
-            </span>
+            </Link>
           </div>
           <p className="text-sm text-[#1c1c19]/70 leading-relaxed max-w-sm font-body">
             A research project mapping the gap between CSR spending and poverty across Indian districts. All data sourced from public government records.

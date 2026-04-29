@@ -24,10 +24,10 @@ export default function Navbar() {
   const handleSimulatorClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setMobileOpen(false);
-    if (pathname === "/") {
+    if (pathname === "/csr") {
       document.getElementById("simulator")?.scrollIntoView({ behavior: "smooth" });
     } else {
-      window.location.href = "/#simulator";
+      window.location.href = "/csr#simulator";
     }
   };
 
@@ -43,27 +43,33 @@ export default function Navbar() {
     >
       <div className="flex justify-between items-center w-full px-6 md:px-10 py-5 max-w-full">
         <div className="flex items-center gap-10 md:gap-12">
-          <Link
-            href="/"
-            aria-label="Whitespace India CSR, home"
-            className="flex items-baseline gap-2 font-headline text-[#1c1c19]"
-          >
-            <Image
-              src="/logo.svg"
-              alt=""
-              aria-hidden="true"
-              width={34}
-              height={34}
-              priority
-              className="w-[22px] h-[22px] md:w-[26px] md:h-[26px] shrink-0 self-baseline translate-y-[2px]"
-            />
-            <span className="font-headline font-bold text-[28px] md:text-[34px] leading-none tracking-[-0.02em]">
-              Whitespace India
-            </span>
-            <span className="font-headline italic font-bold text-[22px] md:text-[26px] leading-none tracking-[-0.01em] text-[#BD402C]">
+          <div className="flex items-baseline gap-2 font-headline text-[#1c1c19]">
+            <Link
+              href="/"
+              aria-label="Whitespace India home"
+              className="flex items-baseline gap-2 hover:opacity-80 transition-opacity"
+            >
+              <Image
+                src="/logo.svg"
+                alt=""
+                aria-hidden="true"
+                width={34}
+                height={34}
+                priority
+                className="w-[22px] h-[22px] md:w-[26px] md:h-[26px] shrink-0 self-baseline translate-y-[2px]"
+              />
+              <span className="font-headline font-bold text-[28px] md:text-[34px] leading-none tracking-[-0.02em]">
+                Whitespace India
+              </span>
+            </Link>
+            <Link
+              href="/csr"
+              aria-label="CSR home"
+              className="font-headline italic font-bold text-[22px] md:text-[26px] leading-none tracking-[-0.01em] text-[#BD402C] hover:text-[#9b2817] transition-colors"
+            >
               CSR
-            </span>
-          </Link>
+            </Link>
+          </div>
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-8 lg:gap-10">

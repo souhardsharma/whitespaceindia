@@ -1,0 +1,166 @@
+/* Shared layout for the Health/Energy/Education placeholder pages.
+   Mirrors the landing's tonal language (full-bleed scene, ivory text on
+   tinted ground) so each placeholder reads as "you're inside a vertical of
+   the same family," not a stub. */
+
+.root {
+  --ivory: #f3ede1;
+  --ink: #1a1a17;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--font-newsreader), Georgia, serif;
+  color: var(--ivory);
+}
+
+.scene { position: absolute; inset: 0; z-index: 0; }
+.scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.09  0 0 0 0.16 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.sceneHealth { background: #4a607a url('/landing/health-bg.webp') center/cover no-repeat; }
+.sceneHealth::before {
+  background:
+    linear-gradient(180deg, rgba(74, 96, 122, 0) 35%, rgba(25, 40, 60, 0.7) 100%),
+    radial-gradient(60% 50% at 50% 50%, rgba(20, 35, 55, 0.3), transparent 70%);
+}
+
+.sceneEducation { background: #b48a52 url('/landing/education-bg.webp') center/cover no-repeat; }
+.sceneEducation::before {
+  background:
+    linear-gradient(180deg, rgba(180, 138, 82, 0) 35%, rgba(90, 60, 25, 0.7) 100%),
+    radial-gradient(60% 50% at 50% 50%, rgba(60, 40, 15, 0.3), transparent 70%);
+}
+
+.sceneEnergy {
+  background: #8a6a2a url('/landing/energy-bg.webp') center/cover no-repeat;
+  filter: hue-rotate(-95deg) saturate(0.85) brightness(0.95);
+}
+.sceneEnergy::before {
+  background:
+    linear-gradient(180deg, rgba(120, 90, 35, 0) 35%, rgba(60, 40, 10, 0.7) 100%),
+    radial-gradient(60% 50% at 50% 50%, rgba(40, 25, 5, 0.3), transparent 70%);
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.45;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.09  0 0 0 0.07 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+.back {
+  position: fixed;
+  top: 32px;
+  left: 32px;
+  z-index: 50;
+  font-family: var(--font-space-grotesk), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity 200ms ease, transform 200ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.back:hover { opacity: 1; transform: translateX(-2px); }
+
+.contact {
+  position: fixed;
+  top: 32px;
+  right: 32px;
+  z-index: 50;
+  font-family: var(--font-space-grotesk), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity 200ms ease;
+}
+.contact:hover { opacity: 1; }
+
+.content {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  text-align: center;
+  padding: 0 32px;
+}
+
+.title {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(72px, 13vw, 200px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  margin: 0;
+  text-shadow: 0 2px 32px rgba(0, 0, 0, 0.4);
+}
+
+.subtitle {
+  font-family: var(--font-space-grotesk), ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  margin-top: 28px;
+  opacity: 0.9;
+}
+
+.blurb {
+  font-family: var(--font-public-sans), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  margin-top: 56px;
+  max-width: 480px;
+  opacity: 0.85;
+}
+
+.copyright {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  font-family: var(--font-space-grotesk), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  opacity: 0.55;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .back, .contact { font-size: 10px; top: 20px; }
+  .back { left: 20px; }
+  .contact { right: 20px; }
+  .title { font-size: clamp(56px, 18vw, 96px); }
+  .blurb { font-size: 14px; margin-top: 40px; padding: 0 12px; }
+  .copyright { bottom: 16px; }
+}

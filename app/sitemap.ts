@@ -13,8 +13,12 @@ const LAST_MODIFIED =
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: BASE_URL, lastModified: LAST_MODIFIED, changeFrequency: "monthly", priority: 1.0 },
+    { url: `${BASE_URL}/csr`, lastModified: LAST_MODIFIED, changeFrequency: "monthly", priority: 0.95 },
     { url: `${BASE_URL}/methodology`, lastModified: LAST_MODIFIED, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/about`, lastModified: LAST_MODIFIED, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/reports`, lastModified: LAST_MODIFIED, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE_URL}/health`, lastModified: LAST_MODIFIED, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${BASE_URL}/education`, lastModified: LAST_MODIFIED, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${BASE_URL}/energy`, lastModified: LAST_MODIFIED, changeFrequency: "yearly", priority: 0.4 },
   ];
 }

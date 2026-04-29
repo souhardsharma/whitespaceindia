@@ -27,24 +27,24 @@ const siteUrl =
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Whitespace India CSR | Where CSR Should Go",
-    template: "%s | Whitespace India CSR",
+    default: "Whitespace India | CSR · Health · Education · Energy",
+    template: "%s | Whitespace India",
   },
   description:
-    "Interactive tool ranking Indian districts by philanthropic opportunity. Combines NITI Aayog MPI poverty data with CSR spending to find where philanthropic capital can create the most impact.",
+    "A studio for civic data systems across India. Four research initiatives — CSR, Health, Education, Energy — mapping the gap between public need and where capital actually flows.",
   openGraph: {
-    title: "Whitespace India CSR - Find Where CSR Should Go",
+    title: "Whitespace India",
     description:
-      "Discover the districts where philanthropic capital can create the most impact. Free interactive tool for foundation leaders.",
+      "Civic data systems across CSR, Health, Education, and Energy. Currently shipping: CSR opportunity index across 766 Indian districts.",
     images: [{ url: "/images/og-image.png", width: 1200, height: 630 }],
     type: "website",
-    siteName: "Whitespace India CSR",
+    siteName: "Whitespace India",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Whitespace India CSR",
+    title: "Whitespace India",
     description:
-      "Find India's philanthropic whitespaces - districts with high poverty and low CSR funding.",
+      "Civic data systems across CSR, Health, Education, and Energy.",
     creator: "@souaboroq",
   },
   alternates: {
