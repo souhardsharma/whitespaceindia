@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
-import { District } from "@/lib/score";
+import { District } from "@/lib/csr/score";
 
 interface Props {
   districts: Array<District & { computed_pos: number; rank: number }>;

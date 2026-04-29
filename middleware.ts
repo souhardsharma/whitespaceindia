@@ -6,12 +6,13 @@ import { NextResponse, type NextRequest } from "next/server";
  * The CSR app shipped first at `whitespaceindia-csr.vercel.app`. Anyone with
  * that URL bookmarked (or any backlink already in the wild) expects to land
  * on the CSR experience, not the new parent-brand landing. We honor that:
- * requests on the legacy host get rewritten to /csr/* so the CSR app shows
- * up exactly where it always did. New hosts (whitespaceindia.vercel.app,
- * future custom domains) see the landing at /.
+ * requests to `/` on the legacy host get rewritten to `/csr` so the homepage
+ * still serves the CSR app. All other paths (`/methodology`, `/about`, etc.)
+ * already work as-is — they were always top-level routes — so we leave them
+ * alone.
  *
  * If you add a `csr.whitespaceindia.com` subdomain later, append its host
- * to LEGACY_CSR_HOSTS — same rewrite.
+ * to LEGACY_CSR_HOSTS — same behavior.
  */
 const LEGACY_CSR_HOSTS = new Set([
   "whitespaceindia-csr.vercel.app",
@@ -20,11 +21,11 @@ const LEGACY_CSR_HOSTS = new Set([
 
 export function middleware(req: NextRequest) {
   const host = req.headers.get("host")?.toLowerCase().split(":")[0] ?? "";
-  const { pathname, search } = req.nextUrl;
+  const { pathname } = req.nextUrl;
 
-  if (LEGACY_CSR_HOSTS.has(host) && !pathname.startsWith("/csr")) {
+  if (LEGACY_CSR_HOSTS.has(host) && pathname === "/") {
     const rewritten = req.nextUrl.clone();
-    rewritten.pathname = `/csr${pathname === "/" ? "" : pathname}`;
+    rewritten.pathname = "/csr";
     return NextResponse.rewrite(rewritten);
   }
 

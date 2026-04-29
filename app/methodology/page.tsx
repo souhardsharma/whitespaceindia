@@ -362,7 +362,7 @@ function JoinPipeline({ totalDistricts }: { totalDistricts: number }) {
               Source-cited catalogue
             </p>
             <p className="font-mono text-[12px] text-[#1c1c19] mb-2 break-all">
-              data/external/population_recast_2011.csv
+              scripts/csr/data/external/population_recast_2011.csv
             </p>
             <p className="font-body text-sm text-[#1c1c19]/70 leading-relaxed">
               Each row carries a clickable URL pointing to a Census District Census Handbook (DCHB), the relevant state gazette notification, or a Wikipedia article that itself cites those primary sources.
@@ -496,8 +496,8 @@ export default function MethodologyPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/data/whitespace_master.json").then((r) => r.json()),
-      fetch("/data/meta.json").then((r) => r.json()),
+      fetch("/data/csr/whitespace_master.json").then((r) => r.json()),
+      fetch("/data/csr/meta.json").then((r) => r.json()),
     ]).then(([districts, metaData]: [{ POS: number }[], MetaData]) => {
       const buckets: Record<string, number> = {};
       const ranges = ["0-10", "10-20", "20-30", "30-40", "40-50", "50-60", "60-70", "70-80", "80-90", "90-100"];

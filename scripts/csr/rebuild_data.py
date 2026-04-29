@@ -12,11 +12,11 @@ Source files (hard-coded — the user keeps them at this exact path):
     census_2011_districts.csv                                (population)
 
 Writes:
-  <project>/public/data/
+  <project>/public/data/csr/
     whitespace_master.json       — per-district POS + inputs (consumed by UI)
     sector_scores.json           — per-district × sector POS (consumed by UI)
     meta.json                    — headline constants the UI reads
-  <project>/scripts/
+  <project>/scripts/csr/
     verification_report.json     — local-only audit report (Bihar vs Maha,
                                    national totals, top districts). Read by
                                    show_examples.py; not shipped to the site.
@@ -47,7 +47,7 @@ Matching
   (more historical/spelling drift). Every match keeps a score so the
   verification report can flag low-confidence ones.
 
-Run: `python scripts/rebuild_data.py` from the project root.
+Run: `python scripts/csr/rebuild_data.py` from the project root.
 """
 
 from __future__ import annotations
@@ -69,8 +69,10 @@ PDF_PATH = SRC_DIR / "India-National-Multidimentional-Poverty-Index-2023.pdf"
 EXCEL_PATH = SRC_DIR / "csr_state_sector.xlsx"
 CENSUS_PATH = SRC_DIR / "census_2011_districts.csv"
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-OUT_DIR = PROJECT_ROOT / "public" / "data"
+# This file lives at <project>/scripts/csr/rebuild_data.py, so PROJECT_ROOT
+# is THREE levels up (rebuild_data.py → csr/ → scripts/ → <project>).
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+OUT_DIR = PROJECT_ROOT / "public" / "data" / "csr"
 SCRIPTS_DIR = Path(__file__).resolve().parent
 
 # ── Constants ─────────────────────────────────────────────────────────────
@@ -84,8 +86,9 @@ CENSUS_2011_NATIONAL = 1_210_854_977
 
 # Path to the population recast catalogue. One row per post-2011 carve-out
 # child and per residual parent. Edit the CSV to change values, not this file.
+# Lives next to this script under scripts/csr/data/external/.
 RECAST_CSV_PATH = (
-    Path(__file__).resolve().parent.parent
+    Path(__file__).resolve().parent
     / "data" / "external" / "population_recast_2011.csv"
 )
 
@@ -221,7 +224,7 @@ CENSUS_NAME_OVERRIDES: dict[tuple[str, str], tuple[str, str]] = {
 
 # CARVEOUT_PARENTS: post-2011 carve-out district -> Census 2011 parent(s).
 # Coverage tracking only - the actual population resolution comes from
-# data/external/population_recast_2011.csv. If a row here has no matching
+# scripts/csr/data/external/population_recast_2011.csv. If a row here has no matching
 # recast CSV row, the pipeline aborts naming the missing district.
 CARVEOUT_PARENTS: dict[tuple[str, str], list[tuple[str, str]]] = {
     # Arunachal Pradesh — 2012+ carve-outs
@@ -868,7 +871,7 @@ def join_datasets(
         bullet = "\n    - "
         raise RuntimeError(
             "No population resolution for the following MPI districts. "
-            "Add a row to data/external/population_recast_2011.csv for each:"
+            "Add a row to scripts/csr/data/external/population_recast_2011.csv for each:"
             + bullet + bullet.join(f"{s}/{d}" for s, d in fatal)
         )
 
@@ -1149,7 +1152,7 @@ def write_outputs(
     (SCRIPTS_DIR / "verification_report.json").write_text(
         json.dumps(report, indent=2), encoding="utf-8"
     )
-    print(f"  wrote verification_report.json (scripts/)")
+    print(f"  wrote verification_report.json (scripts/csr/)")
 
 
 def build_verification_report(

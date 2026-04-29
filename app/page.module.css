@@ -27,13 +27,13 @@
 
 .brand {
   position: fixed;
-  top: 38px;
+  top: 32px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 60;
   font-family: var(--font-newsreader), "Cormorant Garamond", "Playfair Display", serif;
   font-weight: 400;
-  font-size: clamp(48px, 6vw, 96px);
+  font-size: clamp(36px, 4vw, 64px);
   letter-spacing: -0.035em;
   pointer-events: none;
   white-space: nowrap;
@@ -168,7 +168,7 @@
   line-height: 0.9;
   letter-spacing: -0.02em;
   user-select: none;
-  font-size: clamp(28px, 2.6vw, 44px);
+  font-size: clamp(24px, 2.2vw, 36px);
   white-space: nowrap;
   color: #f3ede1;
   text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
@@ -176,7 +176,7 @@
 }
 .cardActive .title,
 .deck.hasHover .card:hover .title {
-  font-size: clamp(64px, 7.5vw, 132px);
+  font-size: clamp(56px, 5.6vw, 88px);
   line-height: 0.9;
   letter-spacing: -0.025em;
 }
@@ -205,7 +205,10 @@
   filter: none !important;
   opacity: 1 !important;
   z-index: 50 !important;
-  transform: translateX(-12vw);
+  /* Slide left to expand the peek strip — but never past the screen edge.
+     Without the max(), the leftmost card (Health, --x:0) would slide to
+     -12vw and clip off-screen. */
+  transform: translateX(max(-12vw, calc(0px - var(--x))));
   box-shadow:
     -2px 0 0 rgba(26, 26, 23, 0.06),
     -50px 0 80px -10px rgba(40, 25, 15, 0.45);

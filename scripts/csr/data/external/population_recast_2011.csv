@@ -7,7 +7,7 @@ state,district,population_2011_recast,parent_districts,parent_share_pops,method,
 # come directly from census_2011_districts.csv. Each row has a source URL. To change a value, edit the row.
 #
 # Schema:
-#   state                    : MPI/current state name (matches scripts/rebuild_data.py STATE_CODES)
+#   state                    : MPI/current state name (matches scripts/csr/rebuild_data.py STATE_CODES)
 #   district                 : MPI/current district name (lower-case OK; pipeline normalises)
 #   population_2011_recast   : 2011 population WITHIN the district's CURRENT boundary (integer)
 #   parent_districts         : comma-separated list of Census 2011 parent district(s); blank for residuals

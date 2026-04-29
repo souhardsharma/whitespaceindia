@@ -167,7 +167,7 @@ function SectionHeader({ num, tag, title, lead }: { num: string; tag: string; ti
 export default function AboutPage() {
   const [meta, setMeta] = useState<AboutMeta | null>(null);
   useEffect(() => {
-    fetch("/data/meta.json")
+    fetch("/data/csr/meta.json")
       .then((r) => r.json())
       .then((m: AboutMeta) => setMeta(m))
       .catch(() => {});

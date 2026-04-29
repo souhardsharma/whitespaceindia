@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { SECTORS, Weights } from "@/lib/score";
-import { WEIGHT_PRESETS } from "@/lib/constants";
+import { SECTORS, Weights } from "@/lib/csr/score";
+import { WEIGHT_PRESETS } from "@/lib/csr/constants";
 
 interface Props {
   onWeightsChange: (weights: { w_N: number; w_G: number; w_U: number }) => void;

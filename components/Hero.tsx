@@ -88,7 +88,7 @@ export default function Hero() {
   const [meta, setMeta] = useState<HeroMeta | null>(null);
 
   useEffect(() => {
-    fetch("/data/meta.json")
+    fetch("/data/csr/meta.json")
       .then((r) => r.json())
       .then((m: HeroMeta) => setMeta(m))
       .catch(() => {});

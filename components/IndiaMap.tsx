@@ -9,7 +9,7 @@ import {
 import { scaleLinear } from "d3-scale";
 import { feature } from "topojson-client";
 
-const TOPO_URL = "/india-states.topojson";
+const TOPO_URL = "/data/csr/india-states.topojson";
 
 function normalizeForMatch(name: string): string {
   return name

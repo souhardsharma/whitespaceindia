@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     description:
       "Who built this tool, why it matters, and how we measure the philanthropic funding gap across India.",
     url: `${siteUrl}/about`,
-    images: [{ url: "/images/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/og/csr.png", width: 1200, height: 630 }],
     type: "website",
     siteName: "Whitespace India CSR",
   },

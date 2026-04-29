@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: "Whitespace India CSR — Where CSR Should Go",
     description:
       "Discover the districts where philanthropic capital can create the most impact. Free interactive tool for foundation leaders.",
-    images: [{ url: "/images/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/og/csr.png", width: 1200, height: 630 }],
     type: "website",
     siteName: "Whitespace India CSR",
   },

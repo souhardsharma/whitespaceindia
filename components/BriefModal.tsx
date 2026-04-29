@@ -14,7 +14,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { District } from "@/lib/score";
+import { District } from "@/lib/csr/score";
 
 const NATIONAL_MPI_HEADCOUNT = 0.1496;
 

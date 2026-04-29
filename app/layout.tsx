@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     title: "Whitespace India",
     description:
       "Civic data systems across CSR, Health, Education, and Energy. Currently shipping: CSR opportunity index across 766 Indian districts.",
-    images: [{ url: "/images/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/og/csr.png", width: 1200, height: 630 }],
     type: "website",
     siteName: "Whitespace India",
   },

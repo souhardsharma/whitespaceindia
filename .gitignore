@@ -48,6 +48,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Local-only diagnostic artifacts
-scripts/verification_report.json
-scripts/_baseline/
+# Local-only diagnostic artifacts (Python pipelines, any vertical)
+scripts/**/verification_report.json
+scripts/**/_baseline/
+scripts/**/__pycache__/
+
+
+

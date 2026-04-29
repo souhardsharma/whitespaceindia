@@ -28,7 +28,7 @@ import {
   Weights,
   DEFAULT_WEIGHTS,
   rankDistricts,
-} from "@/lib/score";
+} from "@/lib/csr/score";
 
 function DataInsightCard({
   number,
@@ -234,9 +234,9 @@ export default function HomePage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/data/whitespace_master.json").then((r) => r.json()),
-      fetch("/data/sector_scores.json").then((r) => r.json()),
-      fetch("/data/meta.json").then((r) => r.json()),
+      fetch("/data/csr/whitespace_master.json").then((r) => r.json()),
+      fetch("/data/csr/sector_scores.json").then((r) => r.json()),
+      fetch("/data/csr/meta.json").then((r) => r.json()),
     ])
       .then(([d, s, m]) => {
         setDistricts(d);

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     description:
       "In-depth district profiling, thematic studies, and funder analyses for India's philanthropic landscape.",
     url: `${siteUrl}/reports`,
-    images: [{ url: "/images/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/og/csr.png", width: 1200, height: 630 }],
     type: "website",
     siteName: "Whitespace India CSR",
   },

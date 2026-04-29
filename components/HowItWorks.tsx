@@ -102,7 +102,7 @@ export default function HowItWorks() {
           className="flex justify-end mt-6"
         >
           <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/40">
-            Precomputed scores · Reproducible via scripts/rebuild_data.py
+            Precomputed scores · Reproducible via scripts/csr/rebuild_data.py
           </span>
         </motion.div>
       </div>
