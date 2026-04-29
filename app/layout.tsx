@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     template: "%s | Whitespace India",
   },
   description:
-    "A research project mapping the gap between public need and where capital actually flows across India. Four open-data initiatives — CSR, Health, Education, Energy — built on government records.",
+    "Open instruments that show where India's resources are landing, and where they aren't. Four research initiatives across CSR, Health, Education, and Energy, built entirely on government records and free for anyone to use.",
   applicationName: "Whitespace India",
   keywords: [
     "Whitespace India",
@@ -93,7 +93,7 @@ const SITE_LD = {
       url: `${siteUrl}/`,
       logo: `${siteUrl}/logo.svg`,
       description:
-        "A research project mapping the gap between public need and where capital actually flows across India.",
+        "Open instruments that show where India's resources are landing and where they aren't, built on government records and free to use.",
       sameAs: ["https://www.linkedin.com/in/souhardsharma/"],
       founder: { "@type": "Person", name: "Souhard Sharma" },
       foundingLocation: { "@type": "Country", name: "India" },

@@ -314,22 +314,42 @@
 .faqList {
   display: flex;
   flex-direction: column;
-  gap: 48px;
+  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
+  border-top: 1px solid rgba(26, 26, 23, 0.12);
 }
 
 .faqItem {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+  border-bottom: 1px solid rgba(26, 26, 23, 0.12);
 }
-@media (min-width: 760px) {
-  .faqItem {
-    grid-template-columns: 64px 1fr;
-    gap: 32px;
-  }
+
+.faqDetails {
+  /* Native HTML5 accordion. <summary> stays visible (the question), the
+     paragraph below appears when open. Content is in the SSR HTML so Google
+     still sees the answers for FAQPage rich-result indexing, regardless of
+     open/closed state. */
+}
+
+.faqSummary {
+  display: grid;
+  grid-template-columns: 56px 1fr 32px;
+  align-items: baseline;
+  column-gap: 24px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  padding: 28px 0;
+  outline: none;
+  transition: background-color 200ms ease;
+}
+.faqSummary::-webkit-details-marker { display: none; }
+.faqSummary::marker { content: ""; }
+.faqSummary:hover .faqQuestion { color: var(--terra); }
+.faqSummary:focus-visible {
+  outline: 2px solid var(--terra);
+  outline-offset: 4px;
 }
 
 .faqNumber {
@@ -339,27 +359,53 @@
   text-transform: uppercase;
   color: var(--ink);
   opacity: 0.4;
-  padding-top: 8px;
+  font-weight: 500;
 }
 
 .faqQuestion {
   font-family: var(--font-newsreader), Georgia, serif;
   font-weight: 500;
-  font-size: clamp(22px, 2.4vw, 30px);
-  line-height: 1.2;
+  font-size: clamp(20px, 2.2vw, 28px);
+  line-height: 1.25;
   letter-spacing: -0.015em;
   color: var(--ink);
-  margin: 0 0 12px 0;
+  transition: color 200ms ease;
+}
+
+.faqIndicator {
+  font-family: var(--font-space-grotesk), ui-monospace, monospace;
+  font-size: 28px;
+  font-weight: 200;
+  text-align: right;
+  color: var(--terra);
+  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  line-height: 1;
+  display: inline-block;
+}
+.faqDetails[open] .faqIndicator {
+  transform: rotate(45deg);
 }
 
 .faqAnswer {
   font-family: var(--font-public-sans), system-ui, sans-serif;
   font-size: clamp(15px, 1.2vw, 17px);
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--ink);
   opacity: 0.78;
-  margin: 0;
+  margin: 0 32px 32px 80px;
   max-width: 64ch;
+}
+
+@media (max-width: 600px) {
+  .faqSummary {
+    grid-template-columns: 40px 1fr 24px;
+    column-gap: 16px;
+    padding: 22px 0;
+  }
+  .faqAnswer {
+    margin-left: 56px;
+    margin-right: 16px;
+  }
 }
 
 .faqFooter {
@@ -380,6 +426,13 @@
   text-transform: uppercase;
   color: var(--ink);
   opacity: 0.5;
+}
+
+.faqFooterLinks {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .faqFooterLink {

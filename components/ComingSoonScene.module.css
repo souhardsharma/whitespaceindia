@@ -65,38 +65,47 @@
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.09  0 0 0 0.07 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
+/* z-index 200 puts the chrome links ABOVE the .grain overlay (z-index 100).
+   Without this, the multiply-blend-mode grain darkens the cream link text
+   into the background and the link becomes invisible. The text-shadow adds
+   a soft dark halo so the cream reads cleanly on the lighter top portions
+   of each scene's gradient. */
 .back {
   position: fixed;
   top: 32px;
   left: 32px;
-  z-index: 50;
+  z-index: 200;
   font-family: var(--font-space-grotesk), ui-monospace, monospace;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: var(--ivory);
   text-decoration: none;
-  opacity: 0.85;
+  opacity: 0.95;
   transition: opacity 200ms ease, transform 200ms ease;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
 }
-.back:hover { opacity: 1; transform: translateX(-2px); }
+.back:hover { opacity: 1; transform: translateX(-3px); }
 
 .contact {
   position: fixed;
   top: 32px;
   right: 32px;
-  z-index: 50;
+  z-index: 200;
   font-family: var(--font-space-grotesk), ui-monospace, monospace;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: var(--ivory);
   text-decoration: none;
-  opacity: 0.85;
+  opacity: 0.95;
   transition: opacity 200ms ease;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
 }
 .contact:hover { opacity: 1; }
 

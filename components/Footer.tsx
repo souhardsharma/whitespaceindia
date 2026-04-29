@@ -121,6 +121,16 @@ export default function Footer() {
             </li>
             <li>
               <a
+                href="https://github.com/souhardsharma/whitespaceindia-csr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#1c1c19]/80 hover:text-[#BD402C] transition-colors"
+              >
+                Source on GitHub
+              </a>
+            </li>
+            <li>
+              <a
                 href="https://www.oecd.org/en/publications/handbook-on-constructing-composite-indicators-methodology-and-user-guide_9789264043466-en.html"
                 target="_blank"
                 rel="noopener noreferrer"

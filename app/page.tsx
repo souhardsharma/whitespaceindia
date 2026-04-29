@@ -4,19 +4,17 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
 
-/* Brace mark: { ? } with a terra-cotta dot replacing the ?'s natural dot.
-   Designed in a 100x80 viewBox so braces (font-size 80, weight 900) and the
-   question mark stem + dot all sit on a shared baseline grid. The dot is
-   x-centered with the stem (cx=50) and y-positioned just below the stem
-   terminus (stem ends at y=46, dot at y=54) — so it reads as one composite
-   glyph, not three drifting elements. */
+/* Brace mark: same paths as the CSR navbar's public/logo.svg, inlined here
+   so the dot color can be themed per layer (ink layer vs cream layer of the
+   split wordmark). Strokes use currentColor so they follow the parent
+   layer's color. ViewBox matches the source SVG exactly. */
 const BraceMark = ({ dotColor }: { dotColor: string }) => (
   <span className={styles.brace}>
-    <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
-      <text x="0" y="62" fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, monospace" fontWeight="900" fontSize="80" fill="currentColor">{"{"}</text>
-      <text x="68" y="62" fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, monospace" fontWeight="900" fontSize="80" fill="currentColor">{"}"}</text>
-      <path d="M 41 22 C 41 13, 46 7, 50 7 C 54 7, 59 13, 59 22 C 59 28, 55 31, 52 33 C 50 35, 50 37, 50 40 L 50 46 L 46 46 L 46 40 C 46 35, 49 33, 51 31 C 54 29, 56 26, 56 22 C 56 17, 53 13, 50 13 C 47 13, 44 17, 44 22 Z" fill="currentColor" />
-      <circle cx="48" cy="54" r="3.6" fill={dotColor} />
+    <svg viewBox="32 28 176 184" xmlns="http://www.w3.org/2000/svg" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M 78 40 C 58 40 56 58 56 76 C 56 98 56 104 44 116 C 44 120 44 120 44 124 C 56 136 56 142 56 164 C 56 182 58 200 78 200" stroke="currentColor" strokeWidth="20" />
+      <path d="M 162 40 C 182 40 184 58 184 76 C 184 98 184 104 196 116 C 196 120 196 120 196 124 C 184 136 184 142 184 164 C 184 182 182 200 162 200" stroke="currentColor" strokeWidth="20" />
+      <path d="M 98 88 C 98 72 108 62 120 62 C 134 62 144 74 144 88 C 144 104 134 110 126 118 C 120 124 120 130 120 138 L 120 146" stroke="currentColor" strokeWidth="30" />
+      <circle cx="120" cy="180" r="16" fill={dotColor} />
     </svg>
   </span>
 );
@@ -117,7 +115,7 @@ export default function Landing() {
             href="/health"
             className={`${styles.card} ${styles.cardDim}`}
             data-vert="health"
-            aria-label="Whitespace India Health — coming soon"
+            aria-label="Whitespace India Health, coming soon"
             style={{ ["--x" as string]: "0vw", ["--z" as string]: 1 } as React.CSSProperties}
           >
             <div className={`${styles.scene} ${styles.sceneHealth}`} />
@@ -131,7 +129,7 @@ export default function Landing() {
             href="/energy"
             className={`${styles.card} ${styles.cardDim}`}
             data-vert="energy"
-            aria-label="Whitespace India Energy — coming soon"
+            aria-label="Whitespace India Energy, coming soon"
             style={{ ["--x" as string]: "16.666vw", ["--z" as string]: 2 } as React.CSSProperties}
           >
             <div className={`${styles.scene} ${styles.sceneEnergy}`} />
@@ -145,7 +143,7 @@ export default function Landing() {
             href="/education"
             className={`${styles.card} ${styles.cardDim}`}
             data-vert="education"
-            aria-label="Whitespace India Education — coming soon"
+            aria-label="Whitespace India Education, coming soon"
             style={{ ["--x" as string]: "33.333vw", ["--z" as string]: 3 } as React.CSSProperties}
           >
             <div className={`${styles.scene} ${styles.sceneEducation}`} />
@@ -160,7 +158,7 @@ export default function Landing() {
             ref={csrRef}
             className={`${styles.card} ${styles.cardActive} ${styles.csrCard}`}
             data-vert="csr"
-            aria-label="Open Whitespace India CSR — opportunity index across 651 districts"
+            aria-label="Open Whitespace India CSR, opportunity index across 651 districts"
             style={{ ["--x" as string]: "50vw", ["--z" as string]: 4 } as React.CSSProperties}
           >
             <div className={`${styles.scene} ${styles.sceneCsr}`} />
@@ -182,11 +180,14 @@ export default function Landing() {
           <ol className={styles.faqList}>
             {FAQS.map((qa, i) => (
               <li key={i} className={styles.faqItem}>
-                <div className={styles.faqNumber}>{String(i + 1).padStart(2, "0")}</div>
-                <div>
-                  <h3 className={styles.faqQuestion}>{qa.q}</h3>
+                <details className={styles.faqDetails}>
+                  <summary className={styles.faqSummary}>
+                    <span className={styles.faqNumber}>{String(i + 1).padStart(2, "0")}</span>
+                    <span className={styles.faqQuestion}>{qa.q}</span>
+                    <span className={styles.faqIndicator} aria-hidden="true">+</span>
+                  </summary>
                   <p className={styles.faqAnswer}>{qa.a}</p>
-                </div>
+                </details>
               </li>
             ))}
           </ol>
@@ -195,14 +196,24 @@ export default function Landing() {
             <span className={styles.faqFooterText}>
               © {new Date().getFullYear()} Whitespace India
             </span>
-            <a
-              href="https://www.linkedin.com/in/souhardsharma/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.faqFooterLink}
-            >
-              Get in touch →
-            </a>
+            <div className={styles.faqFooterLinks}>
+              <a
+                href="https://github.com/souhardsharma/whitespaceindia-csr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.faqFooterLink}
+              >
+                Source on GitHub
+              </a>
+              <a
+                href="https://www.linkedin.com/in/souhardsharma/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.faqFooterLink}
+              >
+                Get in touch
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -218,23 +229,23 @@ export default function Landing() {
 const FAQS: { q: string; a: string }[] = [
   {
     q: "What is Whitespace India?",
-    a: "A research project mapping the gap between public need and where capital actually flows across India. We turn government data into open, interactive tools that show where attention is missing — starting with CSR philanthropy and expanding into health, education, and energy.",
+    a: "We build instruments that show where India's resources are actually landing, and where they aren't. Public data sits trapped in PDFs and dashboards nobody opens. Our work is to read it carefully, weigh it honestly, and put it on a single screen anyone can reason from. CSR comes first because the spending is mandated, the records are public, and the misallocation is enormous.",
   },
   {
     q: "Who is this for?",
-    a: "Anyone making allocation decisions with public consequence — funders, policymakers, journalists, researchers, civic leaders. The tools are useful whenever the question is some version of \"where should this money go?\"",
+    a: "Anyone whose job involves deciding where money or attention should go inside India. Foundation officers planning their next grant cycle. Journalists chasing a story the bureaucracy has not told. Researchers asking a question no consulting deck answers. Policy people who want evidence sitting under their decisions instead of pure instinct. If your work bends a budget or shapes a campaign, you will find something useful here.",
   },
   {
     q: "Where does the data come from?",
-    a: "Exclusively from public government records — NITI Aayog, the Ministry of Corporate Affairs, the Census of India, and similar primary sources. Every dataset and methodological choice is documented openly. No private data, no proprietary models.",
+    a: "Government records, all the way down. The NITI Aayog poverty index, the Ministry of Corporate Affairs CSR filings, the Census of India, and a handful of similarly authoritative sources. Every number we publish traces back to a document anyone can download for themselves. The full methodology lives in the open beside every result, so you can disagree with us at the level of evidence.",
   },
   {
     q: "Is everything free to use?",
-    a: "Yes. All tools, datasets, and analyses are openly accessible. Public-interest data should remain in public hands — that's the operating principle, not a marketing claim.",
+    a: "Yes, and that is a deliberate choice. Every tool, every underlying dataset, every methodology note, the entire source code, all of it stays free and openly licensed under permissive terms. Charging citizens to see how their own government allocates public capital would defeat the entire point of doing this work.",
   },
   {
     q: "What's coming next?",
-    a: "Health, Education, and Energy verticals — each applying the same opportunity-mapping approach to a different domain. We build where allocation visibility is poorest and the spend is largest. Timeline depends on data availability and validation.",
+    a: "Health, Education, and Energy follow CSR, each with its own composite index built from signals specific to that domain. The architecture carries over. Identify the dimensions that matter inside the sector, normalise them honestly, weight them in ways anyone can audit, and surface the districts where focused attention would compound furthest. Health goes next because the underlying data is in the best shape. The rest arrive as the validation work holds up.",
   },
 ];
 
