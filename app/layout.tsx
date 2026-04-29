@@ -31,14 +31,31 @@ export const metadata: Metadata = {
     template: "%s | Whitespace India",
   },
   description:
-    "A studio for civic data systems across India. Four research initiatives — CSR, Health, Education, Energy — mapping the gap between public need and where capital actually flows.",
+    "A research project mapping the gap between public need and where capital actually flows across India. Four open-data initiatives — CSR, Health, Education, Energy — built on government records.",
+  applicationName: "Whitespace India",
+  keywords: [
+    "Whitespace India",
+    "CSR India",
+    "philanthropy India",
+    "NITI Aayog MPI",
+    "open data India",
+    "civic data",
+    "MCA CSR data",
+    "Indian districts",
+  ],
+  authors: [{ name: "Souhard Sharma", url: "https://www.linkedin.com/in/souhardsharma/" }],
+  creator: "Souhard Sharma",
+  publisher: "Whitespace India",
+  formatDetection: { telephone: false, email: false, address: false },
   openGraph: {
     title: "Whitespace India",
     description:
-      "Civic data systems across CSR, Health, Education, and Energy. Currently shipping: CSR opportunity index across 766 Indian districts.",
-    images: [{ url: "/og/csr.png", width: 1200, height: 630 }],
+      "Civic data systems across CSR, Health, Education, and Energy. Shipping now: CSR opportunity index across 651 Indian districts.",
+    url: siteUrl,
+    images: [{ url: "/og/csr.png", width: 1200, height: 630, alt: "Whitespace India" }],
     type: "website",
     siteName: "Whitespace India",
+    locale: "en_IN",
   },
   twitter: {
     card: "summary_large_image",
@@ -46,18 +63,50 @@ export const metadata: Metadata = {
     description:
       "Civic data systems across CSR, Health, Education, and Energy.",
     creator: "@souaboroq",
+    images: ["/og/csr.png"],
   },
-  alternates: {
-    canonical: siteUrl,
+  alternates: { canonical: siteUrl },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
-  robots: { index: true, follow: true },
   icons: {
-    icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-    ],
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
     shortcut: "/favicon.svg",
     apple: "/favicon.svg",
   },
+  category: "research",
+};
+
+/* Site-wide structured data — Organization + WebSite. Appears on every page
+   so Google can establish brand identity regardless of entry point. Page-
+   specific schema (FAQPage on /, BreadcrumbList on placeholders) lives in
+   the page files. */
+const SITE_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${siteUrl}/#org`,
+      name: "Whitespace India",
+      url: `${siteUrl}/`,
+      logo: `${siteUrl}/logo.svg`,
+      description:
+        "A research project mapping the gap between public need and where capital actually flows across India.",
+      sameAs: ["https://www.linkedin.com/in/souhardsharma/"],
+      founder: { "@type": "Person", name: "Souhard Sharma" },
+      foundingLocation: { "@type": "Country", name: "India" },
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteUrl}/#site`,
+      url: `${siteUrl}/`,
+      name: "Whitespace India",
+      publisher: { "@id": `${siteUrl}/#org` },
+      inLanguage: "en-IN",
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -69,6 +118,10 @@ export default function RootLayout({
     <html lang="en" className={`${newsreader.variable} ${publicSans.variable} ${spaceGrotesk.variable}`}>
       <body className="bg-[#fcf9f4] text-[#1c1c19] font-body antialiased">
         <a href="#main-content" className="skip-link">Skip to main content</a>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD) }}
+        />
         {children}
         <Analytics />
         <SpeedInsights />
