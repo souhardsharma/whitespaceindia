@@ -66,10 +66,8 @@
 }
 
 /* z-index 200 puts the chrome links ABOVE the .grain overlay (z-index 100).
-   Without this, the multiply-blend-mode grain darkens the cream link text
-   into the background and the link becomes invisible. The text-shadow adds
-   a soft dark halo so the cream reads cleanly on the lighter top portions
-   of each scene's gradient. */
+   A semi-transparent dark backdrop pill guarantees legibility on any scene,
+   including the lighter education and health backgrounds. */
 .back {
   position: fixed;
   top: 32px;
@@ -80,16 +78,25 @@
   font-weight: 600;
   letter-spacing: 0.26em;
   text-transform: uppercase;
-  color: var(--ivory);
+  color: #fff;
   text-decoration: none;
-  opacity: 0.95;
-  transition: opacity 200ms ease, transform 200ms ease;
+  transition: opacity 200ms ease, transform 200ms ease, background 200ms ease;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
+  text-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.7),
+    0 0 16px rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 8px 16px;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
-.back:hover { opacity: 1; transform: translateX(-3px); }
+.back:hover {
+  background: rgba(0, 0, 0, 0.5);
+  transform: translateX(-3px);
+}
 
 .contact {
   position: fixed;
@@ -101,13 +108,19 @@
   font-weight: 600;
   letter-spacing: 0.26em;
   text-transform: uppercase;
-  color: var(--ivory);
+  color: #fff;
   text-decoration: none;
-  opacity: 0.95;
-  transition: opacity 200ms ease;
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
+  transition: opacity 200ms ease, background 200ms ease;
+  text-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.7),
+    0 0 16px rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 8px 16px;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
-.contact:hover { opacity: 1; }
+.contact:hover { background: rgba(0, 0, 0, 0.5); }
 
 .content {
   position: relative;
@@ -166,7 +179,7 @@
 }
 
 @media (max-width: 640px) {
-  .back, .contact { font-size: 10px; top: 20px; }
+  .back, .contact { font-size: 10px; top: 20px; padding: 6px 12px; }
   .back { left: 20px; }
   .contact { right: 20px; }
   .title { font-size: clamp(56px, 18vw, 96px); }
