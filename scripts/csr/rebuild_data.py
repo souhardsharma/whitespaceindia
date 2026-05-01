@@ -5,7 +5,7 @@ Whitespace India CSR — Data Pipeline (single-file, reproducible)
 Reads the three source files and regenerates every data artifact the
 website consumes.
 
-Source files (hard-coded — the user keeps them at this exact path):
+Source files (set WHITESPACE_DATA_DIR to the folder containing them):
   $WHITESPACE_DATA_DIR/
     India-National-Multidimentional-Poverty-Index-2023.pdf   (MPI)
     csr_state_sector.xlsx                                    (CSR MCA)
@@ -54,6 +54,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 import sys
 from pathlib import Path
@@ -64,7 +65,16 @@ import pdfplumber
 from rapidfuzz import fuzz, process
 
 # ── Paths ─────────────────────────────────────────────────────────────────
-SRC_DIR = Path("$WHITESPACE_DATA_DIR")
+_src = os.environ.get("WHITESPACE_DATA_DIR", "")
+if not _src:
+    sys.exit(
+        "ERROR: WHITESPACE_DATA_DIR is not set.\n"
+        "Set it to the folder containing the three source files:\n"
+        "  MPI PDF, CSR Excel, Census CSV.\n\n"
+        "  Windows:  set WHITESPACE_DATA_DIR=C:\\path\\to\\whitespace-india-data\n"
+        "  macOS:    export WHITESPACE_DATA_DIR=/path/to/whitespace-india-data"
+    )
+SRC_DIR = Path(_src)
 PDF_PATH = SRC_DIR / "India-National-Multidimentional-Poverty-Index-2023.pdf"
 EXCEL_PATH = SRC_DIR / "csr_state_sector.xlsx"
 CENSUS_PATH = SRC_DIR / "census_2011_districts.csv"

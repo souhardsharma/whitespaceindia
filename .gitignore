@@ -37,24 +37,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-
-
-/
-
-
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Local-only diagnostic artifacts (Python pipelines, any vertical)
+# Local pipeline artifacts
 scripts/**/verification_report.json
 scripts/**/_baseline/
 scripts/**/__pycache__/
-
-
-
-
-
-
