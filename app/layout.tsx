@@ -22,8 +22,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://whitespaceindia-csr.vercel.app");
+  process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -53,7 +52,7 @@ export const metadata: Metadata = {
     description:
       "Civic data systems across CSR, Health, Education, and Energy. Shipping now: CSR opportunity index across 651 Indian districts.",
     url: siteUrl,
-    images: [{ url: "/og/csr.jpg", width: 1200, height: 630, alt: "Whitespace India" }],
+    images: [{ url: "/og/csr.png", width: 1200, height: 630, alt: "Whitespace India" }],
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
@@ -64,7 +63,7 @@ export const metadata: Metadata = {
     description:
       "Civic data systems across CSR, Health, Education, and Energy.",
     creator: "@souaboroq",
-    images: ["/og/csr.jpg"],
+    images: ["/og/csr.png"],
   },
   alternates: { canonical: siteUrl },
   robots: {
