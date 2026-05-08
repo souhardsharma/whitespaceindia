@@ -1,7 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
+import { memo, useCallback } from "react";
 import { District } from "@/lib/csr/score";
 
 interface Props {
@@ -11,23 +10,31 @@ interface Props {
   isLoading: boolean;
 }
 
+type RankedDistrict = District & { computed_pos: number; rank: number };
+
 const DistrictRow = memo(function DistrictRow({
   district,
   isSelected,
   onSelect,
 }: {
-  district: District & { computed_pos: number; rank: number };
+  district: RankedDistrict;
   isSelected: boolean;
-  onSelect: () => void;
+  onSelect: (district: RankedDistrict) => void;
 }) {
+  const handleClick = useCallback(() => onSelect(district), [onSelect, district]);
+
   return (
-    <motion.div
-      layout={false}
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-      onClick={onSelect}
-      className={`group cursor-pointer py-3 px-2 transition-colors ${
+    <div
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
+      className={`group cursor-pointer py-3 px-2 transition-colors duration-150 ${
         isSelected
           ? "bg-[#ebe8e3] border-l-2 border-[#BD402C] pl-4"
           : "border-l-2 border-transparent hover:bg-[#f6f3ee] hover:border-[#1c1c19] hover:pl-4"
@@ -59,16 +66,19 @@ const DistrictRow = memo(function DistrictRow({
           {district.pop_tier && <> · {district.pop_tier.replace(/\s*\(.*?\)/, "")}</>}
         </p>
         <div className="h-px bg-[#1c1c19]/30 flex-1 mx-3 max-w-[80px] relative overflow-hidden">
-          <motion.div
-            className="absolute inset-y-0 left-0 bg-[#BD402C]"
-            initial={{ width: 0 }}
-            animate={{ width: `${district.computed_pos}%` }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            style={{ height: "2px", top: "-0.5px" }}
+          <div
+            className="absolute left-0 bg-[#BD402C]"
+            style={{
+              width: `${district.computed_pos}%`,
+              height: "2px",
+              top: "-0.5px",
+              transition: "width 250ms ease-out",
+              willChange: "width",
+            }}
           />
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 });
 
@@ -98,14 +108,6 @@ export default function RankingList({
     [onSelectDistrict]
   );
 
-  const listKey = useMemo(() => {
-    const sig = districts
-      .slice(0, 5)
-      .map((d) => `${d.district_lgd_code}:${d.computed_pos.toFixed(1)}`)
-      .join("|");
-    return `${districts.length}-${sig}`;
-  }, [districts]);
-
   if (isLoading) {
     return (
       <div className="space-y-1">
@@ -128,16 +130,15 @@ export default function RankingList({
 
   return (
     <div
-      key={listKey}
       className="overflow-y-auto space-y-1 pr-2 scrollbar-thin"
-      style={{ maxHeight: "420px" }}
+      style={{ maxHeight: "420px", contain: "content" }}
     >
       {districts.map((d) => (
         <DistrictRow
           key={d.district_lgd_code}
           district={d}
           isSelected={selectedLgdCode === d.district_lgd_code}
-          onSelect={() => handleSelect(d)}
+          onSelect={handleSelect}
         />
       ))}
     </div>
