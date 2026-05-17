@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Newsreader, Public_Sans, Space_Grotesk } from "next/font/google";
+import { Newsreader, Public_Sans, Space_Grotesk, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -19,6 +19,12 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-space-grotesk",
   weight: ["300", "400", "500", "700"],
+});
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  variable: "--font-instrument",
+  weight: ["400"],
+  style: ["normal", "italic"],
 });
 
 const siteUrl =
@@ -115,7 +121,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${newsreader.variable} ${publicSans.variable} ${spaceGrotesk.variable}`}>
+    <html lang="en" className={`${newsreader.variable} ${publicSans.variable} ${spaceGrotesk.variable} ${instrumentSerif.variable}`}>
       <body className="bg-[#fcf9f4] text-[#1c1c19] font-body antialiased">
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <script

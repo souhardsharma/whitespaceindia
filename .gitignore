@@ -46,3 +46,9 @@ __pycache__/
 scripts/**/verification_report.json
 scripts/**/_baseline/
 scripts/**/__pycache__/
+
+# Local-only landing image source backups (input for scripts/optimize_landing.py)
+public/landing/_orig_backup/
+
+# Local design exploration scratch
+.design-options/
