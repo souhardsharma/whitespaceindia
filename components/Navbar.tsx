@@ -5,8 +5,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import type { VerticalConfig } from "@/lib/verticals/types";
 
-export default function Navbar() {
+const DEFAULT_ACCENT = "#BD402C";
+const DEFAULT_ACCENT_DEEP = "#9b2817";
+
+export default function Navbar({ vertical }: { vertical?: VerticalConfig }) {
+  const accent = vertical?.theme.accent ?? DEFAULT_ACCENT;
+  const accentDeep = vertical?.theme.accentDeep ?? DEFAULT_ACCENT_DEEP;
+  const verticalName = vertical?.name ?? "CSR";
+  const verticalSlug = vertical?.slug ?? "csr";
+  const methodologyHref = verticalSlug === "csr" ? "/methodology" : `/${verticalSlug}/methodology`;
+  const aboutHref = verticalSlug === "csr" ? "/about" : `/${verticalSlug}/about`;
+  const reportsHref = verticalSlug === "csr" ? "/reports" : `/${verticalSlug}/reports`;
+  const simulatorHref = `/${verticalSlug}#simulator`;
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
@@ -24,10 +36,10 @@ export default function Navbar() {
   const handleSimulatorClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setMobileOpen(false);
-    if (pathname === "/csr") {
+    if (pathname === `/${verticalSlug}`) {
       document.getElementById("simulator")?.scrollIntoView({ behavior: "smooth" });
     } else {
-      window.location.href = "/csr#simulator";
+      window.location.href = simulatorHref;
     }
   };
 
@@ -63,50 +75,52 @@ export default function Navbar() {
               </span>
             </Link>
             <Link
-              href="/csr"
-              aria-label="CSR home"
-              className="font-headline italic font-bold text-[22px] md:text-[26px] leading-none tracking-[-0.01em] text-[#BD402C] hover:text-[#9b2817] transition-colors"
+              href={`/${verticalSlug}`}
+              aria-label={`${verticalName} home`}
+              className="font-headline italic font-bold text-[22px] md:text-[26px] leading-none tracking-[-0.01em] transition-colors"
+              style={{ color: accent }}
+              onMouseEnter={e => (e.currentTarget.style.color = accentDeep)}
+              onMouseLeave={e => (e.currentTarget.style.color = accent)}
             >
-              CSR
+              {verticalName}
             </Link>
           </div>
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-8 lg:gap-10">
             <a
-              href={pathname === "/" ? "#simulator" : "/#simulator"}
+              href={simulatorHref}
               onClick={handleSimulatorClick}
-              className="font-label text-[11px] uppercase tracking-[0.25em] text-[#1c1c19] hover:text-[#BD402C] transition-colors cursor-pointer"
+              className="font-label text-[11px] uppercase tracking-[0.25em] text-[#1c1c19] transition-colors cursor-pointer"
+              onMouseEnter={e => (e.currentTarget.style.color = accent)}
+              onMouseLeave={e => (e.currentTarget.style.color = '#1c1c19')}
             >
               Simulator
             </a>
             <Link
-              href="/methodology"
-              className={`font-label text-[11px] uppercase tracking-[0.25em] transition-colors ${
-                isActive("/methodology")
-                  ? "text-[#BD402C] border-b border-[#BD402C] pb-0.5"
-                  : "text-[#1c1c19] hover:text-[#BD402C]"
-              }`}
+              href={methodologyHref}
+              className="font-label text-[11px] uppercase tracking-[0.25em] transition-colors text-[#1c1c19]"
+              style={isActive(methodologyHref) ? { color: accent, borderBottom: `1px solid ${accent}`, paddingBottom: '2px' } : undefined}
+              onMouseEnter={e => { if (!isActive(methodologyHref)) e.currentTarget.style.color = accent; }}
+              onMouseLeave={e => { if (!isActive(methodologyHref)) e.currentTarget.style.color = '#1c1c19'; }}
             >
               Methodology
             </Link>
             <Link
-              href="/reports"
-              className={`font-label text-[11px] uppercase tracking-[0.25em] transition-colors ${
-                isActive("/reports")
-                  ? "text-[#BD402C] border-b border-[#BD402C] pb-0.5"
-                  : "text-[#1c1c19] hover:text-[#BD402C]"
-              }`}
+              href={reportsHref}
+              className="font-label text-[11px] uppercase tracking-[0.25em] transition-colors text-[#1c1c19]"
+              style={isActive(reportsHref) ? { color: accent, borderBottom: `1px solid ${accent}`, paddingBottom: '2px' } : undefined}
+              onMouseEnter={e => { if (!isActive(reportsHref)) e.currentTarget.style.color = accent; }}
+              onMouseLeave={e => { if (!isActive(reportsHref)) e.currentTarget.style.color = '#1c1c19'; }}
             >
               Reports
             </Link>
             <Link
-              href="/about"
-              className={`font-label text-[11px] uppercase tracking-[0.25em] transition-colors ${
-                isActive("/about")
-                  ? "text-[#BD402C] border-b border-[#BD402C] pb-0.5"
-                  : "text-[#1c1c19] hover:text-[#BD402C]"
-              }`}
+              href={aboutHref}
+              className="font-label text-[11px] uppercase tracking-[0.25em] transition-colors text-[#1c1c19]"
+              style={isActive(aboutHref) ? { color: accent, borderBottom: `1px solid ${accent}`, paddingBottom: '2px' } : undefined}
+              onMouseEnter={e => { if (!isActive(aboutHref)) e.currentTarget.style.color = accent; }}
+              onMouseLeave={e => { if (!isActive(aboutHref)) e.currentTarget.style.color = '#1c1c19'; }}
             >
               About
             </Link>
@@ -114,7 +128,10 @@ export default function Navbar() {
               href="https://www.linkedin.com/in/souhardsharma/"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-label text-[11px] uppercase tracking-[0.25em] text-[#BD402C] hover:text-[#9b2817] transition-colors"
+              className="font-label text-[11px] uppercase tracking-[0.25em] transition-colors"
+              style={{ color: accent }}
+              onMouseEnter={e => (e.currentTarget.style.color = accentDeep)}
+              onMouseLeave={e => (e.currentTarget.style.color = accent)}
             >
               Contact
             </a>
@@ -151,30 +168,38 @@ export default function Navbar() {
           >
             <div className="px-6 py-6 flex flex-col gap-5">
               <a
-                href={pathname === "/" ? "#simulator" : "/#simulator"}
+                href={simulatorHref}
                 onClick={handleSimulatorClick}
-                className="font-label text-[11px] uppercase tracking-[0.25em] text-[#1c1c19] hover:text-[#BD402C] transition-colors"
+                className="font-label text-[11px] uppercase tracking-[0.25em] text-[#1c1c19] transition-colors"
+                onMouseEnter={e => (e.currentTarget.style.color = accent)}
+                onMouseLeave={e => (e.currentTarget.style.color = '#1c1c19')}
               >
                 Simulator
               </a>
               <Link
-                href="/methodology"
+                href={methodologyHref}
                 onClick={() => setMobileOpen(false)}
-                className="font-label text-[11px] uppercase tracking-[0.25em] text-[#1c1c19] hover:text-[#BD402C] transition-colors"
+                className="font-label text-[11px] uppercase tracking-[0.25em] text-[#1c1c19] transition-colors"
+                onMouseEnter={e => (e.currentTarget.style.color = accent)}
+                onMouseLeave={e => (e.currentTarget.style.color = '#1c1c19')}
               >
                 Methodology
               </Link>
               <Link
-                href="/reports"
+                href={reportsHref}
                 onClick={() => setMobileOpen(false)}
-                className="font-label text-[11px] uppercase tracking-[0.25em] text-[#1c1c19] hover:text-[#BD402C] transition-colors"
+                className="font-label text-[11px] uppercase tracking-[0.25em] text-[#1c1c19] transition-colors"
+                onMouseEnter={e => (e.currentTarget.style.color = accent)}
+                onMouseLeave={e => (e.currentTarget.style.color = '#1c1c19')}
               >
                 Reports
               </Link>
               <Link
-                href="/about"
+                href={aboutHref}
                 onClick={() => setMobileOpen(false)}
-                className="font-label text-[11px] uppercase tracking-[0.25em] text-[#1c1c19] hover:text-[#BD402C] transition-colors"
+                className="font-label text-[11px] uppercase tracking-[0.25em] text-[#1c1c19] transition-colors"
+                onMouseEnter={e => (e.currentTarget.style.color = accent)}
+                onMouseLeave={e => (e.currentTarget.style.color = '#1c1c19')}
               >
                 About
               </Link>
@@ -183,7 +208,10 @@ export default function Navbar() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMobileOpen(false)}
-                className="font-label text-[11px] uppercase tracking-[0.25em] text-[#BD402C] hover:text-[#9b2817] transition-colors"
+                className="font-label text-[11px] uppercase tracking-[0.25em] transition-colors"
+                style={{ color: accent }}
+                onMouseEnter={e => (e.currentTarget.style.color = accentDeep)}
+                onMouseLeave={e => (e.currentTarget.style.color = accent)}
               >
                 Contact
               </a>

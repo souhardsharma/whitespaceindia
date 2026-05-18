@@ -1,0 +1,15 @@
+{
+  "total_districts": 651,
+  "data_window": "2020-2023",
+  "pos_range": {
+    "min": 0,
+    "max": 76.8
+  },
+  "sector_pos_max": 80,
+  "sources": [
+    "Central Electricity Authority",
+    "Saubhagya Dashboard",
+    "MNRE Reports",
+    "Census of India 2011"
+  ]
+}

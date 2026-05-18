@@ -15,12 +15,16 @@ import {
   Line,
 } from "recharts";
 import { District } from "@/lib/csr/score";
+import type { VerticalConfig } from "@/lib/verticals/types";
 
 const NATIONAL_MPI_HEADCOUNT = 0.1496;
+const DEFAULT_ACCENT = "#BD402C";
+const DEFAULT_ACCENT_DEEP = "#9b2817";
 
 interface Props {
   district: (District & { computed_pos: number }) | null;
   onClose: () => void;
+  vertical?: VerticalConfig;
 }
 
 const CHART_TOOLTIP_STYLE = {
@@ -88,10 +92,12 @@ function TrendChart({
   baseline,
   current,
   districtName,
+  accent = DEFAULT_ACCENT,
 }: {
   baseline: number | null;
   current: number;
   districtName: string;
+  accent?: string;
 }) {
   if (!baseline) {
     return (
@@ -119,7 +125,7 @@ function TrendChart({
         <p className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19] font-bold">
           Poverty Trend
         </p>
-        <span className="font-label text-[9px] uppercase tracking-widest text-[#BD402C]">
+        <span className="font-label text-[9px] uppercase tracking-widest" style={{ color: accent }}>
           {improved ? "Improving" : "Worsening"}
         </span>
       </div>
@@ -151,9 +157,9 @@ function TrendChart({
           <Line
             type="monotone"
             dataKey="value"
-            stroke={improved ? "#1c1c19" : "#BD402C"}
+            stroke={improved ? "#1c1c19" : accent}
             strokeWidth={2}
-            dot={{ r: 4, fill: improved ? "#1c1c19" : "#BD402C", strokeWidth: 0 }}
+            dot={{ r: 4, fill: improved ? "#1c1c19" : accent, strokeWidth: 0 }}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -170,7 +176,9 @@ const PROGRESS_MESSAGES = [
   "Finalizing download",
 ];
 
-export default function BriefModal({ district, onClose }: Props) {
+export default function BriefModal({ district, onClose, vertical }: Props) {
+  const accent = vertical?.theme.accent ?? DEFAULT_ACCENT;
+  const accentDeep = vertical?.theme.accentDeep ?? DEFAULT_ACCENT_DEEP;
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
@@ -267,6 +275,7 @@ export default function BriefModal({ district, onClose }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          vertical: vertical?.id ?? "csr",
           district_name: district.district_name,
           state_name: district.state_name,
           headcount_ratio_2021: district.headcount_ratio_2021,
@@ -332,7 +341,7 @@ export default function BriefModal({ district, onClose }: Props) {
             {/* Header bar */}
             <div className="sticky top-0 z-10 flex items-center justify-between px-6 md:px-8 py-4 border-b border-[#1c1c19] bg-[#f6f3ee]">
               <div className="flex items-center gap-4">
-                <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] font-bold">
+                <span className="font-label text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: accent }}>
                   Research Brief
                 </span>
                 <span className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60">
@@ -341,7 +350,9 @@ export default function BriefModal({ district, onClose }: Props) {
               </div>
               <button
                 onClick={onClose}
-                className="text-[#1c1c19]/60 hover:text-[#BD402C] transition-colors"
+                className="text-[#1c1c19]/60 transition-colors"
+                onMouseEnter={e => (e.currentTarget.style.color = accent)}
+                onMouseLeave={e => (e.currentTarget.style.color = '')}
                 aria-label="Close"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -369,7 +380,8 @@ export default function BriefModal({ district, onClose }: Props) {
                     initial={{ opacity: 0, x: -6 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4, delay: 0.2 }}
-                    className="font-label text-xs uppercase tracking-[0.2em] bg-[#BD402C] text-white px-4 py-2"
+                    className="font-label text-xs uppercase tracking-[0.2em] text-white px-4 py-2"
+                    style={{ backgroundColor: accent }}
                   >
                     POS · {district.computed_pos.toFixed(1)}/100
                   </motion.span>
@@ -378,7 +390,8 @@ export default function BriefModal({ district, onClose }: Props) {
                       initial={{ opacity: 0, x: -6 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.4, delay: 0.3 }}
-                      className="font-label text-xs uppercase tracking-[0.2em] border border-[#BD402C] text-[#BD402C] px-4 py-2"
+                      className="font-label text-xs uppercase tracking-[0.2em] px-4 py-2"
+                      style={{ borderWidth: 1, borderStyle: 'solid', borderColor: accent, color: accent }}
                     >
                       Neglected
                     </motion.span>
@@ -457,7 +470,7 @@ export default function BriefModal({ district, onClose }: Props) {
                     className={`p-5 ${i % 2 === 1 ? "bg-[#f6f3ee]" : "bg-[#fcf9f4]"} ${i < 2 ? "border-r border-[#1c1c19]" : ""
                       }`}
                   >
-                    <div className="font-label text-xl md:text-2xl font-bold text-[#BD402C] tracking-tighter mb-2">
+                    <div className="font-label text-xl md:text-2xl font-bold tracking-tighter mb-2" style={{ color: accent }}>
                       {metric.value}
                     </div>
                     <div className="h-px bg-[#1c1c19]/30 w-6 mb-2" />
@@ -485,7 +498,7 @@ export default function BriefModal({ district, onClose }: Props) {
                           ? district.district_name.slice(0, 10) + "."
                           : district.district_name,
                       value: +(district.headcount_ratio_2021 * 100).toFixed(1),
-                      color: "#BD402C",
+                      color: accent,
                     },
                     {
                       name: "National",
@@ -506,13 +519,13 @@ export default function BriefModal({ district, onClose }: Props) {
                       value: Math.round(district.district_csr_per_person),
                       color:
                         district.district_csr_per_person < district.tier_median_csr
-                          ? "#BD402C"
+                          ? accent
                           : "#1c1c19",
                     },
                     {
                       name: "Tier Med.",
                       value: Math.round(district.tier_median_csr),
-                      color: "#9b2817",
+                      color: accentDeep,
                     },
                   ]}
                 />
@@ -527,6 +540,7 @@ export default function BriefModal({ district, onClose }: Props) {
                   baseline={district.headcount_ratio_2016}
                   current={district.headcount_ratio_2021}
                   districtName={district.district_name}
+                  accent={accent}
                 />
               </motion.div>
 
@@ -546,8 +560,9 @@ export default function BriefModal({ district, onClose }: Props) {
                     disabled={cooldown > 0}
                     className={`group w-full font-label uppercase tracking-[0.25em] text-[11px] py-5 px-8 flex justify-between items-center gap-6 transition-colors ${cooldown > 0
                       ? "bg-[#1c1c19]/30 text-[#fcf9f4] cursor-not-allowed"
-                      : "bg-[#BD402C] text-white hover:bg-[#1c1c19]"
+                      : "text-white hover:bg-[#1c1c19]"
                       }`}
+                    style={cooldown > 0 ? undefined : { backgroundColor: accent }}
                   >
                     <span>
                       {cooldown > 0
@@ -577,12 +592,14 @@ export default function BriefModal({ district, onClose }: Props) {
                 >
                   <div className="relative w-14 h-14 mx-auto mb-6">
                     <motion.div
-                      className="absolute inset-0 border-2 border-[#BD402C]/20"
+                      className="absolute inset-0 border-2 opacity-20"
+                      style={{ borderColor: accent }}
                       animate={{ opacity: [0.3, 0.7, 0.3] }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     />
                     <motion.div
-                      className="absolute inset-0 border-2 border-[#BD402C] border-t-transparent"
+                      className="absolute inset-0 border-2 border-t-transparent"
+                      style={{ borderColor: accent, borderTopColor: 'transparent' }}
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
                     />
@@ -609,11 +626,11 @@ export default function BriefModal({ district, onClose }: Props) {
 
                   <div className="mt-6 mx-auto max-w-xs h-px bg-[#1c1c19]/20 relative overflow-hidden">
                     <motion.div
-                      className="absolute inset-y-0 bg-[#BD402C]"
+                      className="absolute inset-y-0"
                       initial={{ x: "-40%", width: "40%" }}
                       animate={{ x: "140%" }}
                       transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                      style={{ height: "2px", top: "-0.5px" }}
+                      style={{ height: "2px", top: "-0.5px", backgroundColor: accent }}
                     />
                   </div>
                 </motion.div>
@@ -626,13 +643,13 @@ export default function BriefModal({ district, onClose }: Props) {
                   animate={{ opacity: 1, y: 0 }}
                   className="border-t border-[#1c1c19] pt-8 text-center"
                 >
-                  <div className="inline-flex items-center justify-center w-12 h-12 border border-[#BD402C] mb-5">
+                  <div className="inline-flex items-center justify-center w-12 h-12 mb-5" style={{ borderWidth: 1, borderStyle: 'solid', borderColor: accent }}>
                     <svg
                       width="22"
                       height="22"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#BD402C"
+                      stroke={accent}
                       strokeWidth="1.5"
                       strokeLinecap="round"
                     >
@@ -651,8 +668,9 @@ export default function BriefModal({ district, onClose }: Props) {
                     disabled={cooldown > 0}
                     className={`font-label text-[11px] uppercase tracking-[0.25em] py-3 px-8 transition-colors ${cooldown > 0
                       ? "bg-[#1c1c19]/20 text-[#1c1c19]/40 cursor-not-allowed"
-                      : "bg-[#BD402C] text-white hover:bg-[#1c1c19]"
+                      : "text-white hover:bg-[#1c1c19]"
                       }`}
+                    style={cooldown > 0 ? undefined : { backgroundColor: accent }}
                   >
                     {cooldown > 0 ? `Retry in ${cooldown}s` : "Retry"}
                   </button>
@@ -674,7 +692,7 @@ export default function BriefModal({ district, onClose }: Props) {
                         height="22"
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke="#BD402C"
+                        stroke={accent}
                         strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -682,7 +700,7 @@ export default function BriefModal({ district, onClose }: Props) {
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     </div>
-                    <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] block mb-3">
+                    <span className="font-label text-[10px] uppercase tracking-[0.3em] block mb-3" style={{ color: accent }}>
                       Download Complete
                     </span>
                     <h3 className="font-headline text-2xl md:text-3xl headline-tight text-[#1c1c19] mb-3">

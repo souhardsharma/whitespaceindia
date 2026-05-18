@@ -1,0 +1,876 @@
+[
+  {
+    "state_name": "Bihar",
+    "district_name": "Araria",
+    "district_lgd_code": "801",
+    "total_population": 1642969,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.39,
+      "learning": 0.19,
+      "edu_infra": 0.5571
+    },
+    "raw": {
+      "school_access": 41.6452,
+      "learning": 50.5076,
+      "edu_infra": 22.8758
+    },
+    "computed_score": 35.18
+  },
+  {
+    "state_name": "Bihar",
+    "district_name": "Kishanganj",
+    "district_lgd_code": "802",
+    "total_population": 2302281,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.1958,
+      "learning": 0.781,
+      "edu_infra": 0.463
+    },
+    "raw": {
+      "school_access": 28.5996,
+      "learning": 61.7324,
+      "edu_infra": 13.8976
+    },
+    "computed_score": 49.669999999999995
+  },
+  {
+    "state_name": "Bihar",
+    "district_name": "Purnia",
+    "district_lgd_code": "803",
+    "total_population": 810944,
+    "pop_tier": "Medium (0.5-1M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.9379,
+      "learning": 0.4859,
+      "edu_infra": 0.5215
+    },
+    "raw": {
+      "school_access": 11.4037,
+      "learning": 32.819,
+      "edu_infra": 55.1432
+    },
+    "computed_score": 65.3
+  },
+  {
+    "state_name": "Bihar",
+    "district_name": "Katihar",
+    "district_lgd_code": "804",
+    "total_population": 2099075,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.7948,
+      "learning": 0.364,
+      "edu_infra": 0.8477
+    },
+    "raw": {
+      "school_access": 49.3805,
+      "learning": 68.8752,
+      "edu_infra": 34.5162
+    },
+    "computed_score": 63.57000000000001
+  },
+  {
+    "state_name": "Bihar",
+    "district_name": "Madhepura",
+    "district_lgd_code": "805",
+    "total_population": 556873,
+    "pop_tier": "Medium (0.5-1M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.2305,
+      "learning": 0.3072,
+      "edu_infra": 0.1561
+    },
+    "raw": {
+      "school_access": 34.5202,
+      "learning": 23.7122,
+      "edu_infra": 51.2592
+    },
+    "computed_score": 24.26
+  },
+  {
+    "state_name": "Bihar",
+    "district_name": "Supaul",
+    "district_lgd_code": "806",
+    "total_population": 2494919,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.3672,
+      "learning": 0.1653,
+      "edu_infra": 0.4107
+    },
+    "raw": {
+      "school_access": 40.4573,
+      "learning": 76.5211,
+      "edu_infra": 33.5178
+    },
+    "computed_score": 29.73
+  },
+  {
+    "state_name": "Bihar",
+    "district_name": "Sitamarhi",
+    "district_lgd_code": "807",
+    "total_population": 2384708,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.5597,
+      "learning": 0.1917,
+      "edu_infra": 0.2736
+    },
+    "raw": {
+      "school_access": 15.0768,
+      "learning": 52.498,
+      "edu_infra": 45.2251
+    },
+    "computed_score": 34.1
+  },
+  {
+    "state_name": "Bihar",
+    "district_name": "Sheohar",
+    "district_lgd_code": "808",
+    "total_population": 836155,
+    "pop_tier": "Medium (0.5-1M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.134,
+      "learning": 0.5985,
+      "edu_infra": 0.7812
+    },
+    "raw": {
+      "school_access": 42.0997,
+      "learning": 31.6966,
+      "edu_infra": 15.1145
+    },
+    "computed_score": 48.16
+  },
+  {
+    "state_name": "Bihar",
+    "district_name": "Muzaffarpur",
+    "district_lgd_code": "809",
+    "total_population": 2401082,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.8273,
+      "learning": 0.4474,
+      "edu_infra": 0.3041
+    },
+    "raw": {
+      "school_access": 12.8836,
+      "learning": 43.566,
+      "edu_infra": 47.6311
+    },
+    "computed_score": 54.449999999999996
+  },
+  {
+    "state_name": "Bihar",
+    "district_name": "Darbhanga",
+    "district_lgd_code": "810",
+    "total_population": 3303940,
+    "pop_tier": "Very Large (>3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.6024,
+      "learning": 0.3849,
+      "edu_infra": 0.1253
+    },
+    "raw": {
+      "school_access": 24.5908,
+      "learning": 49.3243,
+      "edu_infra": 42.486
+    },
+    "computed_score": 39.61
+  },
+  {
+    "state_name": "Uttar Pradesh",
+    "district_name": "Shravasti",
+    "district_lgd_code": "811",
+    "total_population": 858399,
+    "pop_tier": "Medium (0.5-1M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.4538,
+      "learning": 0.4858,
+      "edu_infra": 0.824
+    },
+    "raw": {
+      "school_access": 21.4705,
+      "learning": 51.0811,
+      "edu_infra": 49.2538
+    },
+    "computed_score": 55.910000000000004
+  },
+  {
+    "state_name": "Uttar Pradesh",
+    "district_name": "Bahraich",
+    "district_lgd_code": "812",
+    "total_population": 2144360,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.8032,
+      "learning": 0.1968,
+      "edu_infra": 0.735
+    },
+    "raw": {
+      "school_access": 17.2696,
+      "learning": 27.233,
+      "edu_infra": 35.2619
+    },
+    "computed_score": 54.36
+  },
+  {
+    "state_name": "Uttar Pradesh",
+    "district_name": "Balrampur",
+    "district_lgd_code": "813",
+    "total_population": 1452496,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.7744,
+      "learning": 0.4458,
+      "edu_infra": 0.1663
+    },
+    "raw": {
+      "school_access": 21.5862,
+      "learning": 60.3435,
+      "edu_infra": 55.5691
+    },
+    "computed_score": 49.09
+  },
+  {
+    "state_name": "Uttar Pradesh",
+    "district_name": "Siddharthnagar",
+    "district_lgd_code": "814",
+    "total_population": 567926,
+    "pop_tier": "Medium (0.5-1M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.4236,
+      "learning": 0.7601,
+      "edu_infra": 0.7629
+    },
+    "raw": {
+      "school_access": 32.0987,
+      "learning": 50.456,
+      "edu_infra": 15.3077
+    },
+    "computed_score": 64.3
+  },
+  {
+    "state_name": "Uttar Pradesh",
+    "district_name": "Budaun",
+    "district_lgd_code": "815",
+    "total_population": 2635435,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.5086,
+      "learning": 0.1022,
+      "edu_infra": 0.1554
+    },
+    "raw": {
+      "school_access": 45.1803,
+      "learning": 34.2979,
+      "edu_infra": 52.0192
+    },
+    "computed_score": 25.77
+  },
+  {
+    "state_name": "Uttar Pradesh",
+    "district_name": "Rampur",
+    "district_lgd_code": "816",
+    "total_population": 2594566,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": true,
+    "scores": {
+      "school_access": 0.9204,
+      "learning": 0.8889,
+      "edu_infra": 0.5437
+    },
+    "raw": {
+      "school_access": 15.4299,
+      "learning": 26.9803,
+      "edu_infra": 31.6448
+    },
+    "computed_score": 81.36
+  },
+  {
+    "state_name": "Uttar Pradesh",
+    "district_name": "Bareilly",
+    "district_lgd_code": "817",
+    "total_population": 2323602,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.5328,
+      "learning": 0.4147,
+      "edu_infra": 0.3351
+    },
+    "raw": {
+      "school_access": 6.8327,
+      "learning": 24.2353,
+      "edu_infra": 12.6011
+    },
+    "computed_score": 43.61
+  },
+  {
+    "state_name": "Uttar Pradesh",
+    "district_name": "Shahjahanpur",
+    "district_lgd_code": "818",
+    "total_population": 563957,
+    "pop_tier": "Medium (0.5-1M)",
+    "is_whitespace": true,
+    "scores": {
+      "school_access": 0.6441,
+      "learning": 0.7167,
+      "edu_infra": 0.3101
+    },
+    "raw": {
+      "school_access": 27.2016,
+      "learning": 30.1366,
+      "edu_infra": 34.4331
+    },
+    "computed_score": 58.96
+  },
+  {
+    "state_name": "Madhya Pradesh",
+    "district_name": "Barwani",
+    "district_lgd_code": "819",
+    "total_population": 1520305,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.5825,
+      "learning": 0.4207,
+      "edu_infra": 0.8117
+    },
+    "raw": {
+      "school_access": 13.5755,
+      "learning": 49.2419,
+      "edu_infra": 11.5392
+    },
+    "computed_score": 57.50999999999999
+  },
+  {
+    "state_name": "Madhya Pradesh",
+    "district_name": "Alirajpur",
+    "district_lgd_code": "820",
+    "total_population": 1478893,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.7036,
+      "learning": 0.4159,
+      "edu_infra": 0.7767
+    },
+    "raw": {
+      "school_access": 23.912,
+      "learning": 54.8661,
+      "edu_infra": 41.7254
+    },
+    "computed_score": 60.68
+  },
+  {
+    "state_name": "Madhya Pradesh",
+    "district_name": "Jhabua",
+    "district_lgd_code": "821",
+    "total_population": 697206,
+    "pop_tier": "Medium (0.5-1M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.5335,
+      "learning": 0.5204,
+      "edu_infra": 0.8467
+    },
+    "raw": {
+      "school_access": 27.5648,
+      "learning": 54.0696,
+      "edu_infra": 22.286
+    },
+    "computed_score": 60.660000000000004
+  },
+  {
+    "state_name": "Madhya Pradesh",
+    "district_name": "Dindori",
+    "district_lgd_code": "822",
+    "total_population": 1138746,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.7401,
+      "learning": 0.4708,
+      "edu_infra": 0.7937
+    },
+    "raw": {
+      "school_access": 19.9537,
+      "learning": 20.5494,
+      "edu_infra": 12.0114
+    },
+    "computed_score": 64.58
+  },
+  {
+    "state_name": "Madhya Pradesh",
+    "district_name": "Mandla",
+    "district_lgd_code": "823",
+    "total_population": 1297521,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": true,
+    "scores": {
+      "school_access": 0.9491,
+      "learning": 0.9315,
+      "edu_infra": 0.7704
+    },
+    "raw": {
+      "school_access": 39.8368,
+      "learning": 56.2267,
+      "edu_infra": 41.5785
+    },
+    "computed_score": 89.74
+  },
+  {
+    "state_name": "Madhya Pradesh",
+    "district_name": "Singrauli",
+    "district_lgd_code": "824",
+    "total_population": 1499393,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.4989,
+      "learning": 0.9176,
+      "edu_infra": 0.5399
+    },
+    "raw": {
+      "school_access": 11.3175,
+      "learning": 56.4618,
+      "edu_infra": 46.8297
+    },
+    "computed_score": 67.66
+  },
+  {
+    "state_name": "Madhya Pradesh",
+    "district_name": "Sheopur",
+    "district_lgd_code": "825",
+    "total_population": 3464373,
+    "pop_tier": "Very Large (>3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.8321,
+      "learning": 0.2783,
+      "edu_infra": 0.3463
+    },
+    "raw": {
+      "school_access": 36.6621,
+      "learning": 63.2875,
+      "edu_infra": 27.8602
+    },
+    "computed_score": 48.91
+  },
+  {
+    "state_name": "Madhya Pradesh",
+    "district_name": "Chhatarpur",
+    "district_lgd_code": "826",
+    "total_population": 1927646,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": true,
+    "scores": {
+      "school_access": 0.9382,
+      "learning": 0.9111,
+      "edu_infra": 0.6506
+    },
+    "raw": {
+      "school_access": 14.9614,
+      "learning": 30.9172,
+      "edu_infra": 42.7072
+    },
+    "computed_score": 85.55
+  },
+  {
+    "state_name": "Jharkhand",
+    "district_name": "Pakur",
+    "district_lgd_code": "827",
+    "total_population": 1610592,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": true,
+    "scores": {
+      "school_access": 0.6132,
+      "learning": 0.8454,
+      "edu_infra": 0.1458
+    },
+    "raw": {
+      "school_access": 48.4843,
+      "learning": 41.5784,
+      "edu_infra": 24.816
+    },
+    "computed_score": 58.919999999999995
+  },
+  {
+    "state_name": "Jharkhand",
+    "district_name": "Godda",
+    "district_lgd_code": "828",
+    "total_population": 1912828,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.8229,
+      "learning": 0.3491,
+      "edu_infra": 0.3071
+    },
+    "raw": {
+      "school_access": 19.1188,
+      "learning": 33.741,
+      "edu_infra": 22.6997
+    },
+    "computed_score": 50.44
+  },
+  {
+    "state_name": "Jharkhand",
+    "district_name": "Sahibganj",
+    "district_lgd_code": "829",
+    "total_population": 3419105,
+    "pop_tier": "Very Large (>3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.7727,
+      "learning": 0.4429,
+      "edu_infra": 0.8634
+    },
+    "raw": {
+      "school_access": 5.8603,
+      "learning": 78.555,
+      "edu_infra": 19.7331
+    },
+    "computed_score": 66.35
+  },
+  {
+    "state_name": "Jharkhand",
+    "district_name": "Dumka",
+    "district_lgd_code": "830",
+    "total_population": 3478312,
+    "pop_tier": "Very Large (>3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.5423,
+      "learning": 0.2403,
+      "edu_infra": 0.7333
+    },
+    "raw": {
+      "school_access": 15.8438,
+      "learning": 64.4442,
+      "edu_infra": 15.0361
+    },
+    "computed_score": 46.92
+  },
+  {
+    "state_name": "Jharkhand",
+    "district_name": "Gumla",
+    "district_lgd_code": "831",
+    "total_population": 2386288,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.8846,
+      "learning": 0.3684,
+      "edu_infra": 0.9089
+    },
+    "raw": {
+      "school_access": 34.8499,
+      "learning": 44.6134,
+      "edu_infra": 34.7598
+    },
+    "computed_score": 68.42
+  },
+  {
+    "state_name": "Jharkhand",
+    "district_name": "Simdega",
+    "district_lgd_code": "832",
+    "total_population": 2486643,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.2774,
+      "learning": 0.5314,
+      "edu_infra": 0.647
+    },
+    "raw": {
+      "school_access": 5.2418,
+      "learning": 23.0056,
+      "edu_infra": 46.9696
+    },
+    "computed_score": 47.14
+  },
+  {
+    "state_name": "Jharkhand",
+    "district_name": "Latehar",
+    "district_lgd_code": "833",
+    "total_population": 1316913,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.5991,
+      "learning": 0.3323,
+      "edu_infra": 0.5736
+    },
+    "raw": {
+      "school_access": 37.7358,
+      "learning": 53.8206,
+      "edu_infra": 32.4024
+    },
+    "computed_score": 48.6
+  },
+  {
+    "state_name": "Jharkhand",
+    "district_name": "Palamu",
+    "district_lgd_code": "834",
+    "total_population": 1423597,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.9076,
+      "learning": 0.2405,
+      "edu_infra": 0.7388
+    },
+    "raw": {
+      "school_access": 27.373,
+      "learning": 23.5133,
+      "edu_infra": 16.1498
+    },
+    "computed_score": 59.86
+  },
+  {
+    "state_name": "Rajasthan",
+    "district_name": "Banswara",
+    "district_lgd_code": "835",
+    "total_population": 1237086,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": true,
+    "scores": {
+      "school_access": 0.9272,
+      "learning": 0.9377,
+      "edu_infra": 0.8344
+    },
+    "raw": {
+      "school_access": 33.1047,
+      "learning": 27.9886,
+      "edu_infra": 57.0827
+    },
+    "computed_score": 90.82000000000001
+  },
+  {
+    "state_name": "Rajasthan",
+    "district_name": "Dungarpur",
+    "district_lgd_code": "836",
+    "total_population": 847131,
+    "pop_tier": "Medium (0.5-1M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.1195,
+      "learning": 0.435,
+      "edu_infra": 0.6134
+    },
+    "raw": {
+      "school_access": 8.4455,
+      "learning": 43.9989,
+      "edu_infra": 52.7833
+    },
+    "computed_score": 36.919999999999995
+  },
+  {
+    "state_name": "Rajasthan",
+    "district_name": "Pratapgarh",
+    "district_lgd_code": "837",
+    "total_population": 935816,
+    "pop_tier": "Medium (0.5-1M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.2602,
+      "learning": 0.7283,
+      "edu_infra": 0.2768
+    },
+    "raw": {
+      "school_access": 6.324,
+      "learning": 43.8209,
+      "edu_infra": 16.833
+    },
+    "computed_score": 45.16
+  },
+  {
+    "state_name": "Rajasthan",
+    "district_name": "Jalore",
+    "district_lgd_code": "838",
+    "total_population": 3028536,
+    "pop_tier": "Very Large (>3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.6634,
+      "learning": 0.1164,
+      "edu_infra": 0.3283
+    },
+    "raw": {
+      "school_access": 41.0126,
+      "learning": 65.0717,
+      "edu_infra": 12.7172
+    },
+    "computed_score": 36.08
+  },
+  {
+    "state_name": "Rajasthan",
+    "district_name": "Sirohi",
+    "district_lgd_code": "839",
+    "total_population": 2262078,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": true,
+    "scores": {
+      "school_access": 0.7531,
+      "learning": 0.6379,
+      "edu_infra": 0.9237
+    },
+    "raw": {
+      "school_access": 21.5646,
+      "learning": 66.1179,
+      "edu_infra": 54.3896
+    },
+    "computed_score": 74.97
+  },
+  {
+    "state_name": "Rajasthan",
+    "district_name": "Barmer",
+    "district_lgd_code": "840",
+    "total_population": 1113504,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.6589,
+      "learning": 0.4895,
+      "edu_infra": 0.5355
+    },
+    "raw": {
+      "school_access": 42.398,
+      "learning": 77.668,
+      "edu_infra": 28.6372
+    },
+    "computed_score": 56.03
+  },
+  {
+    "state_name": "Odisha",
+    "district_name": "Malkangiri",
+    "district_lgd_code": "841",
+    "total_population": 2075627,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.8986,
+      "learning": 0.3163,
+      "edu_infra": 0.3842
+    },
+    "raw": {
+      "school_access": 34.1098,
+      "learning": 24.4859,
+      "edu_infra": 44.9044
+    },
+    "computed_score": 53.71
+  },
+  {
+    "state_name": "Odisha",
+    "district_name": "Nabarangpur",
+    "district_lgd_code": "842",
+    "total_population": 2624194,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.7303,
+      "learning": 0.1379,
+      "edu_infra": 0.1416
+    },
+    "raw": {
+      "school_access": 35.7112,
+      "learning": 69.8624,
+      "edu_infra": 16.5639
+    },
+    "computed_score": 34.62
+  },
+  {
+    "state_name": "Odisha",
+    "district_name": "Koraput",
+    "district_lgd_code": "843",
+    "total_population": 2244587,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.2183,
+      "learning": 0.4192,
+      "edu_infra": 0.2273
+    },
+    "raw": {
+      "school_access": 34.9432,
+      "learning": 34.953,
+      "edu_infra": 22.5928
+    },
+    "computed_score": 30.09
+  },
+  {
+    "state_name": "Odisha",
+    "district_name": "Rayagada",
+    "district_lgd_code": "844",
+    "total_population": 3420721,
+    "pop_tier": "Very Large (>3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.1689,
+      "learning": 0.5333,
+      "edu_infra": 0.886
+    },
+    "raw": {
+      "school_access": 22.0247,
+      "learning": 31.2047,
+      "edu_infra": 35.9825
+    },
+    "computed_score": 49.39
+  },
+  {
+    "state_name": "Odisha",
+    "district_name": "Kandhamal",
+    "district_lgd_code": "845",
+    "total_population": 1748925,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.2834,
+      "learning": 0.5532,
+      "edu_infra": 0.1038
+    },
+    "raw": {
+      "school_access": 14.3668,
+      "learning": 56.5508,
+      "edu_infra": 52.8246
+    },
+    "computed_score": 34.64
+  },
+  {
+    "state_name": "Odisha",
+    "district_name": "Nuapada",
+    "district_lgd_code": "846",
+    "total_population": 2515347,
+    "pop_tier": "Large (1-3M)",
+    "is_whitespace": false,
+    "scores": {
+      "school_access": 0.3327,
+      "learning": 0.7256,
+      "edu_infra": 0.3607
+    },
+    "raw": {
+      "school_access": 26.5562,
+      "learning": 41.0246,
+      "edu_infra": 24.4108
+    },
+    "computed_score": 49.69
+  }
+]

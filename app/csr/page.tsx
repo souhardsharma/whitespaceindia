@@ -16,7 +16,7 @@ const IndiaMap = dynamic(() => import("@/components/IndiaMap"), {
       className="w-full flex items-center justify-center border border-[#1c1c19] bg-[#fcf9f4]"
       style={{ aspectRatio: "3/4", maxHeight: "500px" }}
     >
-      <div className="w-8 h-8 border-2 border-[#BD402C] border-t-transparent animate-spin" />
+      <div className="w-8 h-8 border-2 border-t-transparent animate-spin" style={{ borderColor: csrConfig.theme.accent, borderTopColor: 'transparent' }} />
     </div>
   ),
 });
@@ -29,6 +29,7 @@ import {
   DEFAULT_WEIGHTS,
   rankDistricts,
 } from "@/lib/csr/score";
+import { csrConfig } from "@/lib/csr/config";
 
 function DataInsightCard({
   number,
@@ -219,7 +220,11 @@ export default function HomePage() {
     Record<string, Record<string, number>>
   >({});
   const [meta, setMeta] = useState<HomeMeta | null>(null);
-  const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
+  const [weights, setWeights] = useState<Record<string, number>>({
+    w_N: DEFAULT_WEIGHTS.w_N,
+    w_G: DEFAULT_WEIGHTS.w_G,
+    w_U: DEFAULT_WEIGHTS.w_U,
+  });
   const [sector, setSector] = useState("All Sectors");
   const [whitespaceOnly, setWhitespaceOnly] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState<
@@ -251,18 +256,24 @@ export default function HomePage() {
   const posMax = meta?.pos_range?.max ?? 81.2;
   const sectorPosMax = meta?.sector_pos_max ?? 85.5;
 
+  const csrWeights: Weights = useMemo(() => ({
+    w_N: weights.w_N ?? DEFAULT_WEIGHTS.w_N,
+    w_G: weights.w_G ?? DEFAULT_WEIGHTS.w_G,
+    w_U: weights.w_U ?? DEFAULT_WEIGHTS.w_U,
+  }), [weights]);
+
   const rankedDistricts = useMemo(
     () =>
       districts.length > 0
         ? rankDistricts(
             districts,
-            weights,
+            csrWeights,
             sector,
             sectorScores,
             whitespaceOnly
           )
         : [],
-    [districts, weights, sector, sectorScores, whitespaceOnly]
+    [districts, csrWeights, sector, sectorScores, whitespaceOnly]
   );
 
   const displayDistricts = useMemo(() => {
@@ -306,7 +317,7 @@ export default function HomePage() {
     });
   }, []);
 
-  const handleWeightsChange = useCallback((newWeights: Weights) => {
+  const handleWeightsChange = useCallback((newWeights: Record<string, number>) => {
     startTransition(() => {
       setWeights(newWeights);
     });
@@ -326,7 +337,7 @@ export default function HomePage() {
 
   const handleReset = useCallback(() => {
     startTransition(() => {
-      setWeights(DEFAULT_WEIGHTS);
+      setWeights({ w_N: DEFAULT_WEIGHTS.w_N, w_G: DEFAULT_WEIGHTS.w_G, w_U: DEFAULT_WEIGHTS.w_U });
       setSector("All Sectors");
       setWhitespaceOnly(false);
       setHighlightedState(null);
@@ -383,9 +394,9 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(datasetSchema) }}
       />
       <main id="main-content" className="bg-[#fcf9f4] min-h-screen">
-        <Navbar />
-        <Hero />
-        <HowItWorks />
+        <Navbar vertical={csrConfig} />
+        <Hero vertical={csrConfig} />
+        <HowItWorks vertical={csrConfig} />
 
         <section
           id="simulator"
@@ -433,6 +444,7 @@ export default function HomePage() {
                   onWhitespaceToggle={handleWhitespaceToggle}
                   onReset={handleReset}
                   weights={weights}
+                  vertical={csrConfig}
                 />
               </motion.div>
 
@@ -461,6 +473,7 @@ export default function HomePage() {
                       districtScores={stateAverages}
                       onStateClick={handleStateClick}
                       highlightedState={highlightedState}
+                      vertical={csrConfig}
                     />
                   </div>
                 </div>
@@ -500,6 +513,7 @@ export default function HomePage() {
                       onSelectDistrict={handleSelectDistrict}
                       selectedLgdCode={selectedDistrict?.district_lgd_code ?? null}
                       isLoading={isLoading}
+                      vertical={csrConfig}
                     />
                   </div>
                 </div>
@@ -512,11 +526,12 @@ export default function HomePage() {
 
         <BeyondSection />
 
-        <Footer />
+        <Footer vertical={csrConfig} />
 
         <BriefModal
           district={selectedDistrict}
           onClose={() => setSelectedDistrict(null)}
+          vertical={csrConfig}
         />
       </main>
     </>

@@ -1,17 +1,22 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import type { VerticalConfig } from "@/lib/verticals/types";
 
-type Source = "reports" | "landing";
+type Source = "reports" | "landing" | "health" | "energy" | "education" | "csr";
+
+const DEFAULT_ACCENT = "#BD402C";
 
 interface Props {
   variant: "full" | "compact";
   source: Source;
+  vertical?: VerticalConfig;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function SubscribeForm({ variant, source }: Props) {
+export default function SubscribeForm({ variant, source, vertical }: Props) {
+  const accent = vertical?.theme.accent ?? DEFAULT_ACCENT;
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
@@ -62,7 +67,7 @@ export default function SubscribeForm({ variant, source }: Props) {
     if (status === "success") {
       return (
         <div role="status" aria-live="polite" className="flex flex-col gap-3">
-          <div className="bg-[#BD402C] text-white font-label uppercase tracking-[0.25em] text-[11px] py-4 px-6 flex items-center justify-between gap-6">
+          <div className="text-white font-label uppercase tracking-[0.25em] text-[11px] py-4 px-6 flex items-center justify-between gap-6" style={{ backgroundColor: accent }}>
             <span>Check your inbox.</span>
             <span aria-hidden>✓</span>
           </div>
@@ -83,12 +88,14 @@ export default function SubscribeForm({ variant, source }: Props) {
           placeholder="your@email"
           aria-label="Email address"
           disabled={status === "sending"}
-          className="w-full bg-[#fcf9f4] border border-[#1c1c19] text-[#1c1c19] placeholder:text-[#1c1c19]/40 font-body text-base px-5 py-6 focus:outline-none focus:border-[#BD402C] disabled:opacity-60"
+          className="w-full bg-[#fcf9f4] border border-[#1c1c19] text-[#1c1c19] placeholder:text-[#1c1c19]/40 font-body text-base px-5 py-6 focus:outline-none disabled:opacity-60"
+          style={{ ["--sf-accent" as string]: accent } as React.CSSProperties}
         />
         <button
           type="submit"
           disabled={status === "sending"}
-          className="group bg-[#BD402C] text-white font-label uppercase tracking-[0.25em] text-[11px] py-4 px-6 flex justify-between items-center gap-6 hover:bg-[#1c1c19] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className="group text-white font-label uppercase tracking-[0.25em] text-[11px] py-4 px-6 flex justify-between items-center gap-6 hover:bg-[#1c1c19] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          style={{ backgroundColor: accent }}
         >
           {status === "sending" ? "Sending" : "Notify me"}
           <svg width="16" height="10" viewBox="0 0 24 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
@@ -96,7 +103,7 @@ export default function SubscribeForm({ variant, source }: Props) {
           </svg>
         </button>
         {status === "error" && errorMsg && (
-          <p role="alert" className="font-body text-xs text-[#BD402C]">
+          <p role="alert" className="font-body text-xs" style={{ color: accent }}>
             {errorMsg}
           </p>
         )}
@@ -111,7 +118,7 @@ export default function SubscribeForm({ variant, source }: Props) {
         role="status"
         aria-live="polite"
       >
-        <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.3em] text-[#BD402C] mb-4">
+        <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.3em] mb-4" style={{ color: accent }}>
           One step left
         </span>
         <div className="h-px w-12 bg-[#1c1c19]" />
@@ -129,7 +136,7 @@ export default function SubscribeForm({ variant, source }: Props) {
   }
 
   const inputCls =
-    "w-full bg-transparent text-[#1c1c19] border-0 border-b border-[#1c1c19] py-3 px-0 font-body text-sm focus:ring-0 focus:outline-none focus:border-[#BD402C] placeholder:text-[#1c1c19]/30 disabled:opacity-60";
+    "w-full bg-transparent text-[#1c1c19] border-0 border-b border-[#1c1c19] py-3 px-0 font-body text-sm focus:ring-0 focus:outline-none placeholder:text-[#1c1c19]/30 disabled:opacity-60";
   const labelCls =
     "font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/70 block mb-2";
 
@@ -140,7 +147,7 @@ export default function SubscribeForm({ variant, source }: Props) {
       noValidate
     >
       <div className="flex items-baseline justify-between mb-6">
-        <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.3em] text-[#BD402C] font-bold">
+        <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.3em] font-bold" style={{ color: accent }}>
           Get Notified
         </span>
         <span className="font-label text-[9px] uppercase tracking-[0.2em] text-[#1c1c19]/50">
@@ -151,7 +158,7 @@ export default function SubscribeForm({ variant, source }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         <div>
           <label htmlFor="sf-name" className={labelCls}>
-            Name <span className="text-[#BD402C] normal-case tracking-normal">required</span>
+            Name <span className="normal-case tracking-normal" style={{ color: accent }}>required</span>
           </label>
           <input
             id="sf-name"
@@ -197,7 +204,7 @@ export default function SubscribeForm({ variant, source }: Props) {
         </div>
         <div>
           <label htmlFor="sf-email" className={labelCls}>
-            Email <span className="text-[#BD402C] normal-case tracking-normal">required</span>
+            Email <span className="normal-case tracking-normal" style={{ color: accent }}>required</span>
           </label>
           <input
             id="sf-email"
@@ -220,7 +227,8 @@ export default function SubscribeForm({ variant, source }: Props) {
         <button
           type="submit"
           disabled={status === "sending"}
-          className="self-start md:self-auto bg-[#BD402C] text-white font-label uppercase tracking-[0.25em] text-[11px] px-7 py-4 flex items-center gap-4 hover:bg-[#1c1c19] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className="self-start md:self-auto text-white font-label uppercase tracking-[0.25em] text-[11px] px-7 py-4 flex items-center gap-4 hover:bg-[#1c1c19] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          style={{ backgroundColor: accent }}
         >
           {status === "sending" ? "Sending" : "Notify Me"}
           <svg width="16" height="10" viewBox="0 0 24 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
@@ -230,7 +238,7 @@ export default function SubscribeForm({ variant, source }: Props) {
       </div>
 
       {status === "error" && errorMsg && (
-        <p role="alert" className="font-body text-xs text-[#BD402C] mt-4">
+        <p role="alert" className="font-body text-xs mt-4" style={{ color: accent }}>
           {errorMsg}
         </p>
       )}

@@ -1,0 +1,416 @@
+{
+  "701": {
+    "Solar": 0.7619,
+    "Wind": 0.8457,
+    "Grid Infrastructure": 0.3648,
+    "Rural Electrification": 0.9389,
+    "Industrial Efficiency": 0.7176,
+    "Clean Cooking": 0.7135,
+    "EV Infrastructure": 0.4842
+  },
+  "702": {
+    "Solar": 0.6346,
+    "Wind": 0.4151,
+    "Grid Infrastructure": 0.6622,
+    "Rural Electrification": 0.7026,
+    "Industrial Efficiency": 0.5828,
+    "Clean Cooking": 0.6066,
+    "EV Infrastructure": 0.5922
+  },
+  "703": {
+    "Solar": 0.6389,
+    "Wind": 0.9172,
+    "Grid Infrastructure": 0.0776,
+    "Rural Electrification": 0.4454,
+    "Industrial Efficiency": 0.2413,
+    "Clean Cooking": 0.8792,
+    "EV Infrastructure": 0.28
+  },
+  "704": {
+    "Solar": 0.218,
+    "Wind": 0.8935,
+    "Grid Infrastructure": 0.6858,
+    "Rural Electrification": 0.7012,
+    "Industrial Efficiency": 0.832,
+    "Clean Cooking": 0.2401,
+    "EV Infrastructure": 0.5555
+  },
+  "705": {
+    "Solar": 0.7698,
+    "Wind": 0.4318,
+    "Grid Infrastructure": 0.4176,
+    "Rural Electrification": 0.3055,
+    "Industrial Efficiency": 0.3356,
+    "Clean Cooking": 0.8472,
+    "EV Infrastructure": 0.2239
+  },
+  "706": {
+    "Solar": 0.491,
+    "Wind": 0.4315,
+    "Grid Infrastructure": 0.3371,
+    "Rural Electrification": 0.6279,
+    "Industrial Efficiency": 0.346,
+    "Clean Cooking": 0.5522,
+    "EV Infrastructure": 0.6261
+  },
+  "707": {
+    "Solar": 0.2284,
+    "Wind": 0.8977,
+    "Grid Infrastructure": 0.7899,
+    "Rural Electrification": 0.3566,
+    "Industrial Efficiency": 0.1798,
+    "Clean Cooking": 0.2882,
+    "EV Infrastructure": 0.5257
+  },
+  "708": {
+    "Solar": 0.8228,
+    "Wind": 0.94,
+    "Grid Infrastructure": 0.0987,
+    "Rural Electrification": 0.4174,
+    "Industrial Efficiency": 0.756,
+    "Clean Cooking": 0.8646,
+    "EV Infrastructure": 0.5186
+  },
+  "709": {
+    "Solar": 0.0654,
+    "Wind": 0.224,
+    "Grid Infrastructure": 0.8313,
+    "Rural Electrification": 0.2589,
+    "Industrial Efficiency": 0.2024,
+    "Clean Cooking": 0.1832,
+    "EV Infrastructure": 0.8281
+  },
+  "710": {
+    "Solar": 0.4693,
+    "Wind": 0.7667,
+    "Grid Infrastructure": 0.357,
+    "Rural Electrification": 0.7957,
+    "Industrial Efficiency": 0.8595,
+    "Clean Cooking": 0.1109,
+    "EV Infrastructure": 0.5917
+  },
+  "711": {
+    "Solar": 0.8584,
+    "Wind": 0.6139,
+    "Grid Infrastructure": 0.8822,
+    "Rural Electrification": 0.8942,
+    "Industrial Efficiency": 0.4892,
+    "Clean Cooking": 0.4517,
+    "EV Infrastructure": 0.417
+  },
+  "712": {
+    "Solar": 0.8214,
+    "Wind": 0.3323,
+    "Grid Infrastructure": 0.9137,
+    "Rural Electrification": 0.862,
+    "Industrial Efficiency": 0.5586,
+    "Clean Cooking": 0.5458,
+    "EV Infrastructure": 0.4078
+  },
+  "713": {
+    "Solar": 0.2349,
+    "Wind": 0.6464,
+    "Grid Infrastructure": 0.4461,
+    "Rural Electrification": 0.3549,
+    "Industrial Efficiency": 0.8094,
+    "Clean Cooking": 0.5459,
+    "EV Infrastructure": 0.3731
+  },
+  "714": {
+    "Solar": 0.2291,
+    "Wind": 0.769,
+    "Grid Infrastructure": 0.291,
+    "Rural Electrification": 0.0525,
+    "Industrial Efficiency": 0.3119,
+    "Clean Cooking": 0.777,
+    "EV Infrastructure": 0.3497
+  },
+  "715": {
+    "Solar": 0.0503,
+    "Wind": 0.7289,
+    "Grid Infrastructure": 0.5351,
+    "Rural Electrification": 0.4767,
+    "Industrial Efficiency": 0.3114,
+    "Clean Cooking": 0.6868,
+    "EV Infrastructure": 0.1897
+  },
+  "716": {
+    "Solar": 0.4924,
+    "Wind": 0.4002,
+    "Grid Infrastructure": 0.8989,
+    "Rural Electrification": 0.8109,
+    "Industrial Efficiency": 0.2818,
+    "Clean Cooking": 0.2924,
+    "EV Infrastructure": 0.3754
+  },
+  "717": {
+    "Solar": 0.5004,
+    "Wind": 0.1035,
+    "Grid Infrastructure": 0.7425,
+    "Rural Electrification": 0.0666,
+    "Industrial Efficiency": 0.0554,
+    "Clean Cooking": 0.3313,
+    "EV Infrastructure": 0.1405
+  },
+  "718": {
+    "Solar": 0.7664,
+    "Wind": 0.9084,
+    "Grid Infrastructure": 0.3611,
+    "Rural Electrification": 0.7622,
+    "Industrial Efficiency": 0.2233,
+    "Clean Cooking": 0.1224,
+    "EV Infrastructure": 0.0668
+  },
+  "719": {
+    "Solar": 0.3429,
+    "Wind": 0.6139,
+    "Grid Infrastructure": 0.526,
+    "Rural Electrification": 0.7497,
+    "Industrial Efficiency": 0.0815,
+    "Clean Cooking": 0.3961,
+    "EV Infrastructure": 0.6273
+  },
+  "720": {
+    "Solar": 0.0888,
+    "Wind": 0.734,
+    "Grid Infrastructure": 0.0954,
+    "Rural Electrification": 0.8904,
+    "Industrial Efficiency": 0.5534,
+    "Clean Cooking": 0.7218,
+    "EV Infrastructure": 0.4651
+  },
+  "721": {
+    "Solar": 0.1671,
+    "Wind": 0.5365,
+    "Grid Infrastructure": 0.7276,
+    "Rural Electrification": 0.1706,
+    "Industrial Efficiency": 0.0608,
+    "Clean Cooking": 0.6582,
+    "EV Infrastructure": 0.7592
+  },
+  "722": {
+    "Solar": 0.3567,
+    "Wind": 0.9494,
+    "Grid Infrastructure": 0.3194,
+    "Rural Electrification": 0.6331,
+    "Industrial Efficiency": 0.6214,
+    "Clean Cooking": 0.7406,
+    "EV Infrastructure": 0.5339
+  },
+  "723": {
+    "Solar": 0.7162,
+    "Wind": 0.4384,
+    "Grid Infrastructure": 0.8177,
+    "Rural Electrification": 0.5273,
+    "Industrial Efficiency": 0.0807,
+    "Clean Cooking": 0.8115,
+    "EV Infrastructure": 0.8936
+  },
+  "724": {
+    "Solar": 0.1814,
+    "Wind": 0.808,
+    "Grid Infrastructure": 0.1619,
+    "Rural Electrification": 0.5269,
+    "Industrial Efficiency": 0.8592,
+    "Clean Cooking": 0.7166,
+    "EV Infrastructure": 0.197
+  },
+  "725": {
+    "Solar": 0.1099,
+    "Wind": 0.7329,
+    "Grid Infrastructure": 0.9075,
+    "Rural Electrification": 0.7432,
+    "Industrial Efficiency": 0.3337,
+    "Clean Cooking": 0.0814,
+    "EV Infrastructure": 0.9156
+  },
+  "726": {
+    "Solar": 0.329,
+    "Wind": 0.7426,
+    "Grid Infrastructure": 0.706,
+    "Rural Electrification": 0.7526,
+    "Industrial Efficiency": 0.5592,
+    "Clean Cooking": 0.9242,
+    "EV Infrastructure": 0.6319
+  },
+  "727": {
+    "Solar": 0.7232,
+    "Wind": 0.245,
+    "Grid Infrastructure": 0.3809,
+    "Rural Electrification": 0.1857,
+    "Industrial Efficiency": 0.205,
+    "Clean Cooking": 0.3999,
+    "EV Infrastructure": 0.802
+  },
+  "728": {
+    "Solar": 0.9057,
+    "Wind": 0.7526,
+    "Grid Infrastructure": 0.0585,
+    "Rural Electrification": 0.3959,
+    "Industrial Efficiency": 0.511,
+    "Clean Cooking": 0.0665,
+    "EV Infrastructure": 0.145
+  },
+  "729": {
+    "Solar": 0.2759,
+    "Wind": 0.3474,
+    "Grid Infrastructure": 0.9265,
+    "Rural Electrification": 0.7593,
+    "Industrial Efficiency": 0.8739,
+    "Clean Cooking": 0.3232,
+    "EV Infrastructure": 0.6842
+  },
+  "730": {
+    "Solar": 0.4443,
+    "Wind": 0.8554,
+    "Grid Infrastructure": 0.1263,
+    "Rural Electrification": 0.3459,
+    "Industrial Efficiency": 0.0913,
+    "Clean Cooking": 0.6268,
+    "EV Infrastructure": 0.6404
+  },
+  "731": {
+    "Solar": 0.4522,
+    "Wind": 0.6824,
+    "Grid Infrastructure": 0.405,
+    "Rural Electrification": 0.0673,
+    "Industrial Efficiency": 0.6182,
+    "Clean Cooking": 0.703,
+    "EV Infrastructure": 0.1646
+  },
+  "732": {
+    "Solar": 0.1185,
+    "Wind": 0.2704,
+    "Grid Infrastructure": 0.1591,
+    "Rural Electrification": 0.6549,
+    "Industrial Efficiency": 0.8505,
+    "Clean Cooking": 0.7806,
+    "EV Infrastructure": 0.5513
+  },
+  "733": {
+    "Solar": 0.3322,
+    "Wind": 0.3933,
+    "Grid Infrastructure": 0.1473,
+    "Rural Electrification": 0.7216,
+    "Industrial Efficiency": 0.6689,
+    "Clean Cooking": 0.0544,
+    "EV Infrastructure": 0.4265
+  },
+  "734": {
+    "Solar": 0.4066,
+    "Wind": 0.5563,
+    "Grid Infrastructure": 0.3157,
+    "Rural Electrification": 0.6514,
+    "Industrial Efficiency": 0.0567,
+    "Clean Cooking": 0.4304,
+    "EV Infrastructure": 0.1197
+  },
+  "735": {
+    "Solar": 0.5366,
+    "Wind": 0.2286,
+    "Grid Infrastructure": 0.0533,
+    "Rural Electrification": 0.4041,
+    "Industrial Efficiency": 0.727,
+    "Clean Cooking": 0.8375,
+    "EV Infrastructure": 0.3571
+  },
+  "736": {
+    "Solar": 0.4511,
+    "Wind": 0.5778,
+    "Grid Infrastructure": 0.0906,
+    "Rural Electrification": 0.8051,
+    "Industrial Efficiency": 0.6392,
+    "Clean Cooking": 0.3815,
+    "EV Infrastructure": 0.9354
+  },
+  "737": {
+    "Solar": 0.8486,
+    "Wind": 0.7926,
+    "Grid Infrastructure": 0.3485,
+    "Rural Electrification": 0.8277,
+    "Industrial Efficiency": 0.542,
+    "Clean Cooking": 0.1595,
+    "EV Infrastructure": 0.2291
+  },
+  "738": {
+    "Solar": 0.3392,
+    "Wind": 0.3405,
+    "Grid Infrastructure": 0.484,
+    "Rural Electrification": 0.8348,
+    "Industrial Efficiency": 0.5886,
+    "Clean Cooking": 0.5046,
+    "EV Infrastructure": 0.418
+  },
+  "739": {
+    "Solar": 0.3777,
+    "Wind": 0.199,
+    "Grid Infrastructure": 0.6847,
+    "Rural Electrification": 0.7184,
+    "Industrial Efficiency": 0.1226,
+    "Clean Cooking": 0.6807,
+    "EV Infrastructure": 0.2926
+  },
+  "740": {
+    "Solar": 0.695,
+    "Wind": 0.6378,
+    "Grid Infrastructure": 0.1163,
+    "Rural Electrification": 0.6896,
+    "Industrial Efficiency": 0.8854,
+    "Clean Cooking": 0.0879,
+    "EV Infrastructure": 0.4624
+  },
+  "741": {
+    "Solar": 0.9487,
+    "Wind": 0.3072,
+    "Grid Infrastructure": 0.6616,
+    "Rural Electrification": 0.6269,
+    "Industrial Efficiency": 0.5257,
+    "Clean Cooking": 0.3468,
+    "EV Infrastructure": 0.9351
+  },
+  "742": {
+    "Solar": 0.44,
+    "Wind": 0.3094,
+    "Grid Infrastructure": 0.7122,
+    "Rural Electrification": 0.1693,
+    "Industrial Efficiency": 0.5219,
+    "Clean Cooking": 0.8745,
+    "EV Infrastructure": 0.8724
+  },
+  "743": {
+    "Solar": 0.2251,
+    "Wind": 0.4617,
+    "Grid Infrastructure": 0.5604,
+    "Rural Electrification": 0.3817,
+    "Industrial Efficiency": 0.5926,
+    "Clean Cooking": 0.3119,
+    "EV Infrastructure": 0.2621
+  },
+  "744": {
+    "Solar": 0.6595,
+    "Wind": 0.6441,
+    "Grid Infrastructure": 0.8217,
+    "Rural Electrification": 0.5096,
+    "Industrial Efficiency": 0.5257,
+    "Clean Cooking": 0.5699,
+    "EV Infrastructure": 0.2169
+  },
+  "745": {
+    "Solar": 0.6003,
+    "Wind": 0.2531,
+    "Grid Infrastructure": 0.5213,
+    "Rural Electrification": 0.8185,
+    "Industrial Efficiency": 0.9498,
+    "Clean Cooking": 0.5682,
+    "EV Infrastructure": 0.2312
+  },
+  "746": {
+    "Solar": 0.1891,
+    "Wind": 0.3599,
+    "Grid Infrastructure": 0.3269,
+    "Rural Electrification": 0.2179,
+    "Industrial Efficiency": 0.7985,
+    "Clean Cooking": 0.473,
+    "EV Infrastructure": 0.8343
+  }
+}

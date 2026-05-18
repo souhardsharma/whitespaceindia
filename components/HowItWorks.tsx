@@ -2,8 +2,11 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
+import type { VerticalConfig } from "@/lib/verticals/types";
 
-const steps = [
+const DEFAULT_ACCENT = "#BD402C";
+
+const defaultSteps = [
   {
     number: "01",
     tag: "Input",
@@ -30,7 +33,9 @@ const steps = [
   },
 ];
 
-export default function HowItWorks() {
+export default function HowItWorks({ vertical }: { vertical?: VerticalConfig }) {
+  const accent = vertical?.theme.accent ?? DEFAULT_ACCENT;
+  const steps = vertical?.howItWorksSteps ?? defaultSteps;
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-100px" });
 
@@ -45,7 +50,7 @@ export default function HowItWorks() {
           className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-16 md:mb-20"
         >
           <div className="md:col-span-3">
-            <span className="font-label text-[11px] uppercase tracking-[0.3em] text-[#BD402C] block mb-4">
+            <span className="font-label text-[11px] uppercase tracking-[0.3em] block mb-4" style={{ color: accent }}>
               01 / How It Works
             </span>
             <div className="h-px bg-[#1c1c19] w-24" />
@@ -77,7 +82,7 @@ export default function HowItWorks() {
               }`}
             >
               <div className="flex items-start justify-between mb-6">
-                <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C]">
+                <span className="font-label text-[10px] uppercase tracking-[0.3em]" style={{ color: accent }}>
                   {step.tag}
                 </span>
                 <span className="font-headline text-6xl md:text-7xl leading-none text-[#1c1c19]/10">

@@ -8,8 +8,13 @@ import {
 } from "react-simple-maps";
 import { scaleLinear } from "d3-scale";
 import { feature } from "topojson-client";
+import type { VerticalConfig } from "@/lib/verticals/types";
 
 const TOPO_URL = "/geo/india-states.topojson";
+
+const DEFAULT_ACCENT = "#BD402C";
+const DEFAULT_ACCENT_DEEP = "#9b2817";
+const DEFAULT_ACCENT_SOFT = "#e0bfb9";
 
 function normalizeForMatch(name: string): string {
   return name
@@ -19,15 +24,11 @@ function normalizeForMatch(name: string): string {
     .trim();
 }
 
-const colorScale = scaleLinear<string>()
-  .domain([0, 25, 50, 75])
-  .range(["#f0ede8", "#e0bfb9", "#BD402C", "#9b2817"])
-  .clamp(true);
-
 interface Props {
   districtScores: Record<string, number>;
   onStateClick?: (stateName: string) => void;
   highlightedState?: string | null;
+  vertical?: VerticalConfig;
 }
 
 interface TooltipData {
@@ -37,7 +38,20 @@ interface TooltipData {
   y: number;
 }
 
-function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
+function IndiaMap({ districtScores, onStateClick, highlightedState, vertical }: Props) {
+  const accent = vertical?.theme.accent ?? DEFAULT_ACCENT;
+  const accentDeep = vertical?.theme.accentDeep ?? DEFAULT_ACCENT_DEEP;
+  const accentSoft = vertical?.theme.accentSoft ?? DEFAULT_ACCENT_SOFT;
+
+  const colorScale = useMemo(
+    () =>
+      scaleLinear<string>()
+        .domain([0, 25, 50, 75])
+        .range(["#f0ede8", accentSoft, accent, accentDeep])
+        .clamp(true),
+    [accent, accentDeep, accentSoft]
+  );
+
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const [hoveredState, setHoveredState] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -54,7 +68,7 @@ function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
         );
         setGeoData(geo);
       })
-      .catch(console.error);
+      .catch(() => {});
   }, []);
 
   const scoreLookup = useMemo(() => {
@@ -155,7 +169,7 @@ function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
     >
       {!geoData ? (
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-10 h-10 border-2 border-[#BD402C] border-t-transparent animate-spin" />
+          <div className="w-10 h-10 border-2 border-t-transparent animate-spin" style={{ borderColor: accent, borderTopColor: 'transparent' }} />
         </div>
       ) : (
         <ComposableMap
@@ -179,7 +193,7 @@ function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
                   <Geography
                     key={(geo as Record<string, unknown>).rsmKey as string}
                     geography={geo}
-                    fill={isSelected ? "#BD402C" : getStateFill(name)}
+                    fill={isSelected ? accent : getStateFill(name)}
                     stroke={isSelected ? "#1c1c19" : isHovered ? "#1c1c19" : "#1c1c19"}
                     strokeWidth={isSelected ? 1.5 : isHovered ? 1.2 : 0.4}
                     onMouseEnter={(evt: React.MouseEvent<SVGPathElement>) =>
@@ -228,7 +242,7 @@ function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
             </div>
             <div className="font-label text-[11px] uppercase tracking-widest">
               Avg Score:{" "}
-              <span className="text-[#BD402C] font-bold tracking-tighter">
+              <span className="font-bold tracking-tighter" style={{ color: accent }}>
                 {tooltip.score !== null ? tooltip.score : "N/A"}
               </span>
             </div>
@@ -254,7 +268,7 @@ function IndiaMap({ districtScores, onStateClick, highlightedState }: Props) {
         <div
           className="h-2 w-full"
           style={{
-            background: "linear-gradient(90deg, #f0ede8, #e0bfb9, #BD402C, #9b2817)",
+            background: `linear-gradient(90deg, #f0ede8, ${accentSoft}, ${accent}, ${accentDeep})`,
           }}
         />
         <div className="flex justify-between mt-2 font-label text-[9px] tracking-widest text-[#1c1c19]/70">

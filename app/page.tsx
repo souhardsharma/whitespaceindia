@@ -199,36 +199,36 @@ const VERTS: Vert[] = [
     vert: "health",
     num: "02",
     title: "Health",
-    meta: "In progress",
+    meta: "Infrastructure gaps · Coming soon",
     img: "/landing/health-bg.webp",
-    alt: "",
-    active: false,
+    alt: "Health infrastructure gap analysis across Indian districts",
+    active: true,
     accent: "cobalt",
-    aria: "Whitespace India Health, in progress",
+    aria: "Whitespace India Health — infrastructure gap analysis, coming soon",
   },
   {
     href: "/energy",
     vert: "energy",
     num: "03",
     title: "Energy",
-    meta: "In progress",
+    meta: "Access & transition · Coming soon",
     img: "/landing/energy-bg.webp",
-    alt: "",
-    active: false,
+    alt: "Energy access and transition analysis across Indian districts",
+    active: true,
     accent: "forest",
-    aria: "Whitespace India Energy, in progress",
+    aria: "Whitespace India Energy — access and transition analysis, coming soon",
   },
   {
     href: "/education",
     vert: "education",
     num: "04",
     title: "Education",
-    meta: "In progress",
+    meta: "Outcomes index · Coming soon",
     img: "/landing/education-bg.webp",
-    alt: "",
-    active: false,
+    alt: "Education outcomes and access analysis across Indian districts",
+    active: true,
     accent: "ochre",
-    aria: "Whitespace India Education, in progress",
+    aria: "Whitespace India Education — outcomes index, coming soon",
   },
 ];
 
@@ -287,8 +287,8 @@ export default function Landing() {
                 src={VERTS[0].img}
                 alt={VERTS[0].alt}
                 fill
-                sizes="(max-width: 900px) 90vw, 44vw"
-                quality={86}
+                sizes="(max-width: 860px) 92vw, 48vw"
+                quality={95}
                 priority
                 className={styles.featureImg}
               />
@@ -332,8 +332,8 @@ export default function Landing() {
                   src={v.img}
                   alt={v.alt}
                   fill
-                  sizes="22vw"
-                  quality={82}
+                  sizes="(max-width: 860px) 92vw, 33vw"
+                  quality={95}
                   className={styles.tileImg}
                 />
                 <div className={styles.tileFrame}>

@@ -1,0 +1,15 @@
+{
+  "total_districts": 651,
+  "data_window": "2019-2022",
+  "pos_range": {
+    "min": 0,
+    "max": 79.2
+  },
+  "sector_pos_max": 83,
+  "sources": [
+    "UDISE+ 2021-22",
+    "National Achievement Survey 2021",
+    "ASER Reports",
+    "Census of India 2011"
+  ]
+}

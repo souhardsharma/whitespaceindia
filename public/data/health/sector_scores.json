@@ -1,0 +1,452 @@
+{
+  "601": {
+    "Primary Care": 0.9179,
+    "Maternal Health": 0.6044,
+    "Child Health": 0.1581,
+    "Communicable Disease": 0.1966,
+    "Non-Communicable Disease": 0.6276,
+    "Mental Health": 0.7067,
+    "Nutrition": 0.8974
+  },
+  "602": {
+    "Primary Care": 0.8495,
+    "Maternal Health": 0.3014,
+    "Child Health": 0.4261,
+    "Communicable Disease": 0.2741,
+    "Non-Communicable Disease": 0.2419,
+    "Mental Health": 0.3412,
+    "Nutrition": 0.3647
+  },
+  "603": {
+    "Primary Care": 0.4644,
+    "Maternal Health": 0.6472,
+    "Child Health": 0.1968,
+    "Communicable Disease": 0.632,
+    "Non-Communicable Disease": 0.6377,
+    "Mental Health": 0.417,
+    "Nutrition": 0.8304
+  },
+  "604": {
+    "Primary Care": 0.3962,
+    "Maternal Health": 0.4887,
+    "Child Health": 0.6481,
+    "Communicable Disease": 0.7404,
+    "Non-Communicable Disease": 0.6302,
+    "Mental Health": 0.103,
+    "Nutrition": 0.8358
+  },
+  "605": {
+    "Primary Care": 0.4738,
+    "Maternal Health": 0.187,
+    "Child Health": 0.6593,
+    "Communicable Disease": 0.4839,
+    "Non-Communicable Disease": 0.4026,
+    "Mental Health": 0.1835,
+    "Nutrition": 0.5115
+  },
+  "606": {
+    "Primary Care": 0.5114,
+    "Maternal Health": 0.9184,
+    "Child Health": 0.8123,
+    "Communicable Disease": 0.2766,
+    "Non-Communicable Disease": 0.918,
+    "Mental Health": 0.2695,
+    "Nutrition": 0.236
+  },
+  "607": {
+    "Primary Care": 0.1376,
+    "Maternal Health": 0.2533,
+    "Child Health": 0.6925,
+    "Communicable Disease": 0.9527,
+    "Non-Communicable Disease": 0.3131,
+    "Mental Health": 0.9881,
+    "Nutrition": 0.7883
+  },
+  "608": {
+    "Primary Care": 0.3081,
+    "Maternal Health": 0.9529,
+    "Child Health": 0.1186,
+    "Communicable Disease": 0.6474,
+    "Non-Communicable Disease": 0.1331,
+    "Mental Health": 0.3777,
+    "Nutrition": 0.3316
+  },
+  "609": {
+    "Primary Care": 0.6691,
+    "Maternal Health": 0.1335,
+    "Child Health": 0.2487,
+    "Communicable Disease": 0.2009,
+    "Non-Communicable Disease": 0.9566,
+    "Mental Health": 0.9171,
+    "Nutrition": 0.3142
+  },
+  "610": {
+    "Primary Care": 0.0964,
+    "Maternal Health": 0.8726,
+    "Child Health": 0.7781,
+    "Communicable Disease": 0.6125,
+    "Non-Communicable Disease": 0.4608,
+    "Mental Health": 0.2027,
+    "Nutrition": 0.2844
+  },
+  "611": {
+    "Primary Care": 0.8205,
+    "Maternal Health": 0.8797,
+    "Child Health": 0.2539,
+    "Communicable Disease": 0.5402,
+    "Non-Communicable Disease": 0.6237,
+    "Mental Health": 0.3737,
+    "Nutrition": 0.4468
+  },
+  "612": {
+    "Primary Care": 0.7109,
+    "Maternal Health": 0.7423,
+    "Child Health": 0.8269,
+    "Communicable Disease": 0.7613,
+    "Non-Communicable Disease": 0.6329,
+    "Mental Health": 0.3756,
+    "Nutrition": 0.9951
+  },
+  "613": {
+    "Primary Care": 0.9491,
+    "Maternal Health": 0.1899,
+    "Child Health": 0.5487,
+    "Communicable Disease": 0.9468,
+    "Non-Communicable Disease": 0.491,
+    "Mental Health": 0.1381,
+    "Nutrition": 0.5702
+  },
+  "614": {
+    "Primary Care": 0.4832,
+    "Maternal Health": 0.6161,
+    "Child Health": 0.2537,
+    "Communicable Disease": 0.4408,
+    "Non-Communicable Disease": 0.6584,
+    "Mental Health": 0.2057,
+    "Nutrition": 0.114
+  },
+  "615": {
+    "Primary Care": 0.2064,
+    "Maternal Health": 0.7836,
+    "Child Health": 0.3974,
+    "Communicable Disease": 0.0726,
+    "Non-Communicable Disease": 0.954,
+    "Mental Health": 0.7943,
+    "Nutrition": 0.8937
+  },
+  "616": {
+    "Primary Care": 0.9103,
+    "Maternal Health": 0.5579,
+    "Child Health": 0.6406,
+    "Communicable Disease": 0.8226,
+    "Non-Communicable Disease": 0.1418,
+    "Mental Health": 0.365,
+    "Nutrition": 0.7619
+  },
+  "617": {
+    "Primary Care": 0.5868,
+    "Maternal Health": 0.2128,
+    "Child Health": 0.3848,
+    "Communicable Disease": 0.3246,
+    "Non-Communicable Disease": 0.7793,
+    "Mental Health": 0.5088,
+    "Nutrition": 0.3097
+  },
+  "618": {
+    "Primary Care": 0.7294,
+    "Maternal Health": 0.901,
+    "Child Health": 0.8846,
+    "Communicable Disease": 0.4042,
+    "Non-Communicable Disease": 0.3638,
+    "Mental Health": 0.724,
+    "Nutrition": 0.9155
+  },
+  "619": {
+    "Primary Care": 0.0603,
+    "Maternal Health": 0.5853,
+    "Child Health": 0.9521,
+    "Communicable Disease": 0.5408,
+    "Non-Communicable Disease": 0.7828,
+    "Mental Health": 0.8027,
+    "Nutrition": 0.8633
+  },
+  "620": {
+    "Primary Care": 0.8127,
+    "Maternal Health": 0.6816,
+    "Child Health": 0.5927,
+    "Communicable Disease": 0.4508,
+    "Non-Communicable Disease": 0.5361,
+    "Mental Health": 0.2384,
+    "Nutrition": 0.5157
+  },
+  "621": {
+    "Primary Care": 0.3688,
+    "Maternal Health": 0.1769,
+    "Child Health": 0.2009,
+    "Communicable Disease": 0.5008,
+    "Non-Communicable Disease": 0.7101,
+    "Mental Health": 0.652,
+    "Nutrition": 0.317
+  },
+  "622": {
+    "Primary Care": 0.1532,
+    "Maternal Health": 0.7533,
+    "Child Health": 0.2059,
+    "Communicable Disease": 0.568,
+    "Non-Communicable Disease": 0.3591,
+    "Mental Health": 0.8131,
+    "Nutrition": 0.725
+  },
+  "623": {
+    "Primary Care": 0.6577,
+    "Maternal Health": 0.1142,
+    "Child Health": 0.159,
+    "Communicable Disease": 0.676,
+    "Non-Communicable Disease": 0.375,
+    "Mental Health": 0.6973,
+    "Nutrition": 0.7181
+  },
+  "624": {
+    "Primary Care": 0.3564,
+    "Maternal Health": 0.3947,
+    "Child Health": 0.4405,
+    "Communicable Disease": 0.8454,
+    "Non-Communicable Disease": 0.8488,
+    "Mental Health": 0.4777,
+    "Nutrition": 0.5857
+  },
+  "625": {
+    "Primary Care": 0.8227,
+    "Maternal Health": 0.5948,
+    "Child Health": 0.2061,
+    "Communicable Disease": 0.18,
+    "Non-Communicable Disease": 0.1888,
+    "Mental Health": 0.3588,
+    "Nutrition": 0.6811
+  },
+  "626": {
+    "Primary Care": 0.4788,
+    "Maternal Health": 0.4154,
+    "Child Health": 0.4751,
+    "Communicable Disease": 0.96,
+    "Non-Communicable Disease": 0.3599,
+    "Mental Health": 0.7569,
+    "Nutrition": 0.2609
+  },
+  "627": {
+    "Primary Care": 0.5427,
+    "Maternal Health": 0.131,
+    "Child Health": 0.2547,
+    "Communicable Disease": 0.7177,
+    "Non-Communicable Disease": 0.4879,
+    "Mental Health": 0.349,
+    "Nutrition": 0.7409
+  },
+  "628": {
+    "Primary Care": 0.2819,
+    "Maternal Health": 0.7812,
+    "Child Health": 0.7556,
+    "Communicable Disease": 0.1728,
+    "Non-Communicable Disease": 0.726,
+    "Mental Health": 0.0684,
+    "Nutrition": 0.0633
+  },
+  "629": {
+    "Primary Care": 0.3816,
+    "Maternal Health": 0.4887,
+    "Child Health": 0.386,
+    "Communicable Disease": 0.8143,
+    "Non-Communicable Disease": 0.2652,
+    "Mental Health": 0.4793,
+    "Nutrition": 0.9808
+  },
+  "630": {
+    "Primary Care": 0.6313,
+    "Maternal Health": 0.622,
+    "Child Health": 0.3492,
+    "Communicable Disease": 0.9516,
+    "Non-Communicable Disease": 0.2933,
+    "Mental Health": 0.5492,
+    "Nutrition": 0.4755
+  },
+  "631": {
+    "Primary Care": 0.3706,
+    "Maternal Health": 0.6631,
+    "Child Health": 0.7704,
+    "Communicable Disease": 0.22,
+    "Non-Communicable Disease": 0.3671,
+    "Mental Health": 0.2659,
+    "Nutrition": 0.2603
+  },
+  "632": {
+    "Primary Care": 0.5298,
+    "Maternal Health": 0.6848,
+    "Child Health": 0.0695,
+    "Communicable Disease": 0.7158,
+    "Non-Communicable Disease": 0.3317,
+    "Mental Health": 0.2771,
+    "Nutrition": 0.1141
+  },
+  "633": {
+    "Primary Care": 0.3366,
+    "Maternal Health": 0.8906,
+    "Child Health": 0.7173,
+    "Communicable Disease": 0.3099,
+    "Non-Communicable Disease": 0.5982,
+    "Mental Health": 0.5636,
+    "Nutrition": 0.1869
+  },
+  "634": {
+    "Primary Care": 0.6506,
+    "Maternal Health": 0.1319,
+    "Child Health": 0.8863,
+    "Communicable Disease": 0.1135,
+    "Non-Communicable Disease": 0.3953,
+    "Mental Health": 0.9298,
+    "Nutrition": 0.3803
+  },
+  "635": {
+    "Primary Care": 0.9362,
+    "Maternal Health": 0.4915,
+    "Child Health": 0.0773,
+    "Communicable Disease": 0.3325,
+    "Non-Communicable Disease": 0.157,
+    "Mental Health": 0.7396,
+    "Nutrition": 0.7699
+  },
+  "636": {
+    "Primary Care": 0.875,
+    "Maternal Health": 0.3221,
+    "Child Health": 0.3948,
+    "Communicable Disease": 0.3041,
+    "Non-Communicable Disease": 0.6275,
+    "Mental Health": 0.7325,
+    "Nutrition": 0.56
+  },
+  "637": {
+    "Primary Care": 0.6609,
+    "Maternal Health": 0.6344,
+    "Child Health": 0.7197,
+    "Communicable Disease": 0.2636,
+    "Non-Communicable Disease": 0.7017,
+    "Mental Health": 0.4791,
+    "Nutrition": 0.1091
+  },
+  "638": {
+    "Primary Care": 0.3258,
+    "Maternal Health": 0.4532,
+    "Child Health": 0.3799,
+    "Communicable Disease": 0.4139,
+    "Non-Communicable Disease": 0.593,
+    "Mental Health": 0.9535,
+    "Nutrition": 0.3603
+  },
+  "639": {
+    "Primary Care": 0.7553,
+    "Maternal Health": 0.6592,
+    "Child Health": 0.6728,
+    "Communicable Disease": 0.1736,
+    "Non-Communicable Disease": 0.2708,
+    "Mental Health": 0.3576,
+    "Nutrition": 0.1673
+  },
+  "640": {
+    "Primary Care": 0.4616,
+    "Maternal Health": 0.6221,
+    "Child Health": 0.2706,
+    "Communicable Disease": 0.5756,
+    "Non-Communicable Disease": 0.751,
+    "Mental Health": 0.3685,
+    "Nutrition": 0.0765
+  },
+  "641": {
+    "Primary Care": 0.6708,
+    "Maternal Health": 0.8718,
+    "Child Health": 0.2354,
+    "Communicable Disease": 0.1603,
+    "Non-Communicable Disease": 0.2525,
+    "Mental Health": 0.6374,
+    "Nutrition": 0.3581
+  },
+  "642": {
+    "Primary Care": 0.2925,
+    "Maternal Health": 0.4871,
+    "Child Health": 0.4799,
+    "Communicable Disease": 0.4884,
+    "Non-Communicable Disease": 0.7297,
+    "Mental Health": 0.1891,
+    "Nutrition": 0.0544
+  },
+  "643": {
+    "Primary Care": 0.693,
+    "Maternal Health": 0.2485,
+    "Child Health": 0.2796,
+    "Communicable Disease": 0.2532,
+    "Non-Communicable Disease": 0.6396,
+    "Mental Health": 0.2963,
+    "Nutrition": 0.2375
+  },
+  "644": {
+    "Primary Care": 0.4755,
+    "Maternal Health": 0.9068,
+    "Child Health": 0.2354,
+    "Communicable Disease": 0.0545,
+    "Non-Communicable Disease": 0.9703,
+    "Mental Health": 0.9134,
+    "Nutrition": 0.8759
+  },
+  "645": {
+    "Primary Care": 0.7286,
+    "Maternal Health": 0.873,
+    "Child Health": 0.2245,
+    "Communicable Disease": 0.8344,
+    "Non-Communicable Disease": 0.174,
+    "Mental Health": 0.3636,
+    "Nutrition": 0.6066
+  },
+  "646": {
+    "Primary Care": 0.7189,
+    "Maternal Health": 0.3514,
+    "Child Health": 0.3509,
+    "Communicable Disease": 0.6871,
+    "Non-Communicable Disease": 0.1539,
+    "Mental Health": 0.3243,
+    "Nutrition": 0.304
+  },
+  "647": {
+    "Primary Care": 0.2027,
+    "Maternal Health": 0.9667,
+    "Child Health": 0.1151,
+    "Communicable Disease": 0.8517,
+    "Non-Communicable Disease": 0.4433,
+    "Mental Health": 0.1501,
+    "Nutrition": 0.3665
+  },
+  "648": {
+    "Primary Care": 0.4982,
+    "Maternal Health": 0.3178,
+    "Child Health": 0.1386,
+    "Communicable Disease": 0.3045,
+    "Non-Communicable Disease": 0.6241,
+    "Mental Health": 0.7077,
+    "Nutrition": 0.4788
+  },
+  "649": {
+    "Primary Care": 0.3848,
+    "Maternal Health": 0.9156,
+    "Child Health": 0.1142,
+    "Communicable Disease": 0.1868,
+    "Non-Communicable Disease": 0.9701,
+    "Mental Health": 0.5361,
+    "Nutrition": 0.0936
+  },
+  "650": {
+    "Primary Care": 0.7401,
+    "Maternal Health": 0.7675,
+    "Child Health": 0.7558,
+    "Communicable Disease": 0.1205,
+    "Non-Communicable Disease": 0.5444,
+    "Mental Health": 0.1931,
+    "Nutrition": 0.7621
+  }
+}

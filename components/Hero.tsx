@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import type { VerticalConfig } from "@/lib/verticals/types";
+
+const DEFAULT_ACCENT = "#BD402C";
 
 interface HeroMeta {
   total_districts?: number;
@@ -84,22 +87,33 @@ const fadeUp = {
   },
 };
 
-export default function Hero() {
+export default function Hero({ vertical }: { vertical?: VerticalConfig }) {
+  const accent = vertical?.theme.accent ?? DEFAULT_ACCENT;
+  const isCsr = !vertical || vertical.slug === "csr";
+  const dataPath = vertical?.dataPath ?? "/data/csr";
+  const verticalSlug = vertical?.slug ?? "csr";
   const [meta, setMeta] = useState<HeroMeta | null>(null);
 
   useEffect(() => {
-    fetch("/data/csr/meta.json")
+    fetch(`${dataPath}/meta.json`)
       .then((r) => r.json())
       .then((m: HeroMeta) => setMeta(m))
       .catch(() => {});
-  }, []);
+  }, [dataPath]);
 
   const scrollToSimulator = () => {
     document.getElementById("simulator")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const fy24Csr = Math.round(meta?.csr_totals?.total_fy23_24_crore ?? 21878);
   const totalDistricts = meta?.total_districts ?? 651;
+  const methodologyHref = isCsr ? "/methodology" : `/${verticalSlug}/methodology`;
+
+  const headline = vertical?.heroContent?.headline ?? "Over two lakh crore in CSR since 2014.";
+  const headlineItalic = vertical?.heroContent?.headlineItalic ?? "The poorest districts got the least.";
+  const body = vertical?.heroContent?.body ?? "An investigative mapping of India’s Corporate Social Responsibility landscape reveals a staggering geographical divide. While capital centers flourish, the aspirational districts remain shadowed by industrial neglect.";
+
+  /* CSR-specific computed stats */
+  const fy24Csr = Math.round(meta?.csr_totals?.total_fy23_24_crore ?? 21878);
   const nationalHr = meta?.national_hr_official_pct ?? 14.96;
   const bhCsrPp = meta?.state_stats?.bihar?.csr_per_person_inr;
   const mhCsrPp = meta?.state_stats?.maharashtra?.csr_per_person_inr;
@@ -121,10 +135,10 @@ export default function Hero() {
               variants={fadeUp}
               className="font-headline text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl headline-tight text-[#1c1c19]"
             >
-              Over two lakh crore in CSR since 2014.
+              {headline}
               <br />
               <span className="italic font-light">
-                The poorest districts got the least.
+                {headlineItalic}
               </span>
             </motion.h1>
 
@@ -132,7 +146,7 @@ export default function Hero() {
               variants={fadeUp}
               className="mt-10 md:mt-14 max-w-2xl font-body text-lg md:text-xl leading-relaxed text-[#1c1c19]/90"
             >
-              An investigative mapping of India&apos;s Corporate Social Responsibility landscape reveals a staggering geographical divide. While capital centers flourish, the aspirational districts remain shadowed by industrial neglect.
+              {body}
             </motion.p>
 
             {/* CTA row */}
@@ -142,7 +156,8 @@ export default function Hero() {
             >
               <button
                 onClick={scrollToSimulator}
-                className="group bg-[#BD402C] text-white font-label uppercase tracking-[0.25em] text-xs py-5 px-8 flex justify-between items-center gap-6 hover:bg-[#1c1c19] transition-colors w-full sm:w-auto sm:min-w-[280px]"
+                className="group text-white font-label uppercase tracking-[0.25em] text-xs py-5 px-8 flex justify-between items-center gap-6 hover:bg-[#1c1c19] transition-colors w-full sm:w-auto sm:min-w-[280px]"
+                style={{ backgroundColor: accent }}
               >
                 Enter the Ledger
                 <svg width="18" height="10" viewBox="0 0 24 12" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -150,7 +165,7 @@ export default function Hero() {
                 </svg>
               </button>
               <a
-                href="/methodology"
+                href={methodologyHref}
                 className="group border border-[#1c1c19] text-[#1c1c19] font-label uppercase tracking-[0.25em] text-xs py-5 px-8 flex justify-between items-center gap-6 hover:bg-[#1c1c19] hover:text-[#fcf9f4] transition-colors w-full sm:w-auto sm:min-w-[280px]"
               >
                 Read the Methodology
@@ -164,79 +179,106 @@ export default function Hero() {
             variants={fadeUp}
             className="md:col-span-4 lg:col-span-3 flex flex-col gap-10 md:gap-12 mt-8 md:mt-0"
           >
-            <div className="border-t border-[#1c1c19] pt-6">
-              <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-5">
-                Total Expenditure
-              </span>
-              <div className="font-label text-3xl lg:text-4xl font-bold text-[#BD402C] tracking-tighter">
-                <CountUp end={fy24Csr} prefix="₹" suffix=" Cr" />
-              </div>
-              <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
-                District-attributable CSR in FY2023-24, from Ministry of Corporate Affairs filings.
-              </div>
-            </div>
+            {isCsr ? (
+              <>
+                <div className="border-t border-[#1c1c19] pt-6">
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-5">
+                    Total Expenditure
+                  </span>
+                  <div className="font-label text-3xl lg:text-4xl font-bold tracking-tighter" style={{ color: accent }}>
+                    <CountUp end={fy24Csr} prefix="₹" suffix=" Cr" />
+                  </div>
+                  <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
+                    District-attributable CSR in FY2023-24, from Ministry of Corporate Affairs filings.
+                  </div>
+                </div>
 
-            <div className="border-t border-[#1c1c19] pt-6">
-              <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-5">
-                Coverage Analysis
-              </span>
-              <div className="font-label text-3xl lg:text-4xl font-bold text-[#BD402C] tracking-tighter">
-                <CountUp end={totalDistricts} suffix=" Districts" />
-              </div>
-              <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
-                Scored and ranked across administrative zones with complete data.
-              </div>
-            </div>
+                <div className="border-t border-[#1c1c19] pt-6">
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-5">
+                    Coverage Analysis
+                  </span>
+                  <div className="font-label text-3xl lg:text-4xl font-bold tracking-tighter" style={{ color: accent }}>
+                    <CountUp end={totalDistricts} suffix=" Districts" />
+                  </div>
+                  <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
+                    Scored and ranked across administrative zones with complete data.
+                  </div>
+                </div>
 
-            <div className="border-t border-[#1c1c19] pt-6">
-              <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-5">
-                National Poverty
-              </span>
-              <div className="font-label text-3xl lg:text-4xl font-bold text-[#BD402C] tracking-tighter">
-                <CountUp end={nationalHr} suffix="%" decimals={2} />
-              </div>
-              <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
-                Headcount ratio from NITI Aayog MPI 2023 (2019-21, NFHS-5).
-              </div>
-            </div>
+                <div className="border-t border-[#1c1c19] pt-6">
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-5">
+                    National Poverty
+                  </span>
+                  <div className="font-label text-3xl lg:text-4xl font-bold tracking-tighter" style={{ color: accent }}>
+                    <CountUp end={nationalHr} suffix="%" decimals={2} />
+                  </div>
+                  <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
+                    Headcount ratio from NITI Aayog MPI 2023 (2019-21, NFHS-5).
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {(vertical?.heroStats ?? []).map((stat, i) => (
+                  <div key={i} className="border-t border-[#1c1c19] pt-6">
+                    <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-5">
+                      {stat.label}
+                    </span>
+                    <div className="font-label text-3xl lg:text-4xl font-bold tracking-tighter" style={{ color: accent }}>
+                      {stat.value}
+                    </div>
+                  </div>
+                ))}
+                <div className="border-t border-[#1c1c19] pt-6">
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19] block mb-5">
+                    Coverage
+                  </span>
+                  <div className="font-label text-3xl lg:text-4xl font-bold tracking-tighter" style={{ color: accent }}>
+                    <CountUp end={totalDistricts} suffix=" Districts" />
+                  </div>
+                </div>
+              </>
+            )}
           </motion.div>
         </div>
 
-        {/* Editorial exhibit band */}
-        <motion.div
-          variants={fadeUp}
-          className="mt-24 md:mt-32 grid grid-cols-1 md:grid-cols-12 border border-[#1c1c19]"
-        >
-          <div className="md:col-span-7 p-10 md:p-14 border-b md:border-b-0 md:border-r border-[#1c1c19] bg-[#f6f3ee]">
-            <span className="font-label text-[10px] uppercase tracking-[0.3em] block mb-6 text-[#BD402C]">
-              Key Finding // Geographical Disparity
-            </span>
-            <p className="font-headline text-2xl md:text-3xl leading-tight mb-6 text-[#1c1c19]">
-              CSR clusters in Tier-1 corridors while aspirational districts see minimal funding.
-            </p>
-            <p className="font-body text-sm md:text-base text-[#1c1c19]/80 leading-relaxed">
-              Our methodology cross-references Ministry of Corporate Affairs data with NITI Aayog MPI headcount ratios to reveal the widening gap in social capital allocation across {totalDistricts} districts.
-            </p>
-          </div>
-          <div className="md:col-span-5 p-10 md:p-14 flex flex-col justify-between gap-8">
-            <div>
-              <span className="font-label text-[10px] uppercase tracking-[0.3em] block mb-6 text-[#1c1c19]/60">
-                Key Insight // Bihar vs Maharashtra
+        {/* Editorial exhibit band — CSR-specific insight panel */}
+        {isCsr && (
+          <motion.div
+            variants={fadeUp}
+            className="mt-24 md:mt-32 grid grid-cols-1 md:grid-cols-12 border border-[#1c1c19]"
+          >
+            <div className="md:col-span-7 p-10 md:p-14 border-b md:border-b-0 md:border-r border-[#1c1c19] bg-[#f6f3ee]">
+              <span className="font-label text-[10px] uppercase tracking-[0.3em] block mb-6" style={{ color: accent }}>
+                Key Finding // Geographical Disparity
               </span>
-              <div className="font-label text-[11px] uppercase tracking-widest text-[#1c1c19] mb-2">
-                Bihar: Poverty 33.76% / Low CSR
-              </div>
-              <div className="h-1 bg-[#BD402C] w-[5%] mb-6" />
-              <div className="font-label text-[11px] uppercase tracking-widest text-[#1c1c19] mb-2">
-                Maharashtra: Poverty 7.81% / High CSR
-              </div>
-              <div className="h-1 bg-[#1c1c19] w-[95%]" />
+              <p className="font-headline text-2xl md:text-3xl leading-tight mb-6 text-[#1c1c19]">
+                CSR clusters in Tier-1 corridors while aspirational districts see minimal funding.
+              </p>
+              <p className="font-body text-sm md:text-base text-[#1c1c19]/80 leading-relaxed">
+                Our methodology cross-references Ministry of Corporate Affairs data with NITI Aayog MPI headcount ratios to reveal the widening gap in social capital allocation across {totalDistricts} districts.
+              </p>
             </div>
-            <p className="font-body text-xs text-[#1c1c19]/70 leading-relaxed italic">
-              Bihar&apos;s poverty rate is more than 4&times; Maharashtra&apos;s, yet it receives roughly {csrRatio}&times; less CSR per person.
-            </p>
-          </div>
-        </motion.div>
+            <div className="md:col-span-5 p-10 md:p-14 flex flex-col justify-between gap-8">
+              <div>
+                <span className="font-label text-[10px] uppercase tracking-[0.3em] block mb-6 text-[#1c1c19]/60">
+                  Key Insight // Bihar vs Maharashtra
+                </span>
+                <div className="font-label text-[11px] uppercase tracking-widest text-[#1c1c19] mb-2">
+                  Bihar: Poverty 33.76% / Low CSR
+                </div>
+                <div className="h-1 w-[5%] mb-6" style={{ backgroundColor: accent }} />
+                <div className="font-label text-[11px] uppercase tracking-widest text-[#1c1c19] mb-2">
+                  Maharashtra: Poverty 7.81% / High CSR
+                </div>
+                <div className="h-1 bg-[#1c1c19] w-[95%]" />
+              </div>
+              <p className="font-body text-xs text-[#1c1c19]/70 leading-relaxed italic">
+                Bihar&apos;s poverty rate is more than 4&times; Maharashtra&apos;s, yet it receives roughly {csrRatio}&times; less CSR per person.
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         {/* Scroll indicator */}
         <motion.div

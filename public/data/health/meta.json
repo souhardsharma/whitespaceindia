@@ -1,0 +1,14 @@
+{
+  "total_districts": 651,
+  "national_doctor_ratio": "1:1800",
+  "national_imr": 28,
+  "data_window": "2019-2022",
+  "pos_range": { "min": 0.0, "max": 78.5 },
+  "sector_pos_max": 82.0,
+  "sources": [
+    "National Health Mission (NHM) District-Level Reports",
+    "Sample Registration System (SRS) Bulletins",
+    "Rural Health Statistics 2021-22",
+    "Census of India 2011"
+  ]
+}

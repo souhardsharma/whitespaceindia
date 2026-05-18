@@ -1,30 +1,38 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { SECTORS, Weights } from "@/lib/csr/score";
+import { SECTORS } from "@/lib/csr/score";
 import { WEIGHT_PRESETS } from "@/lib/csr/constants";
+import type { VerticalConfig, ScoringDimension, WeightPreset } from "@/lib/verticals/types";
+
+const DEFAULT_ACCENT = "#BD402C";
+
+const DEFAULT_DIMENSIONS: ScoringDimension[] = [
+  { key: "w_N", label: "Poverty Severity", shortLabel: "N", description: "Weight given to MPI headcount ratio", defaultWeight: 0.40, hintLow: "LOW", hintHigh: "HIGH" },
+  { key: "w_G", label: "Funding Gap", shortLabel: "G", description: "Weight given to CSR under-funding vs tier median", defaultWeight: 0.40, hintLow: "FUNDED", hintHigh: "NEGLECTED" },
+  { key: "w_U", label: "Persistent Poverty", shortLabel: "U", description: "Weight given to districts where poverty has not improved", defaultWeight: 0.20, hintLow: "IMPROVED", hintHigh: "STUCK" },
+];
+
+const DEFAULT_PRESETS: WeightPreset[] = WEIGHT_PRESETS.map((p) => ({
+  name: p.name,
+  weights: { w_N: p.w_N, w_G: p.w_G, w_U: p.w_U },
+}));
 
 interface Props {
-  onWeightsChange: (weights: { w_N: number; w_G: number; w_U: number }) => void;
+  onWeightsChange: (weights: Record<string, number>) => void;
   onSectorChange: (sector: string) => void;
   onWhitespaceToggle: (on: boolean) => void;
   onReset?: () => void;
-  weights?: Weights;
+  weights?: Record<string, number>;
+  vertical?: VerticalConfig;
 }
 
-function matchesPreset(w: { w_N: number; w_G: number; w_U: number }): string | null {
-  // Tolerance 0.015 (1.5%) so the slider's 1% step can't drift the active
-  // preset off after a ratio reshuffle (e.g. 40/40/20 → 41/40/19 still reads as
-  // Balanced).
-  for (const p of WEIGHT_PRESETS) {
-    if (
-      Math.abs(w.w_N - p.w_N) < 0.015 &&
-      Math.abs(w.w_G - p.w_G) < 0.015 &&
-      Math.abs(w.w_U - p.w_U) < 0.015
-    ) {
-      return p.name;
-    }
+function matchesPreset(w: Record<string, number>, presets: WeightPreset[]): string | null {
+  for (const p of presets) {
+    const keys = Object.keys(p.weights);
+    const match = keys.every((k) => Math.abs((w[k] ?? 0) - p.weights[k]) < 0.015);
+    if (match) return p.name;
   }
   return null;
 }
@@ -35,74 +43,82 @@ export default function WeightsPanel({
   onWhitespaceToggle,
   onReset,
   weights: externalWeights,
+  vertical,
 }: Props) {
-  const [localPct, setLocalPct] = useState({ w_N: 40, w_G: 40, w_U: 20 });
+  const accent = vertical?.theme.accent ?? DEFAULT_ACCENT;
+  const dimensions = vertical?.dimensions ?? DEFAULT_DIMENSIONS;
+  const sectors = vertical?.sectors ?? [...SECTORS];
+  const presets = vertical?.weightPresets ?? DEFAULT_PRESETS;
+  const methodologyHref = vertical && vertical.slug !== "csr" ? `/${vertical.slug}/methodology` : "/methodology";
+
+  const defaultPct = useMemo(() => {
+    const pct: Record<string, number> = {};
+    for (const d of dimensions) pct[d.key] = Math.round(d.defaultWeight * 100);
+    return pct;
+  }, [dimensions]);
+
+  const [localPct, setLocalPct] = useState<Record<string, number>>(defaultPct);
   const [sector, setSector] = useState("All Sectors");
   const [whitespaceOnly, setWhitespaceOnly] = useState(false);
-  const [activePreset, setActivePreset] = useState<string | null>("Balanced");
-  const [drafts, setDrafts] = useState<Record<"w_N" | "w_G" | "w_U", string | null>>({
-    w_N: null,
-    w_G: null,
-    w_U: null,
+  const [activePreset, setActivePreset] = useState<string | null>(presets[0]?.name ?? null);
+  const [drafts, setDrafts] = useState<Record<string, string | null>>(() => {
+    const d: Record<string, string | null> = {};
+    for (const dim of dimensions) d[dim.key] = null;
+    return d;
   });
 
   useEffect(() => {
     if (externalWeights) {
-      const newPct = {
-        w_N: Math.round(externalWeights.w_N * 100),
-        w_G: Math.round(externalWeights.w_G * 100),
-        w_U: Math.round(externalWeights.w_U * 100),
-      };
+      const newPct: Record<string, number> = {};
+      for (const d of dimensions) newPct[d.key] = Math.round((externalWeights[d.key] ?? 0) * 100);
       setLocalPct(newPct);
-      setActivePreset(matchesPreset(externalWeights));
+      setActivePreset(matchesPreset(externalWeights, presets));
     }
-  }, [externalWeights]);
+  }, [externalWeights, dimensions, presets]);
 
   const handleSliderChange = useCallback(
-    (key: "w_N" | "w_G" | "w_U", value: number) => {
+    (key: string, value: number) => {
       const clamped = Math.max(0, Math.min(100, value));
       const remaining = 100 - clamped;
-      const others = (["w_N", "w_G", "w_U"] as const).filter((k) => k !== key);
-      const otherSum = localPct[others[0]] + localPct[others[1]];
-      let newPct: { w_N: number; w_G: number; w_U: number };
+      const others = dimensions.filter((d) => d.key !== key).map((d) => d.key);
+      const otherSum = others.reduce((sum, k) => sum + (localPct[k] ?? 0), 0);
+
+      const newPct: Record<string, number> = { ...localPct, [key]: clamped };
       if (otherSum > 0) {
-        const r0 = Math.round(remaining * (localPct[others[0]] / otherSum));
-        const r1 = remaining - r0;
-        newPct = {
-          [key]: clamped,
-          [others[0]]: Math.max(0, r0),
-          [others[1]]: Math.max(0, r1),
-        } as { w_N: number; w_G: number; w_U: number };
+        let assigned = 0;
+        for (let i = 0; i < others.length; i++) {
+          if (i === others.length - 1) {
+            newPct[others[i]] = Math.max(0, remaining - assigned);
+          } else {
+            const share = Math.round(remaining * ((localPct[others[i]] ?? 0) / otherSum));
+            newPct[others[i]] = Math.max(0, share);
+            assigned += share;
+          }
+        }
       } else {
-        const each = Math.floor(remaining / 2);
-        newPct = {
-          [key]: clamped,
-          [others[0]]: each + (remaining - each * 2),
-          [others[1]]: each,
-        } as { w_N: number; w_G: number; w_U: number };
+        const each = Math.floor(remaining / others.length);
+        const leftover = remaining - each * others.length;
+        for (let i = 0; i < others.length; i++) {
+          newPct[others[i]] = each + (i === 0 ? leftover : 0);
+        }
       }
+
       setLocalPct(newPct);
-      const decimal = {
-        w_N: newPct.w_N / 100,
-        w_G: newPct.w_G / 100,
-        w_U: newPct.w_U / 100,
-      };
+      const decimal: Record<string, number> = {};
+      for (const k of Object.keys(newPct)) decimal[k] = newPct[k] / 100;
       onWeightsChange(decimal);
-      setActivePreset(matchesPreset(decimal));
+      setActivePreset(matchesPreset(decimal, presets));
     },
-    [onWeightsChange, localPct]
+    [onWeightsChange, localPct, dimensions, presets]
   );
 
   const applyPreset = useCallback(
-    (preset: (typeof WEIGHT_PRESETS)[number]) => {
-      const newPct = {
-        w_N: Math.round(preset.w_N * 100),
-        w_G: Math.round(preset.w_G * 100),
-        w_U: Math.round(preset.w_U * 100),
-      };
+    (preset: WeightPreset) => {
+      const newPct: Record<string, number> = {};
+      for (const [k, v] of Object.entries(preset.weights)) newPct[k] = Math.round(v * 100);
       setLocalPct(newPct);
       setActivePreset(preset.name);
-      onWeightsChange({ w_N: preset.w_N, w_G: preset.w_G, w_U: preset.w_U });
+      onWeightsChange(preset.weights);
     },
     [onWeightsChange]
   );
@@ -124,16 +140,18 @@ export default function WeightsPanel({
   }, [onWhitespaceToggle]);
 
   const handleReset = useCallback(() => {
-    setLocalPct({ w_N: 40, w_G: 40, w_U: 20 });
+    setLocalPct(defaultPct);
     setSector("All Sectors");
     setWhitespaceOnly(false);
-    setActivePreset("Balanced");
-    setDrafts({ w_N: null, w_G: null, w_U: null });
+    setActivePreset(presets[0]?.name ?? null);
+    const resetDrafts: Record<string, string | null> = {};
+    for (const d of dimensions) resetDrafts[d.key] = null;
+    setDrafts(resetDrafts);
     onReset?.();
-  }, [onReset]);
+  }, [onReset, defaultPct, dimensions, presets]);
 
   const commitDraft = useCallback(
-    (key: "w_N" | "w_G" | "w_U") => {
+    (key: string) => {
       const raw = drafts[key];
       setDrafts((d) => ({ ...d, [key]: null }));
       if (raw === null || raw === "") return;
@@ -146,31 +164,7 @@ export default function WeightsPanel({
     [drafts, localPct, handleSliderChange]
   );
 
-  const total = localPct.w_N + localPct.w_G + localPct.w_U;
-
-  const sliders = [
-    {
-      key: "w_N" as const,
-      label: "Poverty Severity",
-      tooltip: "Weight given to MPI headcount ratio",
-      hint1: "LOW",
-      hint2: "HIGH",
-    },
-    {
-      key: "w_G" as const,
-      label: "Funding Gap",
-      tooltip: "Weight given to CSR under-funding vs tier median",
-      hint1: "FUNDED",
-      hint2: "NEGLECTED",
-    },
-    {
-      key: "w_U" as const,
-      label: "Persistent Poverty",
-      tooltip: "Weight given to districts where poverty has not improved",
-      hint1: "IMPROVED",
-      hint2: "STUCK",
-    },
-  ];
+  const total = Object.values(localPct).reduce((sum, v) => sum + v, 0);
 
   return (
     <div className="bg-[#fcf9f4] border border-[#1c1c19]">
@@ -197,7 +191,8 @@ export default function WeightsPanel({
         <div>
           <label
             htmlFor="sector-select"
-            className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] font-bold mb-3 block"
+            className="font-label text-[10px] uppercase tracking-[0.3em] font-bold mb-3 block"
+            style={{ color: accent }}
           >
             Focus Sector
           </label>
@@ -206,10 +201,10 @@ export default function WeightsPanel({
               id="sector-select"
               value={sector}
               onChange={(e) => handleSectorChange(e.target.value)}
-              aria-label="Filter districts by CSR sector"
+              aria-label="Filter districts by sector"
               className="w-full bg-transparent text-[#1c1c19] border-0 border-b border-[#1c1c19] py-3 px-0 pr-8 font-body text-sm focus:ring-0 focus:outline-none appearance-none cursor-pointer"
             >
-              {SECTORS.map((s) => (
+              {sectors.map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>
@@ -224,25 +219,25 @@ export default function WeightsPanel({
         {/* Scoring Weights */}
         <div className="pt-2">
           <div className="flex items-center justify-between mb-6">
-            <label className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] font-bold">
+            <label className="font-label text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: accent }}>
               Scoring Weights
             </label>
             {total !== 100 && (
-              <span className="font-label text-[10px] uppercase tracking-widest text-[#BD402C]">
+              <span className="font-label text-[10px] uppercase tracking-widest" style={{ color: accent }}>
                 Σ {total}%
               </span>
             )}
           </div>
           <div className="space-y-8">
-            {sliders.map((slider) => {
-              const pct = localPct[slider.key];
+            {dimensions.map((dim) => {
+              const pct = localPct[dim.key] ?? 0;
               return (
-                <div key={slider.key}>
+                <div key={dim.key}>
                   <div className="flex justify-between items-baseline mb-3">
                     <span className="font-label text-[11px] uppercase tracking-[0.15em] text-[#1c1c19]">
-                      {slider.label}
+                      {dim.label}
                     </span>
-                    <span className="font-label text-sm font-bold text-[#BD402C] tracking-tighter inline-flex items-baseline">
+                    <span className="font-label text-sm font-bold tracking-tighter inline-flex items-baseline" style={{ color: accent }}>
                       <input
                         type="number"
                         min={0}
@@ -250,23 +245,26 @@ export default function WeightsPanel({
                         step={1}
                         inputMode="numeric"
                         pattern="[0-9]*"
-                        value={drafts[slider.key] ?? pct}
+                        value={drafts[dim.key] ?? pct}
                         onChange={(e) =>
-                          setDrafts((d) => ({ ...d, [slider.key]: e.target.value }))
+                          setDrafts((d) => ({ ...d, [dim.key]: e.target.value }))
                         }
                         onFocus={(e) => e.currentTarget.select()}
-                        onBlur={() => commitDraft(slider.key)}
+                        onBlur={() => commitDraft(dim.key)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
                             (e.target as HTMLInputElement).blur();
                           } else if (e.key === "Escape") {
-                            setDrafts((d) => ({ ...d, [slider.key]: null }));
+                            setDrafts((d) => ({ ...d, [dim.key]: null }));
                             (e.target as HTMLInputElement).blur();
                           }
                         }}
-                        aria-label={`${slider.label} weight percentage`}
-                        className="w-10 text-right bg-transparent border-0 border-b border-transparent focus:border-[#BD402C] focus:outline-none font-label text-sm font-bold text-[#BD402C] tracking-tighter [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        aria-label={`${dim.label} weight percentage`}
+                        className="w-10 text-right bg-transparent border-0 border-b border-transparent focus:outline-none font-label text-sm font-bold tracking-tighter [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        style={{ color: accent, borderBottomColor: 'transparent' }}
+                        onFocusCapture={(e) => { e.currentTarget.style.borderBottomColor = accent; }}
+                        onBlurCapture={(e) => { e.currentTarget.style.borderBottomColor = 'transparent'; }}
                       />
                       <span aria-hidden>%</span>
                     </span>
@@ -276,16 +274,18 @@ export default function WeightsPanel({
                     min={0}
                     max={100}
                     value={pct}
-                    onChange={(e) => handleSliderChange(slider.key, Number(e.target.value))}
-                    aria-label={`${slider.label} weight: ${pct}%`}
+                    onChange={(e) => handleSliderChange(dim.key, Number(e.target.value))}
+                    aria-label={`${dim.label} weight: ${pct}%`}
                     className="w-full"
                   />
-                  <div className="flex justify-between mt-2 font-label text-[9px] tracking-[0.2em] text-[#1c1c19]/40">
-                    <span>{slider.hint1}</span>
-                    <span>{slider.hint2}</span>
-                  </div>
+                  {(dim.hintLow || dim.hintHigh) && (
+                    <div className="flex justify-between mt-2 font-label text-[9px] tracking-[0.2em] text-[#1c1c19]/40">
+                      <span>{dim.hintLow}</span>
+                      <span>{dim.hintHigh}</span>
+                    </div>
+                  )}
                   <p className="font-body text-xs text-[#1c1c19]/60 mt-2 italic">
-                    {slider.tooltip}
+                    {dim.description}
                   </p>
                 </div>
               );
@@ -299,7 +299,7 @@ export default function WeightsPanel({
             Quick Presets
           </p>
           <div className="flex flex-wrap gap-0 border border-[#1c1c19]" role="group" aria-label="Scoring weight presets">
-            {WEIGHT_PRESETS.map((preset, idx) => {
+            {presets.map((preset, idx) => {
               const isActive = activePreset === preset.name;
               return (
                 <button
@@ -309,9 +309,10 @@ export default function WeightsPanel({
                   aria-pressed={isActive}
                   className={`font-label text-[10px] uppercase tracking-[0.15em] px-3 py-3 flex-1 min-w-[50%] transition-colors ${idx % 2 === 1 ? "border-l border-[#1c1c19]" : ""
                     } ${idx >= 2 ? "border-t border-[#1c1c19]" : ""} ${isActive
-                      ? "bg-[#BD402C] text-white"
+                      ? "text-white"
                       : "bg-[#fcf9f4] text-[#1c1c19] hover:bg-[#f6f3ee]"
                     }`}
+                  style={isActive ? { backgroundColor: accent } : undefined}
                 >
                   {preset.name}
                 </button>
@@ -338,7 +339,7 @@ export default function WeightsPanel({
             </div>
             <div
               className="w-14 h-6 relative shrink-0 border border-[#1c1c19]"
-              style={{ background: whitespaceOnly ? "#BD402C" : "transparent" }}
+              style={{ background: whitespaceOnly ? accent : "transparent" }}
             >
               <div
                 className="w-5 h-5 absolute top-0 transition-transform"
@@ -354,8 +355,10 @@ export default function WeightsPanel({
         {/* Methodology link */}
         <div className="border-t border-[#1c1c19] pt-5">
           <Link
-            href="/methodology"
-            className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19] hover:text-[#BD402C] transition-colors flex items-center justify-between gap-2"
+            href={methodologyHref}
+            className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19] transition-colors flex items-center justify-between gap-2"
+            onMouseEnter={e => (e.currentTarget.style.color = accent)}
+            onMouseLeave={e => (e.currentTarget.style.color = '#1c1c19')}
           >
             <span>Full Methodology</span>
             <span className="text-[10px]">→</span>
