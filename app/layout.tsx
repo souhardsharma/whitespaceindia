@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     description:
       "Civic data systems across CSR, Health, Education, and Energy. Shipping now: CSR opportunity index across 651 Indian districts.",
     url: siteUrl,
-    images: [{ url: "/og/csr.png", width: 1200, height: 630, alt: "Whitespace India" }],
+    images: [{ url: "/og/brand.png", width: 1200, height: 630, alt: "Whitespace India" }],
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     description:
       "Civic data systems across CSR, Health, Education, and Energy.",
     creator: "@souaboroq",
-    images: ["/og/csr.png"],
+    images: ["/og/brand.png"],
   },
   alternates: { canonical: siteUrl },
   robots: {

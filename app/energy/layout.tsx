@@ -18,14 +18,14 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
-    images: [{ url: "/og/csr.png", width: 1200, height: 630, alt: "Whitespace India" }],
+    images: [{ url: "/og/energy.png", width: 1200, height: 630, alt: "Whitespace India Energy" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Whitespace India Energy",
     description: DESCRIPTION,
     creator: "@souaboroq",
-    images: ["/og/csr.png"],
+    images: ["/og/energy.png"],
   },
   alternates: { canonical: PAGE_URL },
   robots: {
