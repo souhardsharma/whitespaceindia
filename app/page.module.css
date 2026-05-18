@@ -381,7 +381,7 @@
 .tileGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: 1.15fr 1fr;
+  grid-template-rows: 1.8fr 1fr;
   gap: 2px;
   flex: 1;
   min-height: 0;
