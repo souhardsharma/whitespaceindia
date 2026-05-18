@@ -48,10 +48,7 @@ function StickyHeader() {
           <span className={styles.bIndia}>India</span>
         </span>
       </a>
-      <a href="/csr" className={styles.stickyCta}>
-        Open the CSR Index
-        <span aria-hidden="true">↗</span>
-      </a>
+      <span className={styles.stickyTag}>Civic Data Instruments</span>
     </header>
   );
 }
@@ -187,7 +184,7 @@ const VERTS: Vert[] = [
     vert: "csr",
     num: "01",
     title: "CSR",
-    meta: "Opportunity index",
+    meta: "Impact finance",
     img: "/landing/csr-hands.webp",
     alt: "CSR opportunity index across 651 Indian districts",
     active: true,
@@ -259,68 +256,70 @@ export default function Landing() {
           <NewsTicker />
         </header>
 
-        {/* MAIN GRID — left statement, right featured CSR, bottom 3 tiles */}
+        {/* MAIN GRID — full-width headline, then 2×2 tile grid */}
         <div className={styles.grid}>
 
-          {/* LEFT — statement */}
+          {/* HEADLINE — spans full width */}
           <div className={styles.stmtCol}>
             <h2 className={styles.headline}>
-              <span className={styles.hLine}><span className={styles.hWord}>India&apos;s public data,</span></span>
-              <span className={styles.hLine}><span className={styles.hWord}><span className={styles.hItalic}>made into</span> instruments.</span></span>
+              <span className={styles.hPublic}>Public</span>
+              <span className={styles.hBrace}>{'{'}</span>
+              <span className={styles.hNoun}>Data</span>
+              <span className={styles.hDot} aria-hidden="true">·</span>
+              <span className={styles.hBrand}>Whitespaces</span>
+              <span className={styles.hDot} aria-hidden="true">·</span>
+              <span className={styles.hNoun}>Instruments</span>
+              <span className={styles.hBrace}>{'}'}</span>
             </h2>
-            <div className={styles.actions}>
-              <Link href="/csr" className={styles.ctaPrimary}>
-                <span>Open the CSR Index</span>
-                <span className={styles.ctaArrow} aria-hidden="true">↗</span>
-              </Link>
-            </div>
           </div>
 
-          {/* RIGHT — featured CSR tile */}
-          <div className={styles.featureWrap}>
+          {/* 2×2 TILE GRID — all four verticals at equal size */}
+          <div className={styles.tileGrid}>
+            {/* CSR — featured tile with stats */}
             <Link
               href="/csr"
-              className={`${styles.feature} ${styles.featureCsr}`}
+              className={`${styles.tile} ${styles.tileCsr}`}
               aria-label={VERTS[0].aria}
             >
               <Image
                 src={VERTS[0].img}
                 alt={VERTS[0].alt}
                 fill
-                sizes="(max-width: 860px) 92vw, 48vw"
+                sizes="(max-width: 860px) 92vw, 96vw"
                 quality={95}
                 priority
-                className={styles.featureImg}
+                className={styles.tileImg}
               />
-              <div className={styles.featureFrame}>
-                <div className={styles.featureTopRow}>
-                  <span className={styles.featureNum}>01</span>
+              <div className={styles.tileFrameDark}>
+                <div className={styles.tileTopRow}>
+                  <span className={styles.tileNum} style={{ background: "var(--ivory)", color: "var(--ink)" }}>01</span>
                   <span className={styles.liveTag}>
                     <span className={styles.liveDot} />
                     Live
                   </span>
                 </div>
-                <div className={styles.featureBottom}>
-                  <h3 className={styles.featureTitle}>CSR Opportunity Index</h3>
-                  <div className={styles.featureStats}>
-                    <span className={styles.statBig}>
-                      <Odometer to={651} />
-                      <span className={styles.statUnit}>districts</span>
-                    </span>
-                    <span className={styles.statDivider} />
-                    <span className={styles.statBig}>
-                      ₹<Odometer to={26000} duration={1800} />
-                      <span className={styles.statUnit}>cr / yr</span>
-                    </span>
+                <div className={styles.tileBottomRow}>
+                  <div>
+                    <h3 className={styles.tileTitle} style={{ color: "var(--ivory)" }}>CSR &amp; Impact Finance</h3>
+                    <div className={styles.tileStats}>
+                      <span className={styles.statLabel}>Opportunity Index</span>
+                      <span className={styles.statBig}>
+                        <Odometer to={651} />
+                        <span className={styles.statUnit}>districts</span>
+                      </span>
+                      <span className={styles.statDivider} />
+                      <span className={styles.statBig}>
+                        ₹<Odometer to={26000} duration={1800} />
+                        <span className={styles.statUnit}>cr / yr</span>
+                      </span>
+                    </div>
                   </div>
-                  <span className={styles.featureArrow} aria-hidden="true">↗</span>
+                  <span className={styles.tileArrow} style={{ color: "var(--ivory)" }} aria-hidden="true">↗</span>
                 </div>
               </div>
             </Link>
-          </div>
 
-          {/* BOTTOM — three smaller vertical tiles */}
-          <div className={styles.tileRow}>
+            {/* Remaining 3 verticals */}
             {VERTS.slice(1).map((v) => (
               <Link
                 key={v.vert}
@@ -334,6 +333,7 @@ export default function Landing() {
                   fill
                   sizes="(max-width: 860px) 92vw, 33vw"
                   quality={95}
+                  priority
                   className={styles.tileImg}
                 />
                 <div className={styles.tileFrame}>

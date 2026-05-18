@@ -94,22 +94,15 @@
   color: var(--ink);
   white-space: nowrap;
 }
-.stickyCta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: var(--ink);
-  color: var(--ivory);
-  text-decoration: none;
+.stickyTag {
   font-family: var(--font-space-grotesk), monospace;
-  font-weight: 700;
-  font-size: clamp(10px, 0.85vw, 12px);
-  letter-spacing: 0.18em;
+  font-weight: 600;
+  font-size: clamp(9px, 0.75vw, 11px);
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  transition: background 240ms ease, transform 240ms var(--spring);
+  color: var(--ink);
+  opacity: 0.5;
 }
-.stickyCta:hover { background: var(--terra); transform: translateY(-1px); }
 
 /* ══════════════════════════════ HERO ══════════════════════════════ */
 .hero {
@@ -288,30 +281,17 @@
 
 /* ───────────────────────────── MAIN GRID ───────────────────────────── */
 .grid {
-  display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  grid-template-rows: 1fr auto auto;
-  gap: clamp(16px, 2vh, 26px) clamp(18px, 2.4vw, 36px);
-  padding-top: clamp(16px, 2.4vh, 30px);
-}
-
-/* ──────────────────────── LEFT — STATEMENT ──────────────────────── */
-.stmtCol {
-  grid-column: 1;
-  grid-row: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: clamp(20px, 3vh, 32px);
-  align-self: stretch;
-  padding-top: clamp(8px, 1.5vh, 20px);
+  gap: clamp(10px, 1.4vh, 18px);
+  padding-top: clamp(10px, 1.6vh, 20px);
+  flex: 1;
+  min-height: 0;
 }
 
-.actions {
-  display: inline-flex;
-  align-items: center;
-  gap: clamp(10px, 1.4vw, 18px);
-  flex-wrap: wrap;
+/* ──────────────────────── HEADLINE ──────────────────────── */
+.stmtCol {
+  flex-shrink: 0;
 }
 
 .eyebrow {
@@ -333,44 +313,52 @@
   background: var(--terra);
 }
 
-/* HEADLINE — Instrument Serif, a contemporary high-contrast display
-   typeface with expressive italics. Distinctive against Newsreader-only
-   pages. Headline-only; body stays Newsreader/Public Sans. The italic
-   accent on "made into" lets Instrument's signature italic do the
-   visual work without extra colour or decoration. */
 .headline {
   margin: 0;
-  font-family: var(--font-instrument), "Instrument Serif", Georgia, serif;
-  font-weight: 400;
-  font-size: clamp(40px, 5.8vw, 88px);
-  line-height: 0.95;
-  letter-spacing: -0.015em;
-  color: var(--ink);
-}
-.hLine {
-  display: block;
-  overflow: hidden;
-  line-height: 0.92;
-}
-.hWord {
-  display: inline-block;
+  display: flex;
+  align-items: baseline;
+  gap: 0.22em;
   white-space: nowrap;
-  transform: translateY(110%);
-  animation: wordRise 900ms var(--spring) forwards;
-}
-.hLine:nth-child(1) .hWord { animation-delay: 0.06s; }
-.hLine:nth-child(2) .hWord { animation-delay: 0.22s; }
-
-/* italic accent — let Instrument Serif's italic do the work alone; no
-   colour needed, the typeface character is the design move. */
-.hItalic {
-  font-style: italic;
+  font-size: clamp(30px, 5vw, 68px);
+  line-height: 1.15;
   color: var(--ink);
+  opacity: 0;
+  animation: headFade 800ms ease 0.1s forwards;
+}
+.hPublic {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.hBrace {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-weight: 700;
+  color: var(--terra);
+  font-size: 1.2em;
+  line-height: 1;
+}
+.hNoun {
+  font-family: var(--font-space-grotesk), monospace;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.hDot {
+  color: var(--terra);
+  opacity: 0.8;
+  font-size: 0.7em;
+  font-weight: 700;
+}
+.hBrand {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--terra);
+  letter-spacing: -0.02em;
 }
 
-@keyframes wordRise {
-  from { transform: translateY(110%); }
-  to   { transform: translateY(0); }
+@keyframes headFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .lede {
@@ -388,106 +376,25 @@
 @keyframes fadeIn { to { opacity: 0.78; } }
 
 @keyframes fadeInFull { to { opacity: 1; } }
-.ctaPrimary {
-  display: inline-flex; align-items: center; gap: 12px;
-  padding: 14px 22px;
-  background: var(--ink); color: var(--ivory);
-  font-family: var(--font-space-grotesk), monospace;
-  font-weight: 700;
-  font-size: clamp(12px, 0.95vw, 14px);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: transform 320ms var(--spring), background 240ms ease;
-  position: relative;
-  overflow: hidden;
-}
-.ctaPrimary::before {
-  content: ""; position: absolute; inset: 0;
-  background: var(--terra);
-  transform: translateY(100%);
-  transition: transform 380ms var(--smooth);
-  z-index: 0;
-}
-.ctaPrimary > * { position: relative; z-index: 1; }
-.ctaPrimary:hover::before { transform: translateY(0); }
-.ctaPrimary:hover { transform: translateY(-2px); }
-.ctaArrow { display: inline-block; transition: transform 320ms var(--spring); }
-.ctaPrimary:hover .ctaArrow { transform: translate(2px, -2px) rotate(0deg); }
 
-.ctaGhost {
-  font-family: var(--font-space-grotesk), monospace;
-  font-weight: 600;
-  font-size: clamp(11px, 0.85vw, 13px);
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ink);
-  text-decoration: none;
-  position: relative;
-  padding: 4px 0;
-  border-bottom: 1.5px solid var(--ink);
-  transition: color 240ms ease;
+/* ──────────────────────── TILE GRID ──────────────────────── */
+.tileGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1.15fr 1fr;
+  gap: 2px;
+  flex: 1;
+  min-height: 0;
 }
-.ctaGhost:hover { color: var(--terra); border-color: var(--terra); }
 
-/* ──────────────────────── RIGHT — FEATURE CSR TILE ──────────────────────── */
-.featureWrap {
-  grid-column: 2;
-  grid-row: 1;
-  align-self: stretch;
-}
-.feature {
-  position: relative;
-  display: block;
-  height: 100%;
-  min-height: clamp(280px, 44vh, 440px);
-  overflow: hidden;
-  text-decoration: none;
-  color: inherit;
-  background: var(--terra);
-  border: 1.5px solid var(--ink);
-  transform: translate(var(--mx), var(--my));
-  transition: transform 380ms var(--spring), box-shadow 320ms ease;
-  box-shadow: 0 14px 32px -18px rgba(40, 25, 15, 0.35);
-}
-.feature:hover {
-  box-shadow: 0 24px 52px -18px rgba(155, 40, 23, 0.55);
-}
-.featureImg {
-  object-fit: cover;
-  user-select: none;
-  pointer-events: none;
-  transform: scale(1.02);
-  transition: transform 700ms var(--smooth);
-}
-.feature:hover .featureImg { transform: scale(1.06); }
-
-.featureFrame {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  justify-content: space-between;
-  padding: clamp(18px, 2.4vh, 28px) clamp(20px, 2vw, 32px);
-  background: linear-gradient(180deg,
-    rgba(20, 14, 10, 0) 40%,
-    rgba(20, 14, 10, 0.65) 100%);
-  color: var(--ivory);
-}
-.featureTopRow {
-  display: flex; align-items: center; justify-content: space-between;
-  font-family: var(--font-space-grotesk), monospace;
-  font-weight: 700;
-  font-size: clamp(11px, 0.85vw, 13px);
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-}
-.featureNum {
-  display: inline-block;
-  padding: 5px 10px;
-  background: var(--ivory);
-  color: var(--ink);
-}
 .liveTag {
   display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-space-grotesk), monospace;
+  font-weight: 700;
+  font-size: clamp(9px, 0.7vw, 11px);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ivory);
 }
 .liveDot {
   width: 8px; height: 8px; border-radius: 50%;
@@ -496,34 +403,21 @@
   animation: liveDot 1.6s ease-in-out infinite;
 }
 
-.featureBottom {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: end;
-  gap: clamp(8px, 1vh, 14px) clamp(14px, 1.8vw, 26px);
-}
-.featureTitle {
-  grid-column: 1; grid-row: 1;
-  margin: 0;
-  font-family: var(--font-newsreader), serif;
+.statLabel {
+  display: block;
   font-weight: 700;
-  font-size: clamp(20px, 2.2vw, 34px);
-  line-height: 1.05;
-  letter-spacing: -0.025em;
-}
-.featureStats {
-  grid-column: 1; grid-row: 2;
-  display: inline-flex;
-  align-items: baseline;
-  gap: clamp(12px, 1.4vw, 20px);
-  font-family: var(--font-space-grotesk), monospace;
+  font-size: clamp(8px, 0.65vw, 10px);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 6px;
 }
 .statBig {
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
   font-weight: 700;
-  font-size: clamp(20px, 2vw, 32px);
+  font-size: clamp(16px, 1.6vw, 26px);
   font-variant-numeric: tabular-nums;
   line-height: 1;
   letter-spacing: -0.01em;
@@ -543,55 +437,60 @@
   background: rgba(243, 237, 225, 0.4);
   margin-bottom: 0.1em;
 }
-.featureArrow {
-  grid-column: 2; grid-row: 1 / 3;
-  align-self: center;
-  font-size: clamp(22px, 1.8vw, 30px);
-  transition: transform 320ms var(--spring);
+.tileStats {
+  display: inline-flex;
+  align-items: baseline;
+  gap: clamp(10px, 1.2vw, 18px);
+  font-family: var(--font-space-grotesk), monospace;
+  color: var(--ivory);
+  margin-top: 6px;
 }
-.feature:hover .featureArrow { transform: translate(4px, -4px); }
 
-/* ──────────────────────── BOTTOM — 3 SMALLER TILES ──────────────────────── */
-.tileRow {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(12px, 1.6vw, 22px);
-  margin-top: clamp(6px, 1vh, 14px);
-}
 .tile {
   position: relative;
   display: block;
-  height: clamp(120px, 16vh, 170px);
+  min-height: 0;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
   background: var(--ivory-2);
   border: 1.5px solid var(--ink);
-  transition: transform 380ms var(--spring), box-shadow 320ms ease;
+  transition: box-shadow 320ms ease;
   box-shadow: 0 8px 20px -14px rgba(40, 25, 15, 0.4);
 }
+.tileCsr {
+  background: var(--terra);
+  grid-column: 1 / -1;
+}
 .tile:hover {
+  z-index: 2;
   box-shadow: 0 18px 40px -18px rgba(40, 25, 15, 0.55);
 }
 .tileImg {
   object-fit: cover;
   user-select: none;
   pointer-events: none;
-  transform: scale(1.02);
-  transition: transform 700ms var(--smooth);
+  transition: transform 700ms var(--smooth), opacity 400ms ease;
 }
-.tile:hover .tileImg { transform: scale(1.08); }
+.tile:hover .tileImg { transform: scale(1.06); }
 .tileFrame {
   position: absolute; inset: 0;
   display: flex; flex-direction: column; justify-content: space-between;
-  padding: clamp(12px, 1.6vh, 18px) clamp(12px, 1.4vw, 18px);
+  padding: clamp(14px, 1.8vh, 22px) clamp(14px, 1.6vw, 22px);
   background: linear-gradient(180deg,
     rgba(243, 237, 225, 0) 0%,
-    rgba(243, 237, 225, 0) 35%,
+    rgba(243, 237, 225, 0) 30%,
     rgba(243, 237, 225, 0.92) 100%);
   color: var(--ink);
+}
+.tileFrameDark {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: clamp(14px, 1.8vh, 22px) clamp(14px, 1.6vw, 22px);
+  background: linear-gradient(180deg,
+    rgba(20, 14, 10, 0) 30%,
+    rgba(20, 14, 10, 0.7) 100%);
+  color: var(--ivory);
 }
 .tileTopRow {
   display: flex; justify-content: space-between; align-items: center;
@@ -687,7 +586,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marqueeTrack, .hWord, .hMark, .lede, .actions, .liveDot, .statusDot, .brandMark circle, .hMark circle, .scrollGlyph, .cursorTrail circle {
+  .headline, .liveDot, .brandMark circle, .scrollGlyph {
     animation: none !important;
     transform: none !important;
     opacity: 1 !important;
@@ -700,19 +599,16 @@
     grid-template-columns: auto 1fr;
     gap: 12px;
   }
-  .grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-    padding-top: 20px;
+  .headline {
+    font-size: clamp(18px, 5.6vw, 36px);
+    flex-wrap: wrap;
+    white-space: normal;
   }
-  .stmtCol { grid-column: 1; grid-row: 1; }
-  .headline { font-size: clamp(36px, 9vw, 60px); }
-  .featureWrap { grid-column: 1; grid-row: 2; }
-  .feature { min-height: 280px; }
-  .tileRow {
-    grid-column: 1; grid-row: 3;
+  .tileGrid {
     grid-template-columns: 1fr;
+    grid-template-rows: 1.3fr repeat(3, 1fr);
   }
+  .tileCsr { grid-column: 1; }
 }
 
 /* ════════════════════════════════════════════════════════════════════
