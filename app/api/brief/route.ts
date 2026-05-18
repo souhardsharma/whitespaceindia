@@ -90,7 +90,7 @@ function isAllowedOrigin(req: NextRequest): boolean {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://whitespaceindia-csr.vercel.app';
   if (origin === siteUrl) return true;
   if (origin.endsWith('.vercel.app')) return true;
-  if (origin === 'http://localhost:3000') return true;
+  if (process.env.NODE_ENV === 'development' && origin.startsWith('http://localhost:')) return true;
   return false;
 }
 
