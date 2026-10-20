@@ -85,3 +85,24 @@ def load_records(cache: Path, log=print) -> list[dict]:
     for r in records:
         by_pid[r.get("proposal_id")] = r
     return list(by_pid.values())
+
+
+def merge_forest_states(cache: Path) -> int:
+    """Rebuild `forest_records.json` from the per-state copies; returns rows.
+
+    One proposal per id, later state files winning, so a project filed in two
+    states is counted once.
+    """
+    merged: dict = {}
+    for f in sorted((cache / "parivesh" / "forest").glob("state_*.json")):
+        try:
+            rows = json.loads(f.read_text(encoding="utf-8")).get("data") or []
+        except (OSError, ValueError):
+            continue
+        for r in rows:
+            if r.get("proposal_id"):
+                merged[r["proposal_id"]] = r
+    (cache / "parivesh" / "forest_records.json").write_text(
+        json.dumps(list(merged.values()), separators=(",", ":"), ensure_ascii=False),
+        encoding="utf-8")
+    return len(merged)

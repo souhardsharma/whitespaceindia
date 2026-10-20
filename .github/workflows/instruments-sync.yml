@@ -17,9 +17,9 @@
 # ever, while every gate ahead of the timeout stayed green. Three things stop
 # that:
 #   1. A seed. `cache_seed.py pack` builds a verified archive of the two
-#      per-proposal caches; it is published once as the asset
-#      `instruments-cache-seed.tar.gz` on the release `instruments-cache-seed`,
-#      and a run whose cache is not yet warm merges it in UNDER what it has
+#      per-proposal caches and the sources only PARIVESH serves; it is
+#      published as the asset `instruments-cache-seed.tar.gz` on the release
+#      `instruments-cache-seed`, and every run merges it in UNDER what it has
 #      already read. After that, each night is an increment.
 #   2. A budget. sync.py gets 50 of the job's 90 minutes, reserves 12 of them
 #      for its own rebuild and contract, and gives each per-proposal pass a
@@ -108,6 +108,28 @@ jobs:
           restore-keys: |
             instruments-cache-
 
+      - name: Seed the cache from the published seed
+        # Every night, before anything is fetched. PARIVESH refuses GitHub's
+        # runners at connect, so the sources only it serves - the register,
+        # the LGD reference, the forest register - can be missing or partial
+        # here; on 2026-10-20 a cold runner read 9 of 10 sectors and 1 of 38
+        # forest States through proxies and never reached the LGD reference,
+        # and the build stopped. unpack MERGES: it adds only what the cache
+        # lacks (forms and histories by id, register rows by proposal id,
+        # forest States and LGD files where absent), so nothing read since the
+        # seed is replaced by its older copy. It verifies the archive first:
+        # checksums, whitelists, no contact details.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$INSTRUMENTS_CACHE_DIR"
+          if gh release download "$SEED_RELEASE" --pattern "$SEED_ASSET" \
+               --dir "$RUNNER_TEMP" --clobber; then
+            python scripts/instruments/cache_seed.py unpack "$RUNNER_TEMP/$SEED_ASSET"
+          else
+            echo "::warning::No cache seed published; the backfill will build up over several nights within the time budget, and nothing is published until the unread share falls under its ceiling."
+          fi
+
       - name: Fetch static sources if the cache is cold
         # Tests for the FILES, not for a cache hit: what matters is whether the
         # sources are on disk. `build_data.py --fetch` downloads them and then
@@ -115,7 +137,6 @@ jobs:
         # (the unread-share gate), which is expected here and harmless - it
         # writes nothing - so its exit code is not the signal.
         run: |
-          mkdir -p "$INSTRUMENTS_CACHE_DIR"
           if [ -s "$INSTRUMENTS_CACHE_DIR/geo/2011_Dist.shp" ] \
              && [ -s "$INSTRUMENTS_CACHE_DIR/shrug/pc11_pca_clean_pc11subdist.tab" ] \
              && [ -s "$INSTRUMENTS_CACHE_DIR/parivesh/all_records.json" ]; then
@@ -123,34 +144,6 @@ jobs:
           else
             echo "static sources missing; fetching them once"
             python scripts/instruments/build_data.py --fetch || true
-          fi
-
-      - name: Seed the per-proposal cache if it is not yet warm
-        # Not "if it is empty". A first night without a published seed reads
-        # a few thousand forms; testing for an empty file then skipped the
-        # seed for ever after, leaving the backfill to crawl on budget alone.
-        # unpack MERGES: it adds only the proposals the cache has not read, so
-        # nothing already read is replaced by the seed's older copy.
-        env:
-          GH_TOKEN: ${{ github.token }}
-          WARM_FORMS: "80000"
-        run: |
-          HAVE=0
-          if [ -f "$INSTRUMENTS_CACHE_DIR/caf/caf_extract.jsonl" ]; then
-            HAVE=$(wc -l < "$INSTRUMENTS_CACHE_DIR/caf/caf_extract.jsonl")
-          fi
-          if [ "$HAVE" -ge "$WARM_FORMS" ]; then
-            echo "per-proposal cache warm ($HAVE forms)"
-            exit 0
-          fi
-          if gh release download "$SEED_RELEASE" --pattern "$SEED_ASSET" \
-               --dir "$RUNNER_TEMP" --clobber; then
-            # unpack verifies the archive first: checksums, nested field
-            # whitelists, no contact details. A seed that fails any of it is
-            # refused.
-            python scripts/instruments/cache_seed.py unpack "$RUNNER_TEMP/$SEED_ASSET"
-          else
-            echo "::warning::No cache seed published; the backfill will build up over several nights within the time budget, and nothing is published until the unread share falls under its ceiling."
           fi
 
       - name: Refresh the proxy pool

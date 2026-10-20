@@ -166,10 +166,18 @@ Rules, in order of how expensive they are to get wrong:
 ### Keeping it current
 
 **Starting from nothing.** A cold runner has no application forms, and reading
-~116,000 of them takes hours. While the cache holds fewer than 80,000 forms
-the workflow MERGES a verified seed (`cache_seed.py`, release asset
-`instruments-cache-seed`) under what it has read - never "only if empty",
-which after one seedless night skipped the seed for ever. `verify` checks
+~116,000 of them takes hours, and PARIVESH refuses GitHub's runners at
+connect, so the register, the LGD reference and the forest register arrive
+only partly, through proxies, or not at all (2026-10-20: 9 of 10 sectors, 1 of
+38 forest States, no LGD, and the build stopped). Every night, before any
+fetch, the workflow MERGES a verified seed (`cache_seed.py`, release asset
+`instruments-cache-seed`) under what it has read: forms and histories by id,
+register rows by proposal id, forest States and LGD files only where absent,
+a seeded State keeping the seed's read date. Never "only if empty" or "only
+if cold": the first rule skipped the seed for ever after one seedless night,
+and the second skipped it after a night whose forms were warm but whose LGD
+reference never arrived. The seed's register and forest copies are raw
+answers, so every string is passed through `scrub_contact` when packed. `verify` checks
 every record equals its whitelist-cleaned self at every depth and scans with
 `privacy.find_contact` (labelled numbers with separators included).
 

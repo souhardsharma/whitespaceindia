@@ -31,6 +31,16 @@ WHAT GOES IN, AND WHAT CANNOT
   history/history.jsonl     one line per proposal, the latest.
   history/history_errors.jsonl   HTTP 500 answers only, for the same reason.
 
+and, because PARIVESH refuses GitHub's runners at connect, the sources only
+PARIVESH serves:
+  lgd/getdistricts.json, lgd/getstates.json   the LGD reference
+  parivesh/all_records.json                   the register as last read
+  parivesh/forest/state_<code>.json, parivesh/forest_meta.json
+                                              the forest register, per State
+These are raw answers, so every string in them is passed through
+`scrub_contact` on the way in: the register carries a few emails and phone
+numbers in fields such as `moefccFileNumber` and `nameOfUserAgency`.
+
 Every record is rebuilt from a WHITELIST of fields, so nothing the extractors
 once captured and later dropped - officer names, remarks, contact details - can
 travel in a seed even if an old line still carries it. `verify` re-reads the
@@ -45,7 +55,9 @@ Run from the project root:
 
 `unpack` MERGES under a cache that already holds forms: it adds only the
 proposals the cache has not read, before the cache's own lines, so every read
-made since the seed wins. --force replaces the cache with the seed outright.
+made since the seed wins. Sources merge the same way: register rows by
+`proposal_id`, forest States by file, the LGD files only where absent.
+--force replaces the cache with the seed outright.
 """
 from __future__ import annotations
 
@@ -54,6 +66,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import shutil
 import sys
 import tarfile
@@ -62,7 +75,8 @@ from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
-from privacy import find_contact  # noqa: E402
+from privacy import find_contact, scrub_contact  # noqa: E402
+from register_cache import merge_forest_states  # noqa: E402
 
 try:
     from fetch_caf import EXTRACT_VERSION as CAF_VERSION  # noqa: E402
@@ -93,6 +107,13 @@ ERROR_FIELDS = {"id", "status", "reason"}
 
 MEMBERS = ("caf/caf_extract.jsonl", "caf/caf_errors.jsonl",
            "history/history.jsonl", "history/history_errors.jsonl")
+SOURCE_FILES = ("lgd/getdistricts.json", "lgd/getstates.json",
+                "parivesh/all_records.json", "parivesh/forest_meta.json")
+FOREST_STATE_RE = re.compile(r"^parivesh/forest/state_[0-9]{1,2}\.json$")
+
+
+def is_source(name: str) -> bool:
+    return name in SOURCE_FILES or bool(FOREST_STATE_RE.match(name))
 
 
 def log(msg: str) -> None:
@@ -198,6 +219,30 @@ def _jsonl(records) -> bytes:
     return buf.getvalue().encode("utf-8")
 
 
+def scrub_tree(obj):
+    """The same value with every contact detail in every string redacted."""
+    if isinstance(obj, str):
+        return scrub_contact(obj)[0]
+    if isinstance(obj, dict):
+        return {k: scrub_tree(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [scrub_tree(v) for v in obj]
+    return obj
+
+
+def source_payload(cache: Path) -> dict[str, bytes]:
+    """The PARIVESH-only sources the cache holds, scrubbed of contact details."""
+    names = [n for n in SOURCE_FILES if (cache / n).is_file()]
+    names += sorted(f"parivesh/forest/{p.name}"
+                    for p in (cache / "parivesh" / "forest").glob("state_*.json"))
+    out = {}
+    for name in names:
+        data = json.loads((cache / name).read_text(encoding="utf-8"))
+        out[name] = json.dumps(scrub_tree(data), ensure_ascii=False,
+                               separators=(",", ":")).encode("utf-8")
+    return out
+
+
 def pack(out: Path) -> dict:
     cache = cache_dir()
     caf, _ = latest_by_id(cache / "caf" / "caf_extract.jsonl", "v", None)
@@ -210,6 +255,7 @@ def pack(out: Path) -> dict:
         "history/history_errors.jsonl": _jsonl(
             settled_errors(cache / "history" / "history_errors.jsonl")),
     }
+    sources = source_payload(cache)
     manifest = {
         "format": SEED_FORMAT,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -221,17 +267,21 @@ def pack(out: Path) -> dict:
                          "bytes": len(data),
                          "lines": data.count(b"\n")}
                   for name, data in payload.items()},
+        "sources": {name: {"sha256": hashlib.sha256(data).hexdigest(),
+                           "bytes": len(data)}
+                    for name, data in sources.items()},
     }
     out.parent.mkdir(parents=True, exist_ok=True)
     with tarfile.open(out, "w:gz", compresslevel=9) as tar:
         for name, data in [("manifest.json",
                             json.dumps(manifest, indent=1).encode("utf-8")),
-                           *payload.items()]:
+                           *payload.items(), *sources.items()]:
             info = tarfile.TarInfo(name)
             info.size = len(data)
             info.mtime = 0          # a deterministic archive for identical input
             tar.addfile(info, io.BytesIO(data))
-    log(f"packed {len(caf):,} forms and {len(hist):,} histories into {out} "
+    log(f"packed {len(caf):,} forms, {len(hist):,} histories and "
+        f"{len(sources)} source files into {out} "
         f"({out.stat().st_size/1e6:.1f} MB); {caf_old:,} are at an older extract "
         f"version and will be re-read by fetch_caf")
     return manifest
@@ -243,7 +293,8 @@ def _read(archive: Path) -> tuple[dict, dict[str, bytes]]:
         for m in tar.getmembers():
             if not m.isfile():
                 raise ValueError(f"unexpected non-file member {m.name!r}")
-            if m.name != "manifest.json" and m.name not in MEMBERS:
+            if (m.name != "manifest.json" and m.name not in MEMBERS
+                    and not is_source(m.name)):
                 raise ValueError(f"unexpected member {m.name!r}")
             f = tar.extractfile(m)
             files[m.name] = f.read() if f else b""
@@ -313,6 +364,17 @@ def verify(archive: Path) -> list[str]:
                 break
     if manifest.get("caf_records") != (files.get("caf/caf_extract.jsonl") or b"").count(b"\n"):
         problems.append("caf_records in the manifest does not match the file")
+    listed = manifest.get("sources") or {}
+    present = {n for n in files if is_source(n)}
+    for name in sorted(present ^ set(listed)):
+        problems.append(f"{name} is in the archive or the manifest but not both")
+    for name in sorted(present & set(listed)):
+        data = files[name]
+        if hashlib.sha256(data).hexdigest() != listed[name]["sha256"]:
+            problems.append(f"{name} checksum does not match the manifest")
+            continue
+        if any(find_contact(text) for text in _strings(json.loads(data))):
+            problems.append(f"{name} carries a contact detail")
     return problems
 
 
@@ -329,6 +391,68 @@ def _ids_in(path: Path) -> set:
             if rid is not None:
                 ids.add(rid)
     return ids
+
+
+def _write(dest: Path, data: bytes) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dest.with_suffix(dest.suffix + ".tmp")
+    tmp.write_bytes(data)
+    os.replace(tmp, dest)
+
+
+def unpack_sources(cache: Path, files: dict[str, bytes], force: bool) -> dict:
+    """Put the seed's PARIVESH sources UNDER the cache's own copies.
+
+    Register rows the cache lacks (by `proposal_id`) are added; a forest State
+    or LGD file is written only where the cache has none, and the forest's
+    per-State read dates follow the files actually taken, so a State copied
+    from the seed is dated by the seed's read, never by tonight's.
+    """
+    added: dict = {}
+    taken_states: set[str] = set()
+    for name, data in files.items():
+        dest = cache / name
+        if name == "parivesh/all_records.json":
+            seed_rows = json.loads(data)
+            if force or not dest.is_file():
+                _write(dest, data)
+                added[name] = len(seed_rows)
+                continue
+            own = json.loads(dest.read_text(encoding="utf-8"))
+            have = {r.get("proposal_id") for r in own}
+            fresh = [r for r in seed_rows if r.get("proposal_id") not in have]
+            if fresh:
+                _write(dest, json.dumps(fresh + own, ensure_ascii=False,
+                                        separators=(",", ":")).encode("utf-8"))
+            added[name] = len(fresh)
+        elif FOREST_STATE_RE.match(name):
+            if force or not dest.is_file():
+                _write(dest, data)
+                taken_states.add(name.rsplit("_", 1)[1].split(".")[0])
+        elif name != "parivesh/forest_meta.json":
+            if force or not dest.is_file() or dest.stat().st_size == 0:
+                _write(dest, data)
+                added[name] = 1
+    meta = files.get("parivesh/forest_meta.json")
+    if meta is not None and taken_states:
+        seed_meta = json.loads(meta)
+        meta_path = cache / "parivesh" / "forest_meta.json"
+        own = ({} if force or not meta_path.is_file()
+               else json.loads(meta_path.read_text(encoding="utf-8")))
+        codes = dict(own.get("codes") or {})
+        for code in taken_states:
+            if code in (seed_meta.get("codes") or {}):
+                codes[code] = seed_meta["codes"][code]
+        failed = [c for c in (own.get("failed") or []) if str(c) not in taken_states]
+        _write(meta_path, json.dumps({
+            "read_at": min(codes.values()) if codes else None,
+            "complete": (own or seed_meta).get("complete"),
+            "codes_read": (own or seed_meta).get("codes_read"),
+            "codes": codes, "failed": failed,
+        }, indent=1).encode("utf-8"))
+        added["parivesh/forest"] = len(taken_states)
+        merge_forest_states(cache)
+    return added
 
 
 def unpack(archive: Path, force: bool = False) -> dict:
@@ -348,8 +472,10 @@ def unpack(archive: Path, force: bool = False) -> dict:
             log(f"REFUSED: {p}")
         sys.exit(1)
     manifest, files = _read(archive)
-    added: dict = {}
+    added: dict = unpack_sources(cache, {n: d for n, d in files.items() if is_source(n)}, force)
     for name, data in files.items():
+        if is_source(name):
+            continue
         dest = cache / name
         dest.parent.mkdir(parents=True, exist_ok=True)
         tmp = dest.with_suffix(dest.suffix + ".tmp")
