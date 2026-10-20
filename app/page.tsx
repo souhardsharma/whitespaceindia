@@ -173,6 +173,10 @@ type Vert = {
   meta: string;
   img: string;
   alt: string;
+  /** Which part of the 16:9 print survives the tile's cover crop: x for
+      the ~1.4:1 desktop tile, y for the ~2.9:1 phone tile. The CSR banner
+      sets its own in page.module.css, because it changes with the layout. */
+  pos?: string;
   active: boolean;
   accent: "terra" | "cobalt" | "forest" | "ochre" | "graphite";
   aria: string;
@@ -185,8 +189,8 @@ const VERTS: Vert[] = [
     num: "01",
     title: "CSR",
     meta: "Impact finance",
-    img: "/landing/csr-risograph.webp",
-    alt: "CSR and impact finance — growth, investment, and global reach",
+    img: "/landing/csr-horizon.webp",
+    alt: "A long horizon of pale, dry village plots; a watering can pours on only a few of them",
     active: true,
     accent: "terra",
     aria: "Open the CSR Opportunity Index, 651 Indian districts",
@@ -197,8 +201,9 @@ const VERTS: Vert[] = [
     num: "02",
     title: "Health",
     meta: "Infrastructure gaps · Coming soon",
-    img: "/landing/health-bg.webp",
-    alt: "Health infrastructure gap analysis across Indian districts",
+    img: "/landing/health-road.webp",
+    alt: "A road winds across the hills from a village to a distant clinic",
+    pos: "80% 100%",
     active: true,
     accent: "cobalt",
     aria: "Whitespace India Health — infrastructure gap analysis, coming soon",
@@ -209,8 +214,9 @@ const VERTS: Vert[] = [
     num: "03",
     title: "Energy",
     meta: "Access & transition · Coming soon",
-    img: "/landing/energy-bg.webp",
-    alt: "Energy access and transition analysis across Indian districts",
+    img: "/landing/energy-line.webp",
+    alt: "Power poles cross the hills and stop short of a village; one house is lit by a solar panel",
+    pos: "50% 70%",
     active: true,
     accent: "forest",
     aria: "Whitespace India Energy — access and transition analysis, coming soon",
@@ -221,8 +227,9 @@ const VERTS: Vert[] = [
     num: "04",
     title: "Education",
     meta: "Outcomes index · Coming soon",
-    img: "/landing/education-bg.webp",
-    alt: "Education outcomes and access analysis across Indian districts",
+    img: "/landing/education-paths.webp",
+    alt: "Children walk the footpaths across the hills to a one-room village school",
+    pos: "50% 60%",
     active: true,
     accent: "ochre",
     aria: "Whitespace India Education — outcomes index, coming soon",
@@ -233,8 +240,9 @@ const VERTS: Vert[] = [
     num: "05",
     title: "Instruments",
     meta: "Screening tools · Live",
-    img: "/landing/instruments-shelf.webp",
-    alt: "Screening instruments for land, people and statutory consent in India",
+    img: "/landing/instruments-lens.webp",
+    alt: "A magnifying glass held over one house among farms, a mine, a well and a factory",
+    pos: "50% 50%",
     active: true,
     accent: "graphite",
     aria: "Open the Instruments shelf — per-project screening tools",
@@ -302,17 +310,20 @@ export default function Landing() {
                 priority
                 className={styles.tileImg}
               />
-              <div className={styles.tileFrameDark}>
+              {/* The banner's text prints in ink on its sky, the one part of the
+                  print that is empty at every width (about 2.2:1 on a phone to
+                  3.8:1 on a tablet). On the ground it fitted only on desktop. */}
+              <div className={styles.tileFrameCsr}>
                 <div className={styles.tileTopRow}>
-                  <span className={styles.tileNum} style={{ background: "var(--ivory)", color: "var(--ink)" }}>01</span>
+                  <span className={styles.tileNum}>01</span>
                   <span className={styles.liveTag}>
                     <span className={styles.liveDot} />
                     Live
                   </span>
                 </div>
-                <div className={styles.tileBottomRow}>
+                <div className={styles.csrHeading}>
                   <div>
-                    <h3 className={styles.tileTitle} style={{ color: "var(--ivory)" }}>CSR &amp; Impact Finance</h3>
+                    <h3 className={styles.tileTitle}>CSR &amp; Impact Finance</h3>
                     <div className={styles.tileStats}>
                       <span className={styles.statLabel}>Opportunity Index</span>
                       <span className={styles.statBig}>
@@ -326,8 +337,8 @@ export default function Landing() {
                       </span>
                     </div>
                   </div>
-                  <span className={styles.tileArrow} style={{ color: "var(--ivory)" }} aria-hidden="true">↗</span>
                 </div>
+                <span className={`${styles.tileArrow} ${styles.csrArrow}`} aria-hidden="true">↗</span>
               </div>
             </Link>
 
@@ -347,6 +358,7 @@ export default function Landing() {
                   quality={95}
                   priority
                   className={styles.tileImg}
+                  style={{ objectPosition: v.pos }}
                 />
                 <div className={styles.tileFrame}>
                   <div className={styles.tileTopRow}>
