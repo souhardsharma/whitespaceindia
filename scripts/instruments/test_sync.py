@@ -394,6 +394,19 @@ def test_seed(tmp: Path) -> None:
         f.write(json.dumps({"id": 6, "status": -1, "body": "no route available"}) + "\n")
     with open(cache / "history" / "history.jsonl", "w", encoding="utf-8") as f:
         f.write(json.dumps({"id": 1, "steps": [{"a": 1, "s": "x", "officer": "y"}]}) + "\n")
+    (cache / "lgd").mkdir()
+    (cache / "lgd" / "getdistricts.json").write_text('{"data": [{"code": 1}]}', encoding="utf-8")
+    (cache / "parivesh" / "forest").mkdir(parents=True)
+    (cache / "parivesh" / "all_records.json").write_text(json.dumps([
+        {"proposal_id": 10, "proposalStatus": "A", "moefccFileNumber": "a@b.com"},
+        {"proposal_id": 11, "proposalStatus": "B"}]), encoding="utf-8")
+    for code in (1, 2):
+        (cache / "parivesh" / "forest" / f"state_{code}.json").write_text(json.dumps(
+            {"data": [{"proposal_id": 100 + code, "nameOfUserAgency": "X@Y.GOV.IN"}]}),
+            encoding="utf-8")
+    (cache / "parivesh" / "forest_meta.json").write_text(json.dumps(
+        {"read_at": "2026-01-01", "complete": True, "codes_read": 2,
+         "codes": {"1": "2026-01-01", "2": "2026-01-02"}, "failed": []}), encoding="utf-8")
 
     old = os.environ.get("INSTRUMENTS_CACHE_DIR")
     os.environ["INSTRUMENTS_CACHE_DIR"] = str(cache)
@@ -471,6 +484,45 @@ def test_seed(tmp: Path) -> None:
         ids = [json.loads(x)["id"] for x in target.read_text(encoding="utf-8").splitlines()]
         check("a proposal the cache lacks is taken from the seed, below its own reads",
               ids == [1, 2], str(ids))
+
+        # The PARIVESH-only sources, for a runner PARIVESH refuses.
+        _, files = CS._read(seed)
+        check("the seed carries the register, the LGD reference and each forest State",
+              {"parivesh/all_records.json", "lgd/getdistricts.json",
+               "parivesh/forest/state_1.json", "parivesh/forest_meta.json"} <= set(files))
+        check("contact details in the raw register are scrubbed on the way in",
+              b"a@b.com" not in files["parivesh/all_records.json"]
+              and b"X@Y.GOV.IN" not in files["parivesh/forest/state_2.json"])
+        leak = repack(lambda k, v: v.replace(b'"B"', b'"c@d.com"')
+                      if k == "parivesh/all_records.json" else v, tmp / "leak.tar.gz")
+        check("a source whose bytes no longer match the manifest is refused",
+              bool(CS.verify(leak)), str(CS.verify(leak)))
+
+        # A cold-ish runner: part of the register read tonight, one forest
+        # State, no LGD. The seed fills the gaps and overrides nothing read.
+        reg = cache / "parivesh" / "all_records.json"
+        reg.write_text(json.dumps([{"proposal_id": 11, "proposalStatus": "moved"}]),
+                       encoding="utf-8")
+        (cache / "lgd" / "getdistricts.json").unlink()
+        (cache / "parivesh" / "forest" / "state_2.json").unlink()
+        (cache / "parivesh" / "forest_meta.json").write_text(json.dumps(
+            {"read_at": "2026-02-01", "complete": False, "codes_read": 1,
+             "codes": {"1": "2026-02-01"}, "failed": [2]}), encoding="utf-8")
+        CS.unpack(seed)
+        listed = json.loads(reg.read_text(encoding="utf-8"))
+        rows = {r["proposal_id"]: r for r in listed}
+        check("register rows the cache lacks come from the seed; tonight's read wins",
+              len(listed) == 2 and set(rows) == {10, 11}
+              and rows[11]["proposalStatus"] == "moved", str(listed))
+        check("a missing LGD reference is restored",
+              (cache / "lgd" / "getdistricts.json").is_file())
+        meta = json.loads((cache / "parivesh" / "forest_meta.json").read_text(encoding="utf-8"))
+        check("a forest State taken from the seed keeps the seed's read date",
+              meta["codes"] == {"1": "2026-02-01", "2": "2026-01-02"} and meta["failed"] == [],
+              str(meta))
+        forest = json.loads((cache / "parivesh" / "forest_records.json").read_text(encoding="utf-8"))
+        check("the forest records are re-merged from every State held",
+              sorted(r["proposal_id"] for r in forest) == [101, 102])
     finally:
         if old is None:
             os.environ.pop("INSTRUMENTS_CACHE_DIR", None)

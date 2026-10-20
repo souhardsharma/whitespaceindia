@@ -68,6 +68,7 @@ SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
 import net as NET  # noqa: E402
 import run_lock  # noqa: E402
+from register_cache import merge_forest_states  # noqa: E402
 ROOT = SCRIPTS.parent.parent
 PUBLISHED = ROOT / "public" / "data" / "instruments" / "consent"
 
@@ -309,19 +310,7 @@ def fetch_forest(cache: Path, deadline: float | None = None) -> dict:
         except Exception as exc:  # noqa: BLE001
             stats["failed"].append({"code": code, "error": str(exc)[:120]})
             log(f"  forest register, state code {code}: FAILED ({exc})")
-    merged: dict = {}
-    for f in sorted(folder.glob("state_*.json")):
-        try:
-            rows = json.loads(f.read_text(encoding="utf-8")).get("data") or []
-        except Exception:  # noqa: BLE001
-            continue
-        for r in rows:
-            if r.get("proposal_id"):
-                merged[r["proposal_id"]] = r
-    (cache / "parivesh" / "forest_records.json").write_text(
-        json.dumps(list(merged.values()), separators=(",", ":"), ensure_ascii=False),
-        encoding="utf-8")
-    stats["records"] = len(merged)
+    stats["records"] = merge_forest_states(cache)
     meta_path = cache / "parivesh" / "forest_meta.json"
     try:
         prior = json.loads(meta_path.read_text(encoding="utf-8"))
@@ -342,7 +331,7 @@ def fetch_forest(cache: Path, deadline: float | None = None) -> dict:
         "codes_read": stats["codes"], "codes": codes,
         "failed": [f["code"] for f in stats["failed"]],
     }, indent=1), encoding="utf-8")
-    log(f"forest register: {len(merged):,} proposals from {stats['codes']} state "
+    log(f"forest register: {stats['records']:,} proposals from {stats['codes']} state "
         f"codes ({len(stats['failed'])} failed)")
     return stats
 
