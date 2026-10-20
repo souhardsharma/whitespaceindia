@@ -202,48 +202,68 @@ def fetch(url: str, timeout: int = 300, deadline: float | None = None) -> bytes:
 
 def fetch_delta(since: str | None,
                 deadline: float | None = None) -> tuple[list[dict], dict]:
-    """Fetch the register, optionally windowed. Returns (records, per-sector stats)."""
+    """Fetch the register, optionally windowed. Returns (records, per-sector stats).
+
+    A sector that failed is asked once more after all the others. On a GitHub
+    runner a failure is usually the route, not the service: on 2026-10-20
+    sector 2 met a refused connect on our own address and sector 6 a dead SOCKS
+    proxy, while the sectors read between them answered. Ten minutes later
+    the routes are different ones, and one faulty night in three turns the job
+    red (PARTIAL_FAIL_AFTER). The second round stays inside `deadline`.
+    """
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     records: list[dict] = []
     stats: dict = {}
     for sid, name in SECTORS.items():
-        url = PARIVESH_SEARCH.format(sector=sid)
-        if since:
-            url += f"&startDate={since}&endDate={today}"
-        t0 = time.time()
-        try:
-            raw = fetch(url, deadline=deadline)
-            payload = json.loads(raw.decode("utf-8", "replace"))
-            # The HTTP status is not the answer. This API carries its own
-            # status inside a 200 body - both per-proposal fetchers already
-            # check it - so a sector whose backing query failed server-side
-            # arrives here as a perfectly good 200 with no `data`. Read as
-            # "zero rows", that is indistinguishable from a quiet day: the
-            # sector counts as covered, the watermark advances past it, and
-            # every status change in that window is never asked for again.
-            env = payload.get("status")
-            if env is not None and int(env) != 200:
-                raise RuntimeError(
-                    f"sector answered HTTP 200 carrying status {env}: "
-                    f"{str(payload.get('message') or payload)[:160]}")
-            # `is None` too, not just absent. {"data": null} collapsed to
-            # zero rows one line later and read as a quiet day - the exact
-            # case this check was written to reject.
-            if payload.get("data") is None:
-                raise RuntimeError(
-                    "sector answered HTTP 200 with no `data` key at all, so "
-                    "there is no way to tell an empty window from a failed "
-                    "query: " + str(payload)[:160])
-            rows = payload.get("data") or []
-            records.extend(rows)
-            stats[name] = {"records": len(rows), "bytes": len(raw),
-                           "seconds": round(time.time() - t0, 1)}
-            log(f"  sector {sid:2} {name[:32]:34} {len(rows):>6,} rows  "
-                f"{len(raw)/1024:>8,.0f} KB  {time.time()-t0:>5.1f}s")
-        except Exception as exc:  # noqa: BLE001
-            stats[name] = {"error": str(exc)[:200]}
-            log(f"  sector {sid:2} {name[:32]:34} FAILED: {exc}")
+        records.extend(read_sector(sid, name, since, today, deadline, stats))
+    failed = [(sid, name) for sid, name in SECTORS.items() if "error" in stats[name]]
+    if failed and (deadline is None or time.time() < deadline):
+        log(f"  second round for {len(failed)} failed sector(s)")
+        for sid, name in failed:
+            records.extend(read_sector(sid, name, since, today, deadline, stats))
     return records, stats
+
+
+def read_sector(sid: int, name: str, since: str | None, today: str,
+                deadline: float | None, stats: dict) -> list[dict]:
+    """One sector's rows; records its outcome in `stats[name]`, [] on failure."""
+    url = PARIVESH_SEARCH.format(sector=sid)
+    if since:
+        url += f"&startDate={since}&endDate={today}"
+    t0 = time.time()
+    try:
+        raw = fetch(url, deadline=deadline)
+        payload = json.loads(raw.decode("utf-8", "replace"))
+        # The HTTP status is not the answer. This API carries its own
+        # status inside a 200 body - both per-proposal fetchers already
+        # check it - so a sector whose backing query failed server-side
+        # arrives here as a perfectly good 200 with no `data`. Read as
+        # "zero rows", that is indistinguishable from a quiet day: the
+        # sector counts as covered, the watermark advances past it, and
+        # every status change in that window is never asked for again.
+        env = payload.get("status")
+        if env is not None and int(env) != 200:
+            raise RuntimeError(
+                f"sector answered HTTP 200 carrying status {env}: "
+                f"{str(payload.get('message') or payload)[:160]}")
+        # `is None` too, not just absent. {"data": null} collapsed to
+        # zero rows one line later and read as a quiet day - the exact
+        # case this check was written to reject.
+        if payload.get("data") is None:
+            raise RuntimeError(
+                "sector answered HTTP 200 with no `data` key at all, so "
+                "there is no way to tell an empty window from a failed "
+                "query: " + str(payload)[:160])
+        rows = payload.get("data") or []
+        stats[name] = {"records": len(rows), "bytes": len(raw),
+                       "seconds": round(time.time() - t0, 1)}
+        log(f"  sector {sid:2} {name[:32]:34} {len(rows):>6,} rows  "
+            f"{len(raw)/1024:>8,.0f} KB  {time.time()-t0:>5.1f}s")
+        return rows
+    except Exception as exc:  # noqa: BLE001
+        stats[name] = {"error": str(exc)[:200]}
+        log(f"  sector {sid:2} {name[:32]:34} FAILED: {exc}")
+    return []
 
 
 # The forest-clearance register is swept by STATE, and its state filter takes
