@@ -500,7 +500,14 @@
 }
 .csrHeading { margin-top: clamp(8px, 1.4vh, 16px); }
 .tileCsr .tileImg { object-position: 50% 30%; }
-.csrArrow { margin-top: auto; align-self: flex-end; }
+/* The arrow lands on paper on a tablet and on the terra ground elsewhere;
+   in the 01 chip's ink it reads on both. */
+.csrArrow {
+  margin-top: auto; align-self: flex-end;
+  padding: 2px 8px; line-height: 1.2;
+  background: var(--ink); color: var(--ivory);
+  opacity: 0.9;
+}
 .tileTopRow {
   display: flex; justify-content: space-between; align-items: center;
   font-family: var(--font-space-grotesk), monospace;
