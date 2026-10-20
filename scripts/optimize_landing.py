@@ -19,7 +19,7 @@ from PIL import Image
 
 SRC_DIR = Path("public/landing/_orig_backup")
 OUT_DIR = Path("public/landing")
-TARGETS = ["csr-hands", "education-bg", "energy-bg", "health-bg", "instruments-bg"]
+TARGETS = ["csr-hands", "education-bg", "energy-bg", "health-bg", "instruments-shelf"]
 LONG_EDGE = 1600
 ASPECT = (3, 2)  # landscape poster tile
 QUALITY = 80
@@ -62,7 +62,7 @@ def main() -> None:
     # blanket run silently recrops them and changes the landing page. Pass the
     # names you actually want to rebuild.
     #   python scripts/optimize_landing.py                  # all TARGETS
-    #   python scripts/optimize_landing.py instruments-bg   # just this one
+    #   python scripts/optimize_landing.py instruments-shelf  # just this one
     selected = sys.argv[1:] or TARGETS
     unknown = [n for n in selected if n not in TARGETS]
     if unknown:

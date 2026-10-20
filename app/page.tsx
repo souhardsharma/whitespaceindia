@@ -174,7 +174,7 @@ type Vert = {
   img: string;
   alt: string;
   active: boolean;
-  accent: "terra" | "cobalt" | "forest" | "ochre" | "plum";
+  accent: "terra" | "cobalt" | "forest" | "ochre" | "graphite";
   aria: string;
 };
 
@@ -233,10 +233,10 @@ const VERTS: Vert[] = [
     num: "05",
     title: "Instruments",
     meta: "Screening tools · Live",
-    img: "/landing/instruments-bg.webp",
+    img: "/landing/instruments-shelf.webp",
     alt: "Screening instruments for land, people and statutory consent in India",
     active: true,
-    accent: "plum",
+    accent: "graphite",
     aria: "Open the Instruments shelf — per-project screening tools",
   },
 ];
@@ -376,8 +376,8 @@ export default function Landing() {
           Layout language matches the hero: a 12-col grid, with each Q&A item
           laid out asymmetrically (number narrow / question wide / answer
           offset). Left edge of each item carries a 4-px accent bar cycling
-          through the four riso colours (terra, cobalt, forest, ochre) so the
-          brand palette persists below the hero. */}
+          through the five tile inks (terra, cobalt, forest, ochre, graphite)
+          so the brand palette persists below the hero. */}
       <section className={styles.faq} id="about" aria-labelledby="faq-heading">
         <header className={styles.faqHeader}>
           <div className={styles.faqEyebrow}>About the project</div>
@@ -395,7 +395,18 @@ export default function Landing() {
                   <span className={styles.faqQuestion}>{qa.q}</span>
                   <span className={styles.faqIndicator} aria-hidden="true">+</span>
                 </summary>
-                <p className={styles.faqAnswer}>{qa.a}</p>
+                <p className={styles.faqAnswer}>
+                  {qa.a}
+                  {qa.more ? (
+                    <>
+                      {" "}
+                      <Link href={qa.more.href} prefetch={false} className={styles.faqMore}>
+                        {qa.more.label}
+                        <span aria-hidden="true"> &#8599;</span>
+                      </Link>
+                    </>
+                  ) : null}
+                </p>
               </details>
             </li>
           ))}
@@ -418,26 +429,47 @@ export default function Landing() {
   );
 }
 
-const FAQS: { q: string; a: string }[] = [
+/* What a first-time visitor needs to decide whether to trust and use the site.
+   Every claim here is checkable against the site itself: what is live, what is
+   placeholder, where each number comes from and what it may be reused for.
+   The structured data below is built from this array, so the two cannot drift. */
+type Faq = { q: string; a: string; more?: { href: string; label: string } };
+
+const FAQS: Faq[] = [
   {
-    q: "What does Whitespace India actually do?",
-    a: "We build tools from India's public records. They come in two shapes. Indexes rank every district in the country on one question — the CSR Opportunity Index is live, with Health, Education, and Energy in development. Instruments work the other way round: you bring one case, and the instrument tells you what the public record says about it.",
+    q: "What is Whitespace India?",
+    a: "Free tools built on Indian government data. Two are live. The CSR Opportunity Index ranks 651 districts by how far corporate social responsibility (CSR) spending falls short of poverty there. People & Consent, the first instrument, takes one proposal from the national environmental clearance register and shows who lives where it would be built and which consent rules apply there. The site is built and maintained by Souhard Sharma. It is not a government site, and nothing on it is an official statistic.",
   },
   {
     q: "What is the difference between an index and an instrument?",
-    a: "An index is comparative. It scores 651 districts against each other and ranks them, so it answers where a problem is worst. An instrument is diagnostic. It takes a single project, place, or filing and assembles what the record holds about that one case — no score, no ranking, no weighting. The first instrument, People and Consent, takes an environmental clearance proposal and profiles the population where the project would be built.",
+    a: "An index compares. It scores every district on one question and ranks them, and you can change the weights behind the score. An instrument looks at one case: you pick a proposal and get its profile, with no score and no ranking. Use an index to decide where to look. Use an instrument when you already have a project in front of you.",
   },
   {
-    q: "Who are the instruments built for?",
-    a: "Grant officers planning a cycle, journalists tracing a story the official record hasn't yet told, researchers asking a district-level question that consulting decks don't answer, and policymakers who want evidence sitting under their next decision.",
+    q: "How does the CSR index rank a district?",
+    a: "It combines three measures. Poverty is the share of people who are multidimensionally poor, from NITI Aayog's 2023 index. The funding gap is how far the district's CSR spending per person falls below the median for districts of a similar population. Persistence is how much of the district's 2015-16 poverty was still there in 2019-21. By default poverty and the funding gap count for 40% each and persistence for 20%. You can change the weights and watch the ranking move. CSR spent \"Pan India\" or without a district, which is most of it, cannot be placed and is left out, so district totals are a floor.",
+    more: { href: "/methodology", label: "Read the method" },
+  },
+  {
+    q: "What does People & Consent show about a proposal?",
+    a: "Where the project is: the Census district and sub-district, read from the developer's own application form on PARIVESH, the environment ministry's portal, and checked against the site coordinates where the form gives them. Who lives there: population, the Scheduled Tribe and Scheduled Caste shares, literacy, how many workers depend on land, schools and health posts. Which consent rules apply: whether the place is a Fifth Schedule Scheduled Area, where PESA gives the Gram Sabha a say, and the forest, wildlife and coastal clearances the form declares. It also shows how long the proposal has been under appraisal. It does not say whether a project should go ahead.",
+    more: { href: "/instruments/consent", label: "Look up a proposal" },
+  },
+  {
+    q: "How current is it?",
+    a: "The clearance register is re-read every night, and every instrument page says when its copy was last checked. The CSR index is a fixed edition, and its method page lists the years of spending it uses. Population figures come from the 2011 Census, the latest India has published. They describe the people who lived there in 2011 and are labelled that way wherever they appear.",
   },
   {
     q: "Where does the data come from?",
-    a: "Everything we publish comes from India's public records, accessed primarily through aggregation platforms like IndiaStat and Dataful that consolidate the underlying ministry filings, statistical releases, and survey data for each domain.",
+    a: "Government records only. The CSR index uses NITI Aayog's Multidimensional Poverty Index, the Ministry of Corporate Affairs' CSR filings (through Dataful.in) and the 2011 Census. People & Consent reads the PARIVESH register, each proposal's application form and its appraisal history directly from the portal. It adds the 2011 Census and the 2011 Socio Economic and Caste Census (through the SHRUG research dataset), 2011 district boundaries from datameet, and the Presidential Orders that schedule Fifth Schedule Areas. Every figure in an instrument names its source and year.",
   },
   {
-    q: "What's next on the roadmap?",
-    a: "Health is the next instrument because its source data is in the cleanest shape today, followed by Education and then Energy. Each domain is treated independently, with its own composite index and its own methodology calibrated to the signals that matter inside that sector.",
+    q: "Can I reuse the data?",
+    a: "Yes. The data is CC BY 4.0: you can reuse it, commercially too, if you credit Whitespace India. One exception: the Census and SECC district and sub-district profiles in People & Consent come from SHRUG and keep its CC BY-NC-SA 4.0 licence, which does not allow commercial use. The code is open source under AGPL-3.0 on GitHub.",
+    more: { href: "/instruments/consent/data", label: "Every file and endpoint" },
+  },
+  {
+    q: "What about Health, Energy and Education?",
+    a: "Those pages show how each index will work, but they run on placeholder numbers, not real data. Do not quote them. They are kept out of search results. Each goes live only once it has real district data and a written method. There is no set order or date.",
   },
 ];
 

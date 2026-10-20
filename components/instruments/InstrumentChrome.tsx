@@ -19,8 +19,12 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import RegisterCurrency from "@/components/instruments/RegisterCurrency";
 
+// Instrument 01's colour. The shelf is not an instrument and must not wear
+// one's colour, or the first instrument reads as the whole shelf: the shelf
+// and the "Instruments" label take GRAPHITE, which no instrument will own.
 export const PLUM = "#7a3b6b";
 export const PLUM_DEEP = "#5f2c53";
+export const GRAPHITE = "#3d3a34";
 
 export function InstrumentHeader({
   crumb,
@@ -56,7 +60,7 @@ export function InstrumentHeader({
           <Link
             href="/instruments"
             className="font-headline italic font-bold text-[16px] sm:text-[17px] md:text-[20px] leading-none tracking-[-0.01em] shrink-0"
-            style={{ color: PLUM }}
+            style={{ color: GRAPHITE }}
           >
             Instruments
           </Link>

@@ -37,7 +37,7 @@ test("each section previews with its own card", () => {
   const expected: Record<string, string> = {
     "app/layout.tsx": "/og/whitespace-india-2.jpg",
     "app/csr/layout.tsx": "/og/csr-index-2.jpg",
-    "app/instruments/layout.tsx": "/og/instruments-2.jpg",
+    "app/instruments/layout.tsx": "/og/instruments-3.jpg",
     "lib/instruments/metadata.ts": "/og/consent-2.jpg",
     "app/health/layout.tsx": "/og/health-2.jpg",
     "app/energy/layout.tsx": "/og/energy-2.jpg",
