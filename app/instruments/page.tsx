@@ -4,6 +4,7 @@ import { pageLd } from "@/lib/instruments/metadata";
 import {
   InstrumentFooter,
   InstrumentHeader,
+  GRAPHITE,
   PLUM,
 } from "@/components/instruments/InstrumentChrome";
 import meta from "@/public/data/instruments/consent/meta.json";
@@ -26,6 +27,8 @@ type Shelf = {
   name: string;
   href: string | null;
   status: "live" | "in-development";
+  /** The instrument's own colour, used on its row and on its pages. */
+  colour: string;
   question: string;
   blurb: string;
   inputs: string;
@@ -38,6 +41,7 @@ const INSTRUMENTS: Shelf[] = [
     name: "People & Consent",
     href: "/instruments/consent",
     status: "live",
+    colour: PLUM,
     question:
       "Who lives where this project would be built, and whose agreement is legally required before it proceeds?",
     blurb:
@@ -67,7 +71,7 @@ export default function InstrumentsShelf() {
           <div className="max-w-6xl mx-auto">
             <div
               className="font-label text-[11px] uppercase tracking-[0.24em] mb-6"
-              style={{ color: PLUM }}
+              style={{ color: GRAPHITE }}
             >
               The shelf
             </div>
@@ -78,7 +82,7 @@ export default function InstrumentsShelf() {
             </h1>
             <div className="mt-10 grid grid-cols-1 md:grid-cols-12 gap-8">
               <p className="md:col-span-7 font-body text-[clamp(16px,1.5vw,19px)] leading-relaxed opacity-80">
-                The four indexes on this site are comparative. They score every
+                The indexes on this site are comparative. They score every
                 district in the country against one question and rank them, so
                 they answer <em>where</em> a problem is worst. Instruments work
                 the other way round. You bring a single project, filing, or
@@ -117,7 +121,7 @@ export default function InstrumentsShelf() {
                     <div className="md:col-span-1">
                       <span
                         className="inline-block font-label font-bold text-[11px] tracking-[0.2em] px-2 py-1"
-                        style={{ background: PLUM, color: "#fcf9f4" }}
+                        style={{ background: it.colour, color: "#fcf9f4" }}
                       >
                         {it.num}
                       </span>
@@ -130,7 +134,7 @@ export default function InstrumentsShelf() {
                         </h3>
                         <span
                           className="font-label text-[10px] uppercase tracking-[0.2em]"
-                          style={{ color: it.status === "live" ? PLUM : undefined }}
+                          style={{ color: it.status === "live" ? it.colour : undefined }}
                         >
                           {it.status === "live" ? "Live" : "In development"}
                         </span>
@@ -155,7 +159,7 @@ export default function InstrumentsShelf() {
                             </dt>
                             <dd
                               className="font-label font-bold text-[clamp(20px,2.4vw,30px)] leading-none mt-1 tabular-nums"
-                              style={{ color: PLUM }}
+                              style={{ color: it.colour }}
                             >
                               {s.value}
                             </dd>
@@ -176,7 +180,7 @@ export default function InstrumentsShelf() {
                   <li
                     key={it.num}
                     className="border-b border-[#1c1c19]/20 relative"
-                    style={{ boxShadow: `inset 4px 0 0 ${PLUM}` }}
+                    style={{ boxShadow: `inset 4px 0 0 ${it.colour}` }}
                   >
                     {it.href ? (
                       <Link

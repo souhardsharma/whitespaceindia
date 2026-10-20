@@ -18,12 +18,11 @@
   --cobalt: #2e54a5;
   --forest: #2a6f3e;
   --ochre: #b48a52;
-  /* Fifth riso accent. Chosen by measurement, not taste: the only large gap in
-     the existing hue circle is cobalt(221) -> terra(8), 147 degrees wide. This
-     sits in it at hue 314, deltaE 37 from its nearest neighbour (cobalt) and
-     55+ from the rest, with L* 34.7 landing inside the existing 35/37/41
-     cluster and 6.76 contrast on ivory against terra's 6.65. */
-  --plum: #7a3b6b;
+  /* Tile 05 is the instruments SHELF, not an instrument, so it takes no
+     colour an instrument could own. Plum belongs to Instrument 01 (its pages
+     and share card); the shelf prints in graphite, the riso black drum, and
+     each instrument on it keeps its own ink. */
+  --graphite: #3d3a34;
 
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --smooth: cubic-bezier(0.22, 1, 0.36, 1);
@@ -555,11 +554,11 @@
 .accent_cobalt   { box-shadow: inset 5px 0 0 var(--cobalt), 0 8px 20px -14px rgba(40, 25, 15, 0.4); }
 .accent_forest   { box-shadow: inset 5px 0 0 var(--forest), 0 8px 20px -14px rgba(40, 25, 15, 0.4); }
 .accent_ochre    { box-shadow: inset 5px 0 0 var(--ochre),  0 8px 20px -14px rgba(40, 25, 15, 0.4); }
-.accent_plum     { box-shadow: inset 5px 0 0 var(--plum),   0 8px 20px -14px rgba(40, 25, 15, 0.4); }
+.accent_graphite { box-shadow: inset 5px 0 0 var(--graphite), 0 8px 20px -14px rgba(40, 25, 15, 0.4); }
 .accent_cobalt:hover { box-shadow: inset 5px 0 0 var(--cobalt), 0 18px 40px -18px rgba(40, 25, 15, 0.55); }
 .accent_forest:hover { box-shadow: inset 5px 0 0 var(--forest), 0 18px 40px -18px rgba(40, 25, 15, 0.55); }
 .accent_ochre:hover  { box-shadow: inset 5px 0 0 var(--ochre),  0 18px 40px -18px rgba(40, 25, 15, 0.55); }
-.accent_plum:hover   { box-shadow: inset 5px 0 0 var(--plum),   0 18px 40px -18px rgba(40, 25, 15, 0.55); }
+.accent_graphite:hover { box-shadow: inset 5px 0 0 var(--graphite), 0 18px 40px -18px rgba(40, 25, 15, 0.55); }
 
 /* ───────────────────────── FOOTER STRIP ───────────────────────── */
 .footStrip {
@@ -757,7 +756,7 @@
 .faqItem[data-accent="1"] { --accent: var(--cobalt); }
 .faqItem[data-accent="2"] { --accent: var(--forest); }
 .faqItem[data-accent="3"] { --accent: var(--ochre); }
-.faqItem[data-accent="4"] { --accent: var(--plum); }
+.faqItem[data-accent="4"] { --accent: var(--graphite); }
 
 .faqDetails {
   display: block;
@@ -836,6 +835,17 @@
   margin: 0 0 clamp(28px, 4vh, 44px) 0;
   padding-left: calc(var(--col-num) + var(--col-gap));
   padding-right: calc(var(--col-ind) + var(--col-gap));
+}
+
+/* Ink text, accent underline: ochre text is about 3:1 on ivory, too faint to read. */
+.faqMore {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--accent, var(--terra));
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  white-space: nowrap;
 }
 
 /* FOOTER */

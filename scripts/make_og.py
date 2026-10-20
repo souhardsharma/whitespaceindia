@@ -81,6 +81,8 @@ class Card:
 
 
 CLAY = (189, 64, 44)
+PLUM = (122, 59, 107)  # Instrument 01 only
+GRAPHITE = (61, 58, 52)  # the shelf: its own ink, so no instrument owns it
 CARDS = [
     Card("whitespace-india-2.jpg", "brand.webp", (-110, -110, 1510, 1510), CLAY,
          "OPEN CIVIC DATA · INDIA",
@@ -90,11 +92,11 @@ CARDS = [
          "CSR OPPORTUNITY INDEX",
          "Where CSR\nshould go,", "district by\ndistrict.",
          "651 districts · Government data"),
-    Card("instruments-2.jpg", "instruments.webp", (0, 0, 1400, 1400), (122, 59, 107),
+    Card("instruments-3.jpg", "instruments.webp", (0, 0, 1400, 1400), GRAPHITE,
          "INSTRUMENTS",
          "Bring one case,", "see what the\nrecord holds.",
          "Built from India’s public records"),
-    Card("consent-2.jpg", "consent.webp", (100, 87, 1300, 1287), (122, 59, 107),
+    Card("consent-2.jpg", "consent.webp", (100, 87, 1300, 1287), PLUM,
          "PEOPLE & CONSENT",
          "Who lives where\nit would be built,", "and which consent\nrules apply.",
          "Instrument 01 · Clearance filings"),
