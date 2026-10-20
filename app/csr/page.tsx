@@ -30,6 +30,7 @@ import {
   rankDistricts,
 } from "@/lib/csr/score";
 import { csrConfig } from "@/lib/csr/config";
+import { SITE_URL } from "@/lib/site";
 
 function DataInsightCard({
   number,
@@ -347,9 +348,7 @@ export default function HomePage() {
   const safeJsonLd = (obj: unknown): string =>
     JSON.stringify(obj).replace(/</g, '\\u003c');
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://whitespaceindia-csr.vercel.app";
+  const siteUrl = SITE_URL;
 
   const districtCount = districts.length || 651;
 

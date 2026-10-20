@@ -1,0 +1,139 @@
+/**
+ * What a search engine reads, checked against a running build.
+ *
+ * usage: node scripts/seo_check.mjs [http://localhost:3000]
+ *
+ * Every rule here is a failure this site has already shipped:
+ * - pages inheriting a parent's canonical, so 620 district pages asked to be
+ *   dropped in favour of the shelf, and the landing canonicalised to another
+ *   host's CSR page;
+ * - a sitemap listing pages the site marks noindex, or URLs that redirect;
+ * - one page served at two URLs on two hosts;
+ * - placeholder verticals indexed on synthetic data.
+ * Each is silent in the browser, so each is asserted here.
+ *
+ * The build answers on localhost but names the public origin, so a URL's
+ * origin is swapped for the server under test when fetching and compared
+ * as published.
+ */
+import http from "node:http";
+
+const SERVER = (process.argv[2] || "http://localhost:3000").replace(/\/+$/, "");
+const PRIMARY = "https://whitespaceindia.vercel.app";
+const LEGACY = "whitespaceindia-csr.vercel.app";
+const PROPOSAL_SAMPLE = 15;
+
+const failures = [];
+const fail = (where, what) => failures.push(`${where}: ${what}`);
+
+const local = (url) => SERVER + new URL(url).pathname + new URL(url).search;
+
+async function get(url) {
+  const res = await fetch(local(url), { redirect: "manual" });
+  return { status: res.status, location: res.headers.get("location"), body: await res.text() };
+}
+
+// A bare origin and the origin with "/" are one URL (RFC 3986 6.2.3); Next
+// writes the root canonical without the slash and the sitemap with it.
+const same = (a, b) => !!a && !!b && new URL(a).href === new URL(b).href;
+
+const locs = (xml) => [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
+const attr = (html, re) => (html.match(re) || [])[1];
+
+function headOf(html) {
+  return {
+    canonical: attr(html, /<link[^>]+rel="canonical"[^>]+href="([^"]+)"/),
+    ogUrl: attr(html, /<meta[^>]+property="og:url"[^>]+content="([^"]+)"/),
+    robots: attr(html, /<meta[^>]+name="robots"[^>]+content="([^"]+)"/) || "",
+    title: (attr(html, /<title>([^<]*)<\/title>/) || "").trim(),
+    titles: (html.match(/<title>/g) || []).length,
+    description: attr(html, /<meta[^>]+name="description"[^>]+content="([^"]*)"/),
+    h1: (html.match(/<h1[\s>]/g) || []).length,
+  };
+}
+
+async function checkPage(url, titles) {
+  const { status, location, body } = await get(url);
+  if (status !== 200) return fail(url, `listed in a sitemap but answered ${status}${location ? ` -> ${location}` : ""}`);
+  const h = headOf(body);
+  if (!same(h.canonical, url)) fail(url, `canonical is ${h.canonical ?? "missing"}`);
+  if (h.ogUrl && !same(h.ogUrl, url)) fail(url, `og:url is ${h.ogUrl}`);
+  if (/noindex/i.test(h.robots)) fail(url, "listed in a sitemap but marked noindex");
+  if (h.titles !== 1 || !h.title) fail(url, `expected one non-empty <title>, found ${h.titles}`);
+  if (!h.description) fail(url, "no meta description");
+  if (h.h1 !== 1) fail(url, `expected one <h1>, found ${h.h1}`);
+  if (body.includes(LEGACY)) fail(url, `names the legacy host ${LEGACY}`);
+  if (titles) {
+    if (titles.has(h.title)) fail(url, `title duplicates ${titles.get(h.title)}`);
+    else titles.set(h.title, url);
+  }
+}
+
+function legacyRequest(path) {
+  const { hostname, port } = new URL(SERVER);
+  return new Promise((resolve, reject) => {
+    http
+      .get({ hostname, port, path, headers: { host: LEGACY } }, (res) => {
+        res.resume();
+        resolve({ status: res.statusCode, location: res.headers.location });
+      })
+      .on("error", reject);
+  });
+}
+
+async function main() {
+  const robots = (await get(`${PRIMARY}/robots.txt`)).body;
+  const indexUrl = attr(robots, /^Sitemap:\s*(\S+)/m);
+  if (indexUrl !== `${PRIMARY}/sitemap-index.xml`) fail("robots.txt", `Sitemap is ${indexUrl ?? "missing"}`);
+
+  const index = locs((await get(`${PRIMARY}/sitemap-index.xml`)).body);
+  if (!index.includes(`${PRIMARY}/sitemap.xml`)) fail("sitemap-index.xml", "does not list /sitemap.xml");
+  if (index.length < 2) fail("sitemap-index.xml", "lists no proposal sitemaps");
+  for (const u of index) if (!u.startsWith(`${PRIMARY}/`)) fail("sitemap-index.xml", `foreign URL ${u}`);
+
+  const pages = locs((await get(`${PRIMARY}/sitemap.xml`)).body);
+  if (!pages.includes(`${PRIMARY}/`)) fail("sitemap.xml", "does not list the landing page");
+  for (const u of pages) if (!u.startsWith(`${PRIMARY}/`)) fail("sitemap.xml", `foreign URL ${u}`);
+
+  // Every page in the site's own sitemap, with titles unique among them, then
+  // a sample from each proposal sitemap that has rows.
+  const titles = new Map();
+  for (const u of pages) await checkPage(u, titles);
+  let sampled = 0;
+  for (const s of index.filter((u) => u !== `${PRIMARY}/sitemap.xml`)) {
+    const rows = locs((await get(s)).body);
+    for (const u of rows.slice(0, 1)) {
+      if (sampled++ >= PROPOSAL_SAMPLE) break;
+      await checkPage(u, null);
+    }
+  }
+
+  // The placeholder verticals stay out of the index while coming soon.
+  for (const p of ["/health", "/energy/about", "/education/methodology"]) {
+    const { status, body } = await get(`${PRIMARY}${p}`);
+    const listed = pages.includes(`${PRIMARY}${p}`);
+    if (status === 200 && !listed && !/noindex/i.test(headOf(body).robots)) {
+      fail(p, "neither in the sitemap nor marked noindex");
+    }
+  }
+
+  // The legacy host redirects permanently; "/" lands on the CSR app.
+  for (const [path, want] of [["/", `${PRIMARY}/csr`], ["/about?ref=x", `${PRIMARY}/about?ref=x`]]) {
+    const r = await legacyRequest(path);
+    if (r.status !== 308 || r.location !== want) {
+      fail(`${LEGACY}${path}`, `expected 308 -> ${want}, got ${r.status} -> ${r.location}`);
+    }
+  }
+
+  console.log(`checked ${pages.length} pages, ${Math.min(sampled, PROPOSAL_SAMPLE)} proposals, ${index.length} sitemaps`);
+  if (failures.length) {
+    console.error(failures.map((f) => `FAIL ${f}`).join("\n"));
+    process.exit(1);
+  }
+  console.log("seo check passed");
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

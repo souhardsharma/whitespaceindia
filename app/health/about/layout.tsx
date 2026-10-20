@@ -1,13 +1,21 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site";
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
+const siteUrl = SITE_URL;
 
 export const metadata: Metadata = {
-  title: "About — Health — Whitespace India",
+  title: { absolute: "About — Health — Whitespace India" },
   description:
     "About the Whitespace India Health initiative: methodology, team, and mission behind the public health infrastructure gap analysis.",
   alternates: { canonical: `${siteUrl}/health/about` },
+  openGraph: {
+    url: `${siteUrl}/health/about`,
+    title: "About — Health — Whitespace India",
+    siteName: "Whitespace India",
+    type: "website",
+    locale: "en_IN",
+    images: [{ url: "/og/health.png", width: 1200, height: 630, alt: "Whitespace India Health" }],
+  },
 };
 
 export default function HealthAboutLayout({ children }: { children: React.ReactNode }) {

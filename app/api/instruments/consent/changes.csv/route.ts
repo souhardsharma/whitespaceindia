@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { changeQueryFrom, changes } from "@/lib/instruments/server";
 import { allowRequest, csvPart } from "@/lib/instruments/csv";
+import { SITE_URL } from "@/lib/site";
 
 /**
  * Change-log events as CSV: every event in the view, not a page of them, in
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
   }
   const q = changeQueryFrom(req.nextUrl.searchParams);
   const { events } = changes(q);
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
+  const base = SITE_URL;
   return csvPart(req, HEAD, events.map((e) => {
     const p = e.proposal;
     return [e.date, e.kind, e.sk, p.id, p.no, p.name, p.agency, p.sector, p.category,

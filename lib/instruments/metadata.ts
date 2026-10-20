@@ -24,8 +24,7 @@
  * exactly like a page with no metadata problem at all.
  */
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
+import { SITE_URL } from "@/lib/site";
 
 const OG_IMAGE = "/og/instruments.png";
 

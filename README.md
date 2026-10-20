@@ -6,7 +6,10 @@ Combines NITI Aayog MPI poverty data with MCA CSR spending data to surface where
 
 ## Live Site
 
-[whitespaceindia-csr.vercel.app](https://whitespaceindia-csr.vercel.app)
+[whitespaceindia.vercel.app](https://whitespaceindia.vercel.app)
+
+- CSR opportunity index: [/csr](https://whitespaceindia.vercel.app/csr)
+- Instrument 01, People & Consent: [/instruments/consent](https://whitespaceindia.vercel.app/instruments/consent)
 
 ## Data Sources
 
@@ -68,7 +71,7 @@ The POS combines three dimensions:
 
 Districts are grouped into three population tiers for like-for-like benchmarking. All weights are adjustable via the interactive simulator.
 
-See [/methodology](https://whitespaceindia-csr.vercel.app/methodology) for the full writeup.
+See [/methodology](https://whitespaceindia.vercel.app/methodology) for the full writeup.
 
 ## Author
 
