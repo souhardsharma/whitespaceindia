@@ -90,8 +90,12 @@ export async function GET() {
     const items = parseRss(xml).slice(0, 12);
     return NextResponse.json({ items });
   } catch (err) {
+    console.error("news: upstream fetch failed", err);
     return NextResponse.json(
-      { items: [], error: err instanceof Error ? err.message : "unknown" },
+      // The raw Node fetch message carries the upstream host, the resolved
+      // address and sometimes a local path. The caller gets a fixed string;
+      // the detail goes to the server log, where the operator can see it.
+      { items: [], error: "upstream unavailable" },
       { status: 200 },
     );
   }

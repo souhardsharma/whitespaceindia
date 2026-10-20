@@ -10,6 +10,12 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    // The test files import with an explicit .ts extension, which is what Node
+    // requires to run them directly - no test dependency, no build step. tsc
+    // rejects that by default, so it is allowed here rather than dropping the
+    // tests out of the typecheck: they exercise the rules that decide whether
+    // a statutory consent requirement applies, and are worth type-checking.
+    "allowImportingTsExtensions": true,
     "jsx": "preserve",
     "incremental": true,
     "plugins": [

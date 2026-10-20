@@ -132,6 +132,20 @@ export default function Footer({ vertical }: { vertical?: VerticalConfig }) {
                 Reports
               </Link>
             </li>
+            {/* The only route into the instruments from this side of the site.
+                Everything else here is vertical-scoped, and the instruments
+                are not a vertical - so nothing in a vertical's own navigation
+                would ever mention them. That left one link in the entire site,
+                tile 05 on the parent landing, which the legacy CSR host never
+                shows: it rewrites "/" to "/csr", so a visitor on the host this
+                site actually deploys to could not reach the instrument by
+                navigation at all. Absolute, not vertical-scoped, because
+                /instruments sits above every vertical rather than inside one. */}
+            <li>
+              <Link href="/instruments" className="text-[#1c1c19]/80 hover:text-[#BD402C] transition-colors">
+                Instruments
+              </Link>
+            </li>
             <li>
               <a
                 href="https://github.com/souhardsharma/whitespaceindia-csr"

@@ -33,11 +33,11 @@ const siteUrl =
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Whitespace India | CSR · Health · Education · Energy",
+    default: "Whitespace India | CSR · Health · Education · Energy · Instruments",
     template: "%s | Whitespace India",
   },
   description:
-    "Open instruments that show where India's resources are landing, and where they aren't. Four research initiatives across CSR, Health, Education, and Energy, built entirely on government records and free for anyone to use.",
+    "Open civic data that shows where India's resources are landing, and where they aren't. District indexes across CSR, Health, Education and Energy, and an instruments shelf whose first instrument, People & Consent, screens environmental clearance proposals. Built entirely on government records and free for anyone to use.",
   applicationName: "Whitespace India",
   keywords: [
     "Whitespace India",
@@ -48,6 +48,10 @@ export const metadata: Metadata = {
     "civic data",
     "MCA CSR data",
     "Indian districts",
+    "environmental clearance India",
+    "PARIVESH",
+    "Scheduled Areas",
+    "Gram Sabha consent",
   ],
   authors: [{ name: "Souhard Sharma", url: "https://www.linkedin.com/in/souhardsharma/" }],
   creator: "Souhard Sharma",
@@ -56,7 +60,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Whitespace India",
     description:
-      "Civic data systems across CSR, Health, Education, and Energy. Shipping now: CSR opportunity index across 651 Indian districts.",
+      "Civic data across CSR, Health, Education and Energy, and civic instruments. Live now: the CSR opportunity index across 651 Indian districts, and People & Consent, a screening instrument for environmental clearance proposals.",
     url: siteUrl,
     images: [{ url: "/og/brand.png", width: 1200, height: 630, alt: "Whitespace India" }],
     type: "website",
@@ -67,7 +71,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Whitespace India",
     description:
-      "Civic data systems across CSR, Health, Education, and Energy.",
+      "Civic data across CSR, Health, Education and Energy, and civic instruments.",
     creator: "@souaboroq",
     images: ["/og/brand.png"],
   },
