@@ -287,7 +287,7 @@ export default function RegisterExplorer({
                 {filtered.slice(0, shown).map((r) => (
                   <tr key={r.code} className="border-b border-[#1c1c19]/12 hover:bg-[#1c1c19]/[0.025]">
                     <td className="py-2.5 pr-4">
-                      <Link
+                      <Link prefetch={false}
                         href={`/instruments/consent/district/${r.code}`}
                         className="font-body text-[14px] hover:underline underline-offset-2"
                       >

@@ -185,8 +185,14 @@ function km(aLat: number, aLon: number, bLat: number, bLon: number): number {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-/** Other proposals whose mapped site lies within `radiusKm`, nearest first. */
-export function nearby(p: Project, radiusKm = 10, limit = 50): {
+/**
+ * Other proposals whose mapped site lies within `radiusKm`, nearest first.
+ * `total` counts them all; only the nearest `limit` are listed. Each listed
+ * row is a link a crawler follows into a page Vercel renders on demand, and
+ * fifty of them on every one of ~90,000 pages fanned a single crawl out into
+ * 13 GB of origin transfer in a day (2026-10-20).
+ */
+export function nearby(p: Project, radiusKm = 10, limit = 20): {
   items: NearbyProposal[]; total: number; radiusKm: number;
 } {
   const lat = p.site?.lat, lon = p.site?.lon;

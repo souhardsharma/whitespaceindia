@@ -81,7 +81,7 @@ export default function RecentActivity({
               <span className="md:col-span-4">{LABELS[e.sk] ?? e.sk}</span>
               <span className="md:col-span-5">
                 {forProposal ? null : (
-                  <Link href={`/instruments/consent/${e.proposal.id}`} className="underline underline-offset-2 break-words">
+                  <Link prefetch={false} href={`/instruments/consent/${e.proposal.id}`} className="underline underline-offset-2 break-words">
                     {e.proposal.name.length > 110 ? e.proposal.name.slice(0, 107).replace(/\s+\S*$/, "") + "…" : e.proposal.name}
                   </Link>
                 )}

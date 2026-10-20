@@ -137,7 +137,7 @@ export default function DistrictProposals({
       <ol className="border-t border-[#1c1c19]/25">
         {rows.slice(0, shown).map((p) => (
           <li key={p.id + p.no} className="border-b border-[#1c1c19]/12">
-            <Link
+            <Link prefetch={false}
               href={`/instruments/consent/${encodeURIComponent(p.id)}?state=${p.state}`}
               className="group block py-4 hover:bg-[#1c1c19]/[0.02] transition-colors"
             >
