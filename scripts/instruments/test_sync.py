@@ -248,6 +248,44 @@ def test_sweep_fetch_waits_and_reports() -> None:
         SY.NET.get, SY.pool, SY.time.sleep, SY.log = saved
 
 
+def test_failed_sector_gets_a_second_round() -> None:
+    print("\na sector that failed is asked once more after the others")
+    first, second = list(SY.SECTORS)[:2]
+    calls: list[int] = []
+    fail_left = {first: 1, second: 2}
+
+    def fake_fetch(url: str, timeout: int = 300, deadline=None) -> bytes:
+        sid = int(url.split("sector=")[1].split("&")[0]) if "sector=" in url else None
+        calls.append(sid)
+        if fail_left.get(sid, 0) > 0:
+            fail_left[sid] -= 1
+            raise RuntimeError("register fetch failed after retries: HTTP -1 refused")
+        return b'{"status": 200, "data": [{"id": %d}]}' % sid
+
+    saved = (SY.fetch, SY.log, SY.PARIVESH_SEARCH)
+    try:
+        SY.fetch, SY.log = fake_fetch, (lambda *_: None)
+        SY.PARIVESH_SEARCH = "https://x/?sector={sector}"
+        records, stats = SY.fetch_delta(None)
+        check("a sector that answers on the second round counts as read",
+              "error" not in stats[SY.SECTORS[first]] and {"id": first} in records,
+              str(stats[SY.SECTORS[first]]))
+        check("a sector that fails twice is still a failure",
+              "error" in stats[SY.SECTORS[second]], str(stats[SY.SECTORS[second]]))
+        check("each sector is asked at most twice, the others once",
+              calls.count(first) == 2 and calls.count(second) == 2
+              and len(calls) == len(SY.SECTORS) + 2, str(calls))
+        check("its rows are not counted twice", records.count({"id": first}) == 1)
+
+        calls.clear()
+        fail_left.update({first: 1})
+        SY.fetch_delta(None, deadline=time.time() - 1)
+        check("no second round once the sweep's time is spent",
+              calls.count(first) == 1, str(calls))
+    finally:
+        SY.fetch, SY.log, SY.PARIVESH_SEARCH = saved
+
+
 def test_pass_plan() -> None:
     print("\nevery source gets its own share of the budget")
     names = [(n, p) for n, p, _ in SY.PASS_PLAN]
@@ -640,6 +678,7 @@ def main() -> int:
         test_seed(Path(d))
     test_pass_plan()
     test_sweep_fetch_waits_and_reports()
+    test_failed_sector_gets_a_second_round()
     test_link_silences()
     test_debts_and_streaks()
     with tempfile.TemporaryDirectory() as d:
