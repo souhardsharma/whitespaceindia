@@ -19,13 +19,13 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
-    images: [{ url: "/og/health.png", width: 1200, height: 630, alt: "Whitespace India Health" }],
+    images: [{ url: "/og/health-2.jpg", width: 1200, height: 630, alt: "Whitespace India Health: \u201cWhere care is thin, district by district\u201d, beside a risograph print of a health centre on a hill above a village" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Whitespace India Health",
     description: DESCRIPTION,
-    images: [{ url: "/og/health.png", alt: "Whitespace India Health" }],
+    images: [{ url: "/og/health-2.jpg", alt: "Whitespace India Health: \u201cWhere care is thin, district by district\u201d, beside a risograph print of a health centre on a hill above a village" }],
   },
   alternates: { canonical: PAGE_URL },
   // Coming soon means synthetic placeholder data behind an overlay: kept out
