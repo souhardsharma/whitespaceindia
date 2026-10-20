@@ -18,6 +18,12 @@
   --cobalt: #2e54a5;
   --forest: #2a6f3e;
   --ochre: #b48a52;
+  /* Fifth riso accent. Chosen by measurement, not taste: the only large gap in
+     the existing hue circle is cobalt(221) -> terra(8), 147 degrees wide. This
+     sits in it at hue 314, deltaE 37 from its nearest neighbour (cobalt) and
+     55+ from the rest, with L* 34.7 landing inside the existing 35/37/41
+     cluster and 6.76 contrast on ivory against terra's 6.65. */
+  --plum: #7a3b6b;
 
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --smooth: cubic-bezier(0.22, 1, 0.36, 1);
@@ -378,9 +384,13 @@
 @keyframes fadeInFull { to { opacity: 1; } }
 
 /* ──────────────────────── TILE GRID ──────────────────────── */
+/* Row 1 is the featured CSR banner at full width — its image is a 2400x640
+   riso strip and any narrower span crops the plant and the arrowhead out of the
+   composition. Row 2 carries the four peer tiles, 02 through 05, so reading
+   order, numbering and keyboard order all agree. */
 .tileGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   grid-template-rows: 1.8fr 1fr;
   gap: 2px;
   flex: 1;
@@ -508,6 +518,22 @@
 .tileTag { opacity: 0.7; }
 .tileBottomRow {
   display: flex; justify-content: space-between; align-items: end;
+  gap: 10px;
+}
+.tileHeading { min-width: 0; }
+/* Meta line under the tile title. Carries the label-system treatment the tag
+   had in the top row — Space Grotesk, uppercase, tracked — at a size that fits
+   a quarter-width tile. */
+.tileMeta {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--font-space-grotesk), monospace;
+  font-weight: 500;
+  font-size: clamp(8px, 0.62vw, 10px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  opacity: 0.72;
 }
 .tileTitle {
   margin: 0;
@@ -529,9 +555,11 @@
 .accent_cobalt   { box-shadow: inset 5px 0 0 var(--cobalt), 0 8px 20px -14px rgba(40, 25, 15, 0.4); }
 .accent_forest   { box-shadow: inset 5px 0 0 var(--forest), 0 8px 20px -14px rgba(40, 25, 15, 0.4); }
 .accent_ochre    { box-shadow: inset 5px 0 0 var(--ochre),  0 8px 20px -14px rgba(40, 25, 15, 0.4); }
+.accent_plum     { box-shadow: inset 5px 0 0 var(--plum),   0 8px 20px -14px rgba(40, 25, 15, 0.4); }
 .accent_cobalt:hover { box-shadow: inset 5px 0 0 var(--cobalt), 0 18px 40px -18px rgba(40, 25, 15, 0.55); }
 .accent_forest:hover { box-shadow: inset 5px 0 0 var(--forest), 0 18px 40px -18px rgba(40, 25, 15, 0.55); }
 .accent_ochre:hover  { box-shadow: inset 5px 0 0 var(--ochre),  0 18px 40px -18px rgba(40, 25, 15, 0.55); }
+.accent_plum:hover   { box-shadow: inset 5px 0 0 var(--plum),   0 18px 40px -18px rgba(40, 25, 15, 0.55); }
 
 /* ───────────────────────── FOOTER STRIP ───────────────────────── */
 .footStrip {
@@ -593,6 +621,18 @@
   }
 }
 
+/* ──────────────── NARROW DESKTOP / TABLET ────────────────
+   Four peer tiles across need roughly 340 px each before the title and its
+   meta line start to crowd. Below that they fold to a 2x2 block under the
+   featured banner rather than compressing further. */
+@media (max-width: 1180px) and (min-width: 861px) {
+  .tileGrid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: 1.5fr 1fr 1fr;
+  }
+  .tileCsr { grid-column: 1 / -1; }
+}
+
 /* ───────────────────────── MOBILE ───────────────────────── */
 @media (max-width: 860px) {
   .topbar {
@@ -606,9 +646,10 @@
   }
   .tileGrid {
     grid-template-columns: 1fr;
-    grid-template-rows: 1.3fr repeat(3, 1fr);
+    grid-template-rows: 1.3fr repeat(4, 1fr);
   }
   .tileCsr { grid-column: 1; }
+  .tileMeta { font-size: 9px; }
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -716,7 +757,7 @@
 .faqItem[data-accent="1"] { --accent: var(--cobalt); }
 .faqItem[data-accent="2"] { --accent: var(--forest); }
 .faqItem[data-accent="3"] { --accent: var(--ochre); }
-.faqItem[data-accent="4"] { --accent: var(--terra); }
+.faqItem[data-accent="4"] { --accent: var(--plum); }
 
 .faqDetails {
   display: block;

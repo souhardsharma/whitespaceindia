@@ -12,13 +12,14 @@ Run from repo root:  python scripts/optimize_landing.py
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from PIL import Image
 
 SRC_DIR = Path("public/landing/_orig_backup")
 OUT_DIR = Path("public/landing")
-TARGETS = ["csr-hands", "education-bg", "energy-bg", "health-bg"]
+TARGETS = ["csr-hands", "education-bg", "energy-bg", "health-bg", "instruments-bg"]
 LONG_EDGE = 1600
 ASPECT = (3, 2)  # landscape poster tile
 QUALITY = 80
@@ -56,9 +57,20 @@ def encode_and_save(img: Image.Image, out: Path) -> int:
 
 
 def main() -> None:
+    # Re-encoding everything is destructive: the served tiles are NOT all 3:2.
+    # health-bg ships square and energy-bg at 1.83:1, both deliberately, so a
+    # blanket run silently recrops them and changes the landing page. Pass the
+    # names you actually want to rebuild.
+    #   python scripts/optimize_landing.py                  # all TARGETS
+    #   python scripts/optimize_landing.py instruments-bg   # just this one
+    selected = sys.argv[1:] or TARGETS
+    unknown = [n for n in selected if n not in TARGETS]
+    if unknown:
+        sys.exit(f"unknown target(s): {', '.join(unknown)}\nknown: {', '.join(TARGETS)}")
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     total = 0
-    for name in TARGETS:
+    for name in selected:
         src = SRC_DIR / f"{name}.webp"
         dst = OUT_DIR / f"{name}.webp"
         img = Image.open(src).convert("RGB")

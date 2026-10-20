@@ -1,0 +1,11 @@
+# Pinned: this list is installed by a scheduled workflow, where an
+# unpinned major release would arrive unannounced on a night nobody is
+# watching. shapely is load-bearing - without it every geometric verdict
+# silently becomes 'no_geometry' - so the build refuses to run when it is
+# missing. See geometry.DistrictGeometry.usable().
+pandas>=2.2,<3
+numpy>=1.26,<3
+rapidfuzz>=3.9,<4
+shapely>=2.0,<3
+pdfplumber>=0.11,<1
+PySocks>=1.7.1

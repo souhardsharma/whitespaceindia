@@ -1,0 +1,96 @@
+# Checks that must pass before anything merges.
+#
+# Deliberately runs on a plain checkout with no fetch cache, because that is what
+# a new contributor and a fresh clone have. Anything that only passes on a
+# machine with 150 MB of warm cache is not actually checked.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  data-pipeline:
+    name: Resolver tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Resolver tests
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python scripts/instruments/test_district_resolution.py
+
+      - name: Egress layer
+        # Pins how hard the instrument leans on a government server and where
+        # it goes when a route dies. Both behaviours were learned from real
+        # failures and neither looked like a failure at the time, so they are
+        # asserted rather than left to be re-derived. Needs no network.
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python scripts/instruments/test_net.py
+
+      - name: Scheduled sync currency
+        # The sync's claims about time: when the register was last read, and
+        # how much of it that read covered. Neither is checkable by looking at
+        # the published data, because a stale row and a current row are the
+        # same row. Needs no network.
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python scripts/instruments/test_sync.py
+
+      - name: Boundary reader and site verdict
+        # Skips cleanly when the fetch cache is absent, which is the state of a
+        # fresh clone; the structural checks it does run are the ones that would
+        # catch a boundary file of the wrong vintage, the failure mode that
+        # reads as correct until a point is tested against it.
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python scripts/instruments/test_geometry.py
+
+      - name: Published data invariants
+        # The pages read these files directly. If a shard's field header no
+        # longer matches what the readers index by, every proposal renders with
+        # shifted columns and nothing throws - so assert the contract here.
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python scripts/instruments/check_published.py
+
+  app:
+    name: Typecheck and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # 22, not 20. The suites are .ts and rely on Node's own type
+          # stripping, which does not exist before 22.6 and is unflagged from
+          # 22.18 - so on 20 `npm test` died with ERR_UNKNOWN_FILE_EXTENSION
+          # before running a single test, and had never once executed.
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      # Lint is scoped to the instrument code, which is clean. The rest of the
+      # site has never been linted and is outside this change.
+      - run: npm run lint:instruments
+      - name: Obligation and determination logic
+        # The rules deciding whether a statutory consent requirement applies to
+        # a proposal. Nothing exercised them, and a substring comparison
+        # therefore told 13,433 projects inside Scheduled Areas that the Gram
+        # Sabha's mandatory role under PESA s.4(k)/(l) did not apply to them.
+        # `tsc` was clean throughout: it is a string-containment fact, not a
+        # type error. No test dependency - Node strips the types itself.
+        run: npm test
+      - run: npm run build

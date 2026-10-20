@@ -6,12 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:instruments": "next lint --dir app/instruments --dir components/instruments --dir lib/instruments --dir app/api/instruments",
+    "test": "node --test \"lib/**/__tests__/*.test.ts\" \"components/**/__tests__/*.test.ts\" \"app/**/__tests__/*.test.ts\"",
+    "pretest": "node scripts/assert-tests-discovered.mjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.4.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
+    "d3-geo": "^3.1.1",
     "d3-scale": "^4.0.2",
     "framer-motion": "^12.38.0",
     "next": "14.2.35",
@@ -22,12 +26,15 @@
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.1",
     "@types/d3-scale": "^4.0.9",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/topojson-client": "^3.1.5",
     "autoprefixer": "^10.0.1",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
     "postcss": "^8",
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.1",

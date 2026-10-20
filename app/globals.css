@@ -191,3 +191,15 @@ input[type="range"]::-moz-range-thumb {
     scroll-behavior: auto !important;
   }
 }
+/* Instrument pages: every control is at least 44px tall, the WCAG 2.5.5
+   target size. The site-wide convention (py-2.5 on 13-14px text) gives
+   37-39px, which is small for a thumb on the forms a reader fills on a phone.
+   Scoped to the instruments layout so the four indexes are unchanged. */
+.instrument-root :is(button, select, input[type="text"], input[type="search"]),
+.instrument-root .tap-target {
+  min-height: 44px;
+}
+.instrument-root .tap-target {
+  display: inline-flex;
+  align-items: center;
+}

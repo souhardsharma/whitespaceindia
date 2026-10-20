@@ -37,7 +37,7 @@ function StickyHeader() {
       className={`${styles.stickyHeader} ${active ? styles.stickyActive : ""}`}
       aria-hidden={!active}
     >
-      <a href="#top" className={styles.stickyBrand} aria-label="Back to top">
+      <a href="#main-content" className={styles.stickyBrand} aria-label="Back to top">
         <span className={styles.stickyMark} aria-hidden="true">
           <BraceMark dotColor="#9b2817" />
         </span>
@@ -167,14 +167,14 @@ function Odometer({ to, duration = 1400 }: { to: number; duration?: number }) {
 
 type Vert = {
   href: string;
-  vert: "csr" | "health" | "energy" | "education";
+  vert: "csr" | "health" | "energy" | "education" | "instruments";
   num: string;
   title: string;
   meta: string;
   img: string;
   alt: string;
   active: boolean;
-  accent: "terra" | "cobalt" | "forest" | "ochre";
+  accent: "terra" | "cobalt" | "forest" | "ochre" | "plum";
   aria: string;
 };
 
@@ -227,11 +227,23 @@ const VERTS: Vert[] = [
     accent: "ochre",
     aria: "Whitespace India Education — outcomes index, coming soon",
   },
+  {
+    href: "/instruments",
+    vert: "instruments",
+    num: "05",
+    title: "Instruments",
+    meta: "Screening tools · Live",
+    img: "/landing/instruments-bg.webp",
+    alt: "Screening instruments for land, people and statutory consent in India",
+    active: true,
+    accent: "plum",
+    aria: "Open the Instruments shelf — per-project screening tools",
+  },
 ];
 
 export default function Landing() {
   return (
-    <main className={styles.root} id="top">
+    <main className={styles.root} id="main-content">
       <div className={styles.grain} aria-hidden="true" />
       <StickyHeader />
 
@@ -339,10 +351,17 @@ export default function Landing() {
                 <div className={styles.tileFrame}>
                   <div className={styles.tileTopRow}>
                     <span className={styles.tileNum}>{v.num}</span>
-                    <span className={styles.tileTag}>{v.meta}</span>
                   </div>
+                  {/* Meta sits under the title, not opposite the number. At four
+                      columns the top row has zero slack — measured: 33 px badge
+                      plus a 259 px tag in 292 px — so the tag wrapped. Below the
+                      title it also reads better, pairing each name with its
+                      descriptor. */}
                   <div className={styles.tileBottomRow}>
-                    <h3 className={styles.tileTitle}>{v.title}</h3>
+                    <div className={styles.tileHeading}>
+                      <h3 className={styles.tileTitle}>{v.title}</h3>
+                      <span className={styles.tileMeta}>{v.meta}</span>
+                    </div>
                     <span className={styles.tileArrow} aria-hidden="true">↗</span>
                   </div>
                 </div>
@@ -369,7 +388,7 @@ export default function Landing() {
 
         <ol className={styles.faqList}>
           {FAQS.map((qa, i) => (
-            <li key={i} className={styles.faqItem} data-accent={i % 4}>
+            <li key={i} className={styles.faqItem} data-accent={i % 5}>
               <details className={styles.faqDetails}>
                 <summary className={styles.faqSummary}>
                   <span className={styles.faqNumber}>{String(i + 1).padStart(2, "0")}</span>
@@ -402,7 +421,11 @@ export default function Landing() {
 const FAQS: { q: string; a: string }[] = [
   {
     q: "What does Whitespace India actually do?",
-    a: "We build tools from India's public records, each one a focused instrument for mapping where public capital, attention, and programmatic effort are reaching across the country at a district level. The CSR Opportunity Index is the first instrument live; Health, Education, and Energy are in development.",
+    a: "We build tools from India's public records. They come in two shapes. Indexes rank every district in the country on one question — the CSR Opportunity Index is live, with Health, Education, and Energy in development. Instruments work the other way round: you bring one case, and the instrument tells you what the public record says about it.",
+  },
+  {
+    q: "What is the difference between an index and an instrument?",
+    a: "An index is comparative. It scores 651 districts against each other and ranks them, so it answers where a problem is worst. An instrument is diagnostic. It takes a single project, place, or filing and assembles what the record holds about that one case — no score, no ranking, no weighting. The first instrument, People and Consent, takes an environmental clearance proposal and profiles the population where the project would be built.",
   },
   {
     q: "Who are the instruments built for?",

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { isAllowedOrigin, clientIp } from '@/lib/request-identity';
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, renderToBuffer, Link, Image, Font, Svg, Path, Circle } from '@react-pdf/renderer';
 
@@ -84,15 +85,6 @@ setInterval(() => {
   });
 }, 300_000);
 
-function isAllowedOrigin(req: NextRequest): boolean {
-  const origin = req.headers.get('origin');
-  if (!origin) return true;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://whitespaceindia-csr.vercel.app';
-  if (origin === siteUrl) return true;
-  if (origin.endsWith('.vercel.app')) return true;
-  if (process.env.NODE_ENV === 'development' && origin.startsWith('http://localhost:')) return true;
-  return false;
-}
 
 function getApiKeys(): string[] {
   const keys: string[] = [];
@@ -419,10 +411,10 @@ export async function POST(req: NextRequest) {
     return new Response('Forbidden', { status: 403 });
   }
 
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    req.headers.get('x-real-ip') ||
-    'unknown';
+  // NOT the leftmost X-Forwarded-For entry, which the caller can set: a
+  // client sending its own header has its real address APPENDED, so the
+  // leftmost value is whatever it typed. See clientIp.
+  const ip = clientIp(req);
   if (!checkRateLimit(ip)) {
     return new Response('Too many requests. Please wait a minute.', {
       status: 429,
@@ -431,7 +423,13 @@ export async function POST(req: NextRequest) {
   }
 
   if (getApiKeys().length === 0) {
-    return new Response('Gemini API key not configured. Please set GEMINI_API_KEY_1 in .env.local', { status: 503 });
+    // The caller is not the operator. Naming the environment variable and
+    // the file it belongs in told an unauthenticated stranger exactly how
+    // this deployment is configured and what is missing from it; the operator
+    // gets that in the server log instead.
+    console.error(
+      'brief: no API key configured; set GEMINI_API_KEY_1 in the environment');
+    return new Response('This service is temporarily unavailable.', { status: 503 });
   }
 
   let raw: unknown;

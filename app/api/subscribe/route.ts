@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { clientIp, isAllowedOrigin } from "@/lib/request-identity";
 
 export const runtime = "nodejs";
 
@@ -40,28 +41,16 @@ setInterval(() => {
   });
 }, 300_000);
 
-function isAllowedOrigin(req: NextRequest): boolean {
-  const origin = req.headers.get("origin");
-  if (!origin) return true;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
-  if (origin === siteUrl) return true;
-  if (origin.endsWith(".vercel.app")) return true;
-  if (process.env.NODE_ENV === "development" && origin.startsWith("http://localhost:")) return true;
-  return false;
-}
-
 function clean(v: unknown, max = 100): string | undefined {
   if (typeof v !== "string") return undefined;
   const trimmed = v.trim().slice(0, max);
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+// Replaced by the shared clientIp: the leftmost X-Forwarded-For entry is
+// whatever the caller typed, because a proxy APPENDS rather than replaces.
 function getClientIp(req: NextRequest): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0].trim();
-  const real = req.headers.get("x-real-ip");
-  if (real) return real.trim();
-  return "unknown";
+  return clientIp(req);
 }
 
 export async function POST(req: NextRequest) {

@@ -23,7 +23,7 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
 export default function EnergyReportsPage() {
   return (
     <ComingSoonOverlay active={cfg.comingSoon} verticalName={cfg.name} accentColor={accent}>
-      <main className="bg-[#fcf9f4] min-h-screen">
+      <main id="main-content" className="bg-[#fcf9f4] min-h-screen">
         <Navbar vertical={cfg} />
 
         <section className="pt-32 md:pt-40 pb-16 md:pb-24 px-6 md:px-12 lg:px-16">

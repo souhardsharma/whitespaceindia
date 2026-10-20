@@ -52,3 +52,13 @@ public/landing/_orig_backup/
 
 # Local design exploration scratch
 .design-options/
+
+# Browser-automation scratch. Page dumps and console logs from driving the
+# preview server; useful while debugging, never part of the project.
+.playwright-mcp/
+
+# The instruments fetch cache. Roughly 250 MB of PARIVESH register, SHRUG
+# tables and boundary files. It belongs OUTSIDE the repository - see
+# INSTRUMENTS_CACHE_DIR in scripts/instruments/build_data.py - but a run
+# pointed at the default location here would otherwise stage all of it.
+.instruments-cache/
