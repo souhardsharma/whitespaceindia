@@ -108,6 +108,15 @@ scripts/
 
 **Souhard Sharma**: [LinkedIn](https://www.linkedin.com/in/souhardsharma/)
 
-## License
+## Licence
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+- **Code:** [GNU AGPL v3.0 or later](LICENSE). Run a modified version as a
+  public service and you must offer its source to the people who use it.
+- **Data and content:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
+  open to any use, commercial included, with credit to Whitespace India. The
+  exceptions are the two files of Census and SECC figures taken from SHRUG, which
+  keep SHRUG's [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+- **Not licensed:** the Whitespace India name, logo and artwork.
+
+The full terms, and the sources each file is built from, are in
+[LICENSE-DATA.md](LICENSE-DATA.md).
