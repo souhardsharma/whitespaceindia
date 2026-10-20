@@ -35,10 +35,10 @@ export const metadata: Metadata = {
     locale: "en_IN",
     images: [
       {
-        url: "/og/instruments.png",
+        url: "/og/instruments-2.jpg",
         width: 1200,
         height: 630,
-        alt: "Whitespace India Instruments",
+        alt: "Whitespace India Instruments: \u201cBring one case, see what the record holds\u201d, beside a risograph print of a magnifying glass over a row of everyday objects",
       },
     ],
   },
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Whitespace India — Instruments",
     description: DESCRIPTION,
-    images: [{ url: "/og/instruments.png", alt: "Whitespace India Instruments" }],
+    images: [{ url: "/og/instruments-2.jpg", alt: "Whitespace India Instruments: \u201cBring one case, see what the record holds\u201d, beside a risograph print of a magnifying glass over a row of everyday objects" }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {

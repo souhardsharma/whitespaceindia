@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     description:
       "Quantifying the gap between where philanthropic money goes in India and where people need it most. Three public datasets, one composite Opportunity Score.",
     url: PAGE_URL,
-    images: [{ url: "/og/csr-index.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
+    images: [{ url: "/og/csr-index-2.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     title: "About — Whitespace India CSR",
     description:
       "Why this tool exists and how it measures India's philanthropic funding gap across 651 districts.",
-    images: [{ url: "/og/csr-index.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
+    images: [{ url: "/og/csr-index-2.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {
@@ -68,7 +68,7 @@ const PAGE_LD = {
       description: DESCRIPTION,
       isPartOf: { "@id": `${siteUrl}/#site` },
       about: { "@id": `${siteUrl}/#org` },
-      primaryImageOfPage: { "@type": "ImageObject", url: `${siteUrl}/og/csr-index.jpg` },
+      primaryImageOfPage: { "@type": "ImageObject", url: `${siteUrl}/og/csr-index-2.jpg` },
       inLanguage: "en-IN",
     },
     {

@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     description:
       "Discover the Indian districts where philanthropic capital can create the most impact. Interactive opportunity index across 651 districts, free for foundations, donors, and researchers.",
     url: PAGE_URL,
-    images: [{ url: "/og/csr-index.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
+    images: [{ url: "/og/csr-index-2.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     title: "Whitespace India CSR — Where CSR Should Go",
     description:
       "Find India's philanthropic whitespaces — districts with high poverty and low CSR funding.",
-    images: [{ url: "/og/csr-index.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
+    images: [{ url: "/og/csr-index-2.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {
@@ -74,7 +74,7 @@ const PAGE_LD = {
       offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
       publisher: { "@id": `${siteUrl}/#org` },
       isPartOf: { "@id": `${siteUrl}/#site` },
-      image: `${siteUrl}/og/csr-index.jpg`,
+      image: `${siteUrl}/og/csr-index-2.jpg`,
       inLanguage: "en-IN",
     },
     {

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     siteName: "Whitespace India",
     type: "website",
     locale: "en_IN",
-    images: [{ url: "/og/energy.png", width: 1200, height: 630, alt: "Whitespace India Energy" }],
+    images: [{ url: "/og/energy-2.jpg", width: 1200, height: 630, alt: "Whitespace India Energy: \u201cWhere power falls short, district by district\u201d, beside a risograph print of a house, a power pole and a solar panel on a hill" }],
   },
 };
 

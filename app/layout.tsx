@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     description:
       "Civic data across CSR, Health, Education and Energy, and civic instruments. Live now: the CSR opportunity index across 651 Indian districts, and People & Consent, a screening instrument for environmental clearance proposals.",
     url: siteUrl,
-    images: [{ url: "/og/whitespace-india.jpg", width: 1200, height: 630, alt: "Whitespace India: \u201cWhere India\u2019s resources land, and where they don\u2019t\u201d, beside a risograph print of coloured blocks and a seedling" }],
+    images: [{ url: "/og/whitespace-india-2.jpg", width: 1200, height: 630, alt: "Whitespace India: \u201cWhere India\u2019s resources land, and where they don\u2019t\u201d, beside a risograph print of coloured blocks and a seedling" }],
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
@@ -72,7 +72,7 @@ export const metadata: Metadata = {
     title: "Whitespace India",
     description:
       "Civic data across CSR, Health, Education and Energy, and civic instruments.",
-    images: [{ url: "/og/whitespace-india.jpg", alt: "Whitespace India: \u201cWhere India\u2019s resources land, and where they don\u2019t\u201d, beside a risograph print of coloured blocks and a seedling" }],
+    images: [{ url: "/og/whitespace-india-2.jpg", alt: "Whitespace India: \u201cWhere India\u2019s resources land, and where they don\u2019t\u201d, beside a risograph print of coloured blocks and a seedling" }],
   },
   alternates: { canonical: siteUrl },
   robots: {

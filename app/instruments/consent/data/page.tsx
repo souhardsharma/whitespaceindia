@@ -104,6 +104,11 @@ const ENDPOINTS: [string, string][] = [
 
 type Source = { name: string; publisher?: string; url?: string };
 
+const CC_BY = "https://creativecommons.org/licenses/by/4.0/";
+const CC_BY_NC_SA = "https://creativecommons.org/licenses/by-nc-sa/4.0/";
+/** Files carrying Census and SECC values from SHRUG, which is CC BY-NC-SA 4.0. */
+const SHRUG_FILES = ["districts.json", "subdistricts.json"];
+
 /**
  * schema.org Dataset for this page, the published files' landing page.
  *
@@ -111,8 +116,8 @@ type Source = { name: string; publisher?: string; url?: string };
  * which is where a researcher looking for India's clearance register as data
  * looks. Everything is read from meta.json at build time - the span from the
  * rows, the sources as the build recorded them - so it cannot state a date or
- * a source the files do not carry. No licence is claimed because none has
- * been chosen; add `license` when one is.
+ * a source the files do not carry. Each download names its own licence,
+ * because the two files holding SHRUG's figures keep SHRUG's terms.
  */
 function datasetLd() {
   const m = meta as {
@@ -137,6 +142,7 @@ function datasetLd() {
       "Every proposal in India's environmental clearance register (PARIVESH), placed in the Census 2011 district and sub-district it was filed for, with its stage, dated appraisal history and time to decision, joined to the Census 2011, Village Directory and SECC profile of the place and to the Scheduled Area determination for the district. Rebuilt nightly from the register; contact details are removed.",
     url: `${SITE_URL}/instruments/consent/data`,
     isAccessibleForFree: true,
+    license: [CC_BY, CC_BY_NC_SA],
     creator: { "@id": `${SITE_URL}/#org` },
     publisher: { "@id": `${SITE_URL}/#org` },
     inLanguage: "en-IN",
@@ -161,6 +167,7 @@ function datasetLd() {
       description: what,
       encodingFormat: "application/json",
       contentUrl: `${base}/${file}`,
+      license: SHRUG_FILES.includes(file) ? CC_BY_NC_SA : CC_BY,
     })),
   };
 }
@@ -196,13 +203,24 @@ export default function DataPage() {
             cached. The endpoints below answer the questions a file cannot answer
             on its own - search across India, the change log, and CSV.
           </p>
-          <p className="font-body text-[13.5px] leading-relaxed max-w-3xl opacity-75 mb-10">
+          <p className="font-body text-[13.5px] leading-relaxed max-w-3xl opacity-75 mb-3">
             Each source keeps its own terms: the register is the Ministry of
             Environment, Forest and Climate Change&rsquo;s; the Census figures
             come through SHRUG (Development Data Lab); the boundaries from
             datameet. How each is read and checked is in the{" "}
             <Link href="/instruments/consent/methodology" className="underline underline-offset-2">methodology</Link>.
             {read ? ` These files were last built ${new Date(read).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata" })}.` : ""}
+          </p>
+          <p className="font-body text-[13.5px] leading-relaxed max-w-3xl opacity-75 mb-10">
+            Licence: these files are published under{" "}
+            <a href={CC_BY} className="underline underline-offset-2">CC BY 4.0</a>
+            , so they may be reused for any purpose, commercial included, with
+            credit to Whitespace India and a link to this page. Two are the
+            exception: <code>{SHRUG_FILES.join(" and ")}</code> carry Census and
+            SECC figures taken from SHRUG and keep its licence,{" "}
+            <a href={CC_BY_NC_SA} className="underline underline-offset-2">CC BY-NC-SA 4.0</a>
+            : not for commercial use, and anything built from them is shared on
+            the same terms.
           </p>
 
           <h2 className="font-headline font-bold text-[24px] mb-3">Endpoints</h2>
