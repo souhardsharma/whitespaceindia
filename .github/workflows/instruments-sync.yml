@@ -1,0 +1,278 @@
+# Keeps Instrument 01 current.
+#
+# The clearance register is live. A dataset scraped once and left alone is worse
+# than no dataset, because it looks current and is not. This runs daily, sweeps
+# the whole register (the register's date filter works on SUBMISSION date, so a
+# windowed read cannot see status changes), reads the application form and the
+# appraisal history of every proposal that is new or moved, rebuilds every
+# published artifact into a candidate, checks the candidate against the full
+# published-data contract, and only then replaces the published data and
+# commits it.
+#
+# HOW IT STARTS FROM NOTHING. The register, SHRUG and the boundaries download in
+# minutes. The per-proposal sources do not: ~116,000 application forms at
+# several seconds each. A job that tried to read them all in one night would
+# hit its time limit and be killed, and a killed job saves nothing to the
+# Actions cache - so the next night would start from the same empty place, for
+# ever, while every gate ahead of the timeout stayed green. Three things stop
+# that:
+#   1. A seed. `cache_seed.py pack` builds a verified archive of the two
+#      per-proposal caches; it is published once as the asset
+#      `instruments-cache-seed.tar.gz` on the release `instruments-cache-seed`,
+#      and a run whose cache is not yet warm merges it in UNDER what it has
+#      already read. After that, each night is an increment.
+#   2. A budget. sync.py gets 50 of the job's 90 minutes, reserves 12 of them
+#      for its own rebuild and contract, and gives each per-proposal pass a
+#      share of the rest; each pass stops itself when its share runs out,
+#      keeping what it read, and the rest stays owed. Of the other 40: the
+#      proxy refresh (<= 6), the cross-check (<= 6), and setup, cache restore
+#      and save, the checks, the commit and the Monday seed pack (~25).
+#   3. The cache is saved on EVERY outcome (`if: always()`), so even without a
+#      seed the backfill accumulates night over night instead of restarting.
+#
+# A failed build commits nothing: yesterday's data stays up rather than being
+# replaced by something that did not pass its own checks.
+
+name: Sync Instrument 01 data
+
+on:
+  schedule:
+    # 01:30 UTC daily, which is 07:00 IST - after the register's overnight
+    # updates and before the working day.
+    - cron: "30 1 * * *"
+  workflow_dispatch:
+    inputs:
+      since:
+        description: "Optional YYYY-MM-DD for a targeted catch-up. Leave empty for the normal full sweep."
+        type: string
+        default: ""
+
+concurrency:
+  group: instruments-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+
+    env:
+      INSTRUMENTS_CACHE_DIR: ${{ github.workspace }}/.instruments-cache
+      # NOT INSTRUMENTS_GEO_DBF here. The gating suites run before the cache is
+      # restored, and pointing them at a file that does not exist yet crashed
+      # the resolver suite - caught by scripts/instruments/rehearse_sync.py.
+      # sync.py sets it for its own build steps.
+      PYTHONIOENCODING: utf-8
+      SEED_RELEASE: instruments-cache-seed
+      SEED_ASSET: instruments-cache-seed.tar.gz
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Resolver tests
+        # GATING, and deliberately before the fetch. The resolver decides which
+        # district every proposal is attributed to, so a regression here does
+        # not produce an obviously broken build - it produces a plausible one
+        # that files projects under the wrong districts and then commits it.
+        run: python scripts/instruments/test_district_resolution.py
+
+      - name: Egress layer
+        # GATING, and before the fetch. This job is the one that talks to
+        # PARIVESH unattended, night after night. Needs no network.
+        run: python scripts/instruments/test_net.py
+
+      - name: Scheduled sync currency
+        # GATING. This job IS the sync, so the rules about how far its
+        # watermark may advance are asserted before it runs, not after.
+        run: python scripts/instruments/test_sync.py
+
+      - name: Restore the source cache
+        id: restore
+        uses: actions/cache/restore@v4
+        with:
+          path: .instruments-cache
+          # Never an exact hit (the run id is in the key), so the most recent
+          # cache is always found through restore-keys and a new one is always
+          # saved below. A stable key would restore Monday's cache all week and
+          # throw away each night's reads.
+          key: instruments-cache-${{ github.run_id }}
+          restore-keys: |
+            instruments-cache-
+
+      - name: Fetch static sources if the cache is cold
+        # Tests for the FILES, not for a cache hit: what matters is whether the
+        # sources are on disk. `build_data.py --fetch` downloads them and then
+        # builds; the build refuses to publish without the application forms
+        # (the unread-share gate), which is expected here and harmless - it
+        # writes nothing - so its exit code is not the signal.
+        run: |
+          mkdir -p "$INSTRUMENTS_CACHE_DIR"
+          if [ -s "$INSTRUMENTS_CACHE_DIR/geo/2011_Dist.shp" ] \
+             && [ -s "$INSTRUMENTS_CACHE_DIR/shrug/pc11_pca_clean_pc11subdist.tab" ] \
+             && [ -s "$INSTRUMENTS_CACHE_DIR/parivesh/all_records.json" ]; then
+            echo "static sources present"
+          else
+            echo "static sources missing; fetching them once"
+            python scripts/instruments/build_data.py --fetch || true
+          fi
+
+      - name: Seed the per-proposal cache if it is not yet warm
+        # Not "if it is empty". A first night without a published seed reads
+        # a few thousand forms; testing for an empty file then skipped the
+        # seed for ever after, leaving the backfill to crawl on budget alone.
+        # unpack MERGES: it adds only the proposals the cache has not read, so
+        # nothing already read is replaced by the seed's older copy.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WARM_FORMS: "80000"
+        run: |
+          HAVE=0
+          if [ -f "$INSTRUMENTS_CACHE_DIR/caf/caf_extract.jsonl" ]; then
+            HAVE=$(wc -l < "$INSTRUMENTS_CACHE_DIR/caf/caf_extract.jsonl")
+          fi
+          if [ "$HAVE" -ge "$WARM_FORMS" ]; then
+            echo "per-proposal cache warm ($HAVE forms)"
+            exit 0
+          fi
+          if gh release download "$SEED_RELEASE" --pattern "$SEED_ASSET" \
+               --dir "$RUNNER_TEMP" --clobber; then
+            # unpack verifies the archive first: checksums, nested field
+            # whitelists, no contact details. A seed that fails any of it is
+            # refused.
+            python scripts/instruments/cache_seed.py unpack "$RUNNER_TEMP/$SEED_ASSET"
+          else
+            echo "::warning::No cache seed published; the backfill will build up over several nights within the time budget, and nothing is published until the unread share falls under its ceiling."
+          fi
+
+      - name: Refresh the proxy pool
+        # Proxies are the default egress (net.py), so no single address
+        # carries the night's reads. Free proxies die within days, so the
+        # pool is rebuilt every night - bounded, and written as routes
+        # verify, so a slow night still leaves a usable pool. The pool lives
+        # in the cache directory and is saved with it; a night whose refresh
+        # finds nothing keeps yesterday's routes.
+        # refresh_proxies.py appends to the live pool and replaces it only
+        # when at least 50 routes verified, so a thin night keeps
+        # yesterday's routes rather than shrinking to one or two.
+        continue-on-error: true
+        timeout-minutes: 6
+        run: |
+          python scripts/instruments/refresh_proxies.py --out "$INSTRUMENTS_CACHE_DIR/proxies.txt" --workers 4000 --max-minutes 4 --target 400 || true
+          echo "pool: $(wc -l < "$INSTRUMENTS_CACHE_DIR/proxies.txt" 2>/dev/null || echo 0) routes"
+
+      - name: Sync
+        env:
+          INSTRUMENTS_GEO_DBF: ${{ github.workspace }}/.instruments-cache/geo/2011_Dist.dbf
+          SYNC_SINCE: ${{ inputs.since }}
+          # The sync runs the full published-data contract over its candidate
+          # with this set; a stale read time there means this run's read was
+          # not recorded.
+          INSTRUMENTS_ASSERT_FRESHNESS: "1"
+        run: |
+          # Through the environment, never interpolated into the shell. An
+          # Actions expression substitutes BEFORE the shell parses the line, so
+          # a dispatch input containing shell metacharacters would execute in a
+          # job that holds contents: write and a push token. (Do not write an
+          # expression, even an empty one, inside this comment: Actions
+          # evaluates expressions in run blocks, comments included, and an
+          # empty one makes the whole workflow invalid.)
+          if [ -n "$SYNC_SINCE" ]; then
+            python scripts/instruments/sync.py --since "$SYNC_SINCE" --budget-minutes 50
+          else
+            python scripts/instruments/sync.py --full --budget-minutes 50
+          fi
+
+      - name: Save the source cache
+        # EVERY outcome. A night that ran out of budget, or failed its contract,
+        # still read forms; discarding them is what made a cold start
+        # permanent.
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .instruments-cache
+          key: instruments-cache-${{ github.run_id }}
+
+      - name: Published data contract
+        # Already run over the candidate inside sync.py; run again over what is
+        # now published, so the commit below is of data that passed where it
+        # stands.
+        env:
+          INSTRUMENTS_ASSERT_FRESHNESS: "1"
+        run: python scripts/instruments/check_published.py
+
+      - name: Boundary reader and site verdict
+        env:
+          # This job restores the fetch cache, so the file-dependent half MUST
+          # run here; without the flag a cache-restore failure would silently
+          # downgrade this to the structural checks and still report success.
+          INSTRUMENTS_GEOMETRY_REQUIRE_FILE: "1"
+        run: python scripts/instruments/test_geometry.py
+
+      - name: Commit regenerated data
+        run: |
+          git config user.name "instruments-sync"
+          git config user.email "actions@github.com"
+          # NOT verification_report.json: it is gitignored as a local audit
+          # artifact, and `git add` on an explicitly named ignored path exits 1.
+          git add public/data/instruments
+          if git diff --staged --quiet; then
+            echo "No change in the published data."
+          else
+            RATE=$(python -c "import json;print(json.load(open('public/data/instruments/consent/meta.json'))['resolution_rate_pct'])")
+            N=$(python -c "import json;print(json.load(open('public/data/instruments/consent/meta.json'))['counts']['proposals_published'])")
+            git commit -m "data(instruments): sync register — ${N} proposals, ${RATE}% located"
+            # The branch may have moved while this ran. Pushing without
+            # rebasing is rejected, and the night's data is lost with the job.
+            git pull --rebase origin "$GITHUB_REF_NAME"
+            git push
+          fi
+
+      - name: Cross-check a sample against the signed clearance letters
+        # Advisory, not gating, and AFTER the data commit: it makes ~150
+        # requests to PARIVESH and must never cost the night its publish by
+        # running the job out of time. It measures whether the location the
+        # instrument reports matches the regulator's own letter.
+        continue-on-error: true
+        timeout-minutes: 6
+        run: |
+          python scripts/instruments/crosscheck_location.py --sample 150
+          if [ -f scripts/instruments/crosscheck_report.json ]; then
+            git add scripts/instruments/crosscheck_report.json
+            if ! git diff --staged --quiet; then
+              git commit -m "data(instruments): location cross-check report"
+              git pull --rebase origin "$GITHUB_REF_NAME"
+              git push
+            fi
+          fi
+
+      - name: Refresh the cache seed (weekly, when enabled)
+        # Keeps the seed close to current, so a cold start - a new fork, an
+        # evicted cache - restores this week's reads rather than an old month's.
+        # Off until the repository variable INSTRUMENTS_SEED_REFRESH is "true":
+        # the first seed is published by hand (see
+        # docs/instrument-01-people-and-consent/04-engineering-reference.md).
+        if: success() && vars.INSTRUMENTS_SEED_REFRESH == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(date -u +%u)" != "1" ]; then
+            echo "not Monday; seed refresh skipped"
+            exit 0
+          fi
+          python scripts/instruments/cache_seed.py pack --out "$RUNNER_TEMP/$SEED_ASSET"
+          gh release upload "$SEED_RELEASE" "$RUNNER_TEMP/$SEED_ASSET" --clobber
+
+      - name: Fail on repeated partial nights
+        # Last, after the data is committed: a partial night still publishes
+        # what it read. Three in a row is a fault nobody is looking at, and a
+        # red job is what makes someone look.
+        run: python scripts/instruments/sync.py --check-streak
