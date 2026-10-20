@@ -404,7 +404,7 @@ export default function Landing() {
         <div className={styles.faqFooter}>
           <span className={styles.faqFooterText}>© {new Date().getFullYear()} Whitespace India</span>
           <div className={styles.faqFooterLinks}>
-            <a href="https://github.com/souhardsharma/whitespaceindia-csr" target="_blank" rel="noopener noreferrer" className={styles.faqFooterLink}>Source on GitHub</a>
+            <a href="https://github.com/souhardsharma/whitespaceindia" target="_blank" rel="noopener noreferrer" className={styles.faqFooterLink}>Source on GitHub</a>
             <a href="https://www.linkedin.com/in/souhardsharma/" target="_blank" rel="noopener noreferrer" className={styles.faqFooterLink}>Get in touch</a>
           </div>
         </div>

@@ -29,7 +29,7 @@ export const metadata = pageMeta({
   path: "/instruments/consent",
   title: "People & Consent — Instrument 01 | Whitespace India",
   description:
-    "Take an Indian environmental clearance proposal and see who lives where it would be built, what they live on, and which statutory and international-standard consent obligations attach.",
+    "Take an Indian environmental clearance proposal and see who lives where it would be built, what they live on, and which consent obligations attach.",
 });
 
 const nf = new Intl.NumberFormat("en-IN");

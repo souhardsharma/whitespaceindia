@@ -2,7 +2,7 @@ import { partsFor } from "@/lib/instruments/csv";
 import Link from "next/link";
 import { FollowButton } from "@/components/instruments/Watchlist";
 import RecentActivity from "@/components/instruments/RecentActivity";
-import { presentState } from "@/lib/instruments/place";
+import { presentState, titleCase } from "@/lib/instruments/place";
 import { pageMeta, pageLd } from "@/lib/instruments/metadata";
 import StructuredData from "@/components/instruments/StructuredData";
 import { notFound } from "next/navigation";
@@ -122,10 +122,16 @@ export function generateMetadata({ params }: { params: { code: string } }) {
     // instruments layout's, and 620 district pages all declare themselves a
     // duplicate of /instruments - which asks a search engine to drop the very
     // pages this instrument exists to publish.
+    // A results page cuts a title near 60 characters. A few names are long
+    // enough ("Dadra & Nagar Haveli, Dadra and Nagar Haveli and Daman and
+    // Diu") that the State would push the instrument's name off the end, so
+    // there the title names the district alone; the page heads both.
+    const place = titleCase(d.district_name);
+    const full = `${place}, ${titleCase(presentState(d.censuscode, d.state_name))} — People & Consent`;
     return pageMeta({
       path: `/instruments/consent/district/${params.code}`,
-      title: `${title(d.district_name)}, ${title(presentState(d.censuscode, d.state_name))} — People & Consent`,
-      description: `Every environmental clearance proposal filed for ${title(
+      title: full.length <= 60 ? full : `${place} — People & Consent`,
+      description: `Every environmental clearance proposal filed for ${titleCase(
         d.district_name
       )}, with the Census 2011 record of who lives there and the consent obligations that attach.`,
     });
@@ -253,8 +259,8 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
       <StructuredData
         data={pageLd({
           path: `/instruments/consent/district/${params.code}`,
-          name: `${title(record.district_name)}, ${title(presentState(record.censuscode, record.state_name))}`,
-          description: `Every environmental clearance proposal filed for ${title(
+          name: `${titleCase(record.district_name)}, ${titleCase(presentState(record.censuscode, record.state_name))}`,
+          description: `Every environmental clearance proposal filed for ${titleCase(
             record.district_name,
           )}, with the Census 2011 record of who lives there.`,
           trail: [
@@ -276,11 +282,11 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
           </Link>
 
           <h1 className="mt-4 font-headline font-bold text-[clamp(28px,4.4vw,50px)] leading-[1.03] tracking-[-0.03em]">
-            {title(record.district_name)}
-            <span className="opacity-65">, {title(presentState(record.censuscode, record.state_name))}</span>
+            {titleCase(record.district_name)}
+            <span className="opacity-65">, {titleCase(presentState(record.censuscode, record.state_name))}</span>
             {presentState(record.censuscode, record.state_name) !== record.state_name ? (
               <span className="block font-label text-[11px] uppercase tracking-[0.16em] opacity-80 mt-2">
-                {title(record.state_name)} in Census 2011, the frame every figure here describes
+                {titleCase(record.state_name)} in Census 2011, the frame every figure here describes
               </span>
             ) : null}
           </h1>
@@ -293,7 +299,7 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
-            <FollowButton kind="district" id={String(record.censuscode)} name={title(record.district_name)} />
+            <FollowButton kind="district" id={String(record.censuscode)} name={titleCase(record.district_name)} />
             <a
               href={`/instruments/consent/feed?district=${record.censuscode}`}
               className="tap-target inline-flex items-center px-4 py-2 border border-[#1c1c19] font-label text-[10px] uppercase tracking-[0.16em]"
@@ -575,10 +581,3 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function title(s: string): string {
-  return (s || "")
-    .toLowerCase()
-    .split(/\s+/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}

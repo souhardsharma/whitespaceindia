@@ -61,7 +61,7 @@ export function pageMeta({
       card: "summary_large_image" as const,
       title,
       description,
-      images: [OG_IMAGE],
+      images: [{ url: OG_IMAGE, alt: title }],
     },
     // A page generated on demand for any of 89,817 proposals is not something
     // to put in an index; it stays followable so the register still leads a

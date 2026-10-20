@@ -148,7 +148,7 @@ export default function Footer({ vertical }: { vertical?: VerticalConfig }) {
             </li>
             <li>
               <a
-                href="https://github.com/souhardsharma/whitespaceindia-csr"
+                href="https://github.com/souhardsharma/whitespaceindia"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#1c1c19]/80 hover:text-[#BD402C] transition-colors"

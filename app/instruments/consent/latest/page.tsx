@@ -15,7 +15,7 @@ import {
   json,
   type ChangeKind,
 } from "@/lib/instruments/server";
-import { presentState } from "@/lib/instruments/place";
+import { presentState, titleCase } from "@/lib/instruments/place";
 import stagesFile from "@/public/data/instruments/consent/stages.json";
 import freshness from "@/public/data/instruments/consent/freshness.json";
 
@@ -38,7 +38,7 @@ export const metadata = pageMeta({
   path: "/instruments/consent/latest",
   title: "What moved in the register — People & Consent",
   description:
-    "Environmental clearance proposals filed, queried, decided and closed across India in the last sixty days, dated by the regulator's own appraisal history. Filter by state, sector or Scheduled Area; follow by feed.",
+    "Environmental clearance proposals filed, queried, decided and closed across India in the last sixty days, dated by the regulator's own appraisal history.",
 });
 
 const STAGE_LABELS: Record<string, string> = Object.fromEntries(
@@ -66,9 +66,6 @@ function one(sp: SP, k: string): string {
   return (Array.isArray(v) ? v[0] : v) ?? "";
 }
 
-function title(s: string): string {
-  return s.toLowerCase().replace(/(^|[\s(&-])([a-z])/g, (_, a, b) => a + b.toUpperCase());
-}
 
 function fmtDate(d: string): string {
   return new Date(`${d}T00:00:00+05:30`).toLocaleDateString("en-IN", {
@@ -291,7 +288,7 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
                       className="w-full bg-[#fcf9f4] border border-[#1c1c19] px-3 py-2.5 font-body text-[14px]">
                 <option value="">All of India</option>
                 {states.map((s) => (
-                  <option key={s.slug} value={s.slug}>{title(s.name)}</option>
+                  <option key={s.slug} value={s.slug}>{titleCase(s.name)}</option>
                 ))}
               </select>
             </label>
@@ -393,7 +390,7 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
                           {e.proposal.districtName}
                         </Link>
                       ) : (
-                        title(presentState(null, index.states[e.proposal.stateSlug]?.name ?? ""))
+                        titleCase(presentState(null, index.states[e.proposal.stateSlug]?.name ?? ""))
                       )}
                     </span>
                   </div>

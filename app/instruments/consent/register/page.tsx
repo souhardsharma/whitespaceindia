@@ -22,9 +22,9 @@ import instrumentMeta from "@/public/data/instruments/consent/meta.json";
 
 export const metadata = pageMeta({
   path: "/instruments/consent/register",
-  title: "The register by district — People & Consent | Whitespace India",
+  title: "The register by district — People & Consent",
   description:
-    "Every environmental clearance proposal in India, placed in the district it was filed for, alongside the Census record of who lives there and the Fifth Schedule status of that place.",
+    "Every environmental clearance proposal in India, placed in its district, beside the Census record of who lives there and the place's Fifth Schedule status.",
 });
 
 const nf = new Intl.NumberFormat("en-IN");
