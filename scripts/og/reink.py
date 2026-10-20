@@ -1,9 +1,9 @@
 """Re-ink a one-colour riso print: the paper stays, the ink becomes another ink.
 
 The instruments shelf took its art from Instrument 01's plum, so the shelf and
-its first instrument read as one thing. The shelf is now graphite, and its two
-prints (the landing tile and the share card's magnifying glass) were re-inked
-with this script rather than redrawn, so the drawings are unchanged.
+its first instrument read as one thing. The shelf is now graphite, and its
+share card's magnifying glass was re-inked with this script rather than
+redrawn, so the drawing is unchanged.
 
 Ink coverage is read from luminance, which keeps the grain, the halftone and
 the misregistration. Luminance runs paper -> MID -> DEEP. MID sits at the
@@ -11,9 +11,7 @@ luminance plum had, so the drawing keeps its weight; only pixels darker than
 plum (the second, deeper ink some prints carry) move toward DEEP.
 
 usage: python scripts/og/reink.py <in> <out> <mid r,g,b> <deep r,g,b>
-  shelf: python scripts/og/reink.py public/landing/_orig_backup/instruments-bg.webp \
-             public/landing/_orig_backup/instruments-shelf.webp 84,80,72 30,28,25
-         then python scripts/optimize_landing.py instruments-shelf
+  graphite: mid 84,80,72  deep 30,28,25
 """
 import sys
 

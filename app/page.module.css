@@ -403,12 +403,12 @@
   font-size: clamp(9px, 0.7vw, 11px);
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--ivory);
+  color: var(--ink);
 }
 .liveDot {
   width: 8px; height: 8px; border-radius: 50%;
-  background: var(--ivory);
-  box-shadow: 0 0 0 0 rgba(243, 237, 225, 0.55);
+  background: var(--terra);
+  box-shadow: 0 0 0 0 rgba(155, 40, 23, 0.55);
   animation: liveDot 1.6s ease-in-out infinite;
 }
 
@@ -443,7 +443,7 @@
   display: inline-block;
   width: 1px;
   height: 0.9em;
-  background: rgba(243, 237, 225, 0.4);
+  background: rgba(26, 26, 23, 0.35);
   margin-bottom: 0.1em;
 }
 .tileStats {
@@ -451,7 +451,7 @@
   align-items: baseline;
   gap: clamp(10px, 1.2vw, 18px);
   font-family: var(--font-space-grotesk), monospace;
-  color: var(--ivory);
+  color: var(--ink);
   margin-top: 6px;
 }
 
@@ -492,15 +492,15 @@
     rgba(243, 237, 225, 0.92) 100%);
   color: var(--ink);
 }
-.tileFrameDark {
+.tileFrameCsr {
   position: absolute; inset: 0;
-  display: flex; flex-direction: column; justify-content: space-between;
+  display: flex; flex-direction: column;
   padding: clamp(14px, 1.8vh, 22px) clamp(14px, 1.6vw, 22px);
-  background: linear-gradient(180deg,
-    rgba(20, 14, 10, 0) 30%,
-    rgba(20, 14, 10, 0.7) 100%);
-  color: var(--ivory);
+  color: var(--ink);
 }
+.csrHeading { margin-top: clamp(8px, 1.4vh, 16px); }
+.tileCsr .tileImg { object-position: 50% 30%; }
+.csrArrow { margin-top: auto; align-self: flex-end; }
 .tileTopRow {
   display: flex; justify-content: space-between; align-items: center;
   font-family: var(--font-space-grotesk), monospace;
@@ -645,10 +645,19 @@
   }
   .tileGrid {
     grid-template-columns: 1fr;
-    grid-template-rows: 1.3fr repeat(4, 1fr);
+    grid-template-rows: 1.8fr repeat(4, 1fr);
   }
   .tileCsr { grid-column: 1; }
+  /* One column: the banner is narrower than its print, so the print is
+     cropped at the sides; pinned left, the watering can keeps clear of
+     the text on the left and the Live tag above. */
+  .tileCsr .tileImg { object-position: 0% 30%; }
   .tileMeta { font-size: 9px; }
+}
+@media (max-width: 520px) {
+  /* In a row the second stat lands on the watering can. */
+  .tileStats { flex-direction: column; align-items: flex-start; gap: 3px; }
+  .statDivider { display: none; }
 }
 
 /* ════════════════════════════════════════════════════════════════════
