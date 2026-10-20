@@ -33,11 +33,11 @@ const siteUrl = SITE_URL;
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Whitespace India | CSR · Health · Education · Energy · Instruments",
+    default: "Whitespace India | CSR, Health, Education, Energy, Instruments",
     template: "%s | Whitespace India",
   },
   description:
-    "Open civic data that shows where India's resources are landing, and where they aren't. District indexes across CSR, Health, Education and Energy, and an instruments shelf whose first instrument, People & Consent, screens environmental clearance proposals. Built entirely on government records and free for anyone to use.",
+    "Open civic data on where India's resources land, and where they don't: a CSR index across 651 districts and a register of environmental clearance proposals.",
   applicationName: "Whitespace India",
   keywords: [
     "Whitespace India",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     description:
       "Civic data across CSR, Health, Education and Energy, and civic instruments. Live now: the CSR opportunity index across 651 Indian districts, and People & Consent, a screening instrument for environmental clearance proposals.",
     url: siteUrl,
-    images: [{ url: "/og/brand.png", width: 1200, height: 630, alt: "Whitespace India" }],
+    images: [{ url: "/og/whitespace-india.jpg", width: 1200, height: 630, alt: "Whitespace India: \u201cWhere India\u2019s resources land, and where they don\u2019t\u201d, beside a risograph print of coloured blocks and a seedling" }],
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
@@ -72,8 +72,7 @@ export const metadata: Metadata = {
     title: "Whitespace India",
     description:
       "Civic data across CSR, Health, Education and Energy, and civic instruments.",
-    creator: "@souaboroq",
-    images: ["/og/brand.png"],
+    images: [{ url: "/og/whitespace-india.jpg", alt: "Whitespace India: \u201cWhere India\u2019s resources land, and where they don\u2019t\u201d, beside a risograph print of coloured blocks and a seedling" }],
   },
   alternates: { canonical: siteUrl },
   robots: {
@@ -81,11 +80,18 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
+  // The SVG follows the reader's colour scheme; the rasters are for what
+  // cannot read one (scripts/make_icons.mjs). Google's results take a
+  // favicon of 48 px or more, so the ICO carries 48.
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
-    shortcut: "/favicon.svg",
-    apple: "/favicon.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
   },
+  manifest: "/manifest.webmanifest",
   category: "research",
 };
 
@@ -125,7 +131,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${newsreader.variable} ${publicSans.variable} ${spaceGrotesk.variable} ${instrumentSerif.variable}`}>
+    <html lang="en-IN" className={`${newsreader.variable} ${publicSans.variable} ${spaceGrotesk.variable} ${instrumentSerif.variable}`}>
       <body className="bg-[#fcf9f4] text-[#1c1c19] font-body antialiased">
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <script

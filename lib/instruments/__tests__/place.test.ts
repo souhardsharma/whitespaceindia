@@ -5,7 +5,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { presentState, stateLabel } from "../place.ts";
+import { presentState, stateLabel, titleCase } from "../place.ts";
 
 test("districts whose State changed after 2011 carry today's State", () => {
   assert.equal(presentState(536, "Andhra Pradesh"), "Telangana"); // Hyderabad
@@ -23,4 +23,16 @@ test("districts whose State did not change are left alone", () => {
 test("the 2011 State is stated beside today's, never silently replaced", () => {
   assert.equal(stateLabel(536, "Andhra Pradesh"), "Telangana (Andhra Pradesh in Census 2011)");
   assert.equal(stateLabel(110, "Rajasthan"), "Rajasthan");
+});
+
+test("place names published in capitals read as a reader writes them", () => {
+  assert.equal(titleCase("LEH (LADAKH)"), "Leh (Ladakh)");
+  assert.equal(titleCase("SANT RAVI DAS NAGAR(BHADOHI)"), "Sant Ravi Das Nagar (Bhadohi)");
+  assert.equal(titleCase("Dadra and Nagar Haveli and Daman and Diu"), "Dadra and Nagar Haveli and Daman and Diu");
+  assert.equal(titleCase("ANDAMAN & NICOBAR ISLAND"), "Andaman & Nicobar Island");
+  assert.equal(titleCase("NORTH & MIDDLE ANDAMAN"), "North & Middle Andaman");
+  assert.equal(titleCase("PASCHIM BARDHAMAN"), "Paschim Bardhaman");
+  assert.equal(titleCase("JAMMU & KASHMIR"), "Jammu & Kashmir");
+  assert.equal(titleCase("of course"), "Of Course");
+  assert.equal(titleCase(""), "");
 });

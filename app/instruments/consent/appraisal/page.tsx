@@ -14,9 +14,9 @@ import meta from "@/public/data/instruments/consent/meta.json";
 
 export const metadata = pageMeta({
   path: "/instruments/consent/appraisal",
-  title: "How long clearance takes — People & Consent | Whitespace India",
+  title: "How long clearance takes — People & Consent",
   description:
-    "Time from the first recorded filing to the decision across India's environmental clearance register, by sector, by phase and by what was decided. Measured from each proposal's own appraisal history rather than the register's submission date, over the proposals for which a dated history is held.",
+    "How long India's environmental clearances take, from first filing to decision, by sector, phase and outcome, measured from each proposal's appraisal history.",
 });
 
 const nf = new Intl.NumberFormat("en-IN");

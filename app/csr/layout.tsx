@@ -5,9 +5,9 @@ const siteUrl = SITE_URL;
 
 const PAGE_URL = `${siteUrl}/csr`;
 
-const TITLE = "CSR Opportunity Index | Whitespace India CSR — Where CSR Should Go in India";
+const TITLE = "CSR Opportunity Index for 651 Districts | Whitespace India";
 const DESCRIPTION =
-  "Interactive opportunity index ranking 651 Indian districts by the gap between multidimensional poverty and CSR funding. Built on NITI Aayog MPI 2023 and ten fiscal years of MCA CSR filings — adjust weights, filter by sector, and generate per-district research briefs. Free and open.";
+  "Ranks 651 Indian districts by the gap between poverty (NITI Aayog MPI 2023) and CSR spending in ten years of MCA filings. Adjust weights, filter by sector.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
     description:
       "Discover the Indian districts where philanthropic capital can create the most impact. Interactive opportunity index across 651 districts, free for foundations, donors, and researchers.",
     url: PAGE_URL,
-    images: [{ url: "/og/csr.png", width: 1200, height: 630, alt: "Whitespace India CSR Opportunity Index" }],
+    images: [{ url: "/og/csr-index.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
     type: "website",
-    siteName: "Whitespace India CSR",
+    siteName: "Whitespace India",
     locale: "en_IN",
   },
   twitter: {
@@ -42,8 +42,7 @@ export const metadata: Metadata = {
     title: "Whitespace India CSR — Where CSR Should Go",
     description:
       "Find India's philanthropic whitespaces — districts with high poverty and low CSR funding.",
-    creator: "@souaboroq",
-    images: ["/og/csr.png"],
+    images: [{ url: "/og/csr-index.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {
@@ -75,7 +74,7 @@ const PAGE_LD = {
       offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
       publisher: { "@id": `${siteUrl}/#org` },
       isPartOf: { "@id": `${siteUrl}/#site` },
-      image: `${siteUrl}/og/csr.png`,
+      image: `${siteUrl}/og/csr-index.jpg`,
       inLanguage: "en-IN",
     },
     {

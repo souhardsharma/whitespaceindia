@@ -34,6 +34,30 @@ export function presentState(code: number | null | undefined, censusState: strin
 }
 
 /**
+ * A place name as a reader writes it. The Census and the register publish
+ * names in capitals, sometimes with no space before a bracket, so "SANT RAVI
+ * DAS NAGAR(BHADOHI)" becomes "Sant Ravi Das Nagar (Bhadohi)" and a merged
+ * UT reads "Dadra and Nagar Haveli and Daman and Diu". Four page-local copies
+ * once disagreed: three printed "Leh (ladakh)" and "And Daman And Diu".
+ */
+const LOWER = new Set(["and", "of"]);
+
+export function titleCase(s: string): string {
+  return (s || "")
+    .toLowerCase()
+    .replace(/(\S)\(/g, "$1 (")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[a-z]+/g, (word, at: number, all: string) => {
+      const prev = all[at - 1];
+      const startsWord = at === 0 || /[\s(\-/&]/.test(prev);
+      if (!startsWord) return word;
+      if (at > 0 && prev === " " && LOWER.has(word)) return word;
+      return word[0].toUpperCase() + word.slice(1);
+    });
+}
+
+/**
  * "Telangana (Andhra Pradesh in Census 2011)" where the two differ, else the
  * State alone. `titleCase` is applied by callers that title-case names.
  */

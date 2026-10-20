@@ -52,7 +52,7 @@ import {
 } from "./ConsentScreen";
 import { PLUM } from "./InstrumentChrome";
 import { locationEvidence } from "@/lib/instruments/location";
-import { presentState } from "@/lib/instruments/place";
+import { presentState, titleCase } from "@/lib/instruments/place";
 import { FollowButton } from "./Watchlist";
 import LinkedClearances from "./LinkedClearances";
 
@@ -446,11 +446,11 @@ function LocationPanel({
             Where this profile describes
           </p>
           <h2 className="font-headline font-bold text-[clamp(22px,2.8vw,34px)] tracking-[-0.02em]">
-            {title(district.district_name)}
-            <span className="opacity-65">, {title(presentState(district.censuscode, district.state_name))}</span>
+            {titleCase(district.district_name)}
+            <span className="opacity-65">, {titleCase(presentState(district.censuscode, district.state_name))}</span>
             {presentState(district.censuscode, district.state_name) !== district.state_name ? (
               <span className="block font-label text-[10px] uppercase tracking-[0.16em] opacity-80 mt-1">
-                {title(district.state_name)} in Census 2011
+                {titleCase(district.state_name)} in Census 2011
               </span>
             ) : null}
           </h2>
@@ -497,7 +497,7 @@ function LocationPanel({
         {scope === "subdistrict" && subdistricts[0] ? (
           <>
             {" "}
-            Showing the {title(subdistricts[0].name || "")} sub-district, which
+            Showing the {titleCase(subdistricts[0].name || "")} sub-district, which
             is a far closer description of who a project actually affects than a
             district of several million people.
             {/* A tehsil that straddles a district boundary is one Census unit
@@ -647,13 +647,6 @@ function Notice({ title, body }: { title: string; body: string }) {
   );
 }
 
-function title(s: string): string {
-  return (s || "")
-    .toLowerCase()
-    .split(/\s+/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}
 
 
 /**
@@ -663,7 +656,7 @@ function title(s: string): string {
 function AppraisalComparison({ c }: { c: NonNullable<ProposalBundle["appraisalContext"]> }) {
   const rows = [
     c.sector ? { label: `${c.sector.name} proposals`, d: c.sector } : null,
-    c.state ? { label: `proposals filed in ${title(c.state.name)}`, d: c.state } : null,
+    c.state ? { label: `proposals filed in ${titleCase(c.state.name)}`, d: c.state } : null,
     c.national ? { label: "all of India", d: c.national } : null,
   ].filter((r): r is { label: string; d: { n: number; p25: number; median: number; p75: number } } => r !== null);
   if (!rows.length) return null;

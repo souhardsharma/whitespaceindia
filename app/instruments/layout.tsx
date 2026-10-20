@@ -6,7 +6,7 @@ const siteUrl = SITE_URL;
 const PAGE_URL = `${siteUrl}/instruments`;
 const TITLE = "Instruments — Whitespace India";
 const DESCRIPTION =
-  "Per-case screening instruments built from India's public records. Bring one project, filing, or place and the instrument assembles what the record holds about it — no score, no ranking. First instrument: People & Consent, a socio-economic and statutory-obligation profile for environmental clearance proposals.";
+  "Per-case instruments built from India's public records. Bring one project, filing or place and get what the record holds about it. First: People & Consent.";
 
 export const metadata: Metadata = {
   // `absolute`, so the root layout's "| Whitespace India" template does not
@@ -46,8 +46,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Whitespace India — Instruments",
     description: DESCRIPTION,
-    creator: "@souaboroq",
-    images: ["/og/instruments.png"],
+    images: [{ url: "/og/instruments.png", alt: "Whitespace India Instruments" }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {
