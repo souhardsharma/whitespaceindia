@@ -350,7 +350,7 @@ function ProjectRow({ project: p }: { project: SearchItem }) {
   const affected = p.declared.affectedFamilies ?? 0;
   return (
     <li className="border-b border-[#1c1c19]/15">
-      <Link
+      <Link prefetch={false}
         href={`/instruments/consent/${encodeURIComponent(p.id)}`}
         className="group block py-5 hover:bg-[#1c1c19]/[0.02] transition-colors"
       >

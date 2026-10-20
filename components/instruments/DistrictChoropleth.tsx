@@ -421,7 +421,7 @@ export default function DistrictChoropleth({
                 <tr key={r.code} className="border-b border-[#1c1c19]/12">
                   <td className="px-3 py-1.5">
                     {canOpen(r.code) ? (
-                      <Link
+                      <Link prefetch={false}
                         href={`/instruments/consent/district/${r.code}`}
                         className="underline underline-offset-2"
                       >
