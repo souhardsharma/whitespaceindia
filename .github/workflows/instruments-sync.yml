@@ -219,8 +219,8 @@ jobs:
 
       - name: Commit regenerated data
         run: |
-          git config user.name "instruments-sync"
-          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           # NOT verification_report.json: it is gitignored as a local audit
           # artifact, and `git add` on an explicitly named ignored path exits 1.
           git add public/data/instruments
