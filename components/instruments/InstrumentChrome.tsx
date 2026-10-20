@@ -151,7 +151,7 @@ export function InstrumentFooter() {
             Whitespace India
           </Link>
           <a
-            href="https://github.com/souhardsharma/whitespaceindia-csr"
+            href="https://github.com/souhardsharma/whitespaceindia"
             target="_blank"
             rel="noopener noreferrer"
             className="font-label text-[11px] uppercase tracking-[0.18em] text-[#1c1c19] opacity-70 hover:opacity-100 transition-opacity"

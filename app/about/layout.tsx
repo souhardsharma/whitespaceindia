@@ -5,9 +5,9 @@ const siteUrl = SITE_URL;
 
 const PAGE_URL = `${siteUrl}/about`;
 
-const TITLE = "About | Whitespace India CSR — The Philanthropic Opportunity Score";
+const TITLE = "About the CSR Opportunity Index | Whitespace India";
 const DESCRIPTION =
-  "Why Whitespace India CSR exists, who built it, and how it quantifies the gap between where CSR money goes in India and where it is most needed across 651 districts. Built on NITI Aayog MPI poverty data, MCA CSR filings, and Census 2011 — fully open and reproducible.";
+  "Why the CSR index exists, who built it, and how it measures the gap between where CSR money goes and where it is needed most, across 651 Indian districts.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -31,9 +31,9 @@ export const metadata: Metadata = {
     description:
       "Quantifying the gap between where philanthropic money goes in India and where people need it most. Three public datasets, one composite Opportunity Score.",
     url: PAGE_URL,
-    images: [{ url: "/og/csr.png", width: 1200, height: 630, alt: "About Whitespace India CSR" }],
+    images: [{ url: "/og/csr-index.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
     type: "website",
-    siteName: "Whitespace India CSR",
+    siteName: "Whitespace India",
     locale: "en_IN",
   },
   twitter: {
@@ -41,8 +41,7 @@ export const metadata: Metadata = {
     title: "About — Whitespace India CSR",
     description:
       "Why this tool exists and how it measures India's philanthropic funding gap across 651 districts.",
-    creator: "@souaboroq",
-    images: ["/og/csr.png"],
+    images: [{ url: "/og/csr-index.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {
@@ -69,7 +68,7 @@ const PAGE_LD = {
       description: DESCRIPTION,
       isPartOf: { "@id": `${siteUrl}/#site` },
       about: { "@id": `${siteUrl}/#org` },
-      primaryImageOfPage: { "@type": "ImageObject", url: `${siteUrl}/og/csr.png` },
+      primaryImageOfPage: { "@type": "ImageObject", url: `${siteUrl}/og/csr-index.jpg` },
       inLanguage: "en-IN",
     },
     {

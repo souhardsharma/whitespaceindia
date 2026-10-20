@@ -17,6 +17,7 @@
  */
 
 import ScrollRegion from "./ScrollRegion";
+import { titleCase } from "@/lib/instruments/place";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PLUM } from "./InstrumentChrome";
@@ -134,7 +135,7 @@ export default function RegisterExplorer({
           >
             <option value="">All states</option>
             {states.map((s) => (
-              <option key={s} value={s}>{title(s)}</option>
+              <option key={s} value={s}>{titleCase(s)}</option>
             ))}
           </select>
         </label>
@@ -290,8 +291,8 @@ export default function RegisterExplorer({
                         href={`/instruments/consent/district/${r.code}`}
                         className="font-body text-[14px] hover:underline underline-offset-2"
                       >
-                        {title(r.district)}
-                        <span className="opacity-70"> · {title(r.state)}</span>
+                        {titleCase(r.district)}
+                        <span className="opacity-70"> · {titleCase(r.state)}</span>
                       </Link>
                     </td>
                     <td className="py-2.5 pr-4 text-right font-label text-[13px] tabular-nums">
@@ -378,10 +379,3 @@ function Total({ label, value }: { label: string; value: string }) {
   );
 }
 
-function title(s: string): string {
-  return (s || "")
-    .toLowerCase()
-    .split(/\s+/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}

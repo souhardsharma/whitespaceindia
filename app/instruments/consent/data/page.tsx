@@ -25,7 +25,7 @@ export const metadata = pageMeta({
   path: "/instruments/consent/data",
   title: "Data and API — People & Consent",
   description:
-    "Every file People & Consent publishes, what each column means, and the endpoints for search, change feeds and CSV downloads. Rebuilt nightly from the environmental clearance register.",
+    "Every file People & Consent publishes, what each column means, and the endpoints for search, change feeds and CSV downloads, rebuilt nightly.",
 });
 
 const FILES: [string, string][] = [

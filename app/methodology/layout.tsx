@@ -5,9 +5,9 @@ const siteUrl = SITE_URL;
 
 const PAGE_URL = `${siteUrl}/methodology`;
 
-const TITLE = "Methodology | Philanthropic Opportunity Score (POS) — Whitespace India CSR";
+const TITLE = "How the CSR Opportunity Score Works | Whitespace India";
 const DESCRIPTION =
-  "The full methodology behind the Philanthropic Opportunity Score: six pipeline stages from raw NITI Aayog MPI poverty data and MCA CSR filings to a composite district-level score. Includes name reconciliation, post-2011 carve-out recasting, population tiering, normalization, and weighted aggregation across 651 Indian districts.";
+  "How the Philanthropic Opportunity Score is built: six stages from NITI Aayog MPI poverty data and MCA CSR filings to one score for each of 651 districts.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
     description:
       "How we measure the gap between poverty and philanthropic funding. Six pipeline stages, three public datasets, one composite Opportunity Score across 651 Indian districts.",
     url: PAGE_URL,
-    images: [{ url: "/og/csr.png", width: 1200, height: 630, alt: "Methodology — Whitespace India CSR" }],
+    images: [{ url: "/og/csr-index.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
     type: "article",
-    siteName: "Whitespace India CSR",
+    siteName: "Whitespace India",
     locale: "en_IN",
   },
   twitter: {
@@ -42,8 +42,7 @@ export const metadata: Metadata = {
     title: "Methodology — Whitespace India CSR",
     description:
       "Six pipeline stages, three public datasets, one composite POS score across 651 Indian districts.",
-    creator: "@souaboroq",
-    images: ["/og/csr.png"],
+    images: [{ url: "/og/csr-index.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {
@@ -73,7 +72,7 @@ const PAGE_LD = {
       author: { "@id": `${siteUrl}/#org` },
       publisher: { "@id": `${siteUrl}/#org` },
       mainEntityOfPage: PAGE_URL,
-      image: `${siteUrl}/og/csr.png`,
+      image: `${siteUrl}/og/csr-index.jpg`,
       inLanguage: "en-IN",
       proficiencyLevel: "Expert",
       about: [

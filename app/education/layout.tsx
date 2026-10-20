@@ -25,8 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Whitespace India Education",
     description: DESCRIPTION,
-    creator: "@souaboroq",
-    images: ["/og/education.png"],
+    images: [{ url: "/og/education.png", alt: "Whitespace India Education" }],
   },
   alternates: { canonical: PAGE_URL },
   // Coming soon means synthetic placeholder data behind an overlay: kept out
