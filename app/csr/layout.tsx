@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site";
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
+const siteUrl = SITE_URL;
 
 const PAGE_URL = `${siteUrl}/csr`;
 

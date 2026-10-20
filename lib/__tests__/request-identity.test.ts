@@ -13,13 +13,13 @@ function post(origin: string | null, host: string): Request {
 }
 
 test("a page served by this host may post to it, on any alias", () => {
-  assert.equal(isAllowedOrigin(post("https://csr.whitespaceindia.com", "csr.whitespaceindia.com")), true);
+  assert.equal(isAllowedOrigin(post("https://whitespaceindia.vercel.app", "whitespaceindia.vercel.app")), true);
 });
 
 test("another site's origin is refused, including other vercel.app projects", () => {
-  assert.equal(isAllowedOrigin(post("https://evil.vercel.app", "whitespaceindia-csr.vercel.app")), false);
+  assert.equal(isAllowedOrigin(post("https://evil.vercel.app", "whitespaceindia.vercel.app")), false);
 });
 
 test("a POST with no Origin is refused", () => {
-  assert.equal(isAllowedOrigin(post(null, "whitespaceindia-csr.vercel.app")), false);
+  assert.equal(isAllowedOrigin(post(null, "whitespaceindia.vercel.app")), false);
 });
