@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { changeQueryFrom, changes, changesFile, districts, json } from "@/lib/instruments/server";
 import stagesFile from "@/public/data/instruments/consent/stages.json";
+import { SITE_URL } from "@/lib/site";
 
 /**
  * An Atom feed of the register's movement, under the same filters as
@@ -34,7 +35,7 @@ function x(s: unknown): string {
 }
 
 export async function GET(req: NextRequest) {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
+  const base = SITE_URL;
   const host = new URL(base).host;
   const u = req.nextUrl.searchParams;
   const q = changeQueryFrom(u);

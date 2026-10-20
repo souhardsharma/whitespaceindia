@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { shardOnce, stateSlugs } from "@/lib/instruments/server";
+import { SITE_URL } from "@/lib/site";
 
 /**
  * One sitemap per filing state, listing every proposal page worth indexing.
@@ -16,8 +17,7 @@ import { shardOnce, stateSlugs } from "@/lib/instruments/server";
  * date where the source gives one, else by its submission date.
  */
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
+const BASE_URL = SITE_URL;
 
 export async function generateSitemaps() {
   return stateSlugs().map((_, id) => ({ id }));

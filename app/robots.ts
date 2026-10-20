@@ -1,12 +1,11 @@
 import type { MetadataRoute } from "next";
-import { stateSlugs } from "@/lib/instruments/server";
+import { SITE_URL } from "@/lib/site";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
+const BASE_URL = SITE_URL;
 
 /**
  * Dynamic robots.txt. Replaces the static public/robots.txt so the sitemap
- * URL automatically tracks NEXT_PUBLIC_SITE_URL across environments instead
+ * URL follows the site's one origin (lib/site.ts) instead
  * of being hardcoded to a single host.
  *
  * If both files coexist Next.js prefers app/robots.ts and ignores the static
@@ -30,13 +29,9 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/_next/image"],
       },
     ],
-    // The site's own pages, then one sitemap per filing state for the
-    // proposal pages (app/instruments/consent/sitemap.ts). Next does not write
-    // a sitemap index for generated sitemaps, so they are listed here.
-    sitemap: [
-      `${BASE_URL}/sitemap.xml`,
-      ...stateSlugs().map((_, i) => `${BASE_URL}/instruments/consent/sitemap/${i}.xml`),
-    ],
-    host: BASE_URL,
+    // One index naming the site's own sitemap and the per-state proposal
+    // sitemaps (app/sitemap-index.xml/route.ts), so a new filing state needs
+    // no change here.
+    sitemap: `${BASE_URL}/sitemap-index.xml`,
   };
 }

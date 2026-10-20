@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site";
+import { healthConfig } from "@/lib/health/config";
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
+const siteUrl = SITE_URL;
 
 const PAGE_URL = `${siteUrl}/health`;
 const TITLE = "Health — Whitespace India";
@@ -9,7 +10,7 @@ const DESCRIPTION =
   "Whitespace India Health: mapping public-health infrastructure gaps across 651 Indian districts. Ranks districts by health access, outcomes severity, and infrastructure shortfalls.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: TITLE },
   description: DESCRIPTION,
   openGraph: {
     title: "Whitespace India Health",
@@ -28,11 +29,16 @@ export const metadata: Metadata = {
     images: ["/og/health.png"],
   },
   alternates: { canonical: PAGE_URL },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
-  },
+  // Coming soon means synthetic placeholder data behind an overlay: kept out
+  // of the index (links still followed) and out of app/sitemap.ts until the
+  // config flag is lifted, which restores both.
+  robots: healthConfig.comingSoon
+    ? { index: false, follow: true }
+    : {
+        index: true,
+        follow: true,
+        googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+      },
 };
 
 export default function HealthLayout({ children }: { children: React.ReactNode }) {

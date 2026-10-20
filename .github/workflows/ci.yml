@@ -94,3 +94,12 @@ jobs:
         # type error. No test dependency - Node strips the types itself.
         run: npm test
       - run: npm run build
+      - name: What a search engine reads
+        # Canonicals, og:url, robots and titles on every sitemap page, the
+        # sitemap index, the noindex on placeholder verticals and the legacy
+        # host's redirect, against the build just made. Every rule is a
+        # failure this site has shipped while looking fine in a browser.
+        run: |
+          npx next start -p 3000 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://localhost:3000/robots.txt && break; sleep 2; done
+          node scripts/seo_check.mjs http://localhost:3000

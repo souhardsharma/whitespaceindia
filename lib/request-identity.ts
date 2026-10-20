@@ -59,9 +59,10 @@ function allowedOrigins(): string[] {
     if (v) out.push(`https://${v.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`);
   }
   if (!site && out.length === 0) {
-    // The historical default, kept so a deployment with no env configured at
-    // all still works rather than refusing every request.
-    out.push("https://whitespaceindia-csr.vercel.app");
+    // The primary origin (lib/site.ts), so a deployment with no env configured
+    // at all still works rather than refusing every request. Spelled out, not
+    // imported: the node test runner loads this file without the @/ alias.
+    out.push("https://whitespaceindia.vercel.app");
   }
   return out;
 }

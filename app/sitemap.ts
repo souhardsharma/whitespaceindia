@@ -1,9 +1,12 @@
 import { MetadataRoute } from "next";
 import registerDistricts from "@/public/data/instruments/consent/register/districts.json";
 import freshness from "@/public/data/instruments/consent/freshness.json";
+import { SITE_URL } from "@/lib/site";
+import { healthConfig } from "@/lib/health/config";
+import { energyConfig } from "@/lib/energy/config";
+import { educationConfig } from "@/lib/education/config";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindia-csr.vercel.app";
+const BASE_URL = SITE_URL;
 
 /**
  * lastModified should be stable per-deployment. We prefer the commit author
@@ -43,54 +46,23 @@ const REGISTER_READ_AT = (() => {
   return LAST_MODIFIED;
 })();
 
-/**
- * Hosts where middleware.ts rewrites "/" to "/csr".
- *
- * Kept in step with LEGACY_CSR_HOSTS in middleware.ts. On those hosts "/"
- * serves the CSR app and emits `canonical=/csr`, so listing "/" as the
- * sitemap's priority-1.0 entry advertised a URL that canonicalises away to
- * another entry in the same file - the top-priority row was a duplicate
- * Google drops. The landing is only a real destination on a host that does
- * not rewrite.
- */
-const LEGACY_CSR_HOSTS = new Set([
-  "whitespaceindia-csr.vercel.app",
-  "csr.whitespaceindia.com",
-]);
-
-function landingIsRewrittenToCsr(): boolean {
-  try {
-    return LEGACY_CSR_HOSTS.has(new URL(BASE_URL).hostname.toLowerCase());
-  } catch {
-    return false;
-  }
-}
-
 export default function sitemap(): MetadataRoute.Sitemap {
   // Priority is relative within this sitemap, not absolute. The CSR app and
   // landing are top-tier (real, fully-built pages); methodology/about are
   // secondary anchors; reports is a roadmap page; the placeholder verticals
-  // are lowest because they're "coming soon" cards.
-  const rewritten = landingIsRewrittenToCsr();
-
+  // are listed only once they are live (see verticalPages()).
   return [
-    // Listed only where it is its own page. See landingIsRewrittenToCsr().
-    ...(rewritten
-      ? []
-      : [
-          {
-            url: `${BASE_URL}/`,
-            lastModified: LAST_MODIFIED,
-            changeFrequency: "monthly" as const,
-            priority: 1.0,
-          },
-        ]),
+    {
+      url: `${BASE_URL}/`,
+      lastModified: LAST_MODIFIED,
+      changeFrequency: "monthly",
+      priority: 1.0,
+    },
     {
       url: `${BASE_URL}/csr`,
       lastModified: LAST_MODIFIED,
       changeFrequency: "monthly",
-      // Top of the file on a host where "/" resolves here anyway.
-      priority: rewritten ? 1.0 : 0.95,
+      priority: 0.95,
     },
     {
       url: `${BASE_URL}/instruments`,
@@ -127,6 +99,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${BASE_URL}/instruments/consent/latest`,
+      lastModified: REGISTER_READ_AT,
+      changeFrequency: "daily",
+      priority: 0.75,
+    },
+    {
+      url: `${BASE_URL}/instruments/consent/data`,
+      lastModified: REGISTER_READ_AT,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
       url: `${BASE_URL}/methodology`,
       lastModified: LAST_MODIFIED,
       changeFrequency: "monthly",
@@ -144,78 +128,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.7,
     },
-    {
-      url: `${BASE_URL}/health`,
-      lastModified: LAST_MODIFIED,
-      changeFrequency: "monthly",
-      priority: 0.85,
-    },
-    {
-      url: `${BASE_URL}/health/about`,
-      lastModified: LAST_MODIFIED,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${BASE_URL}/health/methodology`,
-      lastModified: LAST_MODIFIED,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${BASE_URL}/health/reports`,
-      lastModified: LAST_MODIFIED,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${BASE_URL}/energy`,
-      lastModified: LAST_MODIFIED,
-      changeFrequency: "monthly",
-      priority: 0.85,
-    },
-    {
-      url: `${BASE_URL}/energy/about`,
-      lastModified: LAST_MODIFIED,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${BASE_URL}/energy/methodology`,
-      lastModified: LAST_MODIFIED,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${BASE_URL}/energy/reports`,
-      lastModified: LAST_MODIFIED,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${BASE_URL}/education`,
-      lastModified: LAST_MODIFIED,
-      changeFrequency: "monthly",
-      priority: 0.85,
-    },
-    {
-      url: `${BASE_URL}/education/about`,
-      lastModified: LAST_MODIFIED,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${BASE_URL}/education/methodology`,
-      lastModified: LAST_MODIFIED,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${BASE_URL}/education/reports`,
-      lastModified: LAST_MODIFIED,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
+    ...verticalPages(),
     ...districtPages(),
   ];
 }
@@ -249,5 +162,33 @@ function districtPages(): MetadataRoute.Sitemap {
       // each is a real page with live data, but one of 620 rather than an
       // entry point a reader would search for by name.
       priority: 0.6,
+    }));
+}
+
+/**
+ * The Health, Energy and Education indexes, each with its three sub-pages,
+ * once that vertical is live.
+ *
+ * While `comingSoon` is set they run on synthetic placeholder data behind an
+ * overlay, and their layouts say noindex (a ranking of districts on invented
+ * numbers must not be served as a search result). A sitemap that listed them
+ * asked for pages the site itself refuses to have indexed; Search Console
+ * carried them as "Discovered - currently not indexed". Setting
+ * `comingSoon: false` lists them and lifts the noindex together.
+ */
+function verticalPages(): MetadataRoute.Sitemap {
+  return [healthConfig, energyConfig, educationConfig]
+    .filter((v) => !v.comingSoon)
+    .flatMap((v) => [
+      { path: `/${v.slug}`, priority: 0.85 },
+      { path: `/${v.slug}/about`, priority: 0.6 },
+      { path: `/${v.slug}/methodology`, priority: 0.6 },
+      { path: `/${v.slug}/reports`, priority: 0.5 },
+    ])
+    .map(({ path, priority }) => ({
+      url: `${BASE_URL}${path}`,
+      lastModified: LAST_MODIFIED,
+      changeFrequency: "monthly" as const,
+      priority,
     }));
 }

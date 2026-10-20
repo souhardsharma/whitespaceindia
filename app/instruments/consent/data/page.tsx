@@ -8,6 +8,7 @@ import {
 import StructuredData from "@/components/instruments/StructuredData";
 import { pageLd, pageMeta } from "@/lib/instruments/metadata";
 import meta from "@/public/data/instruments/consent/meta.json";
+import { SITE_URL } from "@/lib/site";
 
 /**
  * The data, for anyone who wants it rather than the pages.
@@ -101,6 +102,69 @@ const ENDPOINTS: [string, string][] = [
   ["POST /api/instruments/consent/export", "One proposal's profile as a PDF (from this site's pages)."],
 ];
 
+type Source = { name: string; publisher?: string; url?: string };
+
+/**
+ * schema.org Dataset for this page, the published files' landing page.
+ *
+ * Google reads Dataset markup for Dataset Search only (not for web results),
+ * which is where a researcher looking for India's clearance register as data
+ * looks. Everything is read from meta.json at build time - the span from the
+ * rows, the sources as the build recorded them - so it cannot state a date or
+ * a source the files do not carry. No licence is claimed because none has
+ * been chosen; add `license` when one is.
+ */
+function datasetLd() {
+  const m = meta as {
+    generated_at?: string;
+    register_span?: { earliest?: string; latest?: string };
+    sources?: Source[];
+  };
+  const base = `${SITE_URL}/data/instruments/consent`;
+  const files: [string, string][] = [
+    ["meta.json", "Counts, resolution rates, source coverage and the build's checks"],
+    ["index.json", "States, sectors, categories and status spellings the shards index into"],
+    ["districts.json", "Census 2011 values for every district, keyed by census code"],
+    ["register/districts.json", "Per-district counts from the register"],
+    ["changes/recent.json", "Every dated event in the register over the last sixty days"],
+  ];
+  return {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "@id": `${SITE_URL}/instruments/consent/data#dataset`,
+    name: "People & Consent: India's environmental clearance register by district",
+    description:
+      "Every proposal in India's environmental clearance register (PARIVESH), placed in the Census 2011 district and sub-district it was filed for, with its stage, dated appraisal history and time to decision, joined to the Census 2011, Village Directory and SECC profile of the place and to the Scheduled Area determination for the district. Rebuilt nightly from the register; contact details are removed.",
+    url: `${SITE_URL}/instruments/consent/data`,
+    isAccessibleForFree: true,
+    creator: { "@id": `${SITE_URL}/#org` },
+    publisher: { "@id": `${SITE_URL}/#org` },
+    inLanguage: "en-IN",
+    keywords: [
+      "environmental clearance", "PARIVESH", "India", "districts", "Census 2011",
+      "Scheduled Areas", "Fifth Schedule", "Gram Sabha", "open data",
+    ],
+    spatialCoverage: { "@type": "Place", name: "India" },
+    ...(m.register_span?.earliest && m.register_span?.latest
+      ? { temporalCoverage: `${m.register_span.earliest}/${m.register_span.latest}` }
+      : {}),
+    ...(m.generated_at ? { dateModified: m.generated_at } : {}),
+    isBasedOn: (m.sources ?? []).map((s) => ({
+      "@type": "CreativeWork",
+      name: s.name,
+      ...(s.url ? { url: s.url } : {}),
+      ...(s.publisher ? { publisher: { "@type": "Organization", name: s.publisher } } : {}),
+    })),
+    distribution: files.map(([file, what]) => ({
+      "@type": "DataDownload",
+      name: file,
+      description: what,
+      encodingFormat: "application/json",
+      contentUrl: `${base}/${file}`,
+    })),
+  };
+}
+
 export default function DataPage() {
   const read = (meta as { generated_at?: string }).generated_at;
   return (
@@ -116,6 +180,7 @@ export default function DataPage() {
           ],
         })}
       />
+      <StructuredData data={datasetLd()} />
       <InstrumentHeader crumb="People & Consent" crumbHref="/instruments/consent" />
       <main id="main-content" className="flex-1 px-6 md:px-12 py-10 md:py-14">
         <div className="max-w-5xl mx-auto">
