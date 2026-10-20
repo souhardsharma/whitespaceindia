@@ -26,7 +26,19 @@ export default function robots(): MetadataRoute.Robots {
         // bundle. Only the image optimiser is excluded, which is a genuine
         // crawl-budget sink; /_next/static is content-hashed and immutable,
         // so letting a crawler fetch it costs nothing.
-        disallow: ["/api/", "/_next/image"],
+        //
+        // "?_rsc=" is the React Server Components payload a <Link> prefetch
+        // asks for: the same page again in another format. Crawlers that run
+        // JavaScript requested it for every proposal they saw linked, and on
+        // a free Vercel plan each one is an on-demand render.
+        disallow: ["/api/", "/_next/image", "/*?_rsc=", "/*&_rsc="],
+      },
+      {
+        // Google's non-Search crawler (research and product fetches). It
+        // feeds no search result and crawled ~90,000 proposal pages in a day,
+        // exhausting the plan's origin transfer. Googlebot is unaffected.
+        userAgent: ["GoogleOther", "GoogleOther-Image", "GoogleOther-Video"],
+        disallow: "/",
       },
     ],
     // One index naming the site's own sitemap and the per-state proposal

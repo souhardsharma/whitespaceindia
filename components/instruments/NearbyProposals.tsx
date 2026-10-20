@@ -78,7 +78,7 @@ export default function NearbyProposals({
                   <tr key={n.id} className="border-t border-[#1c1c19]/10 align-top">
                     <td className="py-2 pr-4 whitespace-nowrap tabular-nums">{n.km} km</td>
                     <td className="py-2 pr-4">
-                      <Link
+                      <Link prefetch={false}
                         href={`/instruments/consent/${n.id}`}
                         className="underline underline-offset-2 break-words"
                       >

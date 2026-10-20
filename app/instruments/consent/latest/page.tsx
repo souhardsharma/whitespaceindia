@@ -371,7 +371,7 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
                     </span>
                   </div>
                   <div className="md:col-span-7">
-                    <Link href={`/instruments/consent/${e.proposal.id}`}
+                    <Link prefetch={false} href={`/instruments/consent/${e.proposal.id}`}
                           className="font-body text-[14px] underline underline-offset-2 break-words">
                       {e.proposal.name.length > 180
                         ? e.proposal.name.slice(0, 177).replace(/\s+\S*$/, "") + "…"
@@ -386,7 +386,7 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
                     <span className="block">{STAGE_LABELS[e.sk] ?? e.sk}</span>
                     <span className="opacity-70">
                       {e.proposal.district != null && e.proposal.districtName ? (
-                        <Link href={`/instruments/consent/district/${e.proposal.district}`} className="underline underline-offset-2">
+                        <Link prefetch={false} href={`/instruments/consent/district/${e.proposal.district}`} className="underline underline-offset-2">
                           {e.proposal.districtName}
                         </Link>
                       ) : (

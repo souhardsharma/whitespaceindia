@@ -144,7 +144,7 @@ export default function Watchlist() {
           const changed = s && (s.sk !== w.seenSk || s.upd !== w.seenUpd);
           return (
             <li key={id} className="flex flex-wrap gap-x-3">
-              <Link href={`/instruments/consent/${id}`} className="underline underline-offset-2">
+              <Link prefetch={false} href={`/instruments/consent/${id}`} className="underline underline-offset-2">
                 {w.name.length > 110 ? w.name.slice(0, 107) + "…" : w.name}
               </Link>
               <span className="opacity-75">{s ? s.stage : "…"}</span>
@@ -161,7 +161,7 @@ export default function Watchlist() {
           const n = districtCounts[c] ?? 0;
           return (
             <li key={`d${c}`} className="flex flex-wrap gap-x-3">
-              <Link href={`/instruments/consent/district/${c}`} className="underline underline-offset-2">
+              <Link prefetch={false} href={`/instruments/consent/district/${c}`} className="underline underline-offset-2">
                 {w.name}
               </Link>
               <span className="opacity-75">district</span>
