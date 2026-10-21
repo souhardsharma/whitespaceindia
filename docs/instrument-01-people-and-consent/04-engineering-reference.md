@@ -181,7 +181,11 @@ answers, so every string is passed through `scrub_contact` when packed. `verify`
 every record equals its whitelist-cleaned self at every depth and scans with
 `privacy.find_contact` (labelled numbers with separators included).
 
-**Budget.** `sync.py --budget-minutes 50` inside the 90-minute job; it
+**Budget.** `sync.py --budget-minutes 190` inside the 240-minute job (50
+inside 90 until 2026-10-21: through proxies a history reads at ~1/s, so
+the weekly re-read of open proposals never ran, and the forest got a few
+States). A refresher rebuilds the proxy pool every 15 minutes while it
+runs, because most free proxies die within two hours. It
 reserves `REBUILD_RESERVE_S` (12 min) for its own rebuild and contract, and
 `PASS_PLAN` gives each per-proposal pass a SHARE of what is left, changed
 passes first for both sources. When the CAF bulk pass took everything, an
