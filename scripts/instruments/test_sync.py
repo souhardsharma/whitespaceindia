@@ -254,7 +254,7 @@ def test_failed_sector_gets_a_second_round() -> None:
     calls: list[int] = []
     fail_left = {first: 1, second: 2}
 
-    def fake_fetch(url: str, timeout: int = 300, deadline=None) -> bytes:
+    def fake_fetch(url: str, timeout: int = 300, deadline=None, **_) -> bytes:
         sid = int(url.split("sector=")[1].split("&")[0]) if "sector=" in url else None
         calls.append(sid)
         if fail_left.get(sid, 0) > 0:
@@ -282,6 +282,93 @@ def test_failed_sector_gets_a_second_round() -> None:
         SY.fetch_delta(None, deadline=time.time() - 1)
         check("no second round once the sweep's time is spent",
               calls.count(first) == 1, str(calls))
+    finally:
+        SY.fetch, SY.log, SY.PARIVESH_SEARCH = saved
+
+
+def _rows(sector: str, per_day: dict) -> list[dict]:
+    rows, n = [], 0
+    for day, count in per_day.items():
+        for _ in range(count):
+            n += 1
+            rows.append({"proposal_id": f"{sector}-{n}", "sector": sector,
+                         "dateOfSubmission": f"{day} 10:00:00.0"})
+    return rows
+
+
+def test_windows_cover_every_day() -> None:
+    print("\na sector is read in windows that leave no day out")
+    name = "Non-Coal Mining"
+    per_day = {f"2024-01-{d:02}": 900 for d in range(1, 11)}
+    windows = SY.plan_windows(_rows(name, per_day) + _rows("INFRA-1", {"2024-01-01": 5}),
+                              name, "2024-02-01")
+    check("windows hold about WINDOW_ROWS each",
+          len(windows) == 4 and all(h >= SY.WINDOW_ROWS for _, _, h in windows[:-1]),
+          str(windows))
+    check("the first opens before the register and the last runs past today",
+          windows[0][0] == SY.WINDOW_FLOOR and windows[-1][1] == "2024-02-03",
+          str(windows))
+    check("each window starts on the day the one before it ends",
+          all(a[1] == b[0] for a, b in zip(windows, windows[1:])), str(windows))
+    check("only this sector's rows place the edges",
+          sum(h for _, _, h in windows) == 9000, str(windows))
+    check("a sector with no previous rows is one unfiltered call",
+          SY.plan_windows([], name, "2024-02-01") == [(None, None, 0)])
+    check("a small sector is one unfiltered call",
+          SY.plan_windows(_rows(name, {"2024-01-01": 30}), name, "2024-02-01")
+          == [(None, None, 30)])
+
+
+def test_windowed_sector_is_checked_whole() -> None:
+    print("\na windowed sector is read, retried and checked window by window")
+    import json
+    name = SY.SECTORS[3]
+    previous = _rows(name, {f"2024-01-{d:02}": 900 for d in range(1, 11)})
+    answers: dict = {}
+    calls: list[str] = []
+    fail_once = {"2024-01-04"}
+
+    def fake_fetch(url: str, **_) -> bytes:
+        if "sector=3" not in url:
+            return b'{"status": 200, "data": []}'
+        start = url.split("startDate=")[1].split("&")[0]
+        calls.append(start)
+        if start in fail_once:
+            fail_once.discard(start)
+            raise RuntimeError("register fetch failed after retries: HTTP -1 refused")
+        return json.dumps({"status": 200, "data": answers.get(start, [])}).encode()
+
+    saved = (SY.fetch, SY.log, SY.PARIVESH_SEARCH)
+    try:
+        SY.fetch, SY.log = fake_fetch, (lambda *_: None)
+        SY.PARIVESH_SEARCH = "https://x/?sector={sector}"
+        windows = SY.plan_windows(previous, name, "2024-02-01")
+        for start, end, _ in windows:
+            # every window also returns its shared edge day's rows
+            answers[start] = [r for r in previous
+                              if start <= r["dateOfSubmission"][:10] <= end]
+        records, stats = SY.fetch_delta(None, previous=previous,
+                                        last_counts={name: 9000})
+        check("a window that failed once is asked again, alone",
+              calls.count("2024-01-04") == 2 and len(calls) == len(windows) + 1,
+              str(calls))
+        check("rows on a shared edge day are counted once",
+              stats[name] == {"records": 9000, "windows": len(windows)}
+              and len([r for r in records if r["sector"] == name]) == 9000,
+              str(stats[name]))
+
+        answers[windows[1][0]] = []
+        _, stats = SY.fetch_delta(None, previous=previous)
+        check("a window answering empty where rows were held fails its sector",
+              "error" in stats[name] and "no rows where" in stats[name]["error"],
+              str(stats[name]))
+
+        answers[windows[1][0]] = answers[windows[0][0]][:1]
+        _, stats = SY.fetch_delta(None, previous=previous,
+                                  last_counts={name: 9000})
+        check("windows short of the last good read fail their sector",
+              "error" in stats[name] and "9,000" in stats[name]["error"],
+              str(stats[name]))
     finally:
         SY.fetch, SY.log, SY.PARIVESH_SEARCH = saved
 
@@ -679,6 +766,8 @@ def main() -> int:
     test_pass_plan()
     test_sweep_fetch_waits_and_reports()
     test_failed_sector_gets_a_second_round()
+    test_windows_cover_every_day()
+    test_windowed_sector_is_checked_whole()
     test_link_silences()
     test_debts_and_streaks()
     with tempfile.TemporaryDirectory() as d:
