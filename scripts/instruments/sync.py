@@ -63,6 +63,7 @@ import time
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+from itertools import zip_longest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -133,8 +134,12 @@ SWEEP_BACKOFF = (10.0, 30.0, 60.0, 120.0)
 # A WINDOW is a few thousand rows, a few MB, and its failure costs only
 # itself: asked again at once, it goes down another route. More attempts,
 # shorter pauses.
-WINDOW_BACKOFF = (5.0, 15.0, 30.0, 60.0, 60.0, 60.0, 60.0)
-WINDOW_TIMEOUT = 180
+WINDOW_BACKOFF = (2.0, 5.0, 10.0, 15.0, 20.0, 30.0, 30.0, 30.0)
+# Seconds a socket may sit idle, NOT a cap on the download: a window that
+# keeps arriving is never cut off. At 180 the first windowed run (2026-10-21)
+# spent most of its 38 minutes waiting out 62 connects to dead proxies, each
+# held until the kernel gave up, and never sent five sectors.
+WINDOW_TIMEOUT = 40
 
 # THE SWEEP IS READ IN WINDOWS, NOT IN ONE ANSWER PER SECTOR. PARIVESH
 # refuses GitHub's runners at connect, so the register arrives through free
@@ -160,7 +165,11 @@ EMPTY_WINDOW_FLOOR = 50
 # A sector whose windows together return fewer than this share of what its
 # last good read returned has lost rows between windows, and is a failure.
 SECTOR_KEEP_SHARE = 0.98
-SWEEP_WORKERS = 6
+SWEEP_WORKERS = 12
+# The register sweep's share of the time before the rebuild reserve. It used
+# to have all of it, so a slow sweep left the forest register and both
+# per-proposal passes nothing: 0 of 38 forest States on 2026-10-21.
+REGISTER_SHARE = 0.6
 
 _POOL = None
 _POOL_LOCK = threading.Lock()
@@ -307,13 +316,17 @@ def fetch_delta(since: str | None,
     total is held to.
     """
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    jobs: list[tuple] = []
+    per_sector: list[list[tuple]] = []
     for sid, name in SECTORS.items():
         if since:
             windows = [(since, today, 0)]
         else:
             windows = plan_windows(previous or [], name, today)
-        jobs.extend((sid, name, w) for w in windows)
+        per_sector.append([(sid, name, w) for w in windows])
+    # Round-robin across sectors: queued in order, Non-Coal Mining's 34
+    # windows held every worker while five small sectors waited behind them
+    # until the deadline and were never sent.
+    jobs = [job for batch in zip_longest(*per_sector) for job in batch if job]
 
     answers: dict[tuple, list[dict]] = {}
     errors: dict[tuple, str] = {}
@@ -386,10 +399,8 @@ def read_window(sid: int, start: str | None, end: str | None, held: int,
     if start:
         url += f"&startDate={start}&endDate={end}"
     label = f"sector {sid} {start}..{end} " if start else f"sector {sid} "
-    # A whole-sector call (a cold cache) can be 92 MB and keeps the long
-    # timeout; a window is a few MB.
-    raw = fetch(url, timeout=WINDOW_TIMEOUT if start else 300,
-                deadline=deadline, backoff=WINDOW_BACKOFF, label=label)
+    raw = fetch(url, timeout=WINDOW_TIMEOUT, deadline=deadline,
+                backoff=WINDOW_BACKOFF, label=label)
     payload = json.loads(raw.decode("utf-8", "replace"))
     # The HTTP status is not the answer. This API carries its own
     # status inside a 200 body - both per-proposal fetchers already
@@ -439,8 +450,8 @@ def read_forest_state(folder: Path, code: int,
     """One State's forest records, checked; raises rather than return a bad answer."""
     if deadline is not None and time.time() > deadline:
         raise RuntimeError("out of time")
-    raw = fetch(FOREST_SEARCH.format(code=code), timeout=300, deadline=deadline,
-                backoff=WINDOW_BACKOFF, label=f"forest {code} ")
+    raw = fetch(FOREST_SEARCH.format(code=code), timeout=WINDOW_TIMEOUT,
+                deadline=deadline, backoff=WINDOW_BACKOFF, label=f"forest {code} ")
     payload = json.loads(raw.decode("utf-8", "replace"))
     env = payload.get("status")
     if env is not None and int(env) != 200:
@@ -952,7 +963,10 @@ def main() -> None:
             "status change on any proposal submitted before it. A scheduled "
             "run should sweep in full.")
     log(f"register fetch: {'full sweep' if not since else f'delta since {since}'}")
-    sweep_deadline = (deadline - REBUILD_RESERVE_S) if deadline else None
+    sweep_deadline = None
+    if deadline:
+        sweep_deadline = time.time() + max(
+            0.0, (deadline - REBUILD_RESERVE_S - time.time()) * REGISTER_SHARE)
     previous_path = cache / "parivesh" / "all_records.json"
     previous = (json.loads(previous_path.read_text(encoding="utf-8"))
                 if previous_path.exists() else [])
