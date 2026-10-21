@@ -385,4 +385,7 @@ export type ProjectSummary = Omit<Project, "appraisal" | "site"> & {
    * Everything that filters or counts by stage must go through this key.
    */
   statusKey: string | null;
+  /** The decision date (`don`), for the watchlist's status endpoint, which
+   *  otherwise had to read a whole shard per watched proposal. */
+  decidedOn: string | null;
 };

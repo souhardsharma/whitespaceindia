@@ -1,5 +1,8 @@
 import { NextRequest } from 'next/server';
 import { isAllowedOrigin, clientIp } from '@/lib/request-identity';
+import { SECTORS, sectorPOS, type District, type Weights } from '@/lib/csr/score';
+import fs from 'fs';
+import path from 'path';
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, renderToBuffer, Link, Image, Font, Svg, Path, Circle } from '@react-pdf/renderer';
 
@@ -39,27 +42,51 @@ FORMAT: write exactly five sections in this order. Put each heading alone on its
 **Limits of this brief**
 [the limits that matter most for these particular figures, chosen from these facts: CSR filed as national or without a district is not counted, so district totals are a lower bound; population is from Census 2011; the poverty figures are for 2019-21; the score depends on the weights the reader chose]`;
 
-const SAFE_NAME_PATTERN = /[^a-zA-Zऀ-ॿঀ-৿਀-੿઀-૿଀-୿஀-௿ఀ-౿ಀ-೿ഀ-ൿ\s.\-()]/g;
 const SAFE_FILENAME = /[^A-Za-z0-9._-]+/g;
-
-function sanitizeName(input: unknown): string {
-  if (typeof input !== 'string') return '';
-  return input.replace(SAFE_NAME_PATTERN, '').trim().slice(0, 100);
-}
+const LGD_CODE_RE = /^[A-Z0-9_]{1,80}$/;
 
 function safeFilename(name: string): string {
   return name.replace(SAFE_FILENAME, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'district';
 }
 
-function safeNum(v: unknown): number {
-  const n = typeof v === 'number' ? v : Number(v);
-  return Number.isFinite(n) ? n : 0;
+/**
+ * Every figure in a brief comes from the published CSR data, never from the
+ * request. The request used to carry the district's name and all its numbers,
+ * so any script could have this route print a "Whitespace India" PDF with an
+ * invented score and spending, and the free-text name doubled as a way to
+ * write instructions into the prompt. Now the caller names a district by its
+ * code and chooses only what the map lets a reader choose: the sector and the
+ * weights.
+ */
+const CSR_DATA = path.join(process.cwd(), 'public', 'data', 'csr');
+let MASTER: Map<string, District> | null = null;
+let SECTOR_SCORES: Record<string, Record<string, number>> | null = null;
+
+function master(): Map<string, District> {
+  if (!MASTER) {
+    const rows = JSON.parse(fs.readFileSync(path.join(CSR_DATA, 'whitespace_master.json'), 'utf-8')) as District[];
+    MASTER = new Map(rows.map((d) => [d.district_lgd_code, d]));
+  }
+  return MASTER;
 }
 
-function optionalNum(v: unknown): number | null {
-  if (v == null) return null;
-  const n = typeof v === 'number' ? v : Number(v);
-  return Number.isFinite(n) ? n : null;
+function sectorScores(): Record<string, Record<string, number>> {
+  if (!SECTOR_SCORES) {
+    SECTOR_SCORES = JSON.parse(fs.readFileSync(path.join(CSR_DATA, 'sector_scores.json'), 'utf-8'));
+  }
+  return SECTOR_SCORES as Record<string, Record<string, number>>;
+}
+
+/** The reader's weights: three shares in [0, 1] that sum to one (the panel's
+ *  whole-percent sliders can leave a rounding remainder). Null when not. */
+function parseWeights(v: unknown): Weights | null {
+  if (!v || typeof v !== 'object') return null;
+  const w = v as Record<string, unknown>;
+  const out = { w_N: Number(w.w_N), w_G: Number(w.w_G), w_U: Number(w.w_U) };
+  const parts = [out.w_N, out.w_G, out.w_U];
+  if (!parts.every((x) => Number.isFinite(x) && x >= 0 && x <= 1)) return null;
+  const sum = parts.reduce((a, b) => a + b, 0);
+  return Math.abs(sum - 1) <= 0.02 ? out : null;
 }
 
 const rateLimitMap = new Map<string, { tokens: number; lastRefill: number }>();
@@ -110,10 +137,12 @@ async function callGeminiWithKey(
   systemPrompt: string
 ): Promise<string> {
   const response = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey,
+    // The key in a header, not the query string, where it would sit in every
+    // log line that records the URL.
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       cache: 'no-store',
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -451,25 +480,34 @@ export async function POST(req: NextRequest) {
   }
 
   const r = raw as Record<string, unknown>;
-  const district_name = sanitizeName(r.district_name);
-  const state_name = sanitizeName(r.state_name);
-  if (!district_name || !state_name) {
-    return new Response('Invalid district or state name.', { status: 400 });
+  const code = typeof r.district_lgd_code === 'string' ? r.district_lgd_code : '';
+  const d = LGD_CODE_RE.test(code) ? master().get(code) : undefined;
+  if (!d) {
+    return new Response('Unknown district.', { status: 400 });
+  }
+  const sector = typeof r.sector === 'string' ? r.sector : 'All Sectors';
+  if (!(SECTORS as readonly string[]).includes(sector)) {
+    return new Response('Unknown sector.', { status: 400 });
+  }
+  const weights = parseWeights(r.weights);
+  if (!weights) {
+    return new Response('Invalid weights.', { status: 400 });
   }
 
   const input: BriefInput = {
-    district_name,
-    state_name,
-    headcount_ratio_2021: safeNum(r.headcount_ratio_2021),
-    headcount_ratio_2016: optionalNum(r.headcount_ratio_2016),
-    district_csr_per_person: safeNum(r.district_csr_per_person),
-    total_csr_recent: safeNum(r.total_csr_recent),
-    total_population: safeNum(r.total_population),
-    mpi_2021: safeNum(r.mpi_2021),
-    computed_pos: safeNum(r.computed_pos),
-    pop_tier: sanitizeName(r.pop_tier),
-    tier_median_csr: safeNum(r.tier_median_csr),
+    district_name: d.district_name,
+    state_name: d.state_name,
+    headcount_ratio_2021: d.headcount_ratio_2021,
+    headcount_ratio_2016: d.headcount_ratio_2016,
+    district_csr_per_person: d.district_csr_per_person,
+    total_csr_recent: d.total_csr_recent,
+    total_population: d.total_population,
+    mpi_2021: d.mpi_2021,
+    computed_pos: sectorPOS(d, weights, sector, sectorScores()),
+    pop_tier: d.pop_tier,
+    tier_median_csr: d.tier_median_csr,
   };
+  const district_name = d.district_name;
 
   try {
     const briefText = await callGemini(

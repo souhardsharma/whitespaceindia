@@ -12,9 +12,9 @@
  *
  * WHY THE CSP LOOKS LOOSER THAN A CSP SHOULD
  * ------------------------------------------
- * `'unsafe-inline'` and `'unsafe-eval'` are in `script-src` because Next's
- * App Router inlines its hydration payload and its runtime uses `eval` in
- * development. A nonce-based policy is the right end state and needs the
+ * `'unsafe-inline'` is in `script-src` because Next's App Router inlines its
+ * hydration payload; `'unsafe-eval'` is added only under `next dev`, whose
+ * runtime uses `eval`. A nonce-based policy is the right end state and needs the
  * middleware to mint a nonce per request and Next to be told about it; that
  * is a change with its own failure modes and it is not made here. What IS
  * gained today: `object-src 'none'` and `base-uri 'self'` close plugin
@@ -31,7 +31,9 @@ const CSP = [
   // omitting it did not disable analytics quietly, it broke them with a
   // console error on every page, which is the kind of "hardening" that ships
   // a regression dressed as a fix.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com",
+  // 'unsafe-eval' only under `next dev`, whose React Refresh runtime needs
+  // it; a production build never evaluates strings, so it is not granted one.
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com`,
   // Tailwind and next/font emit inline styles.
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",

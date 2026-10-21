@@ -44,6 +44,24 @@ export function computePOS(d: District, weights: Weights): number {
   return (weights.w_N * d.N_norm + weights.w_G * d.G_norm + weights.w_U * d.U_norm) * 100;
 }
 
+/** One district's score under the chosen weights and sector, clamped to 0-100.
+ *  Shared by the ranking and the brief API, so the PDF's score is the map's. */
+export function sectorPOS(
+  d: District,
+  weights: Weights,
+  sector: string,
+  sectorScores: Record<string, Record<string, number>>
+): number {
+  let pos: number;
+  if (sector === 'All Sectors' || sectorScores[d.district_lgd_code]?.[sector] == null) {
+    pos = computePOS(d, weights);
+  } else {
+    const sectorGNorm = sectorScores[d.district_lgd_code][sector];
+    pos = (weights.w_N * d.N_norm + weights.w_G * sectorGNorm + weights.w_U * d.U_norm) * 100;
+  }
+  return Math.max(0, Math.min(100, pos));
+}
+
 export function rankDistricts(
   districts: District[],
   weights: Weights,
@@ -53,16 +71,7 @@ export function rankDistricts(
 ): Array<District & { computed_pos: number; rank: number }> {
   let filtered = whitespaceOnly ? districts.filter(d => d.is_whitespace) : districts;
 
-  const scored = filtered.map(d => {
-    let pos: number;
-    if (sector === 'All Sectors' || sectorScores[d.district_lgd_code]?.[sector] == null) {
-      pos = computePOS(d, weights);
-    } else {
-      const sectorGNorm = sectorScores[d.district_lgd_code][sector];
-      pos = (weights.w_N * d.N_norm + weights.w_G * sectorGNorm + weights.w_U * d.U_norm) * 100;
-    }
-    return { ...d, computed_pos: Math.max(0, Math.min(100, pos)) };
-  });
+  const scored = filtered.map(d => ({ ...d, computed_pos: sectorPOS(d, weights, sector, sectorScores) }));
 
   scored.sort((a, b) => b.computed_pos - a.computed_pos);
   return scored.map((d, i) => ({ ...d, rank: i + 1 }));
