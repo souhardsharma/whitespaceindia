@@ -32,8 +32,15 @@ export function middleware(req: NextRequest) {
   return NextResponse.redirect(target, 308);
 }
 
-// Page requests only. Without this filter every image and font request would
-// run the middleware for nothing.
+// Page requests on a legacy host only. On Next 15 an invocation added ~190 ms
+// to every page on the primary origin, where it only ever said "carry on", so
+// the platform now skips it there. The host list must stay literal (Next reads
+// the matcher at build time) and equal LEGACY_CSR_HOSTS; site.test.ts checks.
 export const config = {
-  matcher: ["/((?!api|_next|landing|images|data|.*\\..*).*)"],
+  matcher: [
+    {
+      source: "/((?!api|_next|landing|images|data|.*\\..*).*)",
+      has: [{ type: "host", value: "whitespaceindia-csr\\.vercel\\.app|csr\\.whitespaceindia\\.com" }],
+    },
+  ],
 };
