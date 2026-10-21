@@ -74,16 +74,16 @@ jobs:
       # before that run's commit: it builds the change log and the shard
       # vocabulary on stale files, and its push conflicts on every one
       # (2026-10-21: a scheduled run queued behind a dispatch lost its night).
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.ref_name }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install --require-hashes -r requirements.txt
 
       - name: Resolver tests
         # GATING, and deliberately before the fetch. The resolver decides which
@@ -104,7 +104,7 @@ jobs:
 
       - name: Restore the source cache
         id: restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .instruments-cache
           # Never an exact hit (the run id is in the key), so the most recent
@@ -196,7 +196,7 @@ jobs:
         # still read forms; discarding them is what made a cold start
         # permanent.
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .instruments-cache
           key: instruments-cache-${{ github.run_id }}
@@ -233,6 +233,13 @@ jobs:
             # The branch may have moved while this ran. Pushing without
             # rebasing is rejected, and the night's data is lost with the job.
             git pull --rebase origin "$GITHUB_REF_NAME"
+            # This job holds a write token and runs scripts every night, so it
+            # pushes data and nothing else: a commit of any other path, by a
+            # compromised dependency or a script gone wrong, stops here.
+            OUTSIDE=$(git diff --name-only "origin/$GITHUB_REF_NAME" HEAD | grep -v '^public/data/instruments/' || true)
+            if [ -n "$OUTSIDE" ]; then
+              echo "::error::Refusing to push paths outside the published data:"; echo "$OUTSIDE"; exit 1
+            fi
             git push
           fi
 
@@ -250,6 +257,10 @@ jobs:
             if ! git diff --staged --quiet; then
               git commit -m "data(instruments): location cross-check report"
               git pull --rebase origin "$GITHUB_REF_NAME"
+              OUTSIDE=$(git diff --name-only "origin/$GITHUB_REF_NAME" HEAD | grep -v '^scripts/instruments/crosscheck_report\.json$' || true)
+              if [ -n "$OUTSIDE" ]; then
+                echo "::error::Refusing to push paths other than the report:"; echo "$OUTSIDE"; exit 1
+              fi
               git push
             fi
           fi
