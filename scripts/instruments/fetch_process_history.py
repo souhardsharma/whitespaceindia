@@ -406,13 +406,21 @@ def main() -> None:
         done |= load_done(err_path, answered_only=True)
     log(f"register: {len(records):,} records, {len(done):,} already recorded")
 
+    carried: set = set()
     if args.slice:
         i, n = (int(x) for x in args.slice.split("/"))
         if not (0 <= i < n):
             sys.exit(f"--slice {args.slice}: need 0 <= i < n")
-        todo = [r for r in records
-                if r.get("id") is not None and int(r["id"]) % n == i]
-        log(f"slice {i}/{n}: {len(todo):,} of {len(records):,} records")
+        # With --ids-file as well, the named ids join the slice, FIRST: they
+        # are what an earlier slice ran out of time on. Without them a slice
+        # cut short waits a full cycle for its next turn - on 2026-10-21 that
+        # was 1,082 of 3,990 open proposals left fourteen days between reads.
+        if args.ids_file:
+            carried = set(json.loads(Path(args.ids_file).read_text(encoding="utf-8")))
+        todo = [r for r in records if r.get("id") is not None
+                and (int(r["id"]) % n == i or r["id"] in carried)]
+        log(f"slice {i}/{n}: {len(todo):,} of {len(records):,} records "
+            f"({len(carried):,} carried from earlier slices)")
     elif args.ids_file:
         # Exactly these, whatever the cache holds. The caller has established
         # that their register rows changed, which is the one thing the resume
@@ -427,7 +435,8 @@ def main() -> None:
     if args.open_only:
         todo = [r for r in todo
                 if not _is_terminal(r.get("proposalStatus"))]
-    todo.sort(key=lambda r: (CATEGORY_ORDER.index(r.get("category"))
+    todo.sort(key=lambda r: (r["id"] not in carried,
+                             CATEGORY_ORDER.index(r.get("category"))
                              if r.get("category") in CATEGORY_ORDER else 9))
     if args.limit:
         todo = todo[: args.limit]
