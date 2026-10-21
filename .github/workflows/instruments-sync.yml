@@ -21,12 +21,17 @@
 #      published as the asset `instruments-cache-seed.tar.gz` on the release
 #      `instruments-cache-seed`, and every run merges it in UNDER what it has
 #      already read. After that, each night is an increment.
-#   2. A budget. sync.py gets 50 of the job's 90 minutes, reserves 12 of them
-#      for its own rebuild and contract, and gives each per-proposal pass a
-#      share of the rest; each pass stops itself when its share runs out,
-#      keeping what it read, and the rest stays owed. Of the other 40: the
-#      proxy refresh (<= 6), the cross-check (<= 6), and setup, cache restore
+#   2. A budget. sync.py gets 190 of the job's 240 minutes, reserves 12 of
+#      them for its own rebuild and contract, and gives each per-proposal pass
+#      a share of the rest; each pass stops itself when its share runs out,
+#      keeping what it read, and the rest stays owed. Of the other 50: the
+#      proxy refresh (<= 12), the cross-check (<= 6), and setup, cache restore
 #      and save, the checks, the commit and the Monday seed pack (~25).
+#      It was 50 of 90 until 2026-10-21. Through free proxies a history reads
+#      at about 1/s and a form at about 0.4/s, so 50 minutes covered the
+#      register, a few States of the forest register and the changed ids, and
+#      the weekly re-read of open proposals (~5,000 a night) never ran at all.
+#      The repository is public, so the minutes cost nothing.
 #   3. The cache is saved on EVERY outcome (`if: always()`), so even without a
 #      seed the backfill accumulates night over night instead of restarting.
 #
@@ -54,7 +59,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 240
     permissions:
       contents: write
 
@@ -163,10 +168,12 @@ jobs:
         # refresh_proxies.py appends to the live pool and replaces it only
         # when at least 50 routes verified, so a thin night keeps
         # yesterday's routes rather than shrinking to one or two.
+        # Ten minutes, not four: on 2026-10-21 four minutes verified 39
+        # routes, and the pool's size is the fetchers' speed.
         continue-on-error: true
-        timeout-minutes: 6
+        timeout-minutes: 12
         run: |
-          python scripts/instruments/refresh_proxies.py --out "$INSTRUMENTS_CACHE_DIR/proxies.txt" --workers 4000 --max-minutes 4 --target 400 || true
+          python scripts/instruments/refresh_proxies.py --out "$INSTRUMENTS_CACHE_DIR/proxies.txt" --workers 4000 --max-minutes 10 --target 400 || true
           echo "pool: $(wc -l < "$INSTRUMENTS_CACHE_DIR/proxies.txt" 2>/dev/null || echo 0) routes"
 
       - name: Sync
@@ -185,11 +192,31 @@ jobs:
           # expression, even an empty one, inside this comment: Actions
           # evaluates expressions in run blocks, comments included, and an
           # empty one makes the whole workflow invalid.)
+          # The pool is refreshed WHILE the sync runs: about 80% of free
+          # proxies are gone within two hours, and this run is longer than
+          # that. The fetchers take new routes up every 60 s; the refresher
+          # appends as routes verify and never shrinks a good pool. Narrower
+          # than the opening refresh so it does not crowd the fetchers.
+          # Its output goes to a file: a background child left holding the
+          # step's stdout would keep the step open after the sync ends.
+          (
+            while true; do
+              sleep 900
+              python scripts/instruments/refresh_proxies.py --out "$INSTRUMENTS_CACHE_DIR/proxies.txt" --workers 1000 --max-minutes 8 --target 400 || true
+              echo "[pool] $(date -u +%H:%M) refreshed: $(wc -l < "$INSTRUMENTS_CACHE_DIR/proxies.txt") routes"
+            done
+          ) > "$RUNNER_TEMP/refresher.log" 2>&1 &
+          REFRESHER=$!
+          status=0
           if [ -n "$SYNC_SINCE" ]; then
-            python scripts/instruments/sync.py --since "$SYNC_SINCE" --budget-minutes 50
+            python scripts/instruments/sync.py --since "$SYNC_SINCE" --budget-minutes 190 || status=$?
           else
-            python scripts/instruments/sync.py --full --budget-minutes 50
+            python scripts/instruments/sync.py --full --budget-minutes 190 || status=$?
           fi
+          kill "$REFRESHER" 2>/dev/null || true
+          pkill -f refresh_proxies.py || true
+          grep -a '^\[pool\]' "$RUNNER_TEMP/refresher.log" || echo "[pool] no refresh during the sync"
+          exit "$status"
 
       - name: Save the source cache
         # EVERY outcome. A night that ran out of budget, or failed its contract,
