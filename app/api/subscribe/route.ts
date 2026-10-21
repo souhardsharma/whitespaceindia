@@ -4,6 +4,7 @@ import { clientIp, isAllowedOrigin } from "@/lib/request-identity";
 export const runtime = "nodejs";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_IN_TEXT = /[^\s@"]+@[^\s@"]+\.[^\s@"]+/g;
 // Numeric form IDs used by Kit's /forms/:id/subscriptions endpoint.
 // The public embed UIDs (96285e43e0, 324b05edcf) are NOT accepted here — must
 // be the numeric ID found inside each embed script's submission URL.
@@ -162,11 +163,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (!kitRes.ok || !kitBody?.subscription?.id) {
+      // Kit's error fields only: its raw body can echo the subscriber's
+      // address, which has no business in the deployment's logs.
       console.error(
         "[subscribe] Kit error",
         "http=" + kitRes.status,
         "formId=" + formId,
-        "body=" + rawBody.slice(0, 500)
+        "error=" + String(kitBody?.error ?? "").slice(0, 100),
+        "message=" + String(kitBody?.message ?? "").replace(EMAIL_IN_TEXT, "<email>").slice(0, 200)
       );
       return NextResponse.json(
         { ok: false, message: "Subscription failed. Please try again." },

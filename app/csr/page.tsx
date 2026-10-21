@@ -534,6 +534,8 @@ export default function HomePage() {
           district={selectedDistrict}
           onClose={() => setSelectedDistrict(null)}
           vertical={csrConfig}
+          sector={sector}
+          weights={csrWeights}
         />
       </main>
     </>

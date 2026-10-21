@@ -62,7 +62,9 @@ function parseRss(xml: string): NewsItem[] {
     const source = tag("source");
     const link = tag("link");
     const pubDate = tag("pubDate");
-    if (!titleRaw || !link) continue;
+    // The link becomes an href on the landing page, and React does not refuse
+    // a `javascript:` URL, so only an https link from the feed is kept.
+    if (!titleRaw || !/^https:\/\//i.test(link)) continue;
     items.push({
       title: stripSourceSuffix(titleRaw),
       link,

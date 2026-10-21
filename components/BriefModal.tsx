@@ -14,7 +14,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { District } from "@/lib/csr/score";
+import { DEFAULT_WEIGHTS, type District, type Weights } from "@/lib/csr/score";
 import type { VerticalConfig } from "@/lib/verticals/types";
 
 const NATIONAL_MPI_HEADCOUNT = 0.1496;
@@ -25,6 +25,10 @@ interface Props {
   district: (District & { computed_pos: number }) | null;
   onClose: () => void;
   vertical?: VerticalConfig;
+  /** The sector and weights the score was computed under. The brief API
+   *  recomputes the score from these; it takes no figure from the browser. */
+  sector?: string;
+  weights?: Weights;
 }
 
 const CHART_TOOLTIP_STYLE = {
@@ -172,7 +176,7 @@ const PROGRESS_MESSAGES = [
   "Drafting the text from the district's figures",
 ];
 
-export default function BriefModal({ district, onClose, vertical }: Props) {
+export default function BriefModal({ district, onClose, vertical, sector = "All Sectors", weights = DEFAULT_WEIGHTS }: Props) {
   const accent = vertical?.theme.accent ?? DEFAULT_ACCENT;
   const accentDeep = vertical?.theme.accentDeep ?? DEFAULT_ACCENT_DEEP;
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
@@ -271,22 +275,9 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          vertical: vertical?.id ?? "csr",
-          district_name: district.district_name,
-          state_name: district.state_name,
-          headcount_ratio_2021: district.headcount_ratio_2021,
-          headcount_ratio_2016: district.headcount_ratio_2016,
-          district_csr_per_person: district.district_csr_per_person,
-          total_csr_recent: district.total_csr_recent,
-          total_population: district.total_population,
-          mpi_2021: district.mpi_2021,
-          computed_pos: district.computed_pos,
-          pop_tier: district.pop_tier,
-          tier_median_csr: district.tier_median_csr,
-          population_imputed: district.population_imputed,
-          population_source: district.population_source,
-          population_citation: district.population_citation,
-          population_parent_districts: district.population_parent_districts,
+          district_lgd_code: district.district_lgd_code,
+          sector,
+          weights,
         }),
       });
 
@@ -304,7 +295,7 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [district, triggerDownload]);
+  }, [district, sector, weights, triggerDownload]);
 
   const formatCurrency = (val: number) =>
     "₹" + Math.round(val).toLocaleString("en-IN");

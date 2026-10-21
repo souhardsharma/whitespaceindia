@@ -94,6 +94,7 @@ function buildSummary(
     resolution: RESOLUTION_BY_CODE[r[I.dm] as string] ?? "unresolved",
     declaredDistrict: I.dd >= 0 ? ((r[I.dd] as number) ?? null) : null,
     updatedOn: I.upd >= 0 ? ((r[I.upd] as string) ?? null) : null,
+    decidedOn: (r[I.don] as string) ?? null,
     links: I.lk >= 0 ? ((r[I.lk] as LinkedClearances | 0 | null) ?? null) : null,
     declared: {
       affectedFamilies: (r[I.af] as number) ?? null,
