@@ -10,7 +10,7 @@ import {
 import type { Determination } from '@/lib/instruments/determination';
 import { locationEvidence } from '@/lib/instruments/location';
 import { LINKS_BLANK, LINKS_NONE, LINKS_UNREAD, linkedClearanceLines } from '@/lib/instruments/links';
-import { forestRecord, shard as cachedShard } from '@/lib/instruments/server';
+import { forestRecord, proposalRow, stateSlugs } from '@/lib/instruments/server';
 import React from 'react';
 import fs from 'fs';
 import path from 'path';
@@ -151,19 +151,20 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: 'Invalid proposalId or state' }), { status: 400 });
   }
 
-  // Through the server's shard cache (slug-validated there too). Parsing the
-  // file afresh made every export cost a full shard - 11 MB for Rajasthan -
-  // of CPU and heap, which a loop of requests turns into the deployment's
-  // quota.
-  const shard = cachedShard(state);
-  if (!shard) {
+  // The one row, read by byte range through the server's runtime index.
+  // Parsing the shard made every export cost a full shard - 11 MB for
+  // Rajasthan - of CPU and heap, which a loop of requests turns into the
+  // deployment's quota.
+  if (!stateSlugs().includes(state)) {
     return new Response(JSON.stringify({ error: 'Unknown state' }), { status: 404 });
   }
-  const F = (n: string) => shard.fields.indexOf(n);
-  const row = (shard.rows as any[][]).find((r) => String(r[F('id')]) === proposalId);
-  if (!row) {
+  const found = proposalRow(proposalId);
+  if (!found || found.slug !== state) {
     return new Response(JSON.stringify({ error: 'Proposal not found' }), { status: 404 });
   }
+  const { shard } = found;
+  const row = found.row as any[];
+  const F = (n: string) => shard.fields.indexOf(n);
 
   const meta = readJson('meta.json');
   const registry = readJson('measures.json');

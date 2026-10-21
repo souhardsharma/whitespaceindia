@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { clientIp } from "@/lib/request-identity";
 import { filterProjects } from "@/lib/instruments/projects";
-import { allSummaries, type IndexedProposal } from "@/lib/instruments/server";
+import { EDGE_CACHE, allSummaries, type IndexedProposal } from "@/lib/instruments/server";
 
 /**
  * Search the whole register - every state at once.
@@ -107,6 +107,6 @@ export async function GET(req: NextRequest) {
   const items = final.slice(offset, offset + limit);
   return Response.json(
     { total: final.length, offset, limit, stages, items },
-    { headers: { "Cache-Control": "public, max-age=300" } },
+    { headers: { "Cache-Control": EDGE_CACHE } },
   );
 }

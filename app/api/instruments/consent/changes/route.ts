@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { changeQueryFrom, changes, changesFile } from "@/lib/instruments/server";
+import { EDGE_CACHE, changeQueryFrom, changes, changesFile } from "@/lib/instruments/server";
 
 /**
  * Change-log events as JSON, under the same filters as
@@ -34,6 +34,6 @@ export async function GET(req: NextRequest) {
         state: e.proposal.stateSlug,
       })),
     },
-    { headers: { "Cache-Control": "public, max-age=300" } },
+    { headers: { "Cache-Control": EDGE_CACHE } },
   );
 }

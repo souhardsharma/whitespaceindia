@@ -4,7 +4,9 @@
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
+    "predev": "node scripts/instruments/runtime_index.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/instruments/runtime_index.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

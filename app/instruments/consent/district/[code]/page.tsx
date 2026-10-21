@@ -108,6 +108,10 @@ interface RegisterRow {
   nCrz?: number;
 }
 
+// Every district with a page is generated here; any other code is the 404
+// the page itself would render, answered without rendering anything.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   const rows = read<RegisterRow[]>("register", "districts.json");
   return rows.filter((r) => r.n > 0).map((r) => ({ code: String(r.code) }));

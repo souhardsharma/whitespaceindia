@@ -8,6 +8,8 @@
 
 # next.js
 /.next/
+# the server's index into public/data, rebuilt by every build and dev start
+/.runtime/
 /out/
 build/
 

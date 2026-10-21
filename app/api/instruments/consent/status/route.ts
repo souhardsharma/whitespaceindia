@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { allSummaries } from "@/lib/instruments/server";
+import { EDGE_CACHE, summariesFor } from "@/lib/instruments/server";
 import { stageLabel } from "@/lib/instruments/projects";
 import { allowRequest } from "@/lib/instruments/csv";
 import stagesFile from "@/public/data/instruments/consent/stages.json";
@@ -8,10 +8,10 @@ import stagesFile from "@/public/data/instruments/consent/stages.json";
  * The current position of up to 100 proposals, for the watchlist.
  *
  * GET ?ids=1,2,3. Read-only and public; returns only what the proposal pages
- * already publish. Answered from the in-memory index alone: reading each
- * proposal's shard for its decision date cost 3.3 s of function time for 100
- * ids spread across States, which made this the cheapest way to run down the
- * deployment's quota.
+ * already publish. Each id's row is read by byte range through the runtime
+ * index: reading each proposal's shard for its decision date cost 3.3 s of
+ * function time for 100 ids spread across States, and building the national
+ * index for them parsed all 35 shards on every cold instance.
  */
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     .map((s) => s.trim())
     .filter((s) => /^[0-9]{1,12}$/.test(s))
     .slice(0, 100);
-  const { byId } = allSummaries();
+  const byId = summariesFor(ids);
   const out: Record<string, unknown> = {};
   for (const id of ids) {
     const p = byId.get(id);
@@ -41,5 +41,5 @@ export async function GET(req: NextRequest) {
       don: p.decidedOn,
     };
   }
-  return Response.json(out, { headers: { "Cache-Control": "public, max-age=300" } });
+  return Response.json(out, { headers: { "Cache-Control": EDGE_CACHE } });
 }

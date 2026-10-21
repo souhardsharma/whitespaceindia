@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { changeQueryFrom, changes, changesFile, districts, json } from "@/lib/instruments/server";
+import { EDGE_CACHE, changeQueryFrom, changes, changesFile, districts, json } from "@/lib/instruments/server";
 import stagesFile from "@/public/data/instruments/consent/stages.json";
 import { SITE_URL } from "@/lib/site";
 
@@ -95,7 +95,7 @@ ${entries}
   return new Response(body, {
     headers: {
       "Content-Type": "application/atom+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=900",
+      "Cache-Control": EDGE_CACHE,
     },
   });
 }

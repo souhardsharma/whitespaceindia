@@ -10,7 +10,12 @@ import { SITE_URL } from "@/lib/site";
  * site's URLs, had no submitted sitemap and no coverage report. Submitting
  * this one file covers all of them, and a new filing state joins it on the
  * next build without anyone resubmitting anything.
+ *
+ * Written at build time: it changes only when the data does, and the data
+ * changes only by a deploy.
  */
+export const dynamic = "force-static";
+
 export function GET() {
   const urls = [
     `${SITE_URL}/sitemap.xml`,
