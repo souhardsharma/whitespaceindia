@@ -1534,6 +1534,20 @@ def test_the_refresher_counts_addresses() -> None:
     finally:
         RP.NET.Route.opener = saved
 
+    # PARIVESH answers only Indian addresses, so they are probed first.
+    india = ([RP.ip_number("103.0.0.0:1")], [RP.ip_number("103.255.255.255:1")])
+    order = RP.india_first(["8.8.8.8:80", "socks5://103.250.166.04:1080",
+                            "1.1.1.1:80", "103.1.2.3:3128"], india)
+    check("Indian candidates are probed first, each group in list order",
+          order == ["socks5://103.250.166.04:1080", "103.1.2.3:3128",
+                    "8.8.8.8:80", "1.1.1.1:80"], str(order))
+    check("without the country table the order is unchanged",
+          RP.india_first(["8.8.8.8:80", "103.1.2.3:3128"], None)
+          == ["8.8.8.8:80", "103.1.2.3:3128"])
+    check("list notation: HTTP bare, SOCKS schemed",
+          RP.as_route("HTTP", "1.2.3.4:80") == "1.2.3.4:80"
+          and RP.as_route("socks4", "1.2.3.4:80") == "socks4://1.2.3.4:80")
+
 
 def test_a_settle_storm_stops_the_run() -> None:
     """Settled 500s too common to be absences stop a run (review 2026-10-20).
