@@ -73,7 +73,8 @@ function fmtDate(d: string): string {
   });
 }
 
-export default function LatestPage({ searchParams }: { searchParams: SP }) {
+export default async function LatestPage(props: { searchParams: Promise<SP> }) {
+  const searchParams = await props.searchParams;
   const file = changesFile();
   const index = json<{ states: Record<string, { name: string; total: number }>; sectors: string[]; categories: string[] }>("index.json");
 

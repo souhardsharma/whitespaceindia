@@ -15,6 +15,23 @@ interface Props {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/**
+ * A field no person sees or fills. Form-filling scripts fill every input they
+ * find, and the API quietly drops a submission that arrives with this set,
+ * so a spam run signing other people's addresses up never reaches Kit.
+ * Hidden from layout, from the tab order and from screen readers.
+ */
+function Honeypot() {
+  return (
+    <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+      <label>
+        Website
+        <input type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
+      </label>
+    </div>
+  );
+}
+
 export default function SubscribeForm({ variant, source, vertical }: Props) {
   const accent = vertical?.theme.accent ?? DEFAULT_ACCENT;
   const [email, setEmail] = useState("");
@@ -26,6 +43,7 @@ export default function SubscribeForm({ variant, source, vertical }: Props) {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const website = String(new FormData(e.currentTarget).get("website") ?? "");
     setErrorMsg(null);
     const trimmedEmail = email.trim();
     const trimmedName = name.trim();
@@ -50,6 +68,7 @@ export default function SubscribeForm({ variant, source, vertical }: Props) {
           company: company.trim() || undefined,
           phone: phone.trim() || undefined,
           source,
+          website,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -79,6 +98,7 @@ export default function SubscribeForm({ variant, source, vertical }: Props) {
     }
     return (
       <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate>
+        <Honeypot />
         <input
           type="email"
           required
@@ -146,6 +166,7 @@ export default function SubscribeForm({ variant, source, vertical }: Props) {
       className="border border-[#1c1c19] bg-[#fcf9f4] px-8 md:px-10 py-8 md:py-10 w-full max-w-2xl"
       noValidate
     >
+      <Honeypot />
       <div className="flex items-baseline justify-between mb-6">
         <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.3em] font-bold" style={{ color: accent }}>
           New reports by email

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkBotId } from "botid/server";
 import { clientIp, isAllowedOrigin } from "@/lib/request-identity";
 
 export const runtime = "nodejs";
@@ -59,6 +60,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }
 
+  // The Origin check stops other websites; it does not stop a script, which
+  // can send any Origin it likes. BotID does: the challenge runs in the
+  // visitor's browser and Vercel verifies it on this request. Without it,
+  // anyone could sign other people's addresses up and have Kit mail them.
+  const verdict = await checkBotId();
+  if (verdict.isBot) {
+    return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
+  }
+
   const ip = getClientIp(req);
   if (!checkRateLimit(ip)) {
     return NextResponse.json(
@@ -79,6 +89,11 @@ export async function POST(req: NextRequest) {
   }
 
   const b = body as Record<string, unknown>;
+  // The form's honeypot (SubscribeForm). A person never fills it; answering
+  // success tells a script nothing about why its address went nowhere.
+  if (typeof b.website === "string" && b.website.trim() !== "") {
+    return NextResponse.json({ ok: true });
+  }
   const email = clean(b.email, 150);
   const name = clean(b.name, 100);
   const company = clean(b.company, 100);
