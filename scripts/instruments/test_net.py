@@ -1141,6 +1141,61 @@ def test_the_history_pass_survives_an_error_answer() -> None:
                 _os.environ[k] = v
 
 
+def test_a_rolling_slice_carries_what_it_did_not_read() -> None:
+    """--slice with --ids-file: the carried ids join the slice, first, and
+    whatever is not answered is named in .left for the next run."""
+    print("\nthe rolling re-read carries its unread ids to the next run")
+    import json as _json
+    import os as _os
+    import tempfile
+    from pathlib import Path as _Path
+    import fetch_process_history as HIST
+
+    d = _Path(tempfile.mkdtemp())
+    sent = []
+
+    def fake(rec_id, timeout=45, deadline=None):
+        sent.append(rec_id)
+        if rec_id == 15:
+            return 403, b"no"
+        return 200, _json.dumps({"status": 200, "data": []}).encode()
+
+    carried = d / "rolling.json"
+    carried.write_text(_json.dumps([3, 7]), encoding="utf-8")
+    saved = (HIST.run_lock.hold_or_exit, HIST.register_cache.load_records,
+             HIST.fetch_one, HIST.time.sleep, sys.argv,
+             _os.environ.get("INSTRUMENTS_CACHE_DIR"),
+             _os.environ.get("INSTRUMENTS_PROXIES"))
+    try:
+        HIST.run_lock.hold_or_exit = lambda name: None
+        HIST.register_cache.load_records = lambda cache, log: [
+            {"id": i, "category": "A", "proposalStatus": "x"} for i in range(1, 21)]
+        HIST.fetch_one = fake
+        HIST.time.sleep = lambda s: None
+        _os.environ["INSTRUMENTS_CACHE_DIR"] = str(d)
+        _os.environ["INSTRUMENTS_PROXIES"] = str(d / "none.txt")
+        sys.argv = ["x", "--workers", "1", "--slice", "0/5", "--open-only",
+                    "--ids-file", str(carried)]
+        try:
+            HIST.main()
+        except SystemExit:
+            pass
+        check("the carried ids are read first, then the slice",
+              sent == [3, 7, 5, 10, 15, 20], str(sent))
+        left = _json.loads((d / "rolling.json.left").read_text(encoding="utf-8")) \
+            if (d / "rolling.json.left").exists() else None
+        check("what was not answered is carried on", left == [15], str(left))
+    finally:
+        (HIST.run_lock.hold_or_exit, HIST.register_cache.load_records,
+         HIST.fetch_one, HIST.time.sleep, sys.argv) = saved[:5]
+        for k, v in (("INSTRUMENTS_CACHE_DIR", saved[5]),
+                     ("INSTRUMENTS_PROXIES", saved[6])):
+            if v is None:
+                _os.environ.pop(k, None)
+            else:
+                _os.environ[k] = v
+
+
 def test_the_form_pass_keeps_a_settled_500_owed() -> None:
     """The form fetcher's own loop: a 500 it settles stays in `.left`.
 
@@ -1633,6 +1688,7 @@ def main() -> int:
                test_a_settle_storm_stops_the_run,
                test_the_refresher_counts_addresses,
                test_the_history_pass_survives_an_error_answer,
+               test_a_rolling_slice_carries_what_it_did_not_read,
                test_the_form_pass_keeps_a_settled_500_owed,
                test_a_server_error_does_not_rest_our_own_route,
                test_dead_proxies_are_dropped_fast,

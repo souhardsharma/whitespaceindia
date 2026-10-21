@@ -21,17 +21,19 @@
 #      published as the asset `instruments-cache-seed.tar.gz` on the release
 #      `instruments-cache-seed`, and every run merges it in UNDER what it has
 #      already read. After that, each night is an increment.
-#   2. A budget. sync.py gets 190 of the job's 240 minutes, reserves 12 of
+#   2. A budget. sync.py gets 270 of the job's 330 minutes, reserves 12 of
 #      them for its own rebuild and contract, and gives each per-proposal pass
 #      a share of the rest; each pass stops itself when its share runs out,
-#      keeping what it read, and the rest stays owed. Of the other 50: the
-#      proxy refresh (<= 12), the cross-check (<= 6), and setup, cache restore
+#      keeping what it read, and the rest stays owed. Of the other 60: the
+#      proxy refresh (<= 12), the cross-check (<= 12), and setup, cache restore
 #      and save, the checks, the commit and the Monday seed pack (~25).
 #      It was 50 of 90 until 2026-10-21. Through free proxies a history reads
 #      at about 1/s and a form at about 0.4/s, so 50 minutes covered the
 #      register, a few States of the forest register and the changed ids, and
-#      the weekly re-read of open proposals (~5,000 a night) never ran at all.
-#      The repository is public, so the minutes cost nothing.
+#      the weekly re-read of open proposals (~4,000 a night) never ran at all.
+#      At 190 (2026-10-21) it read 2,908 of 3,990 in 106 minutes; 270 gives it
+#      room, and what it does not reach is carried to the next night. The
+#      repository is public, so the minutes cost nothing.
 #   3. The cache is saved on EVERY outcome (`if: always()`), so even without a
 #      seed the backfill accumulates night over night instead of restarting.
 #
@@ -59,7 +61,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 330
     permissions:
       contents: write
 
@@ -209,9 +211,9 @@ jobs:
           REFRESHER=$!
           status=0
           if [ -n "$SYNC_SINCE" ]; then
-            python scripts/instruments/sync.py --since "$SYNC_SINCE" --budget-minutes 190 || status=$?
+            python scripts/instruments/sync.py --since "$SYNC_SINCE" --budget-minutes 270 || status=$?
           else
-            python scripts/instruments/sync.py --full --budget-minutes 190 || status=$?
+            python scripts/instruments/sync.py --full --budget-minutes 270 || status=$?
           fi
           kill "$REFRESHER" 2>/dev/null || true
           pkill -f refresh_proxies.py || true
@@ -275,8 +277,10 @@ jobs:
         # requests to PARIVESH and must never cost the night its publish by
         # running the job out of time. It measures whether the location the
         # instrument reports matches the regulator's own letter.
+        # 12 minutes: through proxies its ~150 requests took over 6 and the
+        # step timed out (2026-10-21).
         continue-on-error: true
-        timeout-minutes: 6
+        timeout-minutes: 12
         run: |
           python scripts/instruments/crosscheck_location.py --sample 150
           if [ -f scripts/instruments/crosscheck_report.json ]; then

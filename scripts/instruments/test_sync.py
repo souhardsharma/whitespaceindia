@@ -286,6 +286,36 @@ def test_failed_sector_gets_a_second_round() -> None:
         SY.fetch, SY.log, SY.PARIVESH_SEARCH = saved
 
 
+def test_failed_forest_state_gets_a_second_round(tmp: Path) -> None:
+    print("\na forest State that failed is asked once more, with longer patience")
+    calls: list[tuple[int, int]] = []
+
+    def fake_fetch(url: str, timeout: int = 300, **_) -> bytes:
+        code = int(url.split("code=")[1])
+        calls.append((code, timeout))
+        if code == 9 or (code == 6 and timeout == SY.WINDOW_TIMEOUT):
+            raise RuntimeError("register fetch failed after retries: HTTP -1 timed out")
+        return b'{"status": 200, "data": [{"proposal_id": %d}]}' % code
+
+    saved = (SY.fetch, SY.log, SY.FOREST_SEARCH, SY.merge_forest_states)
+    try:
+        SY.fetch, SY.log = fake_fetch, (lambda *_: None)
+        SY.FOREST_SEARCH = "https://x/?code={code}"
+        SY.merge_forest_states = lambda cache: 0
+        stats = SY.fetch_forest(tmp)
+        check("a State that answers on the second round counts as read",
+              stats["codes"] == len(SY.LGD_STATE_CODES) - 1
+              and (tmp / "parivesh" / "forest" / "state_6.json").exists(), str(stats))
+        check("the second round waits longer",
+              (6, SY.FOREST_RETRY_TIMEOUT) in calls, str(calls))
+        check("a State that fails twice is still a failure, and only it",
+              [f["code"] for f in stats["failed"]] == [9], str(stats["failed"]))
+        check("each State that answered is asked once",
+              len(calls) == len(SY.LGD_STATE_CODES) + 2, str(len(calls)))
+    finally:
+        SY.fetch, SY.log, SY.FOREST_SEARCH, SY.merge_forest_states = saved
+
+
 def _rows(sector: str, per_day: dict) -> list[dict]:
     rows, n = [], 0
     for day, count in per_day.items():
@@ -766,6 +796,8 @@ def main() -> int:
     test_pass_plan()
     test_sweep_fetch_waits_and_reports()
     test_failed_sector_gets_a_second_round()
+    with tempfile.TemporaryDirectory() as d:
+        test_failed_forest_state_gets_a_second_round(Path(d))
     test_windows_cover_every_day()
     test_windowed_sector_is_checked_whole()
     test_link_silences()
