@@ -29,6 +29,7 @@ and checks it is the sector list, with the shape the sector list has.
 from __future__ import annotations
 
 import argparse
+import bisect
 import json
 import os
 import re
@@ -115,6 +116,29 @@ SOCKS_SOURCES = [
     ("socks5", "https://www.proxy-list.download/api/v1/get?type=socks5"),
 ]
 
+# PARIVESH answers only addresses in India. Measured 2026-10-21: 105 of the 107
+# distinct addresses in a working pool geolocated to India (data-centre ranges
+# of Microsoft, Oracle and DigitalOcean among them), and GitHub's runners,
+# outside India, are refused at connect. Of 271,185 candidates gathered from
+# the lists above only 4,874 were Indian, so a time-bounded refresh spent
+# nearly all its time on routes that could not work. These lists are India
+# only, one `scheme://ip:port` per line.
+INDIA_SOURCES = [
+    "https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies"
+    "&country=in&proxy_format=protocolipport&format=text",
+    "https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/"
+    "countries/IN/data.txt",
+]
+# The same, as JSON objects carrying ip, port and protocols.
+GEONODE_INDIA = ("https://proxylist.geonode.com/api/proxy-list?country=IN"
+                 "&limit=500&page=1&sort_by=lastChecked&sort_type=desc")
+# IPv4 ranges by country (ip-location-db, from WHOIS and ASN data; CC0). Used
+# only to probe Indian candidates first; without it the order is unchanged.
+COUNTRY_RANGES = ("https://cdn.jsdelivr.net/npm/@ip-location-db/"
+                  "geo-whois-asn-country/geo-whois-asn-country-ipv4-num.csv")
+SCHEMED = re.compile(r"^\s*(https?|socks[45])://(\d{1,3}(?:\.\d{1,3}){3}:\d{2,5})\s*$",
+                     re.M)
+
 PROBE = ("https://parivesh.nic.in/parivesh_api/trackYourProposal/"
          "getListOfSector")
 ADDR = re.compile(r"^\s*(\d{1,3}(?:\.\d{1,3}){3}:\d{2,5})\s*$", re.M)
@@ -154,11 +178,84 @@ def gather() -> list[str]:
             print(f"  {len(hits):>5} from {url.split('/')[2]}")
         except Exception as exc:  # noqa: BLE001
             print(f"      0 from {url.split('/')[2]}  ({type(exc).__name__})")
+    for url in INDIA_SOURCES:
+        try:
+            hits = [as_route(s, a) for s, a in SCHEMED.findall(fetch_text(url))]
+            per_source.append(hits)
+            print(f"  {len(hits):>5} India from {url.split('/')[2]}")
+        except Exception as exc:  # noqa: BLE001
+            print(f"      0 India from {url.split('/')[2]}  ({type(exc).__name__})")
+    try:
+        rows = json.loads(fetch_text(GEONODE_INDIA)).get("data") or []
+        hits = [as_route(proto, f"{r['ip']}:{r['port']}") for r in rows
+                for proto in (r.get("protocols") or [])[:1]
+                if ADDR.match(f"{r.get('ip')}:{r.get('port')}")]
+        per_source.append(hits)
+        print(f"  {len(hits):>5} India from {GEONODE_INDIA.split('/')[2]}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"      0 India from {GEONODE_INDIA.split('/')[2]}  ({type(exc).__name__})")
     # At most PORTS_PER_HOST ports of one address. Lists carry gateways on
     # hundreds of ports (measured 2026-10-20: 514 of 578 verified routes on
     # five IPs, exiting through two), and PARIVESH spaces by address - so the
     # probe budget was spent re-finding the same two exits instead of new ones.
     return cap_ports([h for hits in sorted(per_source, key=len) for h in hits])[0]
+
+
+def fetch_text(url: str) -> str:
+    req = urllib.request.Request(url, headers={"User-Agent": NET.USER_AGENT})
+    with urllib.request.urlopen(req, timeout=45) as r:
+        return r.read().decode("utf-8", "replace")
+
+
+def as_route(scheme: str, addr: str) -> str:
+    """A list entry in the pool's notation: HTTP(S) proxies bare, SOCKS schemed."""
+    scheme = scheme.lower()
+    return f"{scheme}://{addr}" if scheme.startswith("socks") else addr
+
+
+def ip_number(route: str) -> int:
+    # Lists write octets with leading zeros ("103.250.166.04"), which
+    # ipaddress refuses.
+    a, b, c, d = (int(x) for x in route.split("://")[-1].rsplit(":", 1)[0].split("."))
+    return (a << 24) | (b << 16) | (c << 8) | d
+
+
+def india_ranges() -> tuple[list[int], list[int]] | None:
+    """(starts, ends) of India's IPv4 ranges, or None if the table is unreachable."""
+    try:
+        body = fetch_text(COUNTRY_RANGES)
+    except Exception as exc:  # noqa: BLE001
+        print(f"  country table unreachable ({type(exc).__name__}); "
+              "candidates keep their list order")
+        return None
+    starts, ends = [], []
+    for ln in body.splitlines():
+        parts = ln.split(",")
+        if len(parts) == 3 and parts[2].strip() == "IN":
+            starts.append(int(parts[0]))
+            ends.append(int(parts[1]))
+    return (starts, ends) if starts else None
+
+
+def india_first(routes: list[str], ranges) -> list[str]:
+    """Indian addresses first, each group in its existing order."""
+    if not ranges:
+        return routes
+    starts, ends = ranges
+
+    def in_india(route: str) -> bool:
+        try:
+            ip = ip_number(route)
+        except ValueError:
+            return False
+        i = bisect.bisect_right(starts, ip) - 1
+        return i >= 0 and ip <= ends[i]
+
+    inside = [r for r in routes if in_india(r)]
+    chosen = set(inside)
+    print(f"  {len(inside):,} of {len(routes):,} candidates are in India; "
+          "probed first")
+    return inside + [r for r in routes if r not in chosen]
 
 
 def cap_ports(routes: list[str]) -> tuple[list[str], set]:
@@ -246,6 +343,7 @@ def main() -> None:
     # its first seconds confirming (or disproving) what the fetchers use.
     front = set(prior_routes)
     cands = cap_ports(prior_routes + [c for c in cands if c not in front])[0]
+    cands = india_first(cands, india_ranges())
     if args.limit:
         cands = cands[: args.limit]
     print(f"  {len(cands):,} unique\n")
