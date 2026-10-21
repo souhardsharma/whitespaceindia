@@ -66,7 +66,49 @@ const SECURITY_HEADERS = [
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 
+const EDGE_CACHED_PAGES = [
+  "/instruments/consent/:proposalId(\\d{1,12})",
+  "/instruments/consent/latest",
+];
+
+// Files the tracer bundles into a function because the code reads from their
+// directory, which these routes never open. Every instrument function used to
+// carry the whole data folder, 67 MB, and every deployment is kept with them
+// (the Hobby plan's Deployment Storage). Only the proposal page reads
+// sub-districts, district outlines and the neighbours index (proposalBundle);
+// nothing reads lookup.json on the server since the runtime index replaced it.
+const UNREAD_BY_LISTS = [
+  "public/data/instruments/consent/lookup.json",
+  "public/data/instruments/consent/subdistricts.json",
+  "public/geo/**",
+  ".runtime/instruments/consent/near/**",
+];
+
+// The runtime index (scripts/instruments/runtime_index.mjs) is read through a
+// path the tracer finds today; named here so that never depends on its
+// heuristics. Without it a proposal render fails loudly (lib/instruments/server.ts).
+const RUNTIME_INDEX = [
+  ".runtime/instruments/consent/headers.json",
+  ".runtime/instruments/consent/ids/*.json",
+];
+
 const nextConfig = {
+  // Metadata in <head> for every client, as a prerendered page has it. Next
+  // streams a dynamic page's title and og: tags in after the body to clients
+  // it does not list as limited bots - Googlebot and browsers among them - so
+  // moving proposal pages off ISR would otherwise have moved their titles.
+  htmlLimitedBots: /.*/,
+  outputFileTracingIncludes: {
+    "/instruments/consent/[proposalId]": [...RUNTIME_INDEX, ".runtime/instruments/consent/near/*.json"],
+    "/api/instruments/consent/**": RUNTIME_INDEX,
+  },
+  outputFileTracingExcludes: {
+    "/instruments/consent/[proposalId]": ["public/data/instruments/consent/lookup.json"],
+    "/instruments/consent/latest": UNREAD_BY_LISTS,
+    "/instruments/consent/feed": UNREAD_BY_LISTS,
+    "/instruments/consent/district/[code]": UNREAD_BY_LISTS,
+    "/api/instruments/consent/**": UNREAD_BY_LISTS,
+  },
   // `next build` lints once ESLint is installed. Scoped to the instrument
   // code, which is linted in CI and is clean; the rest of the site had never
   // been linted before ESLint was added, and linting it is a separate change.
@@ -88,6 +130,16 @@ const nextConfig = {
         source: "/:path((?!149e9513-01fa-4fb0-aad4-566afd725d1b/).*)",
         headers: SECURITY_HEADERS,
       },
+      // Pages rendered per request from this deployment's files, kept at
+      // Vercel's edge for a day. The CDN keys its cache on the deployment, so
+      // the nightly data deploy starts afresh; browsers are not told to keep
+      // anything (Vercel-CDN-Cache-Control is consumed by the CDN alone).
+      // Proposal pages used ISR instead, and its writes ran 7x past the Hobby
+      // plan's monthly allowance (see app/instruments/consent/[proposalId]).
+      ...EDGE_CACHED_PAGES.map((source) => ({
+        source,
+        headers: [{ key: "Vercel-CDN-Cache-Control", value: "max-age=86400" }],
+      })),
     ];
   },
 };
