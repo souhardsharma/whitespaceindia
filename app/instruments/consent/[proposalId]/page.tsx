@@ -20,8 +20,14 @@ import type { InstrumentMeta } from "@/lib/instruments/types";
  *
  * There are ~91,000 proposals, so no page is built ahead of time. The first
  * request for a proposal renders it on the server from the published data and
- * the result is cached for a day - the register is read nightly, and a deploy
- * replaces the cache with the new data. An unknown id is a real 404.
+ * Vercel's CDN keeps the answer for a day (next.config.mjs) - the register is
+ * read nightly, and a deploy starts a fresh cache with the new data. An
+ * unknown id is a real 404.
+ *
+ * It is NOT ISR. Every ISR render is a write to Vercel's cache in 8 KB units,
+ * HTML and RSC payload alike, and a crawl of the register rendered tens of
+ * thousands of distinct pages: 1.5 million writes in a month against the
+ * Hobby plan's 200,000. A CDN-cached response costs no write.
  *
  * The page used to be rendered in the browser from 9.6 to 18 MB of JSON, and
  * sent "Loading the profile…" to anything without JavaScript - which is every
@@ -29,12 +35,7 @@ import type { InstrumentMeta } from "@/lib/instruments/types";
  * indexable where it has a place to describe; see generateMetadata.
  */
 
-export const revalidate = 86400;
-export const dynamicParams = true;
-
-export function generateStaticParams() {
-  return [];
-}
+export const dynamic = "force-dynamic";
 
 const STAGE_LABELS: Record<string, string> = Object.fromEntries(
   Object.entries(

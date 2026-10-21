@@ -34,6 +34,14 @@ import { unpackOne, unpackSummaries, type RawShard } from "./projects";
 import type { LegalReference } from "./obligations";
 import { fpNumbers } from "./links";
 
+/**
+ * Cache-Control for a response built only from this deployment's files.
+ * Vercel's CDN keys its cache on the deployment, so a day at the edge never
+ * outlives the data; a repeat request is answered there without running a
+ * function at all.
+ */
+export const EDGE_CACHE = "public, max-age=300, s-maxage=86400";
+
 export const DATA_DIR = path.join(process.cwd(), "public", "data", "instruments", "consent");
 
 const cache = new Map<string, unknown>();
@@ -64,41 +72,18 @@ export function jsonOrNull<T>(rel: string): T | null {
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 // Raw shards are the largest thing here - 35 of them are ~117 MB of heap -
-// so they are NOT kept like the other files. A few recently used shards stay
-// (proposal pages cluster by State); everything that sweeps all of them
-// (the national index, the nearby-points table, the sitemaps) reads each
-// once and keeps only what it derives.
-const SHARD_CACHE_MAX = 4;
-const shardCache = new Map<string, RawShard>();
+// so they are never kept. What sweeps all of them (the national index, the
+// sitemaps) reads each once and keeps only what it derives; one proposal is
+// read by byte range through the runtime index below.
 
 /** Read a shard without keeping it. */
 export function shardOnce(slug: string): RawShard | null {
   if (!SLUG_RE.test(slug)) return null;
-  const hit = shardCache.get(slug);
-  if (hit) return hit;
   try {
     return JSON.parse(fs.readFileSync(path.join(DATA_DIR, "projects", `${slug}.json`), "utf-8")) as RawShard;
   } catch {
     return null;
   }
-}
-
-/** A shard, kept in a small most-recently-used cache. */
-export function shard(slug: string): RawShard | null {
-  if (!SLUG_RE.test(slug)) return null;
-  const hit = shardCache.get(slug);
-  if (hit) {
-    shardCache.delete(slug);
-    shardCache.set(slug, hit);
-    return hit;
-  }
-  const sh = shardOnce(slug);
-  if (!sh) return null;
-  shardCache.set(slug, sh);
-  while (shardCache.size > SHARD_CACHE_MAX) {
-    shardCache.delete(shardCache.keys().next().value as string);
-  }
-  return sh;
 }
 
 export function stateSlugs(): string[] {
@@ -109,7 +94,6 @@ export function stateSlugs(): string[] {
     .sort();
 }
 
-export const lookup = () => json<Record<string, string>>("lookup.json");
 export const districts = () => json<Record<string, DistrictRecord>>("districts.json");
 export const measures = () => json<MeasureRegistry>("measures.json");
 export const meta = () => json<InstrumentMeta>("meta.json");
@@ -124,15 +108,83 @@ function subdistrictMap(): Record<string, SubdistrictRecord> {
     : (raw as Record<string, SubdistrictRecord>);
 }
 
+/*
+ * The runtime index (scripts/instruments/runtime_index.mjs, run before every
+ * build): where each proposal's row sits in its shard, and every mapped site
+ * by whole-degree cell. A proposal render reads its one row and the cells
+ * around its site instead of parsing whole shards - the parsing was most of
+ * the deployment's CPU under a crawl. It is built from these same files in
+ * the same build, so it cannot describe other data than the shards beside it.
+ */
+const RUNTIME_DIR = path.join(process.cwd(), ".runtime", "instruments", "consent");
+
+type ShardHeader = Omit<RawShard, "rows">;
+type RuntimeHeaders = { idBuckets: number; slugs: string[]; shards: Record<string, ShardHeader> };
+
+function runtime<T>(rel: string): T | null {
+  const key = `__runtime__/${rel}`;
+  if (cache.has(key)) return cache.get(key) as T | null;
+  let data: T | null = null;
+  try {
+    data = JSON.parse(fs.readFileSync(path.join(RUNTIME_DIR, rel), "utf-8")) as T;
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException)?.code !== "ENOENT") throw e;
+  }
+  cache.set(key, data);
+  return data;
+}
+
+function shardHeaders(): RuntimeHeaders {
+  const h = runtime<RuntimeHeaders>("headers.json");
+  // Loud, never a quiet 404 for every proposal.
+  if (!h) throw new Error(`runtime index missing at ${RUNTIME_DIR}: run node scripts/instruments/runtime_index.mjs`);
+  return h;
+}
+
+/** A proposal's raw row and the shard it was filed in, read by byte range. */
+function rawRow(id: string): { slug: string; shard: RawShard } | null {
+  if (!/^[0-9]{1,12}$/.test(id)) return null;
+  const h = shardHeaders();
+  const at = runtime<Record<string, [number, number, number]>>(`ids/${Number(id) % h.idBuckets}.json`)?.[id];
+  return at ? rowAt(id, ...at) : null;
+}
+
+/** The row of shard `si` at [offset, offset + length), which must carry `id`. */
+function rowAt(id: string, si: number, offset: number, length: number): { slug: string; shard: RawShard } {
+  const h = shardHeaders();
+  const slug = h.slugs[si];
+  const buf = Buffer.alloc(length);
+  const fd = fs.openSync(path.join(DATA_DIR, "projects", `${slug}.json`), "r");
+  try {
+    fs.readSync(fd, buf, 0, length, offset);
+  } finally {
+    fs.closeSync(fd);
+  }
+  const header = h.shards[slug];
+  let row: unknown[] | null = null;
+  try {
+    row = JSON.parse(buf.toString("utf-8")) as unknown[];
+  } catch {
+    row = null;
+  }
+  if (!row || String(row[header.fields.indexOf("id")]) !== id) {
+    throw new Error(`runtime index is stale for ${slug}.json (id ${id}): rebuild it`);
+  }
+  return { slug, shard: { ...header, rows: [row] } };
+}
+
 /** One proposal, with the state it was filed in, or null. */
 export function findProposal(id: string): { project: Project; slug: string } | null {
-  if (!/^[0-9]{1,12}$/.test(id)) return null;
-  const slug = lookup()[id];
-  if (!slug) return null;
-  const sh = shard(slug);
-  if (!sh) return null;
-  const project = unpackOne(sh, id);
-  return project ? { project, slug } : null;
+  const raw = rawRow(id);
+  if (!raw) return null;
+  const project = unpackOne(raw.shard, id);
+  return project ? { project, slug: raw.slug } : null;
+}
+
+/** One proposal's row as published, with its shard's vocabulary, for the PDF export. */
+export function proposalRow(id: string): { slug: string; shard: RawShard; row: unknown[] } | null {
+  const raw = rawRow(id);
+  return raw ? { ...raw, row: raw.shard.rows[0] } : null;
 }
 
 export interface NearbyProposal {
@@ -146,35 +198,21 @@ export interface NearbyProposal {
 }
 
 /**
- * Every proposal in the register with coordinates, as flat arrays, built once
- * per process. Used to find what else is proposed near a site - the
- * cumulative picture no single filing gives.
+ * Every proposal with coordinates in the whole-degree cells a box touches,
+ * from the runtime index: [register order, id, slug index, lat, lon, and the
+ * byte range of the point's own row in that shard].
  */
-let POINTS: {
-  id: string[]; slug: string[]; lat: Float64Array; lon: Float64Array;
-  no: string[]; name: string[]; sector: string[]; sk: (string | null)[];
-} | null = null;
+type NearPoint = [number, string, number, number, number, number, number];
 
-function points() {
-  if (POINTS) return POINTS;
-  const id: string[] = [], slug: string[] = [], lat: number[] = [], lon: number[] = [];
-  const no: string[] = [], name: string[] = [], sector: string[] = [], sk: (string | null)[] = [];
-  for (const s of stateSlugs()) {
-    const sh = shardOnce(s);
-    if (!sh) continue;
-    const I = (k: string) => sh.fields.indexOf(k);
-    const iLat = I("lat"), iLon = I("lon"), iId = I("id"), iNo = I("no"),
-      iName = I("name"), iSec = I("sector"), iSk = I("sk");
-    for (const r of sh.rows) {
-      const a = r[iLat] as number | null, b = r[iLon] as number | null;
-      if (a == null || b == null) continue;
-      id.push(String(r[iId])); slug.push(s); lat.push(a); lon.push(b);
-      no.push(String(r[iNo] ?? "")); name.push(String(r[iName] ?? ""));
-      sector.push(sh.sectors[r[iSec] as number] ?? ""); sk.push((r[iSk] as string) ?? null);
+function pointsInBox(lat: number, lon: number, dLat: number, dLon: number): NearPoint[] {
+  const out: NearPoint[] = [];
+  for (let a = Math.floor(lat - dLat); a <= Math.floor(lat + dLat); a++) {
+    for (let b = Math.floor(lon - dLon); b <= Math.floor(lon + dLon); b++) {
+      const cell = runtime<NearPoint[]>(`near/${a}_${b}.json`);
+      if (cell) out.push(...cell);
     }
   }
-  POINTS = { id, slug, lat: Float64Array.from(lat), lon: Float64Array.from(lon), no, name, sector, sk };
-  return POINTS;
+  return out;
 }
 
 function km(aLat: number, aLon: number, bLat: number, bLon: number): number {
@@ -197,23 +235,34 @@ export function nearby(p: Project, radiusKm = 10, limit = 20): {
 } {
   const lat = p.site?.lat, lon = p.site?.lon;
   if (lat == null || lon == null) return { items: [], total: 0, radiusKm };
-  const P = points();
   // A cheap box first: a degree of latitude is ~111 km everywhere; a degree
   // of longitude is 111 km times the cosine of the latitude (about 91 km in
   // Kashmir), so the box is widened for the site's own latitude, with margin.
   const dLat = radiusKm / 110;
   const dLon = radiusKm / (110 * Math.cos((Math.abs(lat) + 1) * Math.PI / 180));
-  const hits: NearbyProposal[] = [];
-  for (let i = 0; i < P.id.length; i++) {
-    if (Math.abs(P.lat[i] - lat) > dLat || Math.abs(P.lon[i] - lon) > dLon) continue;
-    if (P.id[i] === p.id) continue;
-    const d = km(lat, lon, P.lat[i], P.lon[i]);
+  const hits: { point: NearPoint; km: number }[] = [];
+  for (const point of pointsInBox(lat, lon, dLat, dLon)) {
+    const [, id, , a, b] = point;
+    if (Math.abs(a - lat) > dLat || Math.abs(b - lon) > dLon) continue;
+    if (id === p.id) continue;
+    const d = km(lat, lon, a, b);
     if (d > radiusKm) continue;
-    hits.push({ id: P.id[i], slug: P.slug[i], no: P.no[i], name: P.name[i],
-                sector: P.sector[i], statusKey: P.sk[i], km: Math.round(d * 10) / 10 });
+    hits.push({ point, km: Math.round(d * 10) / 10 });
   }
-  hits.sort((a, b) => a.km - b.km);
-  return { items: hits.slice(0, limit), total: hits.length, radiusKm };
+  // Equal distances keep register order, as a scan of the whole register did.
+  hits.sort((a, b) => a.km - b.km || a.point[0] - b.point[0]);
+  const items = hits.slice(0, limit).map(({ point, km: dist }): NearbyProposal => {
+    const [, id, si, , , offset, length] = point;
+    const { shard: sh, slug } = rowAt(id, si, offset, length);
+    const r = sh.rows[0];
+    const I = (k: string) => sh.fields.indexOf(k);
+    return {
+      id, slug, no: String(r[I("no")] ?? ""), name: String(r[I("name")] ?? ""),
+      sector: sh.sectors[r[I("sector")] as number] ?? "",
+      statusKey: (r[I("sk")] as string) ?? null, km: dist,
+    };
+  });
+  return { items, total: hits.length, radiusKm };
 }
 
 export interface ProposalBundle {
@@ -306,16 +355,11 @@ export function proposalBundle(id: string): ProposalBundle | null {
   };
 }
 
-/** Summaries of every proposal in one state, for the search endpoint. */
-export function stateSummaries(slug: string) {
-  const sh = shard(slug);
-  return sh ? unpackSummaries(sh) : [];
-}
-
 /**
- * The same, WITHOUT keeping the raw shard. The national index needs every
- * state's summaries once; caching all 35 raw shards beside them held ~130 MB
- * of heap per server instance for data already copied into the summaries.
+ * One state's summaries, WITHOUT keeping the raw shard. The national index
+ * needs every state's summaries once; caching all 35 raw shards beside them
+ * held ~130 MB of heap per server instance for data already copied into the
+ * summaries.
  */
 function stateSummariesOnce(slug: string) {
   const sh = shardOnce(slug);
@@ -347,6 +391,25 @@ export function allSummaries(): { list: IndexedProposal[]; byId: Map<string, Ind
   list.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   ALL_SUMMARIES = { list, byId: new Map(list.map((p) => [p.id, p])) };
   return ALL_SUMMARIES;
+}
+
+const NAMED_LOOKUP_MAX = 100;
+
+/** The national index's entries for these ids, built without the national index. */
+export function summariesFor(ids: Iterable<string>): Map<string, IndexedProposal> {
+  const names = districts();
+  const out = new Map<string, IndexedProposal>();
+  for (const id of ids) {
+    const raw = rawRow(id);
+    const p = raw ? unpackSummaries(raw.shard)[0] : undefined;
+    if (!raw || !p) continue;
+    out.set(id, {
+      ...p,
+      stateSlug: raw.slug,
+      districtName: p.district != null ? names[String(p.district)]?.district_name ?? null : null,
+    });
+  }
+  return out;
 }
 
 export type ChangeKind = "filed" | "query" | "moved" | "decided" | "closed";
@@ -402,13 +465,15 @@ export interface ChangeQuery {
 export function changes(q: ChangeQuery = {}): { events: ChangeEvent[]; total: number } {
   const file = changesFile();
   if (!file) return { events: [], total: 0 };
-  const { byId } = allSummaries();
   const ref = legal();
   const dets = (ref?.determinations ?? {}) as Record<string, { status?: string }>;
   const kinds = q.kinds && q.kinds.length ? new Set(q.kinds) : null;
   const out: ChangeEvent[] = [];
   let total = 0;
   const reads = file.stamps ?? [];
+  // A few named proposals (one proposal's own steps) are looked up one by
+  // one; building the national index for them parsed every shard.
+  const byId = q.ids && q.ids.size <= NAMED_LOOKUP_MAX ? summariesFor(q.ids) : allSummaries().byId;
   for (const [kind, date, id, sk, seen] of file.rows) {
     if (kinds && !kinds.has(kind)) continue;
     if (q.since && date < q.since) continue;
@@ -553,7 +618,6 @@ export function appraisalContext(p: Project): AppraisalContext | null {
 
 /** The register's state name for a proposal (its filing state). */
 function lookupStateName(p: Project): string | null {
-  const slug = lookup()[p.id];
-  const sh = slug ? shard(slug) : null;
-  return sh?.state ?? null;
+  const raw = rawRow(p.id);
+  return raw ? raw.shard.state ?? null : null;
 }
