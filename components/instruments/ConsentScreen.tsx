@@ -93,13 +93,15 @@ export function ConsentScreen({
         id="consent-heading"
         className="font-headline font-bold text-[clamp(22px,2.6vw,32px)] tracking-[-0.02em] mb-2"
       >
-        Consent screening
+        Scheduled Area status
       </h2>
       <p className="font-body text-[14px] leading-relaxed opacity-70 max-w-3xl mb-7">
-        Two different kinds of statement appear below and they are not
-        interchangeable. Indicators are computed from the Census. Determinations
-        are statements about the law, cited to the instrument that makes them.
-        A population share is never, by itself, a legal status.
+        This panel holds two kinds of statement. The indicators on the left
+        are calculated from the Census and describe who lives here. The
+        determination on the right is a statement of law, cited to the
+        Presidential Order or other legal text that makes it. A district can
+        have a large Scheduled Tribe population and still lie outside every
+        Scheduled Area, so the indicators cannot settle the legal question.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -112,8 +114,8 @@ export function ConsentScreen({
             </h3>
           </div>
           <p className="font-body text-[12.5px] leading-relaxed opacity-75 mb-4">
-            Computed from Census 2011 for {placeLabel}. These describe the
-            population. They do not establish any legal status.
+            These figures for {placeLabel} come from Census 2011. They
+            describe the population and carry no legal status of their own.
           </p>
           <dl className="space-y-3">
             {indicators.map((f) => (
@@ -152,17 +154,20 @@ export function ConsentScreen({
             </h3>
           </div>
           <p className="font-body text-[12.5px] leading-relaxed opacity-75 mb-4">
-            Whether this place lies in a Fifth Schedule Scheduled Area, where
-            community consent is a legal precondition rather than a consultation
-            outcome.
+            Whether this place lies in a Scheduled Area under the Fifth Schedule
+            to the Constitution. In such an area the Gram Sabha, the assembly
+            of a village&rsquo;s registered voters, must be consulted before land
+            is acquired for a project (PESA section 4(i)), and its prior consent
+            is needed for acquisition under section 41(3) of the 2013 land
+            acquisition Act (RFCTLARR).
             {governingDistrict ? (
               <>
                 {" "}
                 This filing names more than one district, and the determination
-                below is the strongest of them — it is the determination for{" "}
-                <strong>{governingDistrict}</strong>, not for the district
-                profiled above. Consent is owed wherever the site is scheduled,
-                so the stronger answer governs.
+                below is the one for <strong>{governingDistrict}</strong>, the
+                strongest among them. The district profiled above may have a
+                weaker one. We show the strongest because these duties follow
+                the site, which may lie in any of the districts named.
               </>
             ) : null}
           </p>
@@ -179,7 +184,7 @@ export function ConsentScreen({
                   : determination.status === "partial"
                   ? "Partly within a Fifth Schedule Scheduled Area"
                   : determination.status === "outside"
-                  ? "Outside every Fifth Schedule Scheduled Area"
+                  ? "Not in a Fifth Schedule Scheduled Area"
                   : /* An unrecognised status is a gap, not an answer. Reaching
                        "Not within" through an else meant any future status the
                        renderer did not know about would be published as a
@@ -188,32 +193,36 @@ export function ConsentScreen({
               </p>
               {determination.status === "outside" ? (
                 <p className="font-body text-[13px] leading-relaxed opacity-75 mb-3">
-                  This is a determination, not a gap: no Presidential Order
-                  under paragraph 6 of the Fifth Schedule reaches this
-                  district. The duties that turn on Scheduled Area status
-                  therefore do not attach here &mdash; consultation with the
-                  Gram Sabha under PESA s.4(i), its mandatory recommendation
-                  for minor minerals under s.4(k) and s.4(l), and consent
-                  under RFCTLARR s.41(3). Consent is RFCTLARR&rsquo;s
-                  requirement; PESA&rsquo;s is consultation, and the two are
-                  not the same duty. Other protections may still apply.
+                  No Presidential Order under paragraph 6 of the Fifth
+                  Schedule covers this district, so we record it as outside
+                  the Scheduled Areas. The duties that depend on Scheduled Area
+                  status therefore do not apply here. Under the Panchayats
+                  (Extension to the Scheduled Areas) Act, 1996 (PESA), those
+                  are the Gram Sabha&rsquo;s right to be consulted before land
+                  is acquired (section 4(i)) and its recommendation, which is
+                  mandatory, on licences and leases for minor minerals
+                  (sections 4(k) and 4(l)). Under RFCTLARR, the duty is to
+                  obtain the Gram Sabha&rsquo;s prior consent to an
+                  acquisition (section 41(3)). Other protections, listed in
+                  the basis below where they apply, may still cover the
+                  district.
                 </p>
               ) : null}
               {determination.status === "partial" && siteSettled?.length ? (
                 <p className="font-body text-[13px] leading-relaxed opacity-75 mb-3">
-                  The Order covers only part of this district — but it names{" "}
+                  The Order covers only part of this district, but it names{" "}
                   <strong>{siteSettled.join(", ")}</strong> in whole, and this
                   filing places the project there. On the face of the Order,
-                  this site is inside the Scheduled Area.
+                  the site is inside the Scheduled Area.
                 </p>
               ) : determination.status === "partial" ? (
                 <p className="font-body text-[13px] leading-relaxed opacity-75 mb-3">
-                  The Order covers only part of this district. Whether this
-                  particular site falls inside it cannot be settled at district
-                  level — check the blocks and villages the Order names. A
-                  sub-division the Order reaches through a revenue circle or a
-                  named village will not appear here, so this is not a finding
-                  that the site is outside.
+                  The Order covers only part of this district, and the record
+                  we hold cannot say whether this site falls in that part. The
+                  answer lies in the blocks, tehsils and villages the Order
+                  names. Where the Order reaches a place through a revenue
+                  circle or a named village, we cannot match it to the site,
+                  so the site&rsquo;s status remains open.
                 </p>
               ) : null}
               <Citation d={determination} />
@@ -231,16 +240,16 @@ function NotDetermined({ note }: { note?: string }) {
       <p className="font-headline text-[19px] leading-snug mb-3">Not determined</p>
       <p className="font-body text-[13px] leading-relaxed opacity-75">
         {note ||
-          "The curated legal reference does not cover this place. Scheduled Areas " +
-            "are declared by Presidential Order under paragraph 6 of the Fifth " +
-            "Schedule to the Constitution, and there is no machine-readable " +
-            "authoritative list of them. Verify against the Order for this state " +
-            "before relying on any answer."}
+          "Our reference of Presidential Orders does not cover this place. " +
+            "Scheduled Areas are declared by Presidential Order under paragraph 6 " +
+            "of the Fifth Schedule to the Constitution, and no official list of " +
+            "them exists in a form a program can read, so the Order for this " +
+            "state is the authority to check."}
       </p>
       <p className="font-body text-[13px] leading-relaxed opacity-75 mt-3">
-        This instrument will not infer the answer from the tribal population
-        share. The two do not coincide, and treating one as the other is the
-        error this panel exists to prevent.
+        We leave the question open here and do not infer it from the
+        Scheduled Tribe share of the population, because many districts with a
+        large tribal population lie outside every Scheduled Area.
       </p>
     </div>
   );
@@ -251,7 +260,7 @@ function Citation({ d }: { d: LegalDetermination }) {
     <dl className="font-body text-[12.5px] leading-relaxed space-y-1.5 border-t border-[#1c1c19]/15 pt-3">
       <div>
         <dt className="inline font-label text-[9px] uppercase tracking-[0.18em] opacity-70 mr-2">
-          Instrument
+          Legal source
         </dt>
         <dd className="inline">{d.instrument}</dd>
       </div>
@@ -332,23 +341,22 @@ export function ObligationPanel({
         id="obligations-heading"
         className="font-headline font-bold text-[clamp(22px,2.6vw,32px)] tracking-[-0.02em] mb-2"
       >
-        Obligations that attach
+        Legal duties and whether they apply
       </h2>
       <p className="font-body text-[14px] leading-relaxed opacity-70 max-w-3xl mb-2">
-        Every entry below is hand-curated and cited to a provision, with the date
-        it was last reviewed. None of it is generated, and none of it is inferred
-        from the population data on this page.
+        We compiled each entry below by hand from the text of the law or
+        standard, cite the provision it rests on, and record when we last
+        reviewed it. The population figures on this page play no part in
+        deciding whether a duty applies.
       </p>
       <p className="font-body text-[13px] leading-relaxed opacity-75 max-w-3xl mb-6">
-        Whether an obligation applies is decided from what this proposal&rsquo;s
-        own filing establishes, together with the Scheduled Area determination
-        for every district the filing names. &ldquo;Does not apply&rdquo; is
-        said only where a Presidential Order, or the absence of one, settles
-        that the place is outside — it is a determination, not an inference.
-        Where the position is genuinely open, the answer is &ldquo;not
-        determined&rdquo;, because the stronger claim is not one the record
-        supports.
-        {lastReviewed ? ` Reference last reviewed ${lastReviewed}.` : ""}
+        Whether a duty applies depends on what this proposal&rsquo;s own
+        filing establishes and on the Scheduled Area determination for each
+        district the filing names. We say a duty &ldquo;does not apply&rdquo;
+        only where the filing or the Presidential Orders settle that question.
+        Where the record leaves it open, the answer is &ldquo;not
+        determined&rdquo;.
+        {lastReviewed ? ` We last reviewed the list on ${lastReviewed}.` : ""}
       </p>
 
       {unavailable || obligations.length === 0 ? (
@@ -360,8 +368,8 @@ export function ObligationPanel({
           </p>
           <p className="font-body text-[13.5px] leading-relaxed opacity-70 max-w-2xl">
             {unavailable
-              ? "The obligations that attach to this proposal are held by this instrument — this is a failure to reach them, not a finding that none apply. Reloading usually fixes it."
-              : "Rather than show provisions that have not been checked against the bare Acts, this panel shows nothing. A wrong section number is worse than an admitted gap: it would be quoted, and it would be wrong."}
+              ? "The list of legal duties failed to load, so this panel cannot say which of them apply. Reloading the page usually fixes this."
+              : "We show provisions here only after checking them against the text of the Acts, and none has been checked for this proposal yet."}
           </p>
         </div>
       ) : (
@@ -370,16 +378,15 @@ export function ObligationPanel({
               duties bind this project before reading any of them. */}
           <p className="font-label text-[11px] uppercase tracking-[0.14em] mb-4">
             {groupObligations(obligations)
-              .map((g) => `${g.items.length} ${g.label.toLowerCase()}`)
+              .map((g) => `${g.items.length} ${COUNT_PHRASE[g.key](g.items.length)}`)
               .join(" · ")}
           </p>
           {groupObligations(obligations).map((g) =>
             g.items.length === 0 ? null : g.key === "no" ? (
               <details key={g.key} className="mt-6">
                 <summary className="cursor-pointer font-label text-[11px] uppercase tracking-[0.16em] py-2">
-                  {g.label} ({g.items.length}) — settled by the determination
-                  above or by the proponent&rsquo;s own filing; shown for
-                  completeness
+                  {g.label} ({g.items.length}), settled by the determination
+                  above or by the applicant&rsquo;s own filing
                 </summary>
                 <ObligationList items={g.items} />
               </details>
@@ -397,6 +404,14 @@ export function ObligationPanel({
     </section>
   );
 }
+
+/** The count line's verb agrees with its number: "1 applies", "3 apply". */
+const COUNT_PHRASE: Record<Obligation["applies"], (n: number) => string> = {
+  yes: (n) => (n === 1 ? "applies" : "apply"),
+  conditional: () => "may apply",
+  not_determined: () => "not determined",
+  no: (n) => (n === 1 ? "does not apply" : "do not apply"),
+};
 
 function ObligationList({ items }: { items: Obligation[] }) {
   return (
@@ -423,7 +438,7 @@ function ObligationList({ items }: { items: Obligation[] }) {
             </p>
             <p className="font-body text-[12.5px] leading-relaxed opacity-75 mt-1">
               <span className="font-label text-[9px] uppercase tracking-[0.16em] mr-1.5">
-                Triggered by
+                Applies when
               </span>
               {o.trigger}
             </p>
@@ -440,7 +455,7 @@ function ObligationList({ items }: { items: Obligation[] }) {
             <AppliesBadge applies={o.applies} />
             {o.lastReviewed ? (
               <p className="font-label text-[9px] uppercase tracking-[0.14em] opacity-65 mt-1.5">
-                reviewed {o.lastReviewed}
+                Reviewed {o.lastReviewed}
               </p>
             ) : null}
           </div>

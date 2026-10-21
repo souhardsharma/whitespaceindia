@@ -4,17 +4,17 @@ import { SITE_URL } from "@/lib/site";
 const siteUrl = SITE_URL;
 
 export const metadata: Metadata = {
-  title: { absolute: "About — Energy — Whitespace India" },
+  title: { absolute: "About the Energy Index | Whitespace India" },
   description:
-    "About the Whitespace India Energy initiative: methodology, team, and mission behind the energy access and transition gap analysis.",
+    "What the Whitespace India Energy index will measure, and the public sources it will draw on.",
   alternates: { canonical: `${siteUrl}/energy/about` },
   openGraph: {
     url: `${siteUrl}/energy/about`,
-    title: "About — Energy — Whitespace India",
+    title: "About the Energy Index | Whitespace India",
     siteName: "Whitespace India",
     type: "website",
     locale: "en_IN",
-    images: [{ url: "/og/energy-2.jpg", width: 1200, height: 630, alt: "Whitespace India Energy: \u201cWhere power falls short, district by district\u201d, beside a risograph print of a house, a power pole and a solar panel on a hill" }],
+    images: [{ url: "/og/energy-3.jpg", width: 1200, height: 630, alt: "Whitespace India Energy: \u201cWhere power falls short, district by district\u201d, beside a risograph print of a house, a power pole and a solar panel on a hill" }],
   },
 };
 

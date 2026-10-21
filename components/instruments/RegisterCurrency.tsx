@@ -55,7 +55,7 @@ export default function RegisterCurrency({
   if (!when) {
     return (
       <div className={`font-label text-[9px] uppercase tracking-[0.18em] ${className}`}>
-        <span className="opacity-70">Register read time unavailable</span>
+        <span className="opacity-70">Time of last register read unknown</span>
       </div>
     );
   }
@@ -65,13 +65,13 @@ export default function RegisterCurrency({
 
   return (
     <div className={`font-label text-[9px] uppercase tracking-[0.18em] ${className}`}>
-      <span className="opacity-70">Register read </span>
+      <span className="opacity-70">Clearance register last read </span>
       <span className="opacity-80">{when} IST</span>
       {partial ? (
         <span className="opacity-80">
-          {" "}&middot; partial check
+          {" "}&middot; read incompletely
           {unreachable > 0
-            ? `, ${unreachable} sector${unreachable === 1 ? "" : "s"} unreachable`
+            ? `, with ${unreachable} sector${unreachable === 1 ? "" : "s"} of the register unavailable`
             : ""}
         </span>
       ) : null}

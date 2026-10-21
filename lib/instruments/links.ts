@@ -65,13 +65,13 @@ export interface LinkLine {
 const nf = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 });
 
 export const LINKS_UNREAD =
-  "This proposal's application form has not yet been read for its other clearances. That is a gap in what this instrument has read, not a statement that there are none.";
+  "We have not yet read this proposal's application form for its other clearances, so this page cannot yet say whether the project needs any.";
 
 export const LINKS_NONE =
-  "The form answers each question and declares no forest diversion, no wildlife-board recommendation, and no site in an eco-sensitive zone, protected area or coastal regulation zone, and records no detail of how its land is held.";
+  "The form answers each question about other clearances and declares none of them. By its own account the project diverts no forest land, needs no recommendation from the National Board for Wildlife, and lies outside any eco-sensitive zone, protected area or coastal regulation zone. It gives no detail of how the land is held.";
 
 export const LINKS_BLANK =
-  "The form has been read, but it leaves the questions about other clearances unanswered: forest clearance, the wildlife board, eco-sensitive zones, protected areas and the coastal regulation zone. A blank is not a declaration that none of them applies.";
+  "The form has been read, but it leaves every question about other clearances unanswered. Those questions cover forest clearance, the National Board for Wildlife, eco-sensitive zones, protected areas and the coastal regulation zone, and with the answers blank this page cannot say whether any of them applies.";
 
 export function linkedClearanceLines(
   links: LinkedClearances | 0 | null,
@@ -91,28 +91,35 @@ export function linkedClearanceLines(
     if (links.f) {
       const [no, status, applied, diverted, approved] = links.f;
       parts.push(
-        "Forest clearance is involved" +
-          (no ? `, under proposal ${no}` : ", and the form names no forest proposal yet") + ".",
+        "The form says the project needs forest clearance" +
+          (no ? `, under forest proposal ${no}` : ", but it names no forest proposal") + ".",
       );
-      if (status) parts.push(`The form gives its status as "${status}".`);
-      if (applied != null) parts.push(`${nf.format(applied)} ha applied for diversion.`);
-      if (diverted != null) parts.push(`${nf.format(diverted)} ha diverted.`);
-      if (approved) parts.push(`Approved ${approved}.`);
+      if (status) parts.push(`It gives the status of that clearance as "${status}".`);
+      const areas = [
+        applied != null ? `${nf.format(applied)} ha applied for diversion` : null,
+        diverted != null ? `${nf.format(diverted)} ha diverted` : null,
+      ].filter((x): x is string => x !== null);
+      if (areas.length) {
+        parts.push(`It records ${areas.join(" and ")}` +
+          (approved ? `, with approval dated ${approved}` : "") + ".");
+      } else if (approved) {
+        parts.push(`It dates the approval ${approved}.`);
+      }
     }
     if ((links.a ?? 0) > 0) {
       // No unit: the form's land breakup carries none (see the register
       // page's land caveat), so the figure is given as filed.
       parts.push(
         (!links.f && (links.u ?? "").includes("f")
-          ? "The form leaves blank whether forest clearance is involved, but its land breakup"
-          : "The land breakup") +
-          ` records forest land additionally sought, a figure of ${nf.format(links.a!)} as filed, without a unit.`,
+          ? "The form leaves blank whether forest clearance is involved, but its table of land use"
+          : "The form's table of land use") +
+          ` lists additional forest land sought, recorded as ${nf.format(links.a!)} without a unit.`,
       );
     }
     if (forestRegister) {
       const read = istDate(forestRegister.readAt);
       parts.push(
-        `The forest register itself` + (read ? `, as read on ${read},` : "") +
+        `The forest clearance register itself` + (read ? `, as read on ${read},` : "") +
           ` records it as "${forestRegister.status}"` +
           (forestRegister.area != null ? `, ${nf.format(forestRegister.area)} ha` : "") +
           (forestRegister.form ? ` (${forestRegister.form})` : "") + ".",
@@ -121,7 +128,7 @@ export function linkedClearanceLines(
     lines.push({
       label: "Forest clearance",
       text: parts.join(" "),
-      note: "Diverting forest land needs the Forest Rights Act process completed first, with the Gram Sabha's written consent in the circumstances the 2009 circular sets out - see the obligations.",
+      note: "Before forest land is diverted, the rights of forest dwellers have to be settled under the Forest Rights Act, and a 2009 circular of the Ministry of Environment and Forests asks, in the circumstances it sets out, for the Gram Sabha's written consent to the diversion. The obligations section of this profile says how that bears on this proposal.",
     });
   }
   if (links.w) {
@@ -129,9 +136,9 @@ export function linkedClearanceLines(
     lines.push({
       label: "Wildlife board",
       text:
-        "A recommendation of the National Board for Wildlife is involved" +
+        "The form says the project needs a recommendation from the National Board for Wildlife" +
         (pa ? `, for ${pa}` : "") + (no ? `, under proposal ${no}` : "") + "." +
-        (status ? ` Status as declared: "${status}".` : ""),
+        (status ? ` It gives the status as "${status}".` : ""),
     });
   }
   if (links.p || links.e) {
@@ -139,7 +146,9 @@ export function linkedClearanceLines(
       label: "Protected areas",
       text: [
         links.p ? "The form declares the site in or near a national park, sanctuary or other protected area." : "",
-        links.e ? "It declares the site within an eco-sensitive zone." : "",
+        links.e
+          ? `${links.p ? "It also declares" : "The form declares"} the site within an eco-sensitive zone.`
+          : "",
       ].filter(Boolean).join(" "),
     });
   }
@@ -153,8 +162,9 @@ export function linkedClearanceLines(
   if (links.t && links.t.length) {
     lines.push({
       label: "How the land is held",
-      text: links.t.map((t) => t.filter(Boolean).join(" · ")).join("; ") + ".",
-      note: "Whether land is acquired under the 2013 Act, bought privately, or already government land decides which resettlement and consent duties apply.",
+      text: "The form describes its land by type, ownership and acquisition status, in its own words: " +
+        links.t.map((t) => t.filter(Boolean).join(", ")).join("; ") + ".",
+      note: "How the land is obtained decides which resettlement and consent duties apply. Land acquired under the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 carries all of that Act's duties, while land a private company buys by negotiation carries its rehabilitation and resettlement duties only above an area the State government sets (section 2(3)).",
     });
   }
   // Forest is already said to be blank in the forest line when that line
@@ -165,7 +175,7 @@ export function linkedClearanceLines(
   if (blank.length) {
     lines.push({
       label: "Not answered",
-      text: `The form leaves the question of ${listWords(blank.map((k) => TOPIC_NAMES[k]))} blank. A blank is not a "no".`,
+      text: `The form leaves blank the questions on ${listWords(blank.map((k) => TOPIC_NAMES[k]))}, so for these the answer is unknown.`,
     });
     // What it answered and declared none of - said, so a partly blank form
     // is not read as wholly blank or wholly clear.
@@ -176,7 +186,7 @@ export function linkedClearanceLines(
     if (no.length) {
       lines.push({
         label: "Answered, none declared",
-        text: `The form answers the question of ${listWords(no.map((k) => TOPIC_NAMES[k]))}, and declares none.`,
+        text: `The form answers the questions on ${listWords(no.map((k) => TOPIC_NAMES[k]))} and declares nothing under any of them.`,
       });
     }
   }

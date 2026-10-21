@@ -31,18 +31,18 @@ export default function EducationAboutPage() {
             <FadeIn>
               <span className="font-label text-[11px] uppercase tracking-[0.3em] block mb-6" style={{ color: accent }}>About</span>
               <h1 className="font-headline text-5xl md:text-7xl headline-tight text-[#1c1c19] mb-10">
-                Mapping India&apos;s <span className="italic font-light">education divide.</span>
+                Where schooling <span className="italic font-light">falls short.</span>
               </h1>
             </FadeIn>
 
             <FadeIn delay={0.1}>
               <div className="border-t border-[#1c1c19] pt-10 grid grid-cols-1 md:grid-cols-12 gap-10">
                 <div className="md:col-span-4">
-                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60">The Project</span>
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60">The project</span>
                 </div>
                 <div className="md:col-span-8 font-body text-base text-[#1c1c19]/80 leading-relaxed space-y-6">
-                  <p>Whitespace India Education is a research initiative mapping education infrastructure gaps across Indian districts. Using government data from UDISE+, the National Achievement Survey, ASER reports, and Census records, we score every district on three dimensions: school access, learning outcomes, and infrastructure adequacy.</p>
-                  <p>The goal is to surface the districts where education interventions would have the greatest impact — not through subjective assessment, but through transparent, reproducible scoring based on public records.</p>
+                  <p>Whitespace India Education is a planned index of gaps in schooling across Indian districts. It will score each district on access to schools, on learning outcomes and on the adequacy of school buildings and services. The sources will be UDISE+, the National Achievement Survey and the Census, all published by the government, together with the ASER surveys run by Pratham, a non-governmental organisation. Until that data is in place, these pages run on placeholder figures.</p>
+                  <p>The aim is to find the districts where education work would do the most good, with a score that anyone can reproduce from public records.</p>
                 </div>
               </div>
             </FadeIn>
@@ -50,14 +50,14 @@ export default function EducationAboutPage() {
             <FadeIn delay={0.2}>
               <div className="border-t border-[#1c1c19] pt-10 mt-16 grid grid-cols-1 md:grid-cols-12 gap-10">
                 <div className="md:col-span-4">
-                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60">Data Sources</span>
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60">Planned sources</span>
                 </div>
                 <div className="md:col-span-8">
                   <ul className="space-y-4 font-body text-sm text-[#1c1c19]/80 leading-relaxed">
-                    <li className="border-b border-[#1c1c19]/20 pb-4">UDISE+ (Unified District Information System for Education Plus) 2021-22</li>
-                    <li className="border-b border-[#1c1c19]/20 pb-4">National Achievement Survey (NAS) 2021 — Learning outcomes by grade</li>
-                    <li className="border-b border-[#1c1c19]/20 pb-4">ASER (Annual Status of Education Report) — Reading and arithmetic levels</li>
-                    <li className="pb-4">Census of India 2011 — District population baselines</li>
+                    <li className="border-b border-[#1c1c19]/20 pb-4">UDISE+ (Unified District Information System for Education Plus), 2021-22</li>
+                    <li className="border-b border-[#1c1c19]/20 pb-4">National Achievement Survey (NAS) 2021: learning outcomes by grade</li>
+                    <li className="border-b border-[#1c1c19]/20 pb-4">ASER (Annual Status of Education Report), run by Pratham: reading and arithmetic levels</li>
+                    <li className="pb-4">Census of India 2011: district populations</li>
                   </ul>
                 </div>
               </div>

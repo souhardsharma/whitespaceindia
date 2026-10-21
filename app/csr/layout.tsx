@@ -7,7 +7,7 @@ const PAGE_URL = `${siteUrl}/csr`;
 
 const TITLE = "CSR Opportunity Index for 651 Districts | Whitespace India";
 const DESCRIPTION =
-  "Ranks 651 Indian districts by the gap between poverty (NITI Aayog MPI 2023) and CSR spending in ten years of MCA filings. Adjust weights, filter by sector.";
+  "The CSR Opportunity Index ranks 651 Indian districts by their poverty (NITI Aayog MPI 2023) against the CSR spending companies reported there in ten years of Ministry of Corporate Affairs filings. You can change the weights or score a single sector.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -28,21 +28,21 @@ export const metadata: Metadata = {
     "CSR strategy India",
   ],
   openGraph: {
-    title: "Whitespace India CSR — Where CSR Should Go",
+    title: "CSR Opportunity Index: poverty and CSR spending in 651 districts",
     description:
-      "Discover the Indian districts where philanthropic capital can create the most impact. Interactive opportunity index across 651 districts, free for foundations, donors, and researchers.",
+      "A free, interactive index that sets the CSR spending companies report in each of 651 Indian districts against the district's poverty, to show where need is high and recorded spending is low.",
     url: PAGE_URL,
-    images: [{ url: "/og/csr-index-2.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
+    images: [{ url: "/og/csr-index-3.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Whitespace India CSR — Where CSR Should Go",
+    title: "CSR Opportunity Index: poverty and CSR spending in 651 districts",
     description:
-      "Find India's philanthropic whitespaces — districts with high poverty and low CSR funding.",
-    images: [{ url: "/og/csr-index-2.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
+      "An index of Indian districts where poverty is high and recorded CSR spending is low.",
+    images: [{ url: "/og/csr-index-3.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {
@@ -74,15 +74,15 @@ const PAGE_LD = {
       offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
       publisher: { "@id": `${siteUrl}/#org` },
       isPartOf: { "@id": `${siteUrl}/#site` },
-      image: `${siteUrl}/og/csr-index-2.jpg`,
+      image: `${siteUrl}/og/csr-index-3.jpg`,
       inLanguage: "en-IN",
     },
     {
       "@type": "Dataset",
       "@id": `${PAGE_URL}#dataset`,
-      name: "India CSR Opportunity Score (POS) — 651 districts",
+      name: "Philanthropic Opportunity Score (POS) for 651 Indian districts",
       description:
-        "District-level Philanthropic Opportunity Score for 651 Indian districts, combining NITI Aayog MPI poverty data, ten fiscal years of MCA CSR filings, and Census 2011 population.",
+        "A district-level score for 651 Indian districts that combines NITI Aayog's MPI 2023 poverty headcount with ten fiscal years of CSR filings to the Ministry of Corporate Affairs and Census 2011 population.",
       license: "https://creativecommons.org/licenses/by/4.0/",
       isAccessibleForFree: true,
       creator: { "@id": `${siteUrl}/#org` },

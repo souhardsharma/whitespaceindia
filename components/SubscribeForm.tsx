@@ -68,11 +68,11 @@ export default function SubscribeForm({ variant, source, vertical }: Props) {
       return (
         <div role="status" aria-live="polite" className="flex flex-col gap-3">
           <div className="text-white font-label uppercase tracking-[0.25em] text-[11px] py-4 px-6 flex items-center justify-between gap-6" style={{ backgroundColor: accent }}>
-            <span>Check your inbox.</span>
+            <span>Confirmation email sent</span>
             <span aria-hidden>✓</span>
           </div>
           <p className="font-body text-xs text-[#1c1c19]/60 italic leading-relaxed">
-            We&apos;re a young project. Gmail may file our confirmation email under spam until it learns to trust us; rescue it once and we&apos;re in.
+            The email has a link that confirms the subscription. If it is missing from your inbox, it may be in the spam folder.
           </p>
         </div>
       );
@@ -85,7 +85,7 @@ export default function SubscribeForm({ variant, source, vertical }: Props) {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="your@email"
+          placeholder="Email address"
           aria-label="Email address"
           disabled={status === "sending"}
           className="w-full bg-[#fcf9f4] border border-[#1c1c19] text-[#1c1c19] placeholder:text-[#1c1c19]/40 font-body text-base px-5 py-6 focus:outline-none disabled:opacity-60"
@@ -97,7 +97,7 @@ export default function SubscribeForm({ variant, source, vertical }: Props) {
           className="group text-white font-label uppercase tracking-[0.25em] text-[11px] py-4 px-6 flex justify-between items-center gap-6 hover:bg-[#1c1c19] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ backgroundColor: accent }}
         >
-          {status === "sending" ? "Sending" : "Notify me"}
+          {status === "sending" ? "Sending" : "Email me new reports"}
           <svg width="16" height="10" viewBox="0 0 24 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
             <path d="M0 6h22M16 1l5 5-5 5" />
           </svg>
@@ -119,17 +119,17 @@ export default function SubscribeForm({ variant, source, vertical }: Props) {
         aria-live="polite"
       >
         <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.3em] mb-4" style={{ color: accent }}>
-          One step left
+          Confirmation needed
         </span>
         <div className="h-px w-12 bg-[#1c1c19]" />
         <span className="font-label text-xl md:text-2xl font-bold uppercase tracking-tighter text-[#1c1c19] mt-4">
-          Check your inbox
+          Confirmation email sent
         </span>
         <p className="font-body text-sm md:text-base text-[#1c1c19]/70 italic mt-4 max-w-md leading-relaxed">
-          A confirmation email is on its way. Click the link inside and you&apos;ll be on the list for the next research drop.
+          The email has a link that confirms the subscription. Once it is confirmed, you will get an email when a new report is published.
         </p>
         <p className="font-body text-xs md:text-sm text-[#1c1c19]/50 mt-4 max-w-md leading-relaxed">
-          Can&apos;t find it? Check your spam folder. We&apos;re a young project and Gmail hasn&apos;t learned to trust us yet; fishing us out once is all it takes.
+          If the email is missing from your inbox, it may be in the spam folder, and marking it as safe there helps later emails arrive.
         </p>
       </div>
     );
@@ -148,10 +148,10 @@ export default function SubscribeForm({ variant, source, vertical }: Props) {
     >
       <div className="flex items-baseline justify-between mb-6">
         <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.3em] font-bold" style={{ color: accent }}>
-          Get Notified
+          New reports by email
         </span>
         <span className="font-label text-[9px] uppercase tracking-[0.2em] text-[#1c1c19]/50">
-          When new reports ship
+          Sent when a report is published
         </span>
       </div>
 
@@ -222,7 +222,7 @@ export default function SubscribeForm({ variant, source, vertical }: Props) {
 
       <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <p className="font-body text-xs text-[#1c1c19]/50 italic leading-relaxed max-w-sm">
-          One email to confirm, then only research updates. If the confirmation lands in spam, we&apos;re new; Gmail hasn&apos;t met us yet.
+          The first email confirms the subscription, and later emails announce new reports. Company and phone are optional; if you give them, they are stored with your email on the mailing list.
         </p>
         <button
           type="submit"
@@ -230,7 +230,7 @@ export default function SubscribeForm({ variant, source, vertical }: Props) {
           className="self-start md:self-auto text-white font-label uppercase tracking-[0.25em] text-[11px] px-7 py-4 flex items-center gap-4 hover:bg-[#1c1c19] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ backgroundColor: accent }}
         >
-          {status === "sending" ? "Sending" : "Notify Me"}
+          {status === "sending" ? "Sending" : "Subscribe"}
           <svg width="16" height="10" viewBox="0 0 24 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
             <path d="M0 6h22M16 1l5 5-5 5" />
           </svg>

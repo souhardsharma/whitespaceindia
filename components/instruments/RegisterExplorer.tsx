@@ -51,7 +51,7 @@ type SortKey = "n" | "nA" | "st" | "landDep" | "displaced" | "pop" | "district";
 const SA_LABEL: Record<DistrictRow["sa"], string> = {
   within: "Wholly scheduled",
   partial: "Partly scheduled",
-  outside: "Outside — no Order reaches it",
+  outside: "Not scheduled by any Order",
   not_determined: "Not determined",
   unknown: "Not determined",
 };
@@ -150,13 +150,13 @@ export default function RegisterExplorer({
             <option value="">Any status</option>
             <option value="scheduled">In a Scheduled Area (wholly or partly)</option>
             <option value="within">Wholly scheduled only</option>
-            <option value="outside">Outside — no Order reaches it</option>
+            <option value="outside">Not scheduled by any Order</option>
             <option value="undetermined">Not determined</option>
           </select>
         </label>
 
         <label className="md:col-span-3 block">
-          <Lbl>Scheduled Tribe share at least</Lbl>
+          <Lbl>Minimum Scheduled Tribe share</Lbl>
           <select
             value={minST}
             onChange={(e) => { setMinST(Number(e.target.value)); setShown(40); }}
@@ -169,7 +169,7 @@ export default function RegisterExplorer({
         </label>
 
         <label className="md:col-span-3 block">
-          <Lbl>Workers on land at least</Lbl>
+          <Lbl>Minimum share of workers on the land</Lbl>
           <select
             value={minLandDep}
             onChange={(e) => { setMinLandDep(Number(e.target.value)); setShown(40); }}
@@ -187,7 +187,7 @@ export default function RegisterExplorer({
             <input type="checkbox" checked={displacementOnly}
               onChange={(e) => { setDisplacementOnly(e.target.checked); setShown(40); }}
               className="accent-[#7a3b6b]" />
-            Only where displacement is declared
+            Only where families are declared displaced or affected
           </label>
           <label className="flex items-center gap-2 font-body text-[13px] cursor-pointer">
             <input type="checkbox" checked={categoryAOnly}
@@ -255,8 +255,7 @@ export default function RegisterExplorer({
 
       {filtered.length === 0 ? (
         <p className="py-12 text-center font-body text-[14px] opacity-65">
-          No district matches those filters. This is a genuine empty result, not
-          a failure.
+          No district matches those filters. You can widen them to see more.
         </p>
       ) : (
         <>
@@ -267,8 +266,9 @@ export default function RegisterExplorer({
                   any other. The caption is visually hidden because the
                   heading above already says this on screen. */}
               <caption className="sr-only">
-                Every district in the register, with its proposal count,
-                Scheduled Area status and Census indicators. Showing{" "}
+                Districts named in the register that match the filters above,
+                with each one&apos;s proposal count, Scheduled Area status and
+                Census indicators. Showing{" "}
                 {nf.format(Math.min(shown, filtered.length))} of{" "}
                 {nf.format(filtered.length)} districts.
               </caption>
@@ -276,11 +276,11 @@ export default function RegisterExplorer({
                 <tr className="border-b border-[#1c1c19]">
                   <Th>District</Th>
                   <Th right>Proposals</Th>
-                  <Th right>Cat A</Th>
+                  <Th right>Category A</Th>
                   <Th>Scheduled Area</Th>
-                  <Th right>ST share</Th>
-                  <Th right>On land</Th>
-                  <Th right>Displaced</Th>
+                  <Th right>Scheduled Tribe</Th>
+                  <Th right>Workers on land</Th>
+                  <Th right>Families displaced</Th>
                 </tr>
               </thead>
               <tbody>
@@ -299,7 +299,7 @@ export default function RegisterExplorer({
                       {nf.format(r.n)}
                     </td>
                     <td className="py-2.5 pr-4 text-right font-label text-[13px] tabular-nums opacity-70">
-                      {r.nA ? nf.format(r.nA) : "—"}
+                      {r.nA ? nf.format(r.nA) : "0"}
                     </td>
                     <td className="py-2.5 pr-4">
                       <span
@@ -314,13 +314,13 @@ export default function RegisterExplorer({
                       </span>
                     </td>
                     <td className="py-2.5 pr-4 text-right font-label text-[13px] tabular-nums">
-                      {r.st != null ? `${r.st.toFixed(1)}%` : "—"}
+                      {r.st != null ? `${r.st.toFixed(1)}%` : "No data"}
                     </td>
                     <td className="py-2.5 pr-4 text-right font-label text-[13px] tabular-nums opacity-70">
-                      {r.landDep != null ? `${r.landDep.toFixed(0)}%` : "—"}
+                      {r.landDep != null ? `${r.landDep.toFixed(0)}%` : "No data"}
                     </td>
                     <td className="py-2.5 text-right font-label text-[13px] tabular-nums opacity-70">
-                      {r.displaced ? nf.format(r.displaced) : "—"}
+                      {r.displaced ? nf.format(r.displaced) : "0"}
                     </td>
                   </tr>
                 ))}

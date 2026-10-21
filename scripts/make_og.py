@@ -29,8 +29,8 @@ on the sharing device; a renamed image reaches a link shared before only once
 that cache lapses.
 
 The art in scripts/og/art/ is Gemini risograph renders, reduced to 1400 px
-with the generator's corner mark painted out from the print's own paper
-(scripts/og/clean_art.py).
+with the generator's corner mark repainted from the print's own paper
+(scripts/og/clean_art.py). No card shows that corner: see FORBIDDEN.
 
 Fonts: set OG_FONT_DIR to a directory holding Newsreader.ttf,
 Newsreader-Italic.ttf and SpaceGrotesk.ttf (variable TTFs from
@@ -57,6 +57,8 @@ ART = Path("scripts/og/art")
 LOGO = Path("scripts/og/logo.png")
 OUT = Path("public/og")
 MAX_BYTES = 300 * 1024
+# The generator's mark sits in the art's bottom-right corner; no card may show any of it.
+FORBIDDEN = (1200, 1200)  # x >= 1200 and y >= 1200 of the 1400 px art
 
 INK = (28, 28, 25)
 MUTED = (91, 95, 98)
@@ -84,31 +86,31 @@ CLAY = (189, 64, 44)
 PLUM = (122, 59, 107)  # Instrument 01 only
 GRAPHITE = (61, 58, 52)  # the shelf: its own ink, so no instrument owns it
 CARDS = [
-    Card("whitespace-india-2.jpg", "brand.webp", (-110, -110, 1510, 1510), CLAY,
+    Card("whitespace-india-3.jpg", "brand.webp", (140, 140, 1200, 1200), CLAY,
          "OPEN CIVIC DATA · INDIA",
          "Where India’s\nresources land,", "and where\nthey don’t.",
          "District indexes · Civic instruments"),
-    Card("csr-index-2.jpg", "csr.webp", (180, 40, 1400, 1260), CLAY,
+    Card("csr-index-3.jpg", "csr.webp", (180, -20, 1400, 1200), CLAY,
          "CSR OPPORTUNITY INDEX",
          "Where CSR\nshould go,", "district by\ndistrict.",
          "651 districts · Government data"),
-    Card("instruments-3.jpg", "instruments.webp", (0, 0, 1400, 1400), GRAPHITE,
+    Card("instruments-4.jpg", "instruments.webp", (-100, 20, 1200, 1320), GRAPHITE,
          "INSTRUMENTS",
          "Bring one case,", "see what the\nrecord holds.",
          "Built from India’s public records"),
-    Card("consent-2.jpg", "consent.webp", (100, 87, 1300, 1287), PLUM,
+    Card("consent-3.jpg", "consent.webp", (130, 100, 1230, 1200), PLUM,
          "PEOPLE & CONSENT",
          "Who lives where\nit would be built,", "and which consent\nrules apply.",
          "Instrument 01 · Clearance filings"),
-    Card("health-2.jpg", "health.webp", (100, 127, 1300, 1327), (52, 62, 150),
+    Card("health-3.jpg", "health.webp", (130, 100, 1230, 1200), (52, 62, 150),
          "HEALTH INDEX",
          "Where care\nis thin,", "district by\ndistrict.",
          "District index · Coming soon"),
-    Card("energy-2.jpg", "energy.webp", (100, 50, 1300, 1250), (42, 111, 62),
+    Card("energy-3.jpg", "energy.webp", (130, 100, 1230, 1200), (42, 111, 62),
          "ENERGY INDEX",
          "Where power\nfalls short,", "district by\ndistrict.",
          "District index · Coming soon"),
-    Card("education-2.jpg", "education.webp", (100, 82, 1300, 1282), (138, 106, 42),
+    Card("education-3.jpg", "education.webp", (130, 100, 1230, 1200), (138, 106, 42),
          "EDUCATION INDEX",
          "Where schools\nfall behind,", "district by\ndistrict.",
          "District index · Coming soon"),
@@ -190,6 +192,9 @@ def render(card: Card) -> Path:
     canvas = Image.new("RGB", (W, H), paper)
     # A crop may reach past the print onto more of its paper, so art that runs
     # to the print's edge still sits inside the soft edge below.
+    # Cropping the mark out, not painting over it, is the rule: fail on any overlap.
+    if card.crop[2] > FORBIDDEN[0] and card.crop[3] > FORBIDDEN[1]:
+        sys.exit(f"ERROR: crop of {card.out} reaches the generator-mark corner")
     art = ImageOps.expand(art, PAPER_MARGIN, fill=paper)
     crop = tuple(v + PAPER_MARGIN for v in card.crop)
 

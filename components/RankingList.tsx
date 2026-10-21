@@ -59,7 +59,7 @@ const DistrictRow = memo(function DistrictRow({
         <div className="flex items-center gap-3 shrink-0">
           {district.is_whitespace && (
             <span className="font-label text-[9px] uppercase tracking-widest px-2 py-0.5" style={{ color: accent, borderWidth: 1, borderStyle: 'solid', borderColor: accent }}>
-              Neglected
+              Whitespace
             </span>
           )}
           <span className="font-label text-sm font-bold tracking-tighter tabular-nums" style={{ color: accent }}>
@@ -132,7 +132,7 @@ export default function RankingList({
     return (
       <div className="text-center py-16 border-t border-[#1c1c19]">
         <p className="font-body text-sm text-[#1c1c19]/60 italic">
-          No districts match your filters. Try selecting &quot;All Sectors&quot; or adjusting the weights.
+          No district meets the current selection. Clearing the state on the map, or turning off the whitespace filter, brings back the full list.
         </p>
       </div>
     );

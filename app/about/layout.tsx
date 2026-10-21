@@ -7,7 +7,7 @@ const PAGE_URL = `${siteUrl}/about`;
 
 const TITLE = "About the CSR Opportunity Index | Whitespace India";
 const DESCRIPTION =
-  "Why the CSR index exists, who built it, and how it measures the gap between where CSR money goes and where it is needed most, across 651 Indian districts.";
+  "How the CSR Opportunity Index sets the corporate social responsibility spending companies report against poverty in 651 Indian districts, and the public data it is built from.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -27,21 +27,21 @@ export const metadata: Metadata = {
     "Souhard Sharma",
   ],
   openGraph: {
-    title: "About — Whitespace India CSR",
+    title: "About the CSR Opportunity Index",
     description:
-      "Quantifying the gap between where philanthropic money goes in India and where people need it most. Three public datasets, one composite Opportunity Score.",
+      "The index sets the CSR spending companies report in each of 651 districts against NITI Aayog's poverty measure, to show where need is high and recorded spending is low.",
     url: PAGE_URL,
-    images: [{ url: "/og/csr-index-2.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
+    images: [{ url: "/og/csr-index-3.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
   },
   twitter: {
     card: "summary_large_image",
-    title: "About — Whitespace India CSR",
+    title: "About the CSR Opportunity Index",
     description:
-      "Why this tool exists and how it measures India's philanthropic funding gap across 651 districts.",
-    images: [{ url: "/og/csr-index-2.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
+      "How the index sets reported CSR spending against poverty in 651 Indian districts.",
+    images: [{ url: "/og/csr-index-3.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {
@@ -68,7 +68,7 @@ const PAGE_LD = {
       description: DESCRIPTION,
       isPartOf: { "@id": `${siteUrl}/#site` },
       about: { "@id": `${siteUrl}/#org` },
-      primaryImageOfPage: { "@type": "ImageObject", url: `${siteUrl}/og/csr-index-2.jpg` },
+      primaryImageOfPage: { "@type": "ImageObject", url: `${siteUrl}/og/csr-index-3.jpg` },
       inLanguage: "en-IN",
     },
     {

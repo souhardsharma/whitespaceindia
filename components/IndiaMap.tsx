@@ -165,7 +165,7 @@ function IndiaMap({ districtScores, onStateClick, highlightedState, vertical }: 
       className="relative w-full bg-[#fcf9f4]"
       style={{ aspectRatio: "3/4", maxHeight: "560px" }}
       role="img"
-      aria-label="Map of India showing average Philanthropic Opportunity Scores by state"
+      aria-label="Map of India showing each state's average district score"
     >
       {!geoData ? (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -241,9 +241,9 @@ function IndiaMap({ districtScores, onStateClick, highlightedState, vertical }: 
               {tooltip.name}
             </div>
             <div className="font-label text-[11px] uppercase tracking-widest">
-              Avg Score:{" "}
+              Average score{" "}
               <span className="font-bold tracking-tighter" style={{ color: accent }}>
-                {tooltip.score !== null ? tooltip.score : "N/A"}
+                {tooltip.score !== null ? tooltip.score : "no data"}
               </span>
             </div>
           </div>
@@ -253,7 +253,7 @@ function IndiaMap({ districtScores, onStateClick, highlightedState, vertical }: 
       {/* Coordinates */}
       <div className="absolute top-4 right-4 text-right pointer-events-none">
         <p className="font-label text-[9px] uppercase tracking-[0.3em] text-[#1c1c19]/40 mb-1">
-          Coordinates
+          Centre of India
         </p>
         <p className="font-label text-[10px] tracking-widest text-[#1c1c19]/70">
           20.59° N, 78.96° E
@@ -263,7 +263,7 @@ function IndiaMap({ districtScores, onStateClick, highlightedState, vertical }: 
       {/* Color legend */}
       <div className="absolute bottom-4 left-4 bg-[#fcf9f4] border border-[#1c1c19] p-4 w-52">
         <p className="font-label text-[9px] uppercase tracking-[0.3em] text-[#1c1c19] mb-3 font-bold">
-          Avg Opportunity Score
+          Average district score
         </p>
         <div
           className="h-2 w-full"

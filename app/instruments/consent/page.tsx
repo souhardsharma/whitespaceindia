@@ -27,9 +27,9 @@ import type { InstrumentIndex, InstrumentMeta } from "@/lib/instruments/types";
 
 export const metadata = pageMeta({
   path: "/instruments/consent",
-  title: "People & Consent — Instrument 01 | Whitespace India",
+  title: "People & Consent: environmental clearance proposals by place",
   description:
-    "Take an Indian environmental clearance proposal and see who lives where it would be built, what they live on, and which consent obligations attach.",
+    "People & Consent profiles each proposal in India's environmental clearance register, reporting who lives where it would be built and which duties of consultation and consent apply there.",
 });
 
 const nf = new Intl.NumberFormat("en-IN");
@@ -73,41 +73,44 @@ export default function ConsentInstrument() {
               People &amp; Consent
             </h1>
             <p className="mt-5 font-headline italic text-[clamp(18px,2.2vw,27px)] leading-snug max-w-3xl opacity-90">
-              Who lives where this project would be built, and whose agreement is
-              legally required before it proceeds?
+              Who lives where a proposed project would be built, and what does
+              the law require of a project in that place?
             </p>
 
             <div className="mt-9 grid grid-cols-1 md:grid-cols-12 gap-8">
               <p className="md:col-span-7 font-body text-[15px] leading-relaxed opacity-80">
-                Bring a proposal from India&rsquo;s environmental clearance
-                register. The instrument reads the location the proponent filed
-                — down to the village where one is named — and assembles the
-                Census record for that place: who lives there, what they earn a
-                living from, and what community infrastructure exists. It then
-                sets out which statutory and international-standard obligations
-                attach to a project of that kind in that place.
+                Each proposal in India&rsquo;s environmental clearance register
+                is filed with an application form on which the proponent states
+                where the project would be built, often down to the village. People &amp;
+                Consent reads that location and reports the Census record for
+                the surrounding sub-district or district, covering its
+                population, how people there earn a living and what community
+                infrastructure exists. It then lists the Indian laws and
+                international standards that apply to a project of that type
+                in that place.
               </p>
               <div className="md:col-span-5 md:border-l md:border-[#1c1c19]/20 md:pl-8">
                 <p className="font-body text-[14px] leading-relaxed opacity-70">
-                  It produces no score and no ranking. It does not tell you
-                  whether a project should proceed. It tells you what the public
-                  record says about the people who live there, and what the law
-                  requires of anyone who wants to build there.
+                  The profile is evidence about the people who live there and
+                  about what the law requires, and it gives no score or
+                  ranking. Whether a project should go ahead is for the
+                  authorities to decide, and the profile is meant for anyone
+                  following or weighing that decision.
                 </p>
               </div>
             </div>
 
             <dl className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 pt-8 border-t border-[#1c1c19]/20">
               <Stat
-                label="Proposals indexed"
+                label="Proposals published"
                 value={nf.format(m.counts.proposals_published)}
               />
               <Stat
-                label="Located to a district"
+                label="Placed in a district"
                 value={`${m.resolution_rate_pct}%`}
               />
               <Stat
-                label="Located to a sub-district"
+                label="Placed in a sub-district"
                 value={`${m.subdistrict_rate_pct}%`}
               />
               <Stat
@@ -130,13 +133,18 @@ export default function ConsentInstrument() {
               id="map-heading"
               className="font-label text-[11px] uppercase tracking-[0.24em] opacity-75 mb-3"
             >
-              Where proposals are filed
+              Where proposed projects would be built
             </h2>
+            {/* "Filed" here once named the map, but it counts the district a
+                filing names as its SITE. The state a proposal was filed in is
+                a different fact, and is what /latest's "filing state" means. */}
             <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-6 max-w-3xl">
-              Every district, shaded by what the register holds for it. Choose a
-              district to see its proposals and the Census record of who lives
-              there. Outlined districts lie wholly or partly within a Fifth
-              Schedule Scheduled Area.
+              Each district is shaded by the measure chosen on the map, counted
+              over the proposals whose application names a site in it.
+              Selecting a district opens its proposals and the Census record of
+              who lives there. An outline marks a district that lies wholly or
+              partly within a Scheduled Area under the Fifth Schedule of the
+              Constitution.
             </p>
             <DistrictChoropleth
               districts={MAP_DISTRICTS}
@@ -167,31 +175,30 @@ export default function ConsentInstrument() {
                   className="tap-target font-label text-[11px] uppercase tracking-[0.18em] border px-4 py-2.5 transition-colors hover:text-[#fcf9f4]"
                   style={{ borderColor: PLUM, color: PLUM }}
                 >
-                  What moved this week ↗
+                  Recent changes →
                 </Link>
                 <Link
                   href="/instruments/consent/register"
                   className="tap-target font-label text-[11px] uppercase tracking-[0.18em] border px-4 py-2.5 transition-colors hover:text-[#fcf9f4]"
                   style={{ borderColor: PLUM, color: PLUM }}
                 >
-                  Browse by district ↗
+                  Proposals by district →
                 </Link>
                 <Link
                   href="/instruments/consent/appraisal"
                   className="tap-target font-label text-[11px] uppercase tracking-[0.18em] border px-4 py-2.5 transition-colors hover:text-[#fcf9f4]"
                   style={{ borderColor: PLUM, color: PLUM }}
                 >
-                  How long it takes ↗
+                  Time to clearance →
                 </Link>
               </div>
             </div>
             <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-6 max-w-3xl">
-              Search every proposal in the register at once, by project,
-              proponent, district or proposal number. If the question is about a
-              place rather than a filing — what is proposed in this district, and
-              who lives there — the register can be read by district instead; if
-              it is about what is happening now, start with what moved this
-              week.
+              You can search the whole register by project, proponent, district
+              or proposal number. Questions about a place, such as what is
+              proposed in a district and who lives there, are easier to answer
+              from the list of proposals by district, and the page of recent
+              changes follows what has happened to individual proposals.
             </p>
             <ProjectSearch index={idx} />
           </div>
@@ -201,14 +208,14 @@ export default function ConsentInstrument() {
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-7">
               <h2 className="font-label text-[11px] uppercase tracking-[0.24em] opacity-75 mb-4">
-                What this instrument cannot see
+                Limits of the data
               </h2>
               <ul className="font-body text-[14px] leading-relaxed opacity-80 space-y-3 list-disc pl-4">
                 <li>
-                  The socio-economic profile is Census {CENSUS_YEAR}, the most
-                  recent complete sub-district enumeration of India.{" "}
-                  {nextCensusNote()} Every population figure here describes the
-                  country as it was {censusAge()} years ago.
+                  The socio-economic figures come from Census {CENSUS_YEAR}, the
+                  most recent census for which complete sub-district figures
+                  exist, so every population figure here describes India as it
+                  was {censusAge()} years ago. {nextCensusNote()}
                 </li>
                 <li>
                   {m.counts.proposals_published - m.counts.proposals_district_resolved > 0 ? (
@@ -217,34 +224,38 @@ export default function ConsentInstrument() {
                         m.counts.proposals_published -
                           m.counts.proposals_district_resolved
                       )}{" "}
-                      proposals could not be placed below state level. They are
-                      shown as undetermined rather than guessed.
+                      proposals could not be placed in any district. Their
+                      location is shown as undetermined, and no district is
+                      assumed for them.
                     </>
                   ) : (
                     <>
-                      Every published proposal could be placed to at least a
+                      Every published proposal has been placed in at least one
                       district.
                     </>
                   )}
                 </li>
                 {registerStart(m.register_span) ? (
                   <li>
-                    The register holds proposals submitted from{" "}
-                    {registerStart(m.register_span)} onward. A proposal filed
-                    earlier is not in it, so a search for one finds nothing.
+                    The register as this instrument reads it begins with
+                    proposals submitted in {registerStart(m.register_span)}, so
+                    a search for a proposal filed before then finds nothing.
                   </li>
                 ) : null}
                 <li>
-                  Affected and displaced family counts are as declared by the
-                  proponent in their own application. They are a filing, not an
-                  independent assessment, and are labelled as such throughout.
+                  Counts of affected and displaced families are the figures each
+                  proponent declared in its application. They are the
+                  proponent&rsquo;s own statements, and the pages label them as
+                  declared wherever they appear.
                 </li>
                 <li>
-                  Whether a place lies within a Fifth Schedule Scheduled Area is
-                  a legal determination made by Presidential Order. Where the
-                  curated reference does not cover a place, the instrument
-                  reports that it is undetermined and does not infer it from
-                  population data.
+                  Whether a place lies within a Scheduled Area under the Fifth
+                  Schedule is a legal question settled by Presidential Order.
+                  The instrument takes the answer from the Orders themselves,
+                  which have been transcribed and cited, and where they do not
+                  settle a district it reports the status as not determined. It
+                  never infers the status from the share of Scheduled Tribes in
+                  the population.
                 </li>
               </ul>
             </div>
@@ -276,7 +287,7 @@ export default function ConsentInstrument() {
                 className="inline-flex items-center gap-2 mt-6 font-label text-[11px] uppercase tracking-[0.18em] hover:gap-3 transition-all"
                 style={{ color: PLUM }}
               >
-                Full methodology <span aria-hidden="true">&#8599;</span>
+                Full methodology <span aria-hidden="true">&rarr;</span>
               </Link>
             </div>
           </div>

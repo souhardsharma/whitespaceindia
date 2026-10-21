@@ -41,9 +41,9 @@ export function nextCensusNote(now: Date = new Date()): string {
     return `Census ${NEXT_CENSUS.year} is under way, with its population count scheduled for February ${NEXT_CENSUS.year}, and none of its figures are published yet.`;
   }
   if (ym === NEXT_CENSUS.countMonth) {
-    return `Census ${NEXT_CENSUS.year}'s population count is taking place this month; none of its figures are published yet.`;
+    return `The population count for Census ${NEXT_CENSUS.year} is taking place this month, and none of its figures are published yet.`;
   }
-  return `Census ${NEXT_CENSUS.year}'s population count took place in February ${NEXT_CENSUS.year}; this instrument will use its figures once they are published at sub-district level.`;
+  return `The population count for Census ${NEXT_CENSUS.year} took place in February ${NEXT_CENSUS.year}. Its figures can replace the ${CENSUS_YEAR} ones here only after they are published at sub-district level, the scale at which this profile reports.`;
 }
 
 /** Whole years since the Census, counted from the reader's current year. */

@@ -130,8 +130,10 @@ export function InstrumentFooter() {
             </span>
           </div>
           <p className="font-body text-[14px] leading-relaxed text-[#1c1c19] opacity-70 max-w-md">
-            Instruments are built from India&rsquo;s public records. Every figure
-            they show carries its source and the year that source was collected.
+            Instruments are built from India&rsquo;s public records. Each figure
+            they show is listed with its source and either the year the data was
+            collected or, for a source that keeps updating, the date we last
+            read it.
           </p>
           {/* Here rather than on each page: every instrument surface shows
               register-derived figures, and a currency statement that lives in
@@ -182,8 +184,8 @@ export function InstrumentFooter() {
         </span>
         <ul className="flex flex-wrap gap-x-7 gap-y-2">
           {[
-            ["/instruments/consent", "Search the register"],
-            ["/instruments/consent/latest", "What moved"],
+            ["/instruments/consent", "Search proposals"],
+            ["/instruments/consent/latest", "Recent changes"],
             ["/instruments/consent/register", "By district"],
             ["/instruments/consent/appraisal", "How long clearance takes"],
             ["/instruments/consent/data", "Data and API"],
@@ -201,7 +203,7 @@ export function InstrumentFooter() {
                   aria-current="page"
                   className="font-body text-[13px] text-[#1c1c19] opacity-90 font-medium"
                 >
-                  {label} <span className="opacity-80">&mdash; you are here</span>
+                  {label} <span className="opacity-80">(this page)</span>
                 </span>
               ) : (
               <Link

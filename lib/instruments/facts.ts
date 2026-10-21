@@ -157,7 +157,7 @@ export function formatDifference(value: number): string {
 }
 
 export function formatValue(value: number | null, unit: Fact["unit"]): string {
-  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  if (value === null || value === undefined || !Number.isFinite(value)) return "not recorded";
   switch (unit) {
     case "percent":
       return `${oneDp.format(value)}%`;

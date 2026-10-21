@@ -4,17 +4,17 @@ import { SITE_URL } from "@/lib/site";
 const siteUrl = SITE_URL;
 
 export const metadata: Metadata = {
-  title: { absolute: "Methodology — Education — Whitespace India" },
+  title: { absolute: "Education Index Methodology | Whitespace India" },
   description:
-    "How the Whitespace India Education index scores and ranks 651 districts by school access, learning outcomes, and infrastructure gaps.",
+    "How the Whitespace India Education index will score and rank 651 districts by access to schools, learning outcomes and infrastructure gaps.",
   alternates: { canonical: `${siteUrl}/education/methodology` },
   openGraph: {
     url: `${siteUrl}/education/methodology`,
-    title: "Methodology — Education — Whitespace India",
+    title: "Education Index Methodology | Whitespace India",
     siteName: "Whitespace India",
     type: "website",
     locale: "en_IN",
-    images: [{ url: "/og/education-2.jpg", width: 1200, height: 630, alt: "Whitespace India Education: \u201cWhere schools fall behind, district by district\u201d, beside a risograph print of a village schoolhouse and an open book" }],
+    images: [{ url: "/og/education-3.jpg", width: 1200, height: 630, alt: "Whitespace India Education: \u201cWhere schools fall behind, district by district\u201d, beside a risograph print of a village schoolhouse and an open book" }],
   },
 };
 
