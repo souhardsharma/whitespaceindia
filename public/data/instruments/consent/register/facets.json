@@ -1,11 +1,11 @@
 {
- "generated_at": "2026-10-21T06:34:24.204738+00:00",
+ "generated_at": "2026-10-21T08:11:24.027319+00:00",
  "totals": {
-  "proposals": 92502,
-  "with_district": 92139,
+  "proposals": 92509,
+  "with_district": 92142,
   "districts_total": 640,
   "districts_with_proposals": 621,
-  "proposals_in_scheduled_districts": 26377,
+  "proposals_in_scheduled_districts": 26380,
   "districts_scheduled_wholly": 39,
   "districts_scheduled_partly": 67,
   "proposals_declaring_land": 91247,
