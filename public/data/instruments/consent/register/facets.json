@@ -1,17 +1,17 @@
 {
- "generated_at": "2026-10-21T08:11:24.027319+00:00",
+ "generated_at": "2026-10-21T09:42:22.506438+00:00",
  "totals": {
-  "proposals": 92509,
-  "with_district": 92142,
+  "proposals": 92524,
+  "with_district": 92149,
   "districts_total": 640,
   "districts_with_proposals": 621,
   "proposals_in_scheduled_districts": 26380,
   "districts_scheduled_wholly": 39,
   "districts_scheduled_partly": 67,
-  "proposals_declaring_land": 91247,
+  "proposals_declaring_land": 91248,
   "declared_displaced_families": 664997,
   "declared_affected_families": 1428170,
-  "proposals_links_read": 92081,
+  "proposals_links_read": 92082,
   "proposals_declaring_forest": 1317,
   "forest_ha_sought_primary": 48697.57
  },
