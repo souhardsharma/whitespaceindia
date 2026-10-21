@@ -170,6 +170,8 @@ SWEEP_WORKERS = 12
 # to have all of it, so a slow sweep left the forest register and both
 # per-proposal passes nothing: 0 of 38 forest States on 2026-10-21.
 REGISTER_SHARE = 0.6
+# Socket idle seconds for a forest State's second attempt.
+FOREST_RETRY_TIMEOUT = 120
 
 _POOL = None
 _POOL_LOCK = threading.Lock()
@@ -445,12 +447,12 @@ def forest_rows_in(path: Path) -> int:
         return 0
 
 
-def read_forest_state(folder: Path, code: int,
-                      deadline: float | None) -> tuple[Path, bytes]:
+def read_forest_state(folder: Path, code: int, deadline: float | None,
+                      timeout: int = WINDOW_TIMEOUT) -> tuple[Path, bytes]:
     """One State's forest records, checked; raises rather than return a bad answer."""
     if deadline is not None and time.time() > deadline:
         raise RuntimeError("out of time")
-    raw = fetch(FOREST_SEARCH.format(code=code), timeout=WINDOW_TIMEOUT,
+    raw = fetch(FOREST_SEARCH.format(code=code), timeout=timeout,
                 deadline=deadline, backoff=WINDOW_BACKOFF, label=f"forest {code} ")
     payload = json.loads(raw.decode("utf-8", "replace"))
     env = payload.get("status")
@@ -492,18 +494,35 @@ def fetch_forest(cache: Path, deadline: float | None = None) -> dict:
     # In parallel, like the register's windows, and for the same reason: read
     # one after another through free proxies, the 2026-10-21 runs reached 0
     # of 38 codes inside the forest's share of the time.
-    with ThreadPoolExecutor(max_workers=SWEEP_WORKERS) as ex:
-        futures = {code: ex.submit(read_forest_state, folder, code, deadline)
-                   for code in LGD_STATE_CODES}
-    for code, fut in futures.items():
-        try:
-            target, raw = fut.result()
-            target.write_bytes(raw)
-            stats["codes"] += 1
-            stats.setdefault("read", {})[str(code)] = datetime.now(timezone.utc).isoformat()
-        except Exception as exc:  # noqa: BLE001
-            stats["failed"].append({"code": code, "error": str(exc)[:120]})
-            log(f"  forest register, state code {code}: FAILED ({exc})")
+    # A State that failed is asked once more after the rest, with a longer
+    # idle allowance: on 2026-10-21 code 6 timed out on every attempt at 40 s
+    # while the other 37 answered.
+    pending = list(LGD_STATE_CODES)
+    for timeout, final in ((WINDOW_TIMEOUT, False), (FOREST_RETRY_TIMEOUT, True)):
+        if final and pending:
+            if deadline is not None and time.time() > deadline:
+                break
+            log(f"  forest register: second round for {len(pending)} State code(s)")
+        with ThreadPoolExecutor(max_workers=SWEEP_WORKERS) as ex:
+            futures = {code: ex.submit(read_forest_state, folder, code, deadline,
+                                       timeout)
+                       for code in pending}
+        pending = []
+        for code, fut in futures.items():
+            try:
+                target, raw = fut.result()
+                target.write_bytes(raw)
+                stats["codes"] += 1
+                stats.setdefault("read", {})[str(code)] = datetime.now(timezone.utc).isoformat()
+            except Exception as exc:  # noqa: BLE001
+                if final:
+                    stats["failed"].append({"code": code, "error": str(exc)[:120]})
+                    log(f"  forest register, state code {code}: FAILED ({exc})")
+                else:
+                    pending.append(code)
+    for code in pending:
+        stats["failed"].append({"code": code, "error": "out of time"})
+        log(f"  forest register, state code {code}: FAILED (out of time)")
     stats["records"] = merge_forest_states(cache)
     meta_path = cache / "parivesh" / "forest_meta.json"
     try:
@@ -1067,8 +1086,13 @@ def main() -> None:
         # the nights it was skipped. Ordering it first costs nothing when
         # everything works and is the difference between a repaired proposal
         # and a permanently frozen one when it does not.
+        # What earlier slices ran out of time on joins tonight's, first.
+        rolling_path = cache / "pending_rolling.json"
+        if not rolling_path.exists():
+            rolling_path.write_text("[]", encoding="utf-8")
         extras = {"new": [],
-                  "rolling": ["--slice", f"{slot}/{ROLLING}", "--open-only"]}
+                  "rolling": ["--slice", f"{slot}/{ROLLING}", "--open-only",
+                              "--ids-file", str(rolling_path)]}
         owed = {n: list(pending.get(n) or []) for n in FETCHERS}
         ids_paths = {n: cache / f"pending_{n}.json" for n in FETCHERS}
         for n in FETCHERS:
@@ -1114,6 +1138,8 @@ def main() -> None:
             if pass_name == "changed":
                 # A report from an earlier night must never be read as tonight's.
                 Path(str(ids_paths[name]) + ".left").unlink(missing_ok=True)
+            if pass_name == "rolling":
+                Path(str(rolling_path) + ".left").unlink(missing_ok=True)
             log(f"fetching {name} ({pass_name})")
             if name == "caf" and pass_name == "new":
                 # The bulk form pass runs as parallel shards: one Python
@@ -1132,6 +1158,14 @@ def main() -> None:
             if pass_name == "changed":
                 r["left"] = changed_pass_left(ids_paths[name])
                 r["consumed"] = r["left"] is not None
+            if pass_name == "rolling":
+                # Its report replaces the carry-over; without one (a crash)
+                # the carry-over is kept as it was.
+                left = changed_pass_left(rolling_path)
+                if left is not None:
+                    rolling_path.write_text(json.dumps(left), encoding="utf-8")
+                    log(f"  rolling: {len(left):,} open proposals carried to "
+                        "the next run")
             if code not in (0, 3):
                 # Aborted on a sustained error rate, or died: the service is
                 # refusing this fetcher, so its later passes are not tried.
