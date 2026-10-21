@@ -57,8 +57,8 @@ export async function generateMetadata({ params }: { params: { proposalId: strin
   if (!found) {
     return pageMeta({
       path: `/instruments/consent/${encodeURIComponent(params.proposalId)}`,
-      title: "Proposal not found — People & Consent",
-      description: "No proposal with this number is in the register this instrument holds.",
+      title: "Proposal not found | People & Consent",
+      description: "This proposal number is not in the copy of the environmental clearance register that People & Consent holds.",
       index: false,
     });
   }
@@ -72,10 +72,10 @@ export async function generateMetadata({ params }: { params: { proposalId: strin
     where ? `${where.district_name}, ${presentState(where.censuscode, where.state_name)}` : null,
     stage,
   ].filter(Boolean).join(" · ") +
-    ". Who lives where this project would be built, and the consent obligations that attach.";
+    ". The page reports who lives where this project would be built and which duties of consultation and consent apply there.";
   return pageMeta({
     path: `/instruments/consent/${p.id}`,
-    title: `${shortName(p.name || `Proposal ${p.no}`)} — People & Consent`,
+    title: `${shortName(p.name || `Proposal ${p.no}`)} | People & Consent`,
     description,
     // Indexed where the page has a place to describe. A proposal that could
     // not be placed below state level carries no profile, so its page is thin

@@ -51,7 +51,7 @@ function ComparisonChart({ csrRatio }: { csrRatio: number }) {
     <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#f6f3ee]">
       <div className="flex items-center justify-between mb-8">
         <p className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] font-bold">
-          Key Finding // The Mismatch
+          Poverty and CSR per person
         </p>
         <span className="font-label text-[10px] tracking-widest text-[#1c1c19]/40">
           Figure 01
@@ -64,20 +64,20 @@ function ComparisonChart({ csrRatio }: { csrRatio: number }) {
               Bihar
             </span>
             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19]/60">
-              Poverty Rate · 33.76%
+              Share poor · 33.76%
             </span>
           </div>
           <div className="grid grid-cols-2 gap-6">
             <div>
               <AnimatedBar width="100%" color="#BD402C" delay={0} />
               <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-3">
-                Poverty Headcount
+                Share poor
               </p>
             </div>
             <div>
               <AnimatedBar width="5%" color="#1c1c19" delay={0.2} />
               <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-3">
-                Relative CSR / Person
+                CSR per person, relative
               </p>
             </div>
           </div>
@@ -88,27 +88,27 @@ function ComparisonChart({ csrRatio }: { csrRatio: number }) {
               Maharashtra
             </span>
             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19]/60">
-              Poverty Rate · 7.81%
+              Share poor · 7.81%
             </span>
           </div>
           <div className="grid grid-cols-2 gap-6">
             <div>
               <AnimatedBar width="23%" color="#BD402C" delay={0.4} />
               <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-3">
-                Poverty Headcount
+                Share poor
               </p>
             </div>
             <div>
               <AnimatedBar width="100%" color="#1c1c19" delay={0.6} />
               <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-3">
-                Relative CSR / Person
+                CSR per person, relative
               </p>
             </div>
           </div>
         </div>
       </div>
       <p className="font-body text-sm text-[#1c1c19]/70 italic mt-8 pt-5 border-t border-[#1c1c19] leading-relaxed">
-        Bihar&apos;s poverty rate is more than four times Maharashtra&apos;s (33.76% vs 7.81%), yet Maharashtra receives roughly {csrRatio} times more CSR per person. This tool quantifies that gap for every district.
+        The share of Bihar&apos;s people who are multidimensionally poor is more than four times Maharashtra&apos;s (33.76% against 7.81% in 2019-21, by NITI Aayog&apos;s count), yet Maharashtra receives about {csrRatio} times as much CSR spending per person. The index measures the same gap for each district.
       </p>
     </div>
   );
@@ -117,28 +117,28 @@ function ComparisonChart({ csrRatio }: { csrRatio: number }) {
 const DIMENSIONS = [
   {
     letter: "N",
-    name: "Poverty Severity",
-    desc: "MPI headcount ratio from NITI Aayog. What fraction of the district's population is multidimensionally poor.",
+    name: "Poverty",
+    desc: "The share of the district's people who were multidimensionally poor in 2019-21, which NITI Aayog calls the headcount ratio.",
     weight: "40%",
   },
   {
     letter: "G",
-    name: "Funding Gap",
-    desc: "How much less CSR per person the district receives compared to its population-tier median. Benchmarked against similar-sized districts.",
+    name: "Funding gap",
+    desc: "How far the district's CSR spending per person falls below the median for districts of similar population. A district at or above that median has a gap of zero.",
     weight: "40%",
   },
   {
     letter: "U",
     name: "Persistence",
-    desc: "What fraction of 2015-16 poverty remains in 2019-21. Districts where poverty has barely moved despite national progress.",
+    desc: "The 2019-21 headcount divided by the 2015-16 one, which gives the share of the earlier poverty still present. A district where poverty has not fallen scores 1 or more.",
     weight: "20%",
   },
 ];
 
 const PIPELINE_STEPS = [
-  { label: "NITI Aayog MPI", sub: "653 districts extracted" },
-  { label: "MCA CSR Data", sub: "10 fiscal years (via Dataful.in)" },
-  { label: "Census 2011", sub: "Population baseline" },
+  { label: "NITI Aayog MPI", sub: "Poverty data for 653 districts" },
+  { label: "MCA CSR Data", sub: "Ten fiscal years of spending by district, via Dataful" },
+  { label: "Census 2011", sub: "District population" },
 ];
 
 function SectionHeader({ num, tag, title, lead }: { num: string; tag: string; title: React.ReactNode; lead?: string }) {
@@ -186,7 +186,7 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto">
           <div className="mb-10">
             <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.4em] text-[#BD402C]">
-              About This Project
+              CSR Opportunity Index
             </span>
             <div className="h-px bg-[#1c1c19] mt-4 w-24" />
           </div>
@@ -194,10 +194,10 @@ export default function AboutPage() {
             <div className="md:col-span-8">
               <h1 className="font-headline text-5xl sm:text-6xl md:text-7xl lg:text-8xl headline-tight text-[#1c1c19]">
                 About the<br />
-                <span className="italic font-light">project.</span>
+                <span className="italic font-light">index</span>
               </h1>
               <p className="mt-8 md:mt-10 max-w-2xl font-body text-lg md:text-xl leading-relaxed text-[#1c1c19]/90">
-                Quantifying the gap between where philanthropic money goes and where people need it most.
+                Larger Indian companies must spend part of their profits on corporate social responsibility (CSR) and report where the money went. The index sets that reported spending against poverty in each district, to show where need is high and recorded spending is low.
               </p>
             </div>
             <div className="md:col-span-4 flex flex-col gap-6 md:mt-4">
@@ -206,7 +206,7 @@ export default function AboutPage() {
                   Status
                 </span>
                 <p className="font-body text-sm text-[#1c1c19]/70">
-                  Open data. Reproducible methodology.
+                  The data and code are published, and the scores can be rebuilt from them.
                 </p>
               </div>
             </div>
@@ -222,12 +222,12 @@ export default function AboutPage() {
             <SectionHeader
               num="01"
               tag="The Problem"
-              title={<>The <span className="italic font-light">mismatch.</span></>}
+              title={<>Spending and <span className="italic font-light">need</span></>}
             />
             <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
               <div className="md:col-span-5">
                 <p className="font-body text-base md:text-lg text-[#1c1c19]/85 leading-relaxed">
-                  CSR spending in India reached over twenty-one thousand crore rupees (district-attributable) in FY2023-24. Most of that money flows to districts where corporate offices sit. The districts with the deepest poverty receive the least funding per person.
+                  Companies reported over twenty-one thousand crore rupees of CSR spending in FY2023-24 that can be traced to a named district, according to Ministry of Corporate Affairs filings. Further spending was filed as &quot;Pan India&quot; or named no district, so it cannot be placed. The traceable money is spread very unevenly between states, as the comparison of Bihar and Maharashtra shows.
                 </p>
               </div>
               <div className="md:col-span-7">
@@ -243,11 +243,11 @@ export default function AboutPage() {
             <SectionHeader
               num="02"
               tag="The Tool"
-              title={<>What this <span className="italic font-light">tool does.</span></>}
+              title={<>What the index <span className="italic font-light">does</span></>}
             />
             <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#f6f3ee]">
               <p className="font-body text-base md:text-lg text-[#1c1c19]/85 leading-relaxed">
-                Whitespace India CSR ranks every Indian district by the gap between poverty and philanthropic funding. It produces a single composite score, the Philanthropic Opportunity Score, that tells you where capital is most absent relative to need. The simulator lets you adjust weights, filter by sector, and generate district-level research briefs.
+                The CSR Opportunity Index ranks {totalDistricts} districts by how much poverty they carry against how little CSR spending they receive. Each district gets a score from 0 to 100, the Philanthropic Opportunity Score (POS), and a higher score means more poverty relative to recorded spending. The index also flags {whitespaceCount} whitespace districts, where CSR spending per person is in the bottom 25% of all districts and the share of people in poverty is in the top 25%. On the index page you can change the weights behind the score or recompute it for a single CSR sector, and download a research brief on any district.
               </p>
             </div>
           </section>
@@ -259,7 +259,7 @@ export default function AboutPage() {
             <SectionHeader
               num="03"
               tag="The Pipeline"
-              title={<>Three sources, <span className="italic font-light">one ledger.</span></>}
+              title={<>How the data is <span className="italic font-light">joined</span></>}
             />
             <div className="grid grid-cols-1 md:grid-cols-4 border border-[#1c1c19]">
               {PIPELINE_STEPS.map((step, i) => (
@@ -297,15 +297,15 @@ export default function AboutPage() {
                   </span>
                 </div>
                 <p className="font-label text-[12px] uppercase tracking-[0.2em] text-white font-bold mb-2">
-                  Merge &amp; Score
+                  Joined and scored
                 </p>
                 <p className="font-body text-xs text-white/80 italic">
-                  {totalDistricts} district POS
+                  {totalDistricts} districts with a POS
                 </p>
               </div>
             </div>
             <p className="font-body text-sm text-[#1c1c19]/70 italic mt-6 leading-relaxed max-w-3xl">
-              Districts are matched across datasets using fuzzy string matching, then grouped into three population tiers for like-for-like CSR benchmarking. Small rural districts are compared to other small districts, not to Mumbai.
+              We matched districts across the three datasets by name, allowing for differences in spelling where names did not agree exactly. Districts are then split into three equal groups by population, and each district&apos;s spending is compared with the median of its own group, so that small districts are measured against other small districts.
             </p>
           </section>
         </FadeIn>
@@ -316,7 +316,7 @@ export default function AboutPage() {
             <SectionHeader
               num="04"
               tag="Dimensions"
-              title={<>The three <span className="italic font-light">axes.</span></>}
+              title={<>What the score <span className="italic font-light">measures</span></>}
             />
             <div className="grid grid-cols-1 md:grid-cols-3 border border-[#1c1c19]">
               {DIMENSIONS.map((dim, i) => (
@@ -350,7 +350,7 @@ export default function AboutPage() {
               </p>
             </div>
             <p className="font-body text-sm text-[#1c1c19]/70 italic mt-4 leading-relaxed">
-              Each dimension is min-max normalized within its population tier, then combined. Weights are adjustable in the simulator.
+              Each measure is rescaled to run from 0 to 1 across all {totalDistricts} districts (min-max normalisation, marked by the hat over each letter), then weighted and added. The letters stand for need, gap and unresolved poverty. For districts with no 2015-16 figure, persistence is set to the national median. The weights have default values, and you can change them on the index page.
             </p>
           </section>
         </FadeIn>
@@ -361,14 +361,14 @@ export default function AboutPage() {
             <SectionHeader
               num="05"
               tag="Audience"
-              title={<>Who this <span className="italic font-light">is for.</span></>}
+              title={<>Who it is <span className="italic font-light">for</span></>}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 border border-[#1c1c19]">
               {[
-                { role: "Program Officers", context: "Deciding where to open a new grant window" },
-                { role: "CSR Heads", context: "Reporting geographic strategy to the board" },
-                { role: "Philanthropic Advisors", context: "Building investment cases for clients" },
-                { role: "Researchers", context: "Studying CSR allocation and equity patterns" },
+                { role: "Programme officers", context: "They can compare districts before deciding where a new grant round should go." },
+                { role: "CSR heads", context: "They can show a board how the company's district spending lines up with poverty." },
+                { role: "Philanthropy advisers", context: "They can set a client's giving against need in the districts it reaches." },
+                { role: "Researchers", context: "They can study how CSR spending is spread across districts and states, using the published data." },
               ].map((item, i) => (
                 <div
                   key={item.role}
@@ -401,14 +401,14 @@ export default function AboutPage() {
             <SectionHeader
               num="06"
               tag="Key Numbers"
-              title={<>The <span className="italic font-light">ledger line.</span></>}
+              title={<>Key <span className="italic font-light">numbers</span></>}
             />
             <div className="grid grid-cols-2 md:grid-cols-4 border border-[#1c1c19]">
               {[
-                { value: String(totalDistricts), label: "Districts Scored" },
-                { value: "10", label: "Years of CSR Data" },
-                { value: String(whitespaceCount), label: "Whitespace Districts" },
-                { value: "FY14-24", label: "CSR Data Coverage" },
+                { value: String(totalDistricts), label: "Districts scored" },
+                { value: "10", label: "Years of CSR data" },
+                { value: String(whitespaceCount), label: "Whitespace districts" },
+                { value: "FY14-24", label: "CSR data coverage" },
               ].map(({ value, label }, i) => (
                 <div
                   key={label}
@@ -437,21 +437,21 @@ export default function AboutPage() {
             <SectionHeader
               num="07"
               tag="Sources"
-              title={<>The <span className="italic font-light">citations.</span></>}
+              title={<><span className="italic font-light">Sources</span></>}
             />
             <div className="border border-[#1c1c19]">
               {[
                 {
                   tag: "Poverty",
-                  text: "NITI Aayog National Multidimensional Poverty Index 2023, based on NFHS-5 (2019-21), using the Alkire-Foster method from OPHI, University of Oxford.",
+                  text: "NITI Aayog, National Multidimensional Poverty Index 2023, based on NFHS-5 (2019-21) and computed with the Alkire-Foster method of the Oxford Poverty and Human Development Initiative (OPHI) at the University of Oxford.",
                 },
                 {
                   tag: "CSR",
-                  text: "Ministry of Corporate Affairs, Government of India, via Dataful.in (Dataset ID 1612). Ten fiscal years of district-level CSR spending.",
+                  text: "CSR filings to the Ministry of Corporate Affairs, Government of India, as compiled by Dataful.in (dataset ID 1612), with ten fiscal years of district-level spending.",
                 },
                 {
                   tag: "Population",
-                  text: "Census of India 2011, Registrar General of India. Used for population-tier stratification.",
+                  text: "Census of India 2011, Office of the Registrar General of India. District populations are the denominator of CSR per person and set each district's population group.",
                 },
               ].map((src, i) => (
                 <div
@@ -484,10 +484,10 @@ export default function AboutPage() {
                     Contact
                   </span>
                   <h2 className="font-headline text-3xl md:text-4xl headline-tight mb-3">
-                    Get in <span className="italic font-light">touch.</span>
+                    Questions and <span className="italic font-light">corrections</span>
                   </h2>
                   <p className="font-body text-sm md:text-base text-[#fcf9f4]/80 max-w-md leading-relaxed">
-                    Questions about the methodology, data, or applying this for your foundation?
+                    Souhard Sharma built and maintains the index. You can reach him on LinkedIn about the method or the data, or about using the index in a foundation&apos;s work.
                   </p>
                 </div>
                 <a

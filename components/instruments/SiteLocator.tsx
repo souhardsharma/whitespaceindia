@@ -86,7 +86,7 @@ const VERDICT_TEXT: Record<string, string> = {
   elsewhere:
     "The filed coordinates do not fall in any district this proposal names.",
   offshore:
-    "The filed coordinates fall outside every district boundary — at sea.",
+    "The filed coordinates fall outside every district boundary, at sea.",
   // NOT "at sea". The boundary source carries about 98,700 km2 of Jammu &
   // Kashmir under "Data Not Available", and a point there falls in no
   // district for a reason that has nothing to do with the site. Published as
@@ -94,8 +94,9 @@ const VERDICT_TEXT: Record<string, string> = {
   // Uri-I Stage-II hydroelectric project on the Jhelum, 16 km from the
   // nearest mapped district - were in the sea.
   unmapped:
-    "The boundary source does not map this ground, so the coordinates could " +
-    "not be tested against a district. This says nothing about the site.",
+    "The filed coordinates fall in an area the Census 2011 district map " +
+    "assigns to no district, such as the part of Jammu and Kashmir it marks " +
+    "as data not available, so we could not check them against a district.",
   no_geometry:
     "No boundary was available to test the filed coordinates against.",
 };
@@ -258,15 +259,15 @@ export default function SiteLocator({
     const fromTitle = resolution === "project_name";
     const why =
       formStatus === "none"
-        ? "The Ministry’s portal serves no application form for this proposal, so there are no filed coordinates to place on a map."
+        ? "The PARIVESH portal of the Ministry of Environment, Forest and Climate Change serves no application form for this proposal, so there are no filed coordinates to map."
         : formStatus === "pend"
-          ? "This instrument has not yet read this proposal’s application form, so it has no coordinates to place on a map yet."
+          ? "We have not yet read this proposal’s application form, so there are no coordinates to map."
           : discarded
-            ? "This filing does map a site, but every mapped block in it was malformed and was discarded by this instrument, so there is nothing it can place on a map. That is a limit of what this instrument could read, not a gap in the filing."
-            : "This filing records no site coordinates, so there is nothing to place on a map.";
+            ? "This filing does give site coordinates, but none of them could be read as valid coordinates, so we set them aside and there is nothing to map. The limit is in what we could read, and the filing itself does record a site."
+            : "This filing records no site coordinates, so there is nothing to map.";
     const where = fromTitle
       ? "Its district was read from the project’s title, which is weaker evidence than a location filed on the form."
-      : "Its district comes from the codes in the application form.";
+      : "Its district comes from the village, town or district codes in the application form.";
     return (
       <div className="border border-dashed border-[#1c1c19]/30 p-4">
         <p className="font-body text-[13px] leading-relaxed opacity-70">
@@ -280,11 +281,11 @@ export default function SiteLocator({
     `${text ?? "Filed coordinates"} ` +
     `Latitude ${lat.toFixed(4)}, longitude ${lon.toFixed(4)}.` +
     (blocks && blocks > 1
-      ? ` The filing maps ${blocks} separate blocks; the point shown is the one the verdict rests on.`
+      ? ` The filing gives ${blocks} separate site areas, and the point shown is the one the check above is based on.`
       : "") +
     (drawnOutside
-      ? " The outline drawn is simplified, so the point sits slightly outside it here;"
-        + " the verdict is computed against the full boundary."
+      ? " The outline drawn is simplified, so the point sits slightly outside it here,"
+        + " although the check uses the full boundary."
       : "");
 
   return (
@@ -301,14 +302,14 @@ export default function SiteLocator({
       <div className="border border-[#1c1c19] bg-[#fcf9f4]">
         {failed ? (
           <p className="font-body text-[13px] p-4 opacity-70">
-            The district outline could not be loaded. The coordinates and the
-            verdict are stated below.
+            The district outline could not be loaded, but the coordinates and
+            the result of the check are given below.
           </p>
         ) : !geo ? (
           <p className="font-body text-[13px] p-4 opacity-70">Loading&hellip;</p>
         ) : paths.length === 0 ? (
           <p className="font-body text-[13px] p-4 opacity-70">
-            No boundary is held for the district this filing names.
+            We have no boundary for the district this filing names.
           </p>
         ) : (
           <svg
@@ -356,22 +357,21 @@ export default function SiteLocator({
         {fallsIn != null && !districts.includes(fallsIn) ? (
           <>
             {" "}They fall in{" "}
-            <strong>{fallsInName ?? `district ${fallsIn}`}</strong>,
-            drawn dashed.
+            <strong>{fallsInName ?? `district ${fallsIn}`}</strong>, which
+            the map draws with a dashed outline.
           </>
         ) : null}
         {blocks && blocks > 1 ? (
           <>
-            {" "}The filing maps {blocks} separate blocks; the point shown is
-            the one the verdict rests on, not the centre of them all.
+            {" "}The filing gives {blocks} separate site areas, and the point
+            shown is the one the check above is based on.
           </>
         ) : null}
         {drawnOutside ? (
           <>
             {" "}The outline drawn here is simplified for the web, so at this
-            zoom the point can sit a few hundred metres the wrong side of it.
-            The verdict above is computed against the full Census boundary, not
-            this outline.
+            zoom the point can appear a few hundred metres on the wrong side of it. The check above
+            uses the full Census boundary.
           </>
         ) : null}
       </p>

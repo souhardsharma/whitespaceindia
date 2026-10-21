@@ -146,7 +146,7 @@ export default function DistrictProposals({
                   className="font-label text-[9px] uppercase tracking-[0.14em] px-1.5 py-0.5"
                   style={{ background: PLUM, color: "#fcf9f4" }}
                 >
-                  Cat {p.cat ?? "—"}
+                  {p.cat ? `Category ${p.cat}` : "No category"}
                 </span>
                 <span className="font-label text-[10px] uppercase tracking-[0.13em] opacity-70">
                   {p.status}
@@ -159,7 +159,7 @@ export default function DistrictProposals({
                     className="font-label text-[9px] uppercase tracking-[0.14em]"
                     style={{ color: PLUM }}
                   >
-                    displacement declared
+                    declares affected families
                   </span>
                 ) : null}
               </div>
@@ -167,7 +167,7 @@ export default function DistrictProposals({
                 {p.name}
               </p>
               <p className="font-body text-[12.5px] opacity-75 mt-0.5">
-                {p.agency || "Proponent not recorded"} · {p.sector}
+                {p.agency || "Applicant not recorded"} · {p.sector}
               </p>
             </Link>
           </li>
@@ -209,16 +209,15 @@ export default function DistrictProposals({
           aria-live="polite"
         >
           {shown >= total
-            ? `All ${nf.format(total)} proposals filed for this district, newest first.`
-            : `Showing ${nf.format(shown)} of ${nf.format(total)}, newest first. Every one is reachable.`}
+            ? `All ${nf.format(total)} proposals that name this district, newest first.`
+            : `Showing ${nf.format(shown)} of ${nf.format(total)} proposals, newest first. The button below loads the rest.`}
         </p>
       </div>
 
       {error ? (
         <p className="mt-2 font-body text-[13px] opacity-70">
-          These proposals could not be loaded. That is a loading failure, not
-          an empty result — they exist in the register. Reloading usually fixes
-          it.
+          These proposals could not be loaded, although the register does
+          hold them. Reloading the page usually fixes this.
         </p>
       ) : null}
     </>

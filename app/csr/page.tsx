@@ -99,10 +99,10 @@ function InsightSection({ whitespaceCount }: { whitespaceCount: number }) {
           </div>
           <div className="md:col-span-9">
             <h2 className="font-headline text-4xl md:text-6xl lg:text-7xl headline-tight text-[#1c1c19] mb-6">
-              What the data <span className="italic font-light">reveals.</span>
+              Findings from the <span className="italic font-light">index</span>
             </h2>
             <p className="font-body text-base md:text-lg text-[#1c1c19]/75 leading-relaxed max-w-2xl">
-              Three signals from the ledger. Each points to a different kind of gap, and a different lever for philanthropic capital.
+              The first finding concerns CSR spending that cannot be placed in any district, and the other two concern how unevenly the rest is shared between places.
             </p>
           </div>
         </motion.div>
@@ -112,8 +112,8 @@ function InsightSection({ whitespaceCount }: { whitespaceCount: number }) {
             <DataInsightCard
               number="01"
               value="₹1,29,660 Cr"
-              label="Unattributable CSR"
-              sub="Classified as Pan-India (FY2014-15 through FY2023-24). 60.7% of gross CSR, unattributable to any specific district."
+              label="CSR with no district"
+              sub="Of all CSR spending filed between FY2014-15 and FY2023-24, 60.7% was recorded as Pan-India or named no district. The index cannot place that money in any district."
               delay={0}
             />
           </div>
@@ -121,8 +121,8 @@ function InsightSection({ whitespaceCount }: { whitespaceCount: number }) {
             <DataInsightCard
               number="02"
               value="33.76%"
-              label="Bihar Poverty Rate"
-              sub="NITI Aayog MPI 2023 state-level headcount ratio (2019-21). Bihar receives ₹66 per person in CSR vs Maharashtra’s ₹1,436."
+              label="Bihar's poverty headcount"
+              sub="The share of Bihar’s people in multidimensional poverty in 2019-21, from NITI Aayog’s MPI 2023. Bihar receives ₹66 of CSR spending per person, against ₹1,436 in Maharashtra."
               delay={0.12}
             />
           </div>
@@ -130,8 +130,8 @@ function InsightSection({ whitespaceCount }: { whitespaceCount: number }) {
             <DataInsightCard
               number="03"
               value={String(whitespaceCount)}
-              label="Neglected Districts"
-              sub="High poverty meets low funding: the neglected districts awaiting capital."
+              label="Whitespace districts"
+              sub="A whitespace district is one in the bottom 25% of all districts for CSR spending per person and the top 25% for the share of people in poverty."
               delay={0.24}
             />
           </div>
@@ -156,7 +156,7 @@ function BeyondSection() {
         >
           <div className="md:col-span-8 p-10 md:p-14 border-b md:border-b-0 md:border-r border-[#1c1c19]">
             <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#BD402C] block mb-6">
-              What Comes Next
+              Other indexes
             </span>
             <motion.h2
               initial={{ opacity: 0, x: -12 }}
@@ -164,7 +164,7 @@ function BeyondSection() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="font-headline text-3xl md:text-5xl headline-tight text-[#1c1c19] mb-6"
             >
-              The same <span className="italic font-light">methodology</span> works anywhere there is public data.
+              The same <span className="italic font-light">method</span> can be applied to other district data.
             </motion.h2>
             <motion.p
               initial={{ opacity: 0 }}
@@ -172,7 +172,7 @@ function BeyondSection() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="font-body text-base text-[#1c1c19]/75 leading-relaxed mb-6"
             >
-              Education infrastructure gaps, health access disparities, and energy poverty are next in the investigation pipeline.
+              Previews of indexes for health, energy and education are on this site. They run on placeholder numbers until real district data and a written method are in place.
             </motion.p>
             <div className="flex flex-wrap gap-0 border border-[#1c1c19]">
               {["Education", "Health", "Energy"].map((v, i) => (
@@ -200,7 +200,7 @@ function BeyondSection() {
               Updates
             </span>
             <p className="font-body text-sm text-[#1c1c19]/80 leading-relaxed">
-              Future research will apply this methodology to education, health, and energy infrastructure data.
+              We send one short email when a new index or report is published.
             </p>
             <SubscribeForm variant="compact" source="landing" />
           </motion.div>
@@ -355,16 +355,16 @@ export default function HomePage() {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Whitespace India CSR",
+    name: "CSR Opportunity Index",
     url: siteUrl,
-    description: `Interactive tool ranking ${districtCount} Indian districts by philanthropic opportunity. Combines NITI Aayog MPI poverty data with CSR spending to find where philanthropic capital can create the most impact.`,
+    description: `An interactive index that ranks ${districtCount} Indian districts by their poverty (NITI Aayog MPI 2023) against the CSR spending companies report there.`,
   };
 
   const datasetSchema = {
     "@context": "https://schema.org",
     "@type": "Dataset",
-    name: "India District Philanthropic Opportunity Scores",
-    description: `Composite Philanthropic Opportunity Score (POS) for ${districtCount} Indian districts, derived from NITI Aayog MPI 2023 poverty data and MCA CSR spending data (via Dataful.in dataset 1612).`,
+    name: "Philanthropic Opportunity Score (POS) for Indian districts",
+    description: `A composite score for ${districtCount} Indian districts, calculated from NITI Aayog's MPI 2023 poverty data and Ministry of Corporate Affairs CSR spending data (via Dataful.in dataset 1612).`,
     url: siteUrl,
     creator: {
       "@type": "Person",
@@ -374,9 +374,9 @@ export default function HomePage() {
     },
     license: "https://creativecommons.org/licenses/by/4.0/",
     citation: [
-      "National Multidimensional Poverty Index 2023 (NITI Aayog) - https://niti.gov.in/sites/default/files/2023-07/National-Multidimentional-Poverty-Index-2023-Final-17th-July.pdf",
-      "CSR District-Level Spending Data (Ministry of Corporate Affairs) - https://www.csr.gov.in/",
-      "CSR District-Level Dataset via Dataful.in (Dataset 1612) - https://dataful.in/datasets/1612",
+      "National Multidimensional Poverty Index 2023 (NITI Aayog), https://niti.gov.in/sites/default/files/2023-07/National-Multidimentional-Poverty-Index-2023-Final-17th-July.pdf",
+      "CSR District-Level Spending Data (Ministry of Corporate Affairs), https://www.csr.gov.in/",
+      "CSR District-Level Dataset via Dataful.in (Dataset 1612), https://dataful.in/datasets/1612",
     ],
     temporalCoverage: "2014/2024",
     spatialCoverage: { "@type": "Place", name: "India" },
@@ -410,22 +410,25 @@ export default function HomePage() {
             >
               <div className="md:col-span-3">
                 <span className="font-label text-[11px] uppercase tracking-[0.3em] text-[#BD402C] block mb-4">
-                  02 / The Simulator
+                  02 / The Index
                 </span>
                 <div className="h-px bg-[#1c1c19] w-24" />
               </div>
               <div className="md:col-span-9">
                 <h2 className="font-headline text-4xl md:text-6xl lg:text-7xl headline-tight text-[#1c1c19] mb-6">
-                  Opportunity <span className="italic font-light">Simulator.</span>
+                  District <span className="italic font-light">rankings</span>
                 </h2>
                 <p className="font-body text-base md:text-lg text-[#1c1c19]/75 leading-relaxed max-w-2xl">
-                  Adjust weights, select a sector, and click any state to surface your highest-opportunity districts.
+                  Districts at the top of the ranking combine high poverty with little recorded CSR spending. You can change the weights or score a single CSR sector, and clicking a state on the map lists only its districts.
                 </p>
                 <p className="mt-4 font-body text-xs md:text-sm text-[#1c1c19]/60 italic leading-relaxed max-w-2xl">
-                  POS spans {posMin}&ndash;{posMax} at All Sectors (default weights). Picking a sector rescales the funding-gap component: districts with zero CSR in that sector saturate Ĝ at 1.0, so scores can reach ~{sectorPosMax}.
+                  With the default weights and all sectors, scores run from {posMin} to {posMax}. Choosing a sector recalculates the funding gap from that sector&apos;s spending alone, and a district with no CSR spending in the sector gets the largest possible gap, so scores can reach about {sectorPosMax}.
+                </p>
+                <p className="mt-4 font-body text-xs md:text-sm text-[#1c1c19]/70 leading-relaxed max-w-2xl">
+                  The text of each research brief is written by a language model from the district&apos;s figures, so it should be checked against them before it is quoted.
                 </p>
                 <p className="mt-4 font-label text-[10px] uppercase tracking-[0.2em] text-[#1c1c19]/60 max-w-2xl">
-                  Source · NITI Aayog MPI 2023 · MCA CSR via Dataful.in · Census 2011 · Briefs AI-assisted and require independent verification
+                  Source: NITI Aayog MPI 2023; Ministry of Corporate Affairs CSR filings via Dataful.in; Census 2011
                 </p>
               </div>
             </motion.div>
@@ -457,10 +460,10 @@ export default function HomePage() {
                   <div className="px-6 py-5 border-b border-[#1c1c19] bg-[#f6f3ee] flex items-center justify-between">
                     <div>
                       <h3 className="font-label text-[11px] uppercase tracking-[0.3em] font-bold text-[#1c1c19]">
-                        India · Territorial Atlas
+                        Average score by state
                       </h3>
                       <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-2">
-                        Click a state to filter rankings
+                        Selecting a state lists only its districts
                       </p>
                     </div>
                     <span className="font-label text-[10px] tracking-widest text-[#1c1c19]/40">
@@ -481,13 +484,13 @@ export default function HomePage() {
                   <div className="px-6 py-5 border-b border-[#1c1c19] bg-[#f6f3ee] flex items-center justify-between gap-4">
                     <div>
                       <h3 className="font-label text-[11px] uppercase tracking-[0.3em] font-bold text-[#1c1c19]">
-                        District Ledger
+                        District ranking
                       </h3>
                       <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-2">
                         {displayDistricts.length} districts
                         {highlightedState && (
                           <>
-                            {" "}· filter ·{" "}
+                            {" "}in{" "}
                             <span className="text-[#BD402C]">{highlightedState}</span>
                           </>
                         )}

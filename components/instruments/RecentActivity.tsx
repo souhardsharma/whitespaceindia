@@ -16,7 +16,7 @@ const LABELS: Record<string, string> = Object.fromEntries(
     .map(([k, v]) => [k, String(v?.label ?? k)]),
 );
 const KIND: Record<ChangeKind, string> = {
-  filed: "Filed", query: "Details sought", moved: "Moved", decided: "Decided", closed: "Closed",
+  filed: "Filed", query: "Details sought", moved: "Moved to a new stage", decided: "Decided", closed: "Closed",
 };
 
 function fmt(d: string): string {
@@ -52,7 +52,7 @@ export default function RecentActivity({
           id={`activity-${district ?? proposalId}`}
           className="font-headline font-bold text-[clamp(20px,2.4vw,28px)] tracking-[-0.02em]"
         >
-          {forProposal ? "Its recent steps" : "Recent activity"}
+          {forProposal ? "Recent steps in this proposal" : "Recent activity"}
         </h2>
         {!forProposal && district != null ? (
           <Link
@@ -67,7 +67,7 @@ export default function RecentActivity({
         <p className="font-body text-[13.5px] opacity-70">
           {forProposal
             ? `No step of this proposal is recorded between ${fmt(file.window.from)} and ${fmt(file.window.to)}.`
-            : `Nothing filed, queried, decided or closed here between ${fmt(file.window.from)} and ${fmt(file.window.to)}.`}
+            : `No proposal naming this district recorded a step between ${fmt(file.window.from)} and ${fmt(file.window.to)}.`}
         </p>
       ) : (
         <ol className="border-t border-[#1c1c19]/25">

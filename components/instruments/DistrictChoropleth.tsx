@@ -166,7 +166,7 @@ export default function DistrictChoropleth({
   // where to go next, rather than being dropped into 640 shapes.
   const mapLabel =
     `Map of ${rows.length} districts by ${spec?.label ?? measureKey}. ` +
-    `Use the table below this map to move through the districts and open one.`;
+    `The table below the map lists the same figures, and you can open any district from it.`;
 
   return (
     <section className="mb-16">
@@ -391,14 +391,14 @@ export default function DistrictChoropleth({
 
       <details className="mt-6">
         <summary className="font-label text-[10px] uppercase tracking-[0.18em] cursor-pointer">
-          The same numbers, as a table &mdash; and the way to reach a district
-          by keyboard
+          The same figures as a table, which also opens each district by
+          keyboard
         </summary>
         <ScrollRegion label={`${spec?.label ?? "Measure"} by district`} className="mt-3 max-h-[420px] overflow-auto border border-[#1c1c19]/25">
           <table className="w-full font-body text-[13px]">
             <caption className="sr-only">
-              {spec?.label} by district, highest first. All {rows.length}{" "}
-              districts, nothing truncated.
+              {spec?.label} by district, highest first, for all {rows.length}{" "}
+              districts.
             </caption>
             <thead className="sticky top-0 bg-[#fcf9f4]">
               <tr className="border-b border-[#1c1c19]">
@@ -430,7 +430,7 @@ export default function DistrictChoropleth({
                     ) : (
                       // No proposal has been filed here, so no page exists to
                       // open. The Census figures are real and the row stays.
-                      <span title="No proposal has been filed here, so this district has no page">
+                      <span title="No proposal has been filed for this district, so it has no page of its own">
                         {r.name}
                       </span>
                     )}
@@ -441,11 +441,11 @@ export default function DistrictChoropleth({
                   </td>
                   <td className="px-3 py-1.5 opacity-70">
                     {r.sa === "within"
-                      ? "Wholly"
+                      ? "Wholly scheduled"
                       : r.sa === "partial"
-                      ? "Partly"
+                      ? "Partly scheduled"
                       : r.sa === "outside"
-                      ? "Outside"
+                      ? "Not scheduled"
                       : "Not determined"}
                   </td>
                 </tr>
@@ -514,7 +514,7 @@ function Legend({
           />
         </svg>
         <span className="font-body text-[12px] opacity-70">
-          No value recorded
+          Not recorded
         </span>
       </div>
 

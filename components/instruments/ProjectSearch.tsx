@@ -166,7 +166,7 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-8">
         <label className="md:col-span-8 block">
           <span className="font-label text-[10px] uppercase tracking-[0.18em] opacity-75 block mb-1.5">
-            Project, proponent, district, or proposal number
+            Project, company or agency, district, or proposal number
           </span>
           <input
             type="search"
@@ -260,7 +260,7 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
               onChange={(e) => setResolvedOnly(e.target.checked)}
               className="accent-[#7a3b6b]"
             />
-            Only proposals located to a district
+            Only proposals placed in a district
           </label>
           <label className="flex items-center gap-2 font-body text-[13px] cursor-pointer">
             <input
@@ -269,7 +269,8 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
               onChange={(e) => setDisplacementOnly(e.target.checked)}
               className="accent-[#7a3b6b]"
             />
-            Only where displacement or R&amp;R is declared
+            Only where the form declares affected or displaced families, or
+            resettlement
           </label>
         </fieldset>
       </div>
@@ -286,14 +287,14 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
       {status === "error" ? (
         <EmptyState
           title="The search could not be completed"
-          body="The proposals exist in the register — this is a failure to reach the search, not an empty result. Reloading usually fixes it."
+          body="The search failed to load, although the register does hold these proposals. Reloading the page usually fixes this."
         />
       ) : (
         <>
           <div className="flex flex-wrap items-baseline justify-between gap-3 mb-4 pb-3 border-b border-[#1c1c19]">
             <p className="font-body text-[14px]">
               {status === "loading" && items.length === 0 ? (
-                <span className="opacity-70">Searching the register…</span>
+                <span className="opacity-70">Searching the clearance register…</span>
               ) : (
                 <>
                   <strong className="font-label">{nf.format(total)}</strong>{" "}
@@ -308,8 +309,8 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
             </p>
             {current ? (
               <p className="font-label text-[10px] uppercase tracking-[0.16em] opacity-70">
-                {nf.format(current.resolved)} of {nf.format(current.total)} located
-                to a district
+                {nf.format(current.resolved)} of {nf.format(current.total)} placed
+                in a district
               </p>
             ) : null}
           </div>
@@ -317,7 +318,7 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
           {status === "ready" && total === 0 ? (
             <EmptyState
               title="No proposal matches those filters"
-              body="This is a genuine empty result, not a failure. Widen the filters or change the search text."
+              body="The search ran and found nothing. You can widen the filters or change the search text."
             />
           ) : (
             <>
@@ -361,7 +362,7 @@ function ProjectRow({ project: p }: { project: SearchItem }) {
                 className="font-label text-[9px] uppercase tracking-[0.16em] px-1.5 py-0.5"
                 style={{ background: PLUM, color: "#fcf9f4" }}
               >
-                Category {p.category ?? "—"}
+                {p.category ? `Category ${p.category}` : "No category"}
               </span>
               <span className="font-label text-[10px] uppercase tracking-[0.14em] opacity-70">
                 {stageLabel(p.statusKey, p.status, STAGE_LABEL_TEXT)}
@@ -374,7 +375,7 @@ function ProjectRow({ project: p }: { project: SearchItem }) {
               {p.name}
             </h3>
             <p className="font-body text-[12.5px] opacity-75 mt-1">
-              {p.agency || "Proponent not recorded"} · {p.sector} · {p.date}
+              {p.agency || "Applicant not recorded"} · {p.sector} · {p.date}
             </p>
           </div>
           <div className="md:col-span-4 md:text-right">
@@ -387,7 +388,7 @@ function ProjectRow({ project: p }: { project: SearchItem }) {
                 {displaced > 0
                   ? `${nf.format(displaced)} families displaced`
                   : `${nf.format(affected)} families affected`}
-                <span> · declared</span>
+                <span>, as declared</span>
               </p>
             ) : null}
           </div>
@@ -407,16 +408,16 @@ function LocationBadge({ project: p }: { project: ProjectSummary }) {
   }
   const detail =
     p.resolution === "village"
-      ? `${p.villageCount ?? 0} village${p.villageCount === 1 ? "" : "s"} named`
+      ? `from ${p.villageCount ?? 0} village${p.villageCount === 1 ? "" : "s"} on the form`
       : p.resolution === "subdistrict"
-      ? "sub-district filed"
+      ? "from the sub-district on the form"
       : p.resolution === "lgd_district"
-      ? "district filed"
+      ? "from the district on the form"
       : p.resolution === "adjudicated"
-      ? "district declared · site agrees"
+      ? "declared district, confirmed by site"
       : p.resolution === "town_settled"
-      ? "town spanning districts"
-      : "inferred from project name";
+      ? "town in several districts, settled by site or form"
+      : "inferred from project title";
   return (
     <span className="font-label text-[10px] uppercase tracking-[0.14em] opacity-70">
       {p.allDistricts && p.allDistricts.length > 1

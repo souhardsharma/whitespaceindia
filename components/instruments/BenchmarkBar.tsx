@@ -86,8 +86,8 @@ export default function BenchmarkBar({
       ? `${nf.format(coverage.districts)} of ${nf.format(coverage.total)} districts`
       : null;
   const aria =
-    `${text}. This place ${value}, ${direction} ${benchmarkLabel} at ${benchmark}`
-    + (partial ? `, which is computed from ${partial}.` : ".");
+    `${text}. The figure here is ${value}, ${direction} the ${benchmarkLabel} figure of ${benchmark}`
+    + (partial ? `. The ${benchmarkLabel} figure is computed from ${partial}.` : ".");
 
   return (
     <div className="mt-2 w-full max-w-[260px]" title={text}>
@@ -124,8 +124,8 @@ export default function BenchmarkBar({
       </div>
       {partial ? (
         <p className="font-body text-[10px] leading-snug opacity-65 mt-0.5">
-          {benchmarkLabel} here is computed from {partial}; the rest do not
-          report this measure.
+          The {benchmarkLabel} figure is computed from {partial}, because
+          the source table has no value for the others.
         </p>
       ) : null}
     </div>

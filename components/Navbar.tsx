@@ -95,7 +95,7 @@ export default function Navbar({ vertical }: { vertical?: VerticalConfig }) {
               onMouseEnter={e => (e.currentTarget.style.color = accent)}
               onMouseLeave={e => (e.currentTarget.style.color = '#1c1c19')}
             >
-              Simulator
+              Rankings
             </a>
             <Link
               href={methodologyHref}
@@ -133,7 +133,7 @@ export default function Navbar({ vertical }: { vertical?: VerticalConfig }) {
               onMouseEnter={e => (e.currentTarget.style.color = accentDeep)}
               onMouseLeave={e => (e.currentTarget.style.color = accent)}
             >
-              Contact
+              LinkedIn
             </a>
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function Navbar({ vertical }: { vertical?: VerticalConfig }) {
                 onMouseEnter={e => (e.currentTarget.style.color = accent)}
                 onMouseLeave={e => (e.currentTarget.style.color = '#1c1c19')}
               >
-                Simulator
+                Rankings
               </a>
               <Link
                 href={methodologyHref}
@@ -213,7 +213,7 @@ export default function Navbar({ vertical }: { vertical?: VerticalConfig }) {
                 onMouseEnter={e => (e.currentTarget.style.color = accentDeep)}
                 onMouseLeave={e => (e.currentTarget.style.color = accent)}
               >
-                Contact
+                LinkedIn
               </a>
             </div>
           </motion.div>

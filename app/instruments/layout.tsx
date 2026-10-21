@@ -4,20 +4,22 @@ import { SITE_URL } from "@/lib/site";
 const siteUrl = SITE_URL;
 
 const PAGE_URL = `${siteUrl}/instruments`;
-const TITLE = "Instruments — Whitespace India";
+const TITLE = "Instruments | Whitespace India";
 const DESCRIPTION =
-  "Per-case instruments built from India's public records. Bring one project, filing or place and get what the record holds about it. First: People & Consent.";
+  "Whitespace India's instruments take one case at a time from India's public records and report what those records hold about it. The first, People & Consent, profiles the place where an environmental clearance proposal would be built.";
+const CARD_ALT =
+  "Share card for Whitespace India Instruments with the line “Bring one case, see what the record holds”, beside a print of a magnifying glass held over a row of objects";
 
 export const metadata: Metadata = {
   // `absolute`, so the root layout's "| Whitespace India" template does not
-  // append a second brand: the shelf read "Instruments — Whitespace India |
+  // append a second brand: the shelf read "Instruments | Whitespace India |
   // Whitespace India" in tabs and results. Matches app/csr/layout.tsx.
   title: { absolute: TITLE },
   description: DESCRIPTION,
   keywords: [
     "environmental clearance India",
     "PARIVESH",
-    "free prior informed consent India",
+    "Gram Sabha consultation",
     "Fifth Schedule Scheduled Areas",
     "PESA 1996",
     "Forest Rights Act 2006",
@@ -27,7 +29,7 @@ export const metadata: Metadata = {
     "district socio-economic profile",
   ],
   openGraph: {
-    title: "Whitespace India — Instruments",
+    title: TITLE,
     description: DESCRIPTION,
     url: PAGE_URL,
     type: "website",
@@ -35,18 +37,18 @@ export const metadata: Metadata = {
     locale: "en_IN",
     images: [
       {
-        url: "/og/instruments-3.jpg",
+        url: "/og/instruments-4.jpg",
         width: 1200,
         height: 630,
-        alt: "Whitespace India Instruments: \u201cBring one case, see what the record holds\u201d, beside a graphite risograph print of a magnifying glass over a row of everyday objects",
+        alt: CARD_ALT,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Whitespace India — Instruments",
+    title: TITLE,
     description: DESCRIPTION,
-    images: [{ url: "/og/instruments-3.jpg", alt: "Whitespace India Instruments: \u201cBring one case, see what the record holds\u201d, beside a graphite risograph print of a magnifying glass over a row of everyday objects" }],
+    images: [{ url: "/og/instruments-4.jpg", alt: CARD_ALT }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {

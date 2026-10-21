@@ -21,7 +21,7 @@ const LABELS: Record<string, string> = Object.fromEntries(
     .map(([k, v]) => [k, String(v?.label ?? k)]),
 );
 const KIND: Record<string, string> = {
-  filed: "Filed", query: "Details sought", moved: "Moved", decided: "Decided", closed: "Closed",
+  filed: "Filed", query: "Details sought", moved: "Other step", decided: "Decided", closed: "Closed",
 };
 
 function x(s: unknown): string {
@@ -46,11 +46,11 @@ export async function GET(req: NextRequest) {
   if (q.district != null) scope.push(districts()[String(q.district)]?.district_name ?? `district ${q.district}`);
   if (q.state) {
     const idx = json<{ states: Record<string, { name: string }> }>("index.json");
-    scope.push(`filed in ${idx.states[q.state]?.name ?? q.state}`);
+    scope.push(`filing state ${idx.states[q.state]?.name ?? q.state}`);
   }
   if (q.sector) scope.push(q.sector);
-  if (q.scheduled) scope.push("Scheduled Area districts");
-  const title = `People & Consent — ${(q.kinds ?? []).map((k) => KIND[k]).join(", ")}` +
+  if (q.scheduled) scope.push("districts wholly or partly scheduled");
+  const title = `People & Consent: ${(q.kinds ?? []).map((k) => KIND[k]).join(", ")}` +
     (scope.length ? ` · ${scope.join(" · ")}` : " · all of India");
 
   // The feed's identity is its SELECTION, not the URL it was fetched by: the
@@ -73,17 +73,17 @@ export async function GET(req: NextRequest) {
     const where = p.districtName ?? "location not determined";
     return `  <entry>
     <id>tag:${host},${e.date}:consent/${x(p.id)}/${e.kind}/${x(e.sk)}</id>
-    <title>${x(`${KIND[e.kind]}: ${LABELS[e.sk] ?? e.sk} — ${p.name.slice(0, 160)}`)}</title>
+    <title>${x(`${KIND[e.kind]}, ${LABELS[e.sk] ?? e.sk}: ${p.name.slice(0, 160)}`)}</title>
     <link href="${x(url)}"/>
     <updated>${e.date}T00:00:00+05:30</updated>
-    <summary>${x(`${p.agency || "Proponent not recorded"} · ${p.sector} · Category ${p.category ?? "—"} · ${where} · ${p.no}`)}</summary>
+    <summary>${x(`${p.agency || "Proponent not recorded"} · ${p.sector} · ${p.category ? `Category ${p.category}` : "Category not recorded"} · ${where} · ${p.no}`)}</summary>
   </entry>`;
   }).join("\n");
 
   const body = `<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>${x(title)}</title>
-  <subtitle>${x("Environmental clearance proposals as they move through the register, dated by the regulator's own appraisal history.")}</subtitle>
+  <subtitle>${x("Steps taken on environmental clearance proposals in India's register, each dated by the regulator's own appraisal history.")}</subtitle>
   <id>${x(self)}</id>
   <link rel="self" href="${x(self)}"/>
   <link href="${x(`${base}/instruments/consent/latest?${canon.toString()}`)}"/>

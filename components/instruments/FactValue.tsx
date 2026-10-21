@@ -108,7 +108,7 @@ export function FactValue({
             {fact.source}
           </p>
           <p>
-            <SourceLabel>Vintage</SourceLabel>
+            <SourceLabel>Year of data</SourceLabel>
             {fact.vintage}
             {isStale(fact.vintage) ? (
               <span className="ml-2 font-label text-[10px] uppercase tracking-[0.14em] opacity-70">
@@ -122,8 +122,8 @@ export function FactValue({
               {fact.benchmark.label}:{" "}
               {formatValue(fact.benchmark.value, fact.unit)}
               {fact.benchmark.sameDefinition
-                ? " — computed from the same definition and denominator"
-                : " — definition differs, so no comparison is shown"}
+                ? ", computed with the same definition and denominator"
+                : ". It uses a different definition, so no comparison is shown."}
             </p>
           ) : null}
           {fact.caveats?.length ? (

@@ -81,7 +81,7 @@ export default function CompositionBar({
   if (total <= 0 || usable.length === 0) {
     return (
       <p className="font-body text-[13px] opacity-75">
-        No composition is recorded for this place.
+        The source records no breakdown for this place.
       </p>
     );
   }
@@ -102,7 +102,7 @@ export default function CompositionBar({
   const remainder = Math.max(0, total - accounted);
   if (remainder > 0) {
     segments.push({
-      label: "Not accounted for",
+      label: "Not classified in the source",
       value: remainder,
       color: UNACCOUNTED,
     });

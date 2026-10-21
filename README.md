@@ -1,15 +1,15 @@
 # Whitespace India
 
-**Open civic data on where India's resources land, and where they don't.**
+**Free tools that read India's public records to find districts where need is high and money or scrutiny is thin.**
 
 Whitespace India builds public tools on government records, free for anyone to use. It has two kinds of tool:
 
 - **Indexes** rank every district on a single question.
-- **Instruments** take one case and set out everything the public record holds about it.
+- **Instruments** take one case, such as a single clearance proposal, and set out what the public records say about it.
 
 **Live site:** [whitespaceindia.vercel.app](https://whitespaceindia.vercel.app)
 
-| Arm | What it does | Status |
+| Tool | What it does | Status |
 |-----|--------------|--------|
 | [CSR Opportunity Index](https://whitespaceindia.vercel.app/csr) | Ranks 651 districts by the gap between multidimensional poverty and corporate social responsibility (CSR) spending | Live |
 | [Instrument 01: People & Consent](https://whitespaceindia.vercel.app/instruments/consent) | Takes an environmental clearance proposal and shows who lives where it would be built, what they live on, and which consent obligations attach | Live, refreshed nightly |
@@ -17,7 +17,7 @@ Whitespace India builds public tools on government records, free for anyone to u
 
 ## CSR Opportunity Index
 
-The index combines NITI Aayog's Multidimensional Poverty Index with Ministry of Corporate Affairs CSR filings. The result is a Philanthropic Opportunity Score (POS) for 651 districts. The score shows where CSR money is most absent relative to need.
+The index combines NITI Aayog's Multidimensional Poverty Index with Ministry of Corporate Affairs CSR filings. The result is a Philanthropic Opportunity Score (POS) for 651 districts, which is higher where poverty is greater relative to recorded CSR spending.
 
 The POS has three dimensions:
 
@@ -25,7 +25,7 @@ The POS has three dimensions:
 - **G, funding gap:** the CSR shortfall against the median for the district's population tier (default 40%).
 - **U, persistence:** the share of 2015-16 poverty still present in 2019-21 (default 20%).
 
-Districts are compared only with others in the same population tier. Every weight can be changed in the simulator, and any district can be exported as a research brief. The full write-up is at [/methodology](https://whitespaceindia.vercel.app/methodology).
+Only the funding gap compares a district with others in its population tier; each dimension is then rescaled across all districts. Every weight can be changed on the index page, and any district can be downloaded as a research brief. The full write-up is at [/methodology](https://whitespaceindia.vercel.app/methodology).
 
 | Source | Coverage | Link |
 |--------|----------|------|
@@ -41,7 +41,7 @@ People & Consent reads India's environmental clearance register on PARIVESH, the
 - adds the Census record of who lives there;
 - sets out the statutory consent obligations that attach, such as Fifth Schedule areas and the Gram Sabha's role under PESA.
 
-The instrument gives no score and no ranking: one case in, one profile out.
+The instrument scores and ranks nothing. Each proposal gets its own profile.
 
 A scheduled job re-reads the register every night. It publishes only data that passes the published-data contract (`scripts/instruments/check_published.py`). Every page states how current its copy of the register is.
 

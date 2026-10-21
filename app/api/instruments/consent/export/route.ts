@@ -21,16 +21,10 @@ import {
 /**
  * Deterministic PDF export for one proposal profile.
  *
- * NO LANGUAGE MODEL IS INVOLVED. The plan allowed for a generated narrative
- * tier, tightly constrained so the model could introduce no numeral absent from
- * a locked fact table. Building it was declined deliberately.
- *
- * This instrument's entire claim is that every figure it shows carries its own
- * definition, source and vintage. A generated paragraph would be the only thing
- * on the page that could not be traced to a formula, and it would be the part
- * readers quote. The export therefore contains exactly what the screen
- * contains: values joined to their definitions, obligations joined to their
- * provisions, and the citations for both.
+ * Every figure the instrument shows carries its own definition, source and
+ * vintage, so the export contains exactly what the screen contains: values
+ * joined to their definitions, obligations joined to their provisions, and
+ * the citations for both.
  *
  * Security controls mirror app/api/brief/route.ts: origin checking, a token
  * bucket per IP, and validation of every input before it reaches the filesystem.
@@ -121,7 +115,7 @@ const s = StyleSheet.create({
 const nf = new Intl.NumberFormat('en-IN');
 
 function fmt(v: number | null, unit: string): string {
-  if (v === null || v === undefined || !Number.isFinite(v)) return 'not recorded';
+  if (v === null || v === undefined || !Number.isFinite(v)) return 'no figure published';
   if (unit === 'percent') return `${v.toFixed(1)}%`;
   if (unit === 'count') return nf.format(v);
   if (unit === 'hectare') return `${nf.format(v)} ha`;
@@ -310,27 +304,27 @@ export async function POST(req: NextRequest) {
 
   const doc = React.createElement(
     Document,
-    { title: `People & Consent — ${project.no}`, author: 'Whitespace India' },
+    { title: `People & Consent: ${project.no}`, author: 'Whitespace India' },
     React.createElement(
       Page,
       { size: 'A4', style: s.page },
-      React.createElement(Text, { style: s.eyebrow }, 'WHITESPACE INDIA · INSTRUMENT 01 · PEOPLE & CONSENT'),
+      React.createElement(Text, { style: s.eyebrow }, 'WHITESPACE INDIA · PEOPLE & CONSENT · PROFILE OF ONE CLEARANCE PROPOSAL'),
       React.createElement(Text, { style: s.h1 }, project.name),
       React.createElement(Text, { style: s.meta },
-        `${project.no} · Category ${project.category ?? '—'} · ${project.status}` +
+        `${project.no} · ${project.category ? `Category ${project.category}` : 'No category recorded'} · ${project.status}` +
         (project.authority ? ` · ${project.authority}` : '')),
       React.createElement(Text, { style: s.meta },
-        `${project.agency || 'Proponent not recorded'} · ${project.sector} · submitted ${project.date}`),
+        `${project.agency || 'Applicant not recorded'} · ${project.sector} · submitted ${project.date}`),
       React.createElement(View, { style: s.rule }),
 
       // location
-      React.createElement(Text, { style: s.h2 }, 'Where this profile describes'),
+      React.createElement(Text, { style: s.h2 }, 'Area profiled'),
       district
         ? React.createElement(React.Fragment, null,
             React.createElement(Text, { style: s.body },
               `${district.district_name}, ${district.state_name}`),
             React.createElement(Text, { style: s.small },
-              (evidence.contested ? 'Location contested. ' : '') +
+              (evidence.contested ? 'The location is uncertain. ' : '') +
                 evidence.sentences.join(' ')))
         // THE SAME THREE SILENCES THE SCREEN DISTINGUISHES.
         //
@@ -344,41 +338,46 @@ export async function POST(req: NextRequest) {
         // reader downloads and cites. The screen was fixed; this was not.
         : React.createElement(Text, { style: s.body },
             project.formStatus === 'none'
-              ? 'Location not determined. The Ministry’s portal serves no Common ' +
-                'Application Form for this proposal, so no filed location could be read ' +
-                'from it, and the project name carries no district that resolves against ' +
-                'the Census gazetteer. No population profile is shown because there is no ' +
-                'place to profile.'
+              ? 'The location of this project could not be determined. The PARIVESH ' +
+                'portal of the Ministry of Environment, Forest and Climate Change serves ' +
+                'no Common Application Form for this proposal, so we could read no filed ' +
+                'location, and the project’s title names no district we can match to the ' +
+                'Census 2011 list. No population profile is shown, because a state ' +
+                'average would describe a far larger area than the site.'
               : project.formStatus === 'pend'
-              ? 'Location not determined. This instrument has not yet read the Common ' +
-                'Application Form for this proposal, and the project name carries no ' +
-                'district that resolves against the Census gazetteer. No population ' +
-                'profile is shown because there is no place to profile.'
-              : 'Location not determined. This proposal’s Common Application Form ' +
-                'does not record a village, sub-district or district, and the project ' +
-                'name carries no district that resolves against the Census gazetteer. ' +
-                'No population profile is shown because there is no place to profile.'),
+              ? 'The location of this project is not yet known. We have not yet read ' +
+                'the Common Application Form for this proposal, and the project’s title ' +
+                'names no district we can match to the Census 2011 list. No population ' +
+                'profile is shown, because a state average would describe a far larger ' +
+                'area than the site.'
+              : 'The location of this project could not be determined. This proposal’s ' +
+                'Common Application Form records no village, sub-district or district, ' +
+                'and the project’s title names no district we can match to the Census ' +
+                '2011 list. No population profile is shown, because a state average would ' +
+                'describe a far larger area than the site.'),
 
       // declared
       (project.land || project.affected || project.displaced || project.rnr === 'YES')
         ? React.createElement(React.Fragment, null,
-            React.createElement(Text, { style: s.h2 }, 'Declared by the proponent'),
+            React.createElement(Text, { style: s.h2 }, 'Declared by the applicant'),
             React.createElement(Text, { style: s.small },
               [
                 project.land != null
-                  ? `Land: ${nf.format(project.land)} (unit not recorded in the filing)`
+                  ? `The project uses land recorded as ${nf.format(project.land)}, and the filing gives no unit for that figure.`
                   : null,
-                project.forest ? `Forest land: ${nf.format(project.forest)}` : null,
-                project.displaced ? `${nf.format(project.displaced)} families displaced` : null,
-                project.affected ? `${nf.format(project.affected)} families affected` : null,
-                project.rnr === 'YES' ? 'Rehabilitation and resettlement involved' : null,
-              ].filter(Boolean).join(' · ')),
+                project.forest
+                  ? `It involves forest land recorded as ${nf.format(project.forest)}, again with no unit given.`
+                  : null,
+                project.displaced ? `${nf.format(project.displaced)} families will be displaced.` : null,
+                project.affected ? `${nf.format(project.affected)} families will be affected.` : null,
+                project.rnr === 'YES' ? 'The project involves rehabilitation and resettlement.' : null,
+              ].filter(Boolean).join(' ')),
             React.createElement(Text, { style: s.defn },
-              "The proponent's own figures from their filing, not an independent assessment."))
+              "These figures come from the applicant's own filing, and we have not checked them against any other record."))
         : null,
 
       // other clearances and the land - the same lines the screen shows
-      React.createElement(Text, { style: s.h2 }, 'Other clearances, and the land'),
+      React.createElement(Text, { style: s.h2 }, 'Other clearances and land tenure'),
       ...(() => {
         const links = F('lk') >= 0 ? ((row[F('lk')] as ObligationSubject['links']) ?? null) : null;
         const fr = forestRecord({ links } as never);
@@ -390,7 +389,7 @@ export async function POST(req: NextRequest) {
           `${l.label}: ${l.text}${l.note ? ' ' + l.note : ''}`));
       })(),
       React.createElement(Text, { style: s.defn },
-        "As declared on the application form, not an independent finding."),
+        "This section reports the application form's own declarations."),
 
       // consent screening
       //
@@ -402,50 +401,54 @@ export async function POST(req: NextRequest) {
       // C.O. 192 and the PDF of the same profile said its status was not
       // determined. A document that contradicts the screen it was exported from
       // is worse than one that says nothing.
-      React.createElement(Text, { style: s.h2 }, 'Consent screening'),
+      React.createElement(Text, { style: s.h2 }, 'Scheduled Area status'),
       React.createElement(Text, { style: s.body },
         determination
           ? determination.status === 'within'
-            ? 'Within a Fifth Schedule Scheduled Area.'
+            ? 'The district lies within a Fifth Schedule Scheduled Area.'
             : determination.status === 'partial'
-            ? 'Partly within a Fifth Schedule Scheduled Area.'
+            ? 'Part of the district lies within a Fifth Schedule Scheduled Area.'
             : determination.status === 'outside'
-            ? 'Not within a Fifth Schedule Scheduled Area.'
-            : 'Scheduled Area status not determined.'
-          : 'Scheduled Area status not determined.'),
+            ? 'The district is not in a Fifth Schedule Scheduled Area.'
+            : 'Whether the district is in a Scheduled Area has not been determined.'
+          : 'Whether the district is in a Scheduled Area has not been determined.'),
       determination?.note
         ? React.createElement(Text, { style: s.small }, determination.note)
         : null,
       determination?.instrument
         ? React.createElement(Text, { style: s.defn },
-            `Instrument: ${determination.instrument}` +
+            `Legal source: ${determination.instrument}` +
             (determination.provision ? ` · ${determination.provision}` : '') +
             (determination.citation ? ` · ${determination.citation}` : ''))
         : null,
       React.createElement(Text, { style: s.small },
-        'Scheduled Area status is a legal determination made by Presidential Order under paragraph 6 ' +
-        'of the Fifth Schedule. There is no machine-readable authoritative list, so each determination ' +
-        'above rests on a Presidential Order, or on the absence of one. Where an Order names the ' +
-        'place, it is read from the Order and cited to it. Where no Order reaches the State, the ' +
-        'determination rests on that absence, cited to the Ministry of Tribal Affairs index of ' +
-        'Orders in force; and in Assam, Meghalaya, Tripura and Mizoram it rests on Article 244(1), ' +
-        'which applies the Fifth Schedule everywhere except those four States. It is never ' +
-        'inferred from the tribal population share; the two do not coincide.' +
+        'Scheduled Areas are declared by Presidential Order under paragraph 6 of the Fifth Schedule, ' +
+        'and no official list of them exists in a form a program can read, so we determined each ' +
+        'status from the Orders themselves. Where an Order names the place, the status is read from ' +
+        'that Order and cited to it. Where no Order covers the State, the status follows from that ' +
+        'absence, cited to the Ministry of Tribal Affairs index of Orders in force. Assam, Meghalaya, ' +
+        'Tripura and Mizoram are treated separately because Article 244(1) applies the Fifth Schedule ' +
+        'to the Scheduled Areas of every other State, while Article 244(2) applies the Sixth Schedule ' +
+        'to the tribal areas of those four. The Scheduled Tribe share of the population plays no part ' +
+        'in the determination, because many districts with a large tribal population lie outside ' +
+        'every Scheduled Area.' +
         (determination?.status === 'partial'
-          ? ' A partial determination means the Order schedules only part of this district, so whether ' +
-            'a particular site falls inside it cannot be settled from the district alone.'
+          ? ' A partial determination means the Order schedules only part of this district. Where ' +
+            'the filing places the project in a sub-district the Order names in whole, the legal ' +
+            'duties at the end of this document treat the site as inside the Scheduled Area; ' +
+            'otherwise the district record alone cannot say whether the site falls inside it.'
           : '')),
 
       React.createElement(Text, { style: s.footer },
-        `Generated ${generated} from Whitespace India Instrument 01. ` +
+        `Generated ${generated} by Whitespace India, People & Consent. ` +
         (registerReadAt
-          ? `The clearance register was last read ${registerReadAt}; figures ` +
-            `derived from it are current as of that date, not as of the date ` +
-            `above. `
-          : `The date the clearance register was last read is not recorded in ` +
-            `this build, so register-derived figures cannot be dated. `) +
-        `Socio-economic figures are Census 2011, the most recent complete sub-district enumeration of India. ` +
-        `No part of this document was generated by a language model.`)
+          ? `We last read the clearance register on ${registerReadAt}, and ` +
+            `figures drawn from it are current to that date. `
+          : `The date we last read the clearance register is unknown for ` +
+            `this copy, so figures drawn from it cannot be dated. `) +
+        `Population and work figures come from Census 2011, the most recent census published ` +
+        `at sub-district level, and household circumstances from the Socio Economic and Caste ` +
+        `Census 2011.`)
     ),
 
     // fact pages
@@ -469,21 +472,21 @@ export async function POST(req: NextRequest) {
             React.createElement(View, { style: s.ruleThin })
           )),
         React.createElement(Text, { style: s.footer },
-          `Generated ${generated} · Whitespace India Instrument 01 · every figure carries its source and vintage`)
+          `Generated ${generated} · Whitespace India, People & Consent · each figure is listed with its source and the year of its data`)
       )),
 
     // obligations
     legal ? React.createElement(
       Page,
       { size: 'A4', style: s.page },
-      React.createElement(Text, { style: s.eyebrow }, 'OBLIGATIONS THAT ATTACH'),
+      React.createElement(Text, { style: s.eyebrow }, 'LEGAL DUTIES AND WHETHER THEY APPLY'),
       React.createElement(View, { style: s.rule }),
       React.createElement(Text, { style: s.small },
-        'Hand-curated and cited to a provision. None of it is generated, and none of it is inferred ' +
-        'from the population data. Whether each one applies is decided from what this ' +
-        "proposal's own filing establishes, together with the Scheduled Area determination for " +
-        'every district it names. ' +
-        `Reference last reviewed ${legal.last_reviewed}.`),
+        'We compiled each entry by hand from the text of the law or standard and cite the provision ' +
+        "it rests on. Whether each one applies depends on what this proposal's own filing " +
+        'establishes and on the Scheduled Area determination for every district it names; the ' +
+        'population figures play no part in it. ' +
+        `We last reviewed the list on ${legal.last_reviewed}.`),
       React.createElement(View, { style: s.ruleThin }),
       // THE VERDICT, which this document used to omit entirely.
       //
@@ -501,9 +504,9 @@ export async function POST(req: NextRequest) {
           React.createElement(
             View, { key: i, wrap: false, style: { marginBottom: 8 } },
             React.createElement(Text, { style: { ...s.value, fontSize: 8.5 } },
-              `${o.instrument} — ${o.provision}`),
+              `${o.instrument}, ${o.provision}`),
             React.createElement(Text, { style: s.body }, o.requirement),
-            React.createElement(Text, { style: s.defn }, `Triggered by: ${o.trigger}`),
+            React.createElement(Text, { style: s.defn }, `Applies when: ${o.trigger}`),
             o.note ? React.createElement(Text, { style: s.defn }, `Note: ${o.note}`) : null,
             React.createElement(Text, { style: { ...s.value, fontSize: 8 } },
               o.applies === 'yes' ? 'APPLIES'
@@ -511,11 +514,11 @@ export async function POST(req: NextRequest) {
                 : o.applies === 'no' ? 'DOES NOT APPLY'
                 : 'NOT DETERMINED'),
             React.createElement(Text, { style: s.defn },
-              `Reviewed ${o.lastReviewed}${o.verified ? ' · verified against the primary source' : ' · UNVERIFIED'}`),
+              `Reviewed ${o.lastReviewed}${o.verified ? ' · checked against the text of the law or standard' : ' · not yet checked against the text of the law or standard'}`),
             React.createElement(View, { style: s.ruleThin })
           )),
       React.createElement(Text, { style: s.footer },
-        `Generated ${generated} · Whitespace India Instrument 01`)
+        `Generated ${generated} · Whitespace India, People & Consent`)
     ) : null
   );
 

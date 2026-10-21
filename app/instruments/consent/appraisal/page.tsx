@@ -14,9 +14,9 @@ import meta from "@/public/data/instruments/consent/meta.json";
 
 export const metadata = pageMeta({
   path: "/instruments/consent/appraisal",
-  title: "How long clearance takes — People & Consent",
+  title: "How long clearance takes | People & Consent",
   description:
-    "How long India's environmental clearances take, from first filing to decision, by sector, phase and outcome, measured from each proposal's appraisal history.",
+    "How long India's environmental clearance proposals take from first filing to decision, by sector, by phase and by type of decision, measured over the proposals with a dated appraisal history.",
 });
 
 const nf = new Intl.NumberFormat("en-IN");
@@ -25,9 +25,23 @@ const INSTRUMENTS_TRAIL = { name: "Instruments", path: "/instruments" };
 const CONSENT_TRAIL = { name: "People & Consent", path: "/instruments/consent" };
 
 
-/** The published register total, joined rather than typed. */
+/** The published register total, read from meta.json. */
 const REGISTER_TOTAL = (meta as { counts?: { proposals_published?: number } })
   .counts?.proposals_published ?? 0;
+
+/**
+ * Page wording for the registry's duration definitions, keyed as in
+ * appraisal.json. The registry's own text stays the record; a key missing
+ * here falls back to it.
+ */
+const DEFINITIONS: Record<string, string> = {
+  "appraisal.days_to_decision":
+    "The calendar days between the first recorded step on a proposal and the step at which the authority granted or refused what was applied for, minus any days the portal had the proposal automatically delisted. Terms of Reference and environmental clearance are decided on different timescales, so each is reported separately.",
+  "appraisal.days_pending":
+    "The calendar days between the first recorded step on a proposal and the date the register was last read, minus any days the proposal spent automatically delisted, which puts it on the same basis as the time to decision. It is counted only for proposals still open, since a proposal that was withdrawn, returned or delisted stopped its clock when it closed.",
+  "appraisal.days_suspended":
+    "The days during which the portal had automatically delisted a proposal that was later revived. Nothing is pending with the authority in that interval, so it is excluded from the time to decision.",
+};
 
 interface Group {
   n: number;
@@ -84,6 +98,8 @@ export default function AppraisalPage() {
           ? "Terms of Reference"
           : label === "form9"
           ? "Form 9"
+          : label === "unspecified"
+          ? "Decision type not recorded"
           : label,
       d: d as Distribution,
     }))
@@ -126,18 +142,20 @@ export default function AppraisalPage() {
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-8">
               <p className="md:col-span-7 font-body text-[15px] leading-relaxed opacity-80">
-                Measured from the first step in the proposal&rsquo;s own
-                appraisal history to the step at which the authority granted or
-                refused what was applied for. Not from the register&rsquo;s
-                submission date, which moves forward when a proposal is
-                re-submitted and disagrees with the history for a third of the
-                register.
+                Each duration runs from the first step in a proposal&rsquo;s
+                appraisal history, the dated record of steps the portal keeps
+                for it, to the step at which the authority granted or refused
+                what was applied for. The register also gives a submission
+                date, but that date moves forward whenever a proposal is
+                submitted again, and it differs from the first step in the
+                history for a third of the register.
               </p>
               <p className="md:col-span-5 font-body text-[13.5px] leading-relaxed opacity-70">
-                Days on which the portal had a proposal delisted are subtracted:
-                nothing is pending with the authority during them. Across the
-                register that is{" "}
-                {nf.format(a.coverage.suspended.days_excluded)} days, over{" "}
+                The portal sometimes delists a proposal automatically and later
+                revives it. Nothing is pending with the authority while a
+                proposal is delisted, so those days are subtracted from its
+                duration. They come to{" "}
+                {nf.format(a.coverage.suspended.days_excluded)} days across{" "}
                 {nf.format(a.coverage.suspended.proposals)} proposals.
               </p>
             </div>
@@ -156,11 +174,11 @@ export default function AppraisalPage() {
                 value={nf.format(ec.n)}
               />
               <Stat
-                label="Median days, environmental clearance"
+                label="Median days to environmental clearance"
                 value={String(ec.median)}
               />
               <Stat
-                label="Middle half, environmental clearance"
+                label="Middle half of environmental clearances"
                 value={`${ec.p25}–${ec.p75} days`}
               />
               <Stat
@@ -174,16 +192,16 @@ export default function AppraisalPage() {
             <p className="font-body text-[13px] leading-relaxed opacity-65 mt-6 max-w-3xl">
               These figures cover the{" "}
               {nf.format(a.coverage.proposals_summarised)} proposals for which
-              this instrument holds a dated appraisal history &mdash;{" "}
+              this instrument holds a dated appraisal history, which is{" "}
               {((a.coverage.proposals_summarised / REGISTER_TOTAL) * 100).toFixed(0)}%
               of the register. Of those, {nf.format(a.coverage.with_duration)}{" "}
-              have been decided, {nf.format(a.coverage.pending)} are still
-              open, and {nf.format(a.coverage.closed_without_decision ?? 0)}{" "}
-              closed without a decision &mdash; returned in their present form,
-              withdrawn, or pulled back by the proponent &mdash; so they have
-              no duration to a decision and are not waiting for one. Proposals
-              without a dated history are not counted here, and they are
-              overwhelmingly older filings.
+              have been decided and {nf.format(a.coverage.pending)} are still
+              open. Another {nf.format(a.coverage.closed_without_decision ?? 0)}{" "}
+              closed without a decision, because they were returned, withdrawn
+              or pulled back by the proponent, so they have no time to decision
+              and are no longer waiting for one. The proposals without a dated
+              history are left out of these figures, and almost all of them
+              are among the register&rsquo;s earliest filings.
             </p>
           </div>
         </section>
@@ -194,10 +212,11 @@ export default function AppraisalPage() {
               By what was decided
             </h2>
             <p className="font-body text-[13.5px] leading-relaxed opacity-70 max-w-3xl mb-6">
-              A Terms of Reference decision and an environmental clearance are
-              different questions with different work behind them, and blending
-              them produces a figure that describes neither. They are kept
-              apart.
+              Terms of Reference (ToR) are set early in an appraisal and fix
+              the scope of the environmental impact study a project must carry
+              out, while an environmental clearance is the final decision on
+              the project. The two involve different work and take different
+              lengths of time, so each is measured separately.
             </p>
             <DurationDistribution
               rows={byDecision}
@@ -213,7 +232,8 @@ export default function AppraisalPage() {
               By sector
             </h2>
             <p className="font-body text-[13.5px] leading-relaxed opacity-70 max-w-3xl mb-6">
-              Environmental clearance only, so the comparison is like for like.
+              Only environmental clearance decisions are counted here, so every
+              sector is measured on the same kind of decision.
             </p>
             <DurationDistribution
               rows={bySector}
@@ -229,10 +249,15 @@ export default function AppraisalPage() {
               By phase
             </h2>
             <p className="font-body text-[13.5px] leading-relaxed opacity-70 max-w-3xl mb-6">
-              {a.byPhase.note} {nf.format(a.byPhase.overlapping_proposals)} of{" "}
-              {nf.format(a.byPhase.of_decided)} decided proposals have at least
-              two phases running at once, so reading these as consecutive
-              stages of one timeline would overstate the total.
+              {/* Written here in place of a.byPhase.note, which the build
+                  writes; the fact is the same. */}
+              The portal can run several steps of an appraisal at the same
+              time, so a proposal&rsquo;s phases can overlap and their lengths
+              add up to more than its total time.{" "}
+              {nf.format(a.byPhase.overlapping_proposals)} of the{" "}
+              {nf.format(a.byPhase.of_decided)} decided proposals had at least
+              two phases running at once, and each phase is best read as a
+              separate measure.
             </p>
             <DurationDistribution
               rows={byPhase}
@@ -241,29 +266,29 @@ export default function AppraisalPage() {
             />
 
             <div className="mt-10 pt-6 border-t border-[#1c1c19]/20 max-w-3xl space-y-3">
-              {Object.values(a.registry)
-                .filter((r) => r.unit === "days")
+              {Object.entries(a.registry)
+                .filter(([, r]) => r.unit === "days")
                 .slice(0, 3)
-                .map((r) => (
+                .map(([key, r]) => (
                   <p
-                    key={r.label}
+                    key={key}
                     className="font-body text-[13px] leading-relaxed opacity-70"
                   >
                     <span className="font-label text-[10px] uppercase tracking-[0.16em] opacity-70 mr-2">
                       {r.label}
                     </span>
-                    {r.definition}
+                    {DEFINITIONS[key] ?? r.definition}
                   </p>
                 ))}
               <p className="font-body text-[13px] leading-relaxed opacity-70">
-                No distribution is published for a group below {a.minGroup}{" "}
-                decided proposals.{" "}
+                A distribution is published only for a group of at least{" "}
+                {a.minGroup} decided proposals. The methodology describes{" "}
                 <Link
-                  href="/instruments/consent/methodology"
+                  href="/instruments/consent/methodology#time-to-decision"
                   className="underline underline-offset-2"
                   style={{ color: PLUM }}
                 >
-                  How this is measured
+                  how durations are measured
                 </Link>
               </p>
             </div>

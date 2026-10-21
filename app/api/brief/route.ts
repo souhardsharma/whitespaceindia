@@ -5,33 +5,39 @@ import { Document, Page, Text, View, StyleSheet, renderToBuffer, Link, Image, Fo
 
 export const maxDuration = 60;
 
-const SYSTEM_PROMPT = `You are a senior research analyst at a philanthropic advisory firm in India. You write district investment briefs used by foundation program officers and CSR heads. Your writing is direct, data-anchored, and clear.
+const SYSTEM_PROMPT = `You write short research briefs on Indian districts for Whitespace India, an independent project that sets the corporate social responsibility (CSR) spending companies report against district poverty. The readers are researchers, journalists, CSR and foundation staff, and public officials. Write as a careful researcher explaining figures to an intelligent colleague: plainly, exactly and calmly.
 
-RULES:
-- Never use: leverage, utilize, robust, seamless, innovative, transformative, pivotal, synergy, foster, harness, catalyze, optimize, democratize, holistic, impactful, actionable, delve, embark, unleash
-- No em-dashes. Use hyphens with spaces ( - ) instead
-- No AI/automation references
-- Vary sentence length
-- Every claim cites a specific number, place, or year
-- No bullet points. Pure prose paragraphs
-- No generic phrases like "In an era where" or "In conclusion"
+FACTS:
+- Use only the figures in the data block. Add no other fact, number, place, scheme, programme, company, CSR sector or event, and do not guess at causes.
+- The data block says nothing about which sectors or companies fund the district, about the intensity of poverty, or about any indicator it does not list. If a point would need such information, leave the point out.
+- Give every number with the period and unit the data block gives it. CSR figures cover FY2021-24; population is from Census 2011; poverty figures are NITI Aayog's for 2019-21 and 2015-16.
+- Describe and compare. Do not recommend where money should go, and do not call the district neglected, deserving or a priority.
 
-FORMAT - write exactly this structure, with these headings in bold:
+STYLE:
+- Never use a dash as punctuation: no em dash, no en dash, and no hyphen with spaces around it. Use a comma, a full stop, brackets or a conjunction. Hyphens inside words and in year ranges such as 2019-21 are fine.
+- Never use these words: leverage, utilize, robust, seamless, innovative, transformative, pivotal, synergy, foster, harness, catalyze, optimize, democratize, holistic, impactful, actionable, delve, embark, unleash, crucial, insights, navigate, landscape, unlock, empower, stark, staggering, underscore, surface (as a verb).
+- State each claim directly. Avoid contrasts of the form "not X but Y", "it is not X, it is Y" and "rather than".
+- Do not group adjectives, phrases or sentences in threes for rhythm.
+- No rhetorical questions, slogans, closing one-liners or sentence fragments.
+- No bullet points or lists. Write full paragraphs, vary sentence length, and join sentences with ordinary connectives such as because, so, but and which means.
+- Do not mention artificial intelligence, language models or automation.
 
-**Why This District Matters**
-[1 paragraph: the specific case for philanthropic attention right now]
+FORMAT: write exactly five sections in this order. Put each heading alone on its own line, in bold, exactly as written below, and follow it with one paragraph of three to five sentences.
 
-**Poverty Profile**
-[1 paragraph: specific MPI headcount, intensity, change from baseline, what it means on the ground]
+**Summary**
+[the district's score, and how its poverty and its CSR spending per person compare with the benchmarks in the data block]
 
-**CSR Funding Gap**
-[1 paragraph: how much CSR the district receives per person vs. its population-tier median, what sectors are funded or absent]
+**Poverty**
+[the 2019-21 headcount ratio and MPI score, and the change since 2015-16 if the data block gives a baseline; if it does not, say that no baseline is available]
 
-**Where the Opportunity Lies**
-[1 paragraph: specific gaps and opportunities based on the data]
+**CSR spending**
+[CSR received over FY2021-24, the amount per person, and how it compares with the median for districts in the same population tier]
 
-**One Honest Limitation**
-[1 paragraph: a genuine constraint on this analysis - be specific, not generic]`;
+**What the figures indicate**
+[what this combination of figures says about the district, kept strictly within the data block]
+
+**Limits of this brief**
+[the limits that matter most for these particular figures, chosen from these facts: CSR filed as national or without a district is not counted, so district totals are a lower bound; population is from Census 2011; the poverty figures are for 2019-21; the score depends on the weights the reader chose]`;
 
 const SAFE_NAME_PATTERN = /[^a-zA-Zऀ-ॿঀ-৿਀-੿઀-૿଀-୿஀-௿ఀ-౿ಀ-೿ഀ-ൿ\s.\-()]/g;
 const SAFE_FILENAME = /[^A-Za-z0-9._-]+/g;
@@ -255,16 +261,16 @@ DATA FOR ${d.district_name.toUpperCase()} DISTRICT, ${d.state_name.toUpperCase()
 - MPI Score (2019-21): ${d.mpi_2021}
 - Headcount Ratio baseline (2015-16): ${d.headcount_ratio_2016 ? (d.headcount_ratio_2016 * 100).toFixed(1) + '%' : 'not available'}
 - Change from baseline: ${povChange} percentage points
-- Poverty retention ratio: ${retentionRatio} (1.0 = no improvement, >1.0 = worsening)
+- Poverty retention ratio (2019-21 headcount divided by 2015-16 headcount): ${retentionRatio} (1.0 means no fall, above 1.0 means a rise)
 - Total population (Census 2011${d.population_imputed && d.population_source ? `, ${d.population_source.replace(/_/g, ' ')}` : ''}): ${d.total_population ? Number(d.total_population).toLocaleString('en-IN') : 'not available'}${d.population_imputed && d.population_parent_districts ? ` (district carved from ${d.population_parent_districts} after Census 2011; recast to current boundary)` : ''}
 - Population tier: ${d.pop_tier || 'N/A'}
 - CSR received FY2021-24: INR ${Number(d.total_csr_recent).toFixed(2)} crore
-- CSR per person: INR ${Math.round(d.district_csr_per_person)}
-- Tier median CSR per person: INR ${Math.round(tierMedian)}
-- Shortfall vs tier median: INR ${Math.max(0, Math.round(tierMedian) - Math.round(d.district_csr_per_person))} per person
-- Philanthropic Opportunity Score: ${Math.round(d.computed_pos)}/100`;
+- CSR per person (CSR received FY2021-24 divided by Census 2011 population): INR ${Math.round(d.district_csr_per_person)}
+- Median CSR per person for districts in the same population tier: INR ${Math.round(tierMedian)}
+- Shortfall against that median: INR ${Math.max(0, Math.round(tierMedian) - Math.round(d.district_csr_per_person))} per person
+- Philanthropic Opportunity Score: ${Math.round(d.computed_pos)} out of 100 (a higher score means more poverty relative to recorded CSR spending; it reflects the weights and sector the reader chose)`;
 
-  return `Write a research brief for the following district. Use all data provided. Follow the required format with 5 bold-headed sections.\n\n${dataBlock}`;
+  return `Write the research brief for this district from the data below, in the five-section format.\n\n${dataBlock}`;
 }
 
 function buildDocument(d: BriefInput, briefText: string) {
@@ -328,7 +334,7 @@ function buildDocument(d: BriefInput, briefText: string) {
           { style: styles.card },
           ce(Text, { style: styles.cardLabel }, 'MPI HEADCOUNT RATIO'),
           ce(Text, { style: styles.cardValue }, mpiPct),
-          ce(Text, { style: styles.cardSubValue }, '2019 - 21  ·  NFHS-5')
+          ce(Text, { style: styles.cardSubValue }, '2019-21  ·  NFHS-5')
         ),
         ce(View, { style: styles.cardGap }),
         ce(
@@ -336,20 +342,20 @@ function buildDocument(d: BriefInput, briefText: string) {
           { style: styles.card },
           ce(Text, { style: styles.cardLabel }, 'CSR PER PERSON'),
           ce(Text, { style: styles.cardValue }, csrPerPerson),
-          ce(Text, { style: styles.cardSubValue }, 'FY 2021 - 24  ·  MCA data')
+          ce(Text, { style: styles.cardSubValue }, 'FY2021-24  ·  MCA data')
         ),
         ce(View, { style: styles.cardGap }),
         ce(
           View,
           { style: styles.card },
-          ce(Text, { style: styles.cardLabel }, 'TIER MEDIAN'),
+          ce(Text, { style: styles.cardLabel }, 'MEDIAN, SIMILAR DISTRICTS'),
           ce(Text, { style: styles.cardValue }, tierMedian),
-          ce(Text, { style: styles.cardSubValue }, 'CSR per person  ·  population tier')
+          ce(Text, { style: styles.cardSubValue }, 'CSR per person, same population tier')
         )
       ),
 
       ce(Image, {
-        src: `https://quickchart.io/chart?c={type:'bar',data:{labels:['District CSR','Tier Median'],datasets:[{label:'INR per person',backgroundColor:['%23BD402C','%231c1c19'],data:[${Math.round(d.district_csr_per_person)},${Math.round(d.tier_median_csr)}]}]}}`,
+        src: `https://quickchart.io/chart?c={type:'bar',data:{labels:['District','Median of similar districts'],datasets:[{label:'INR per person',backgroundColor:['%23BD402C','%231c1c19'],data:[${Math.round(d.district_csr_per_person)},${Math.round(d.tier_median_csr)}]}]}}`,
         style: { width: '100%', height: 180, marginTop: 10, marginBottom: 24, borderRadius: 0 }
       }),
 
@@ -392,15 +398,16 @@ function buildDocument(d: BriefInput, briefText: string) {
         ce(
           Text,
           { style: styles.footerSources },
-          'Brief text generated using Google Gemini 2.5 Flash API. All underlying data from the public sources listed above.'
+          'The text of this brief was written by Google Gemini 2.5 Flash, a language model, from the figures above. It should be checked against those figures, which come from the sources listed, before it is quoted.'
         ),
         ce(
           Text,
           { style: styles.footerSources },
-          'Prepared by: ',
-          ce(Link, { src: 'https://linkedin.com/in/souhardsharma', style: { color: CLAY, textDecoration: 'none' } }, 'Souhard Sharma (Whitespace India)')
+          'Whitespace India is maintained by ',
+          ce(Link, { src: 'https://linkedin.com/in/souhardsharma', style: { color: CLAY, textDecoration: 'none' } }, 'Souhard Sharma'),
+          '.'
         ),
-        ce(Text, { style: styles.footerDate }, 'Generated ' + generationDate + '  ·  Whitespace India CSR')
+        ce(Text, { style: styles.footerDate }, 'Generated on ' + generationDate + ' from the CSR Opportunity Index')
       )
     )
   );
@@ -483,6 +490,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     console.error('brief error:', msg);
-    return new Response('Please try after some time.', { status: 500 });
+    return new Response('The brief could not be prepared. Please try again in a minute.', { status: 500 });
   }
 }

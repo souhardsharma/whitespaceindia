@@ -103,13 +103,13 @@ function TrendChart({
     return (
       <div className="border border-[#1c1c19] bg-[#f6f3ee] p-5">
         <p className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19] font-bold mb-2">
-          Poverty Trend
+          Poverty, 2015-16 to 2019-21
         </p>
         <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mb-3">
-          {districtName} · MPI Headcount
+          {districtName} · share poor
         </p>
         <p className="font-body text-sm text-[#1c1c19]/70 italic leading-relaxed">
-          2015-16 baseline unavailable for this district — U dimension uses the national median retention ratio as a conservative imputation.
+          There is no 2015-16 poverty figure for this district, so its persistence score uses the median for all districts that have one.
         </p>
       </div>
     );
@@ -123,14 +123,14 @@ function TrendChart({
     <div className="border border-[#1c1c19] bg-[#f6f3ee] p-5">
       <div className="flex items-center justify-between mb-1">
         <p className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19] font-bold">
-          Poverty Trend
+          Poverty, 2015-16 to 2019-21
         </p>
         <span className="font-label text-[9px] uppercase tracking-widest" style={{ color: accent }}>
-          {improved ? "Improving" : "Worsening"}
+          {improved ? "Fell" : "Did not fall"}
         </span>
       </div>
       <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mb-4">
-        {districtName} · MPI Headcount
+        {districtName} · share poor
       </p>
       <ResponsiveContainer width="100%" height={100}>
         <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: -10 }}>
@@ -152,7 +152,7 @@ function TrendChart({
             contentStyle={CHART_TOOLTIP_STYLE}
             itemStyle={{ color: "#fcf9f4" }}
             labelStyle={{ color: "#fcf9f4", fontWeight: 600, paddingBottom: 4 }}
-            formatter={(value) => [`${value}%`, "Headcount"]}
+            formatter={(value) => [`${value}%`, "Share poor"]}
           />
           <Line
             type="monotone"
@@ -168,12 +168,8 @@ function TrendChart({
 }
 
 const PROGRESS_MESSAGES = [
-  "Analysing district data",
-  "Preparing poverty profile",
-  "Evaluating CSR funding gaps",
-  "Generating research brief",
-  "Building PDF report",
-  "Finalizing download",
+  "Writing the brief and building the PDF",
+  "Drafting the text from the district's figures",
 ];
 
 export default function BriefModal({ district, onClose, vertical }: Props) {
@@ -303,7 +299,7 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
 
       triggerDownload(blob, filenameFor(district.district_name));
     } catch {
-      setErrorMsg("Please try after some time.");
+      setErrorMsg("The brief could not be prepared. The service may be busy, so trying again in a minute or two may work.");
       setCooldown(15);
     } finally {
       setLoading(false);
@@ -342,10 +338,10 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
             <div className="sticky top-0 z-10 flex items-center justify-between px-6 md:px-8 py-4 border-b border-[#1c1c19] bg-[#f6f3ee]">
               <div className="flex items-center gap-4">
                 <span className="font-label text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: accent }}>
-                  Research Brief
+                  Research brief
                 </span>
                 <span className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60">
-                  District Profile
+                  District profile
                 </span>
               </div>
               <button
@@ -383,7 +379,7 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
                     className="font-label text-xs uppercase tracking-[0.2em] text-white px-4 py-2"
                     style={{ backgroundColor: accent }}
                   >
-                    POS · {district.computed_pos.toFixed(1)}/100
+                    Score · {district.computed_pos.toFixed(1)}/100
                   </motion.span>
                   {district.is_whitespace && (
                     <motion.span
@@ -393,7 +389,7 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
                       className="font-label text-xs uppercase tracking-[0.2em] px-4 py-2"
                       style={{ borderWidth: 1, borderStyle: 'solid', borderColor: accent, color: accent }}
                     >
-                      Neglected
+                      Whitespace
                     </motion.span>
                   )}
                   {district.pop_tier && (
@@ -409,18 +405,28 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
                   {district.population_imputed && (() => {
                     const method = district.population_source || "imputed";
                     const labelByMethod: Record<string, string> = {
-                      gazette_2011_table: "Pop · Gazette 2011",
-                      subdistrict_sum: "Pop · Sub-district sum",
-                      residual_subtraction: "Pop · Residual",
-                      areal_allocation: "Pop · Areal estimate",
-                      census_exact_rename: "Pop · Renamed",
+                      gazette_2011_table: "Population · published 2011 figure",
+                      subdistrict_sum: "Population · sum of sub-districts",
+                      residual_subtraction: "Population · parent less new districts",
+                      areal_allocation: "Population · estimated by area",
+                      census_exact_rename: "Population · Census, former name",
                     };
-                    const pillLabel = labelByMethod[method] || "Pop · Imputed";
+                    const howByMethod: Record<string, string> = {
+                      gazette_2011_table: "Its 2011 population is the figure published for the new district.",
+                      subdistrict_sum: "Its 2011 population is the sum of its Census 2011 sub-districts.",
+                      residual_subtraction: "Its 2011 population is the Census figure for the old district less the districts later created from it.",
+                      areal_allocation: "Its 2011 population is estimated from its share of the parent district's area.",
+                      census_exact_rename: "Its population is the Census 2011 figure for the district under its former name.",
+                    };
+                    const pillLabel = labelByMethod[method] || "Population · estimated";
                     const parents = district.population_parent_districts;
                     const cite = district.population_citation;
-                    const tooltip = parents
-                      ? `Carved from ${parents} after Census 2011. Population (${method.replace(/_/g, " ")}) sourced from: ${cite || "primary 2011 source"}.`
-                      : `Population (${method.replace(/_/g, " ")}) sourced from: ${cite || "primary 2011 source"}.`;
+                    const how = howByMethod[method] || "Its 2011 population is estimated.";
+                    const tooltip = [
+                      parents ? `Created from ${parents} after Census 2011.` : "",
+                      how,
+                      cite ? `Source: ${cite}` : "",
+                    ].filter(Boolean).join(" ");
                     const pillNode = (
                       <motion.span
                         initial={{ opacity: 0, x: -6 }}
@@ -451,15 +457,15 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
                 {[
                   {
                     value: (district.headcount_ratio_2021 * 100).toFixed(1) + "%",
-                    label: "MPI Poverty Rate",
+                    label: "Share poor, 2019-21",
                   },
                   {
                     value: formatCurrency(district.district_csr_per_person),
-                    label: "CSR Per Person",
+                    label: "CSR per person, FY2021-24",
                   },
                   {
                     value: formatCurrency(district.tier_median_csr),
-                    label: "Tier Median",
+                    label: "Median, similar districts",
                   },
                 ].map((metric, i) => (
                   <motion.div
@@ -489,7 +495,7 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
                 className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6"
               >
                 <MiniBarChart
-                  label="MPI Poverty Rate · %"
+                  label="Share poor · %"
                   unit="%"
                   data={[
                     {
@@ -508,7 +514,7 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
                   ]}
                 />
                 <MiniBarChart
-                  label="CSR Per Person · ₹"
+                  label="CSR per person · ₹"
                   unit=""
                   data={[
                     {
@@ -523,7 +529,7 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
                           : "#1c1c19",
                     },
                     {
-                      name: "Tier Med.",
+                      name: "Median",
                       value: Math.round(district.tier_median_csr),
                       color: accentDeep,
                     },
@@ -553,7 +559,7 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
                   className="border-t border-[#1c1c19] pt-6"
                 >
                   <p className="font-body text-sm text-[#1c1c19]/70 italic leading-relaxed mb-5">
-                    Briefs use this district&apos;s data from NITI Aayog (MPI 2023), Ministry of Corporate Affairs (CSR data), and Census of India 2011. Narrative text is AI-generated and should be independently verified.
+                    The brief&apos;s text is written by a language model from this district&apos;s figures, so it should be checked against them before it is quoted. The figures come from NITI Aayog&apos;s MPI 2023, CSR filings to the Ministry of Corporate Affairs and Census 2011.
                   </p>
                   <button
                     onClick={generateBrief}
@@ -566,8 +572,8 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
                   >
                     <span>
                       {cooldown > 0
-                        ? `Please wait · ${cooldown}s`
-                        : "Generate & Download Brief"}
+                        ? `Available again in ${cooldown}s`
+                        : "Download the brief (PDF)"}
                     </span>
                     <svg
                       width="18"
@@ -701,20 +707,20 @@ export default function BriefModal({ district, onClose, vertical }: Props) {
                       </svg>
                     </div>
                     <span className="font-label text-[10px] uppercase tracking-[0.3em] block mb-3" style={{ color: accent }}>
-                      Download Complete
+                      Brief ready
                     </span>
                     <h3 className="font-headline text-2xl md:text-3xl headline-tight text-[#1c1c19] mb-3">
-                      Brief <span className="italic font-light">ready.</span>
+                      Brief <span className="italic font-light">downloaded</span>
                     </h3>
                     <p className="font-body text-sm text-[#1c1c19]/70 mb-6 italic">
-                      Your PDF research brief has automatically downloaded.
+                      The PDF should now be in your downloads. If your browser blocked it, the button below downloads it again.
                     </p>
 
                     <button
                       onClick={() => pdfBlob && triggerDownload(pdfBlob, filenameFor(district.district_name))}
                       className="group w-full border border-[#1c1c19] text-[#1c1c19] font-label uppercase tracking-[0.25em] text-[11px] py-4 px-6 flex justify-between items-center gap-6 hover:bg-[#1c1c19] hover:text-[#fcf9f4] transition-colors"
                     >
-                      <span>Download PDF Again</span>
+                      <span>Download the PDF again</span>
                       <svg
                         width="16"
                         height="16"

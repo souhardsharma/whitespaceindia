@@ -74,51 +74,60 @@ PHASES: dict[str, dict] = {
     "filed": {
         "order": 1,
         "label": "Filed",
-        "definition": "Lodged with the authority and not yet taken up.",
+        "definition": "The proposal has been lodged with the authority that "
+                      "will decide it and has not yet been taken up.",
     },
     "verification": {
         "order": 2,
         "label": "In verification",
-        "definition": "With the authority's secretariat for completeness and "
-                      "eligibility checks before appraisal.",
+        "definition": "The authority's secretariat is checking the proposal "
+                      "for completeness and eligibility before appraisal.",
     },
     "administrative": {
         "order": 3,
-        "label": "Administrative",
-        "definition": "Fee demands, payments and pollution control board "
-                      "comments - steps a proposal must clear that decide "
-                      "nothing about it.",
+        "label": "Administrative steps",
+        "definition": "The proposal is going through procedural steps, such as "
+                      "fee demands and payments or comments from the "
+                      "pollution control board, before appraisal continues.",
     },
     "query": {
         "order": 4,
         "label": "Under query",
-        "definition": "The authority has raised written questions - Essential "
-                      "or Additional Details Sought - and the proposal waits on "
-                      "the proponent's reply.",
+        "definition": "The authority has asked the applicant in writing for "
+                      "essential or additional details, and the proposal waits "
+                      "on the reply.",
     },
     "appraisal": {
         "order": 5,
         "label": "In appraisal",
-        "definition": "Before an expert appraisal committee or the authority "
-                      "that acts on its recommendation.",
+        "definition": "The proposal is before an expert appraisal committee, "
+                      "or before the authority that decides on the "
+                      "committee's recommendation.",
     },
     "decided": {
         "order": 6,
         "label": "Decided",
-        "definition": "The authority has granted or refused the clearance or "
-                      "the terms of reference applied for.",
+        "definition": "The authority has issued a decision on the application, "
+                      "granting or refusing either the environmental clearance "
+                      "or the Terms of Reference that come before it. A grant "
+                      "of Terms of Reference settles only the scope of the "
+                      "impact assessment, and the clearance itself is still to "
+                      "be decided.",
     },
     "closed": {
         "order": 7,
         "label": "Closed without decision",
-        "definition": "Withdrawn by the proponent, returned by the authority, "
-                      "or removed from the register.",
+        "definition": "The proposal left the process without a decision on "
+                      "its merits, for example when the applicant withdrew it "
+                      "or the authority returned it. A proposal the portal "
+                      "delisted automatically can later be restored.",
     },
     "other": {
         "order": 8,
         "label": "Other",
-        "definition": "A recorded position that does not fall in the ordinary "
-                      "passage from filing to decision.",
+        "definition": "The proposal is at a recorded position outside the "
+                      "usual sequence from filing to decision, such as a "
+                      "transfer between authorities.",
     },
 }
 
@@ -147,11 +156,13 @@ STATUSES: dict[str, dict] = {
     # Decided
     "ec_granted": _s(
         "Environmental clearance granted", "decided",
-        "Prior environmental clearance has been granted for the project.",
+        "The project has been granted environmental clearance, which it needs "
+        "before construction or operation can begin.",
         outcome="granted", terminal=True, decision="ec"),
     "ec_rejected": _s(
         "Environmental clearance refused", "decided",
-        "The application for prior environmental clearance was refused.",
+        "The application for environmental clearance, which the project needs "
+        "before work can begin, was refused.",
         outcome="rejected", terminal=True, decision="ec"),
     "tor_granted": _s(
         "Terms of Reference granted", "decided",
@@ -169,8 +180,9 @@ STATUSES: dict[str, dict] = {
         outcome="rejected", terminal=True, decision="tor"),
     "granted": _s(
         "Granted", "decided",
-        "The source records that the application was granted without naming "
-        "the instrument granted.",
+        "The register records the application as granted but does not say "
+        "whether the grant was of environmental clearance or of Terms of "
+        "Reference.",
         outcome="granted", terminal=True, decision="unspecified"),
     "form9_approved": _s(
         "Form 9 approved", "decided",
@@ -188,21 +200,23 @@ STATUSES: dict[str, dict] = {
     # Filed
     "submitted": _s(
         "Submitted", "filed",
-        "Lodged with the authority and awaiting first action.",
+        "The proposal has been lodged with the authority and awaits its first "
+        "action.",
         outcome=None),
     "draft": _s(
         "Draft", "filed",
-        "Begun by the proponent and not yet submitted.",
+        "The applicant has begun the application but not yet submitted it.",
         outcome=None),
     "intimated": _s(
         "Intimated", "filed",
-        "The authority has been notified of the proposal.",
+        "The applicant has notified the authority of the proposal.",
         outcome=None),
 
     # Verification
     "ms_verification": _s(
         "With the member secretary", "verification",
-        "With the member secretary of the appraisal authority for verification.",
+        "The member secretary, the official who runs the appraisal body's "
+        "secretariat, is verifying the application.",
         outcome=None),
     "under_verification": _s(
         "Under verification", "verification",
@@ -211,8 +225,7 @@ STATUSES: dict[str, dict] = {
         outcome=None),
     "under_verification_sceia": _s(
         "Under verification with SCEIA", "verification",
-        "Under verification with the State Coastal Environment Impact "
-        "Assessment authority.",
+        "The application is being verified by the Standing Committee on Environment Impact Appraisal (SCEIA), which appraises proposals while a State Expert Appraisal Committee is not functioning.",
         outcome=None),
     "under_examination": _s(
         "Under examination", "verification",
@@ -220,12 +233,12 @@ STATUSES: dict[str, dict] = {
         outcome=None),
     "under_examination_sceia": _s(
         "Under examination with SCEIA", "verification",
-        "Under examination with the State Coastal Environment Impact "
-        "Assessment authority.",
+        "The application is being examined by the Standing Committee on Environment Impact Appraisal (SCEIA), which appraises proposals while a State Expert Appraisal Committee is not functioning.",
         outcome=None),
     "under_processing": _s(
         "Under processing with the authority", "verification",
-        "With the authority for processing, without a finer position recorded.",
+        "The authority is processing the application, and the register "
+        "records no more precise position.",
         outcome=None),
     "pending_ms_seiaa": _s(
         "Pending with the member secretary, SEIAA", "verification",
@@ -233,37 +246,33 @@ STATUSES: dict[str, dict] = {
         "Impact Assessment Authority.",
         outcome=None),
     "pending_ms_saeia": _s(
-        "Pending with the member secretary (SAEIA)", "verification",
-        "Awaiting action by the member secretary of the authority the register "
-        "records as SAEIA. The source never expands the abbreviation. It "
-        "appears on 18 proposals, all from West Bengal, every one of which "
-        "names SEIAA as its issuing authority - so this may well be the same "
-        "body under a second label. It is recorded as written rather than "
-        "merged into SEIAA, because the record does not establish that, and an "
-        "invented expansion would be a claim about an institution rather than "
-        "about the data.",
+        "Pending with the member secretary, SAEIA", "verification",
+        "Awaiting action by the member secretary of the Standing Authority on "
+        "Environment Impact Assessment (SAEIA), which acts in place of a State "
+        "Environment Impact Assessment Authority that is not functioning. The "
+        "stage appears on 18 proposals, all from West Bengal.",
         outcome=None),
 
     # Query
     "eds_raised": _s(
         "Essential details sought", "query",
-        "The authority has asked the proponent in writing for essential "
-        "details and the proposal waits on the reply.",
+        "The authority has asked the applicant in writing for essential "
+        "details, and the proposal waits on the reply.",
         outcome=None),
     "eds_replied": _s(
         "Essential details supplied", "query",
-        "The proponent has answered the authority's request for essential "
+        "The applicant has answered the authority's request for essential "
         "details.",
         outcome=None),
     "eds_under_examination": _s(
         "Essential details under examination", "query",
-        "The authority is examining the proponent's reply to its request for "
+        "The authority is examining the applicant's reply to its request for "
         "essential details.",
         outcome=None),
     "ads_raised": _s(
         "Additional details sought", "query",
-        "The authority has asked the proponent in writing for additional "
-        "details and the proposal waits on the reply.",
+        "The authority has asked the applicant in writing for additional "
+        "details, and the proposal waits on the reply.",
         outcome=None),
 
     # Appraisal
@@ -282,13 +291,11 @@ STATUSES: dict[str, dict] = {
         outcome=None),
     "referred_to_saeia": _s(
         "Referred to SAEIA", "appraisal",
-        "Sent to the authority the register records as SAEIA. The source never "
-        "expands the abbreviation. First seen in the 24 September 2026 sweep, "
-        "on 131 proposals, all from Andhra Pradesh, every one of which names "
-        "SEIAA as its issuing authority - so this may be the same body under a "
-        "second label, as with the member-secretary stage above. It is recorded "
-        "as written rather than merged into SEIAA, because the record does not "
-        "establish that.",
+        "Sent to the Standing Authority on Environment Impact Assessment "
+        "(SAEIA), which decides proposals while a State Environment Impact "
+        "Assessment Authority is not functioning. It was first seen in the "
+        "register read of 24 September 2026, on 131 proposals, all from Andhra "
+        "Pradesh.",
         outcome=None),
     "accepted_referred_to_eac": _s(
         "Accepted and referred to the Expert Appraisal Committee", "appraisal",
@@ -303,12 +310,12 @@ STATUSES: dict[str, dict] = {
         outcome=None),
     "accepted_referred_to_sceia": _s(
         "Accepted and referred to SCEIA", "appraisal",
-        "Accepted by the authority and sent to the State Coastal Environment "
-        "Impact Assessment authority.",
+        "The authority has accepted the application and sent it to the Standing Committee on Environment Impact Appraisal (SCEIA), which appraises proposals while a State Expert Appraisal Committee is not functioning.",
         outcome=None),
     "mom_pending": _s(
         "Minutes of meeting pending", "appraisal",
-        "The appraisal committee has met and its minutes are not yet issued.",
+        "The minutes of the appraisal committee's meeting are waiting to be "
+        "prepared by its member secretary.",
         outcome=None),
     "mom_published": _s(
         "Minutes of meeting published", "appraisal",
@@ -320,47 +327,50 @@ STATUSES: dict[str, dict] = {
         outcome=None),
     "stage1_fc_awaited": _s(
         "Stage-I forest clearance awaited", "appraisal",
-        "The proposal waits on first-stage clearance under the Forest "
-        "(Conservation) Act before it can proceed.",
+        "The proposal waits on Stage-I forest clearance, the in-principle "
+        "approval to divert forest land under the Forest (Conservation) Act, "
+        "1980, now the Van (Sanrakshan Evam Samvardhan) Adhiniyam.",
         outcome=None),
 
     # Closed
     "withdrawn": _s(
         "Withdrawn", "closed",
-        "Withdrawn by the proponent.",
+        "The applicant has withdrawn the proposal.",
         outcome="withdrawn", terminal=True),
     "pulled_back": _s(
-        "Pulled back by the proponent", "closed",
-        "Taken back by the proponent before decision.",
+        "Pulled back by the applicant", "closed",
+        "The register records that the applicant took the proposal back "
+        "before a decision, using this wording in place of a withdrawal.",
         outcome="withdrawn", terminal=True),
     "withdrawal_request_accepted": _s(
         "Withdrawal accepted", "closed",
-        "The proponent asked to withdraw and the authority agreed.",
+        "The applicant asked to withdraw and the authority agreed.",
         outcome="withdrawn", terminal=True),
     "pending_ms_withdraw": _s(
         "Withdrawal request pending", "closed",
-        "The proponent has asked to withdraw and the authority has not yet "
+        "The applicant has asked to withdraw, and the authority has not yet "
         "acted on the request.",
         outcome=None),
     "returned_in_present_form": _s(
         "Returned in its present form", "closed",
-        "Returned to the proponent by the authority without a decision on the "
-        "merits, to be refiled.",
+        "The authority returned the proposal to the applicant without deciding "
+        "it on its merits, so that it can be filed again.",
         outcome="returned", terminal=True),
     "returned_to_ua": _s(
         "Returned to the user agency", "closed",
-        "Sent back to the applying agency by the authority.",
+        "The authority sent the proposal back to the user agency, the body "
+        "that applied to use the land.",
         outcome="returned", terminal=True),
     "delisted": _s(
         "Delisted", "closed",
-        "Removed from the register by the authority.",
+        "The proposal has been removed from the list of active proposals.",
         outcome="withdrawn", terminal=True),
 
     # Other
     "violation_reported": _s(
         "Violation reported", "other",
-        "Recorded against the proposal as a reported violation of the "
-        "environmental clearance regime.",
+        "The register records a reported violation of the environmental "
+        "clearance rules against this proposal.",
         outcome=None),
     "unrecorded": _s(
         "Not recorded", "other",
@@ -392,7 +402,7 @@ STATUSES: dict[str, dict] = {
         outcome=None),
     "ads_replied": _s(
         "Additional details supplied", "query",
-        "The proponent has answered the authority's request for additional "
+        "The applicant has answered the authority's request for additional "
         "details.",
         outcome=None),
     "processed_by_ms_seiaa": _s(
@@ -411,7 +421,8 @@ STATUSES: dict[str, dict] = {
     "forwarded_to_spcb": _s(
         "Forwarded to the pollution control board", "administrative",
         "The member secretary has sent the proposal to the State Pollution "
-        "Control Board or Pollution Control Committee for its part.",
+        "Control Board or Pollution Control Committee for its comments and "
+        "fee demand.",
         outcome=None),
     "comments_furnished": _s(
         "Pollution control board comments furnished", "administrative",
@@ -432,15 +443,15 @@ STATUSES: dict[str, dict] = {
         outcome=None),
     "payment_furnished": _s(
         "Payment details furnished", "administrative",
-        "The proponent has supplied evidence of payment of the fee.",
+        "The applicant has supplied evidence of payment of the fee.",
         outcome=None),
     "payment_approved": _s(
         "Payment approved", "administrative",
-        "The board has accepted the proponent's payment.",
+        "The board has accepted the applicant's payment.",
         outcome=None),
     "payment_rejected": _s(
         "Payment rejected", "administrative",
-        "The board has refused the proponent's payment.",
+        "The board has refused the applicant's payment.",
         outcome=None),
     "transferred_to_state": _s(
         "Transferred to the state", "other",
@@ -452,12 +463,13 @@ STATUSES: dict[str, dict] = {
         outcome=None),
     "transferred_to_sceia": _s(
         "Transferred to SCEIA", "other",
-        "Moved to the State Coastal Environment Impact Assessment authority on "
-        "expiry of the appraisal committee's term.",
+        "Moved to the Standing Committee on Environment Impact Appraisal "
+        "(SCEIA) because the term of the State appraisal committee or authority "
+        "had expired.",
         outcome=None),
     "transferred_from_sceia": _s(
         "Transferred back from SCEIA", "other",
-        "Returned from the coastal authority after the appraisal committee was "
+        "Returned from SCEIA after the State appraisal committee was "
         "reconstituted.",
         outcome=None),
     "parked": _s(
@@ -466,54 +478,59 @@ STATUSES: dict[str, dict] = {
         outcome=None),
     "recalled": _s(
         "Recalled", "closed",
-        "Recalled by the authority.",
+        "The authority has called the proposal back from the stage it had "
+        "reached.",
         outcome=None),
     "reopen_requested": _s(
         "Reopening requested", "other",
-        "The proponent has asked for the proposal to be reopened.",
+        "The applicant has asked for the proposal to be reopened.",
         outcome=None),
     "reopened": _s(
         "Reopened for reconsideration", "other",
-        "Reopened by the authority for reconsideration.",
+        "The authority has reopened the proposal to consider it again.",
         outcome=None),
     "delisted_by_system": _s(
         "Delisted automatically", "closed",
-        "Removed from the register by the portal itself rather than by a "
-        "decision of the authority, on lapse of a time limit.",
+        "The portal removed the proposal automatically when a time limit "
+        "lapsed, without any decision by the authority. Such a proposal can "
+        "later be restored.",
         outcome="withdrawn", terminal=True),
 
     "processed_by_ms": _s(
         "Processed by the member secretary", "appraisal",
-        "Acted on by the member secretary and passed onward, without the "
-        "source naming which authority.",
+        "The member secretary has acted on the proposal and passed it on; the "
+        "register does not name the authority.",
         outcome=None),
     "processed_by_ms_sceia": _s(
         "Processed by the member secretary, SCEIA", "appraisal",
-        "Acted on by the member secretary of the State Coastal Environment "
-        "Impact Assessment authority and passed onward.",
+        "The member secretary of the Standing Committee on Environment Impact "
+        "Appraisal (SCEIA) has acted on the proposal and passed it on.",
         outcome=None),
-    # Seen in the appraisal history from September 2026. Recorded as the
-    # source writes the authority, as for the other SAEIA stages: the source
-    # never expands the abbreviation, so it is not merged into SEIAA.
+    # Seen in the appraisal history from September 2026. Kept apart from SEIAA:
+    # SAEIA is the standing authority that acts while a SEIAA is not
+    # functioning (EIA Notification 2006 as amended by S.O. 3862(E), July 2026;
+    # S.O. 3863(E) sets out its composition and that of the SCEIA).
     "processed_by_ms_saeia": _s(
         "Processed by the member secretary, SAEIA", "appraisal",
-        "Acted on by the member secretary of the authority the register calls "
-        "SAEIA, and passed onward.",
+        "The member secretary of the Standing Authority on Environment Impact "
+        "Assessment (SAEIA) has acted on the proposal and passed it on.",
         outcome=None),
     "transferred_from_saeia": _s(
         "Transferred from SAEIA to SEIAA", "other",
-        "Returned from SAEIA to the State Environment Impact Assessment "
-        "Authority after the appraisal committee was reconstituted.",
+        "Returned from the Standing Authority on Environment Impact Assessment "
+        "(SAEIA) to the State Environment Impact Assessment Authority after the "
+        "appraisal committee was reconstituted.",
         outcome=None),
     "transferred_to_saeia": _s(
         "Transferred to SAEIA", "other",
-        "Moved to the State Authority for Environment Impact Assessment on "
-        "expiry of the appraisal committee's term.",
+        "Moved to the Standing Authority on Environment Impact Assessment "
+        "(SAEIA) because the term of the State appraisal committee or "
+        "authority had expired.",
         outcome=None),
     "stage1_fc_uploaded": _s(
         "Stage-I forest clearance uploaded", "appraisal",
-        "First-stage clearance under the Forest (Conservation) Act has been "
-        "filed against the proposal.",
+        "The Stage-I forest clearance, the in-principle approval to divert "
+        "forest land, has been uploaded to the proposal's record.",
         outcome=None),
     "pending_ms_seac": _s(
         "Pending with the member secretary, SEAC", "verification",
@@ -527,9 +544,8 @@ STATUSES: dict[str, dict] = {
 
     "unclassified": _s(
         "Not classified", "other",
-        "A status the register has begun using that this registry does not yet "
-        "define. The raw text is shown as filed and is never folded into "
-        "another position.",
+        "The register has begun using a status we have not yet defined. It is "
+        "shown in the register's own words and counted on its own.",
         outcome=None),
 }
 

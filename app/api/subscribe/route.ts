@@ -70,11 +70,11 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ ok: false, message: "Invalid request body." }, { status: 400 });
+    return NextResponse.json({ ok: false, message: "The form could not be read. Please reload the page and try again." }, { status: 400 });
   }
 
   if (!body || typeof body !== "object") {
-    return NextResponse.json({ ok: false, message: "Invalid request body." }, { status: 400 });
+    return NextResponse.json({ ok: false, message: "The form could not be read. Please reload the page and try again." }, { status: 400 });
   }
 
   const b = body as Record<string, unknown>;
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     );
   }
   if (!source) {
-    return NextResponse.json({ ok: false, message: "Missing source." }, { status: 400 });
+    return NextResponse.json({ ok: false, message: "The form could not be read. Please reload the page and try again." }, { status: 400 });
   }
 
   const formId =
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
   if (!apiKey) {
     console.error("[subscribe] KIT_API_KEY missing in environment");
     return NextResponse.json(
-      { ok: false, message: "Subscription is temporarily unavailable." },
+      { ok: false, message: "Subscriptions are closed for the moment. Please try again later." },
       { status: 500 }
     );
   }
