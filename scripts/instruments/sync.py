@@ -58,9 +58,11 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -124,7 +126,44 @@ def load_state(cache: Path) -> dict:
         return {}
 
 
+# Seconds between a sweep call's attempts: a sector that failed is a server
+# struggling with one large query, and asking again at once does not help it.
+SWEEP_BACKOFF = (10.0, 30.0, 60.0, 120.0)
+
+# A WINDOW is a few thousand rows, a few MB, and its failure costs only
+# itself: asked again at once, it goes down another route. More attempts,
+# shorter pauses.
+WINDOW_BACKOFF = (5.0, 15.0, 30.0, 60.0, 60.0, 60.0, 60.0)
+WINDOW_TIMEOUT = 180
+
+# THE SWEEP IS READ IN WINDOWS, NOT IN ONE ANSWER PER SECTOR. PARIVESH
+# refuses GitHub's runners at connect, so the register arrives through free
+# proxies, which fail about half their requests and die mid-transfer. Read
+# whole, Non-Coal Mining is one 92 MB answer: on 2026-10-21 three runs in a
+# row lost three to five of the ten sectors that way (connect refused, connect
+# timed out, a SOCKS failure), and the last never sent two sectors at all
+# because five 300-second attempts at the big ones had spent the sweep's
+# time. The register's startDate/endDate filter splits a sector by
+# submission date; windows of WINDOW_ROWS (~2.5 MB) are read in parallel
+# across the pool, and a window that fails is asked again on another route
+# without throwing away the rest of its sector. Window edges come from the
+# previous read, so they follow the register as it grows.
+WINDOW_ROWS = 2500
+# Earlier than any submission (the register begins in 2022), so the first
+# window holds everything before the second; the last runs two days past
+# today, so a proposal filed tonight IST is inside it.
+WINDOW_FLOOR = "2000-01-01"
+WINDOW_TAIL_DAYS = 2
+# A window that answers with no rows where the previous read held at least
+# this many is a failed query, not a quiet stretch of the register.
+EMPTY_WINDOW_FLOOR = 50
+# A sector whose windows together return fewer than this share of what its
+# last good read returned has lost rows between windows, and is a failure.
+SECTOR_KEEP_SHARE = 0.98
+SWEEP_WORKERS = 6
+
 _POOL = None
+_POOL_LOCK = threading.Lock()
 
 
 def pool():
@@ -136,38 +175,40 @@ def pool():
     only symptom is a red job nobody is watching. See net.py.
     """
     global _POOL
-    if _POOL is None:
-        # The LIGHTEST endpoint the service has, ~800 bytes. Splitting the
-        # search URL at its first "&" stripped the sector filter and turned
-        # this into the unfiltered advanceSearchData call - the one this
-        # project documents as returning about 128 MB. Every scheduled run was
-        # asking a government server to build the entire register just to see
-        # whether the route answered, then reading the status line and hanging
-        # up; and because that query is the slowest one available, a timeout
-        # on it stood the direct route down before any real work began.
-        _POOL = NET.build_pool(probe_url=PROBE_URL, max_workers=8)
-        # The sweeps download 130 MB of register and 35 MB of forest records;
-        # they go down our own verified route and use proxies only while it
-        # is stood down. The per-proposal passes are separate processes and
-        # keep the default mix.
-        _POOL.direct_share = 1.0
-        n = len(_POOL.routes) - 1
-        log(f"egress: direct "
-            f"{'BLOCKED, using proxies' if _POOL.blocked_direct else 'available'}"
-            f", {n} proxy route(s)")
-        if _POOL.blocked_direct and not n:
-            log("WARNING: the direct route is refusing and no proxy routes are "
-                "configured. Set INSTRUMENTS_PROXIES, or run "
-                "scripts/instruments/refresh_proxies.py to build a pool.")
+    with _POOL_LOCK:  # the sweeps call this from several threads at once
+        if _POOL is None:
+            _POOL = _build_pool()
     return _POOL
 
 
-# Seconds between a sweep call's attempts: a sector that failed is a server
-# struggling with one large query, and asking again at once does not help it.
-SWEEP_BACKOFF = (10.0, 30.0, 60.0, 120.0)
+def _build_pool():
+    # The LIGHTEST endpoint the service has, ~800 bytes. Splitting the
+    # search URL at its first "&" stripped the sector filter and turned
+    # this into the unfiltered advanceSearchData call - the one this
+    # project documents as returning about 128 MB. Every scheduled run was
+    # asking a government server to build the entire register just to see
+    # whether the route answered, then reading the status line and hanging
+    # up; and because that query is the slowest one available, a timeout
+    # on it stood the direct route down before any real work began.
+    built = NET.build_pool(probe_url=PROBE_URL, max_workers=8)
+    # The sweeps download 130 MB of register and 35 MB of forest records;
+    # they go down our own verified route and use proxies only while it
+    # is stood down. The per-proposal passes are separate processes and
+    # keep the default mix.
+    built.direct_share = 1.0
+    n = len(built.routes) - 1
+    log(f"egress: direct "
+        f"{'BLOCKED, using proxies' if built.blocked_direct else 'available'}"
+        f", {n} proxy route(s)")
+    if built.blocked_direct and not n:
+        log("WARNING: the direct route is refusing and no proxy routes are "
+            "configured. Set INSTRUMENTS_PROXIES, or run "
+            "scripts/instruments/refresh_proxies.py to build a pool.")
+    return built
 
 
-def fetch(url: str, timeout: int = 300, deadline: float | None = None) -> bytes:
+def fetch(url: str, timeout: int = 300, deadline: float | None = None,
+          backoff: tuple = SWEEP_BACKOFF, label: str = "") -> bytes:
     """One register call, over whichever route is healthy.
 
     Raises on total failure so the caller's per-sector error handling still
@@ -181,12 +222,12 @@ def fetch(url: str, timeout: int = 300, deadline: float | None = None) -> bytes:
     # sector 2 in about two minutes and reported only the last, a dead proxy,
     # so what our own route had answered was never seen.
     status, body = -1, b""
-    for i, pause in enumerate(SWEEP_BACKOFF + (None,), 1):
+    for i, pause in enumerate(tuple(backoff) + (None,), 1):
         status, body = NET.get(pool(), url, timeout=timeout, attempts=1,
                                deadline=deadline, final=frozenset())
         if status == 200:
             return body
-        log(f"    attempt {i}: HTTP {status} "
+        log(f"    {label}attempt {i}: HTTP {status} "
             f"{body[:160].decode('utf-8', 'replace')!r}")
         if pause is None or body == NET.DEADLINE_BODY:
             break
@@ -200,70 +241,180 @@ def fetch(url: str, timeout: int = 300, deadline: float | None = None) -> bytes:
         f"{body[:200].decode('utf-8', 'replace')}")
 
 
+def _next_day(day: str, n: int = 1) -> str:
+    return (datetime.strptime(day, "%Y-%m-%d") + timedelta(days=n)).strftime("%Y-%m-%d")
+
+
+def plan_windows(previous: list[dict], sector: str, today: str) -> list[tuple]:
+    """Submission-date windows for one sector: [(start, end, rows held)].
+
+    Each window holds about WINDOW_ROWS of the previous read. Consecutive
+    windows SHARE their edge day, so whether the service reads endDate as
+    inclusive or exclusive no day falls between two windows; the rows of the
+    shared day come back twice and are de-duplicated by proposal. A sector
+    with no previous rows, or fewer than one window's worth, is one window
+    with no date filter at all - the whole-sector call.
+    """
+    per_day: dict[str, int] = {}
+    for row in previous:
+        if row.get("sector") != sector or not row.get("dateOfSubmission"):
+            continue
+        day = str(row["dateOfSubmission"])[:10]
+        per_day[day] = per_day.get(day, 0) + 1
+    windows: list[tuple] = []
+    start, held = WINDOW_FLOOR, 0
+    for day in sorted(per_day):
+        held += per_day[day]
+        if held >= WINDOW_ROWS:
+            end = _next_day(day)
+            windows.append((start, end, held))
+            start, held = end, 0
+    if not windows:
+        return [(None, None, sum(per_day.values()))]
+    windows.append((start, _next_day(today, WINDOW_TAIL_DAYS), held))
+    return windows
+
+
+def last_sector_counts(cache: Path | None) -> dict:
+    """Rows each sector returned the last time it was read without a fault."""
+    if cache is None:
+        return {}
+    try:
+        stamps = json.loads((cache / "fetch_stamps.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    # A manual `build_data.py --fetch` writes only `sectors`; the sync also
+    # carries `sector_counts` forward past a night on which a sector failed.
+    counts = {s["name"]: s["records"] for s in stamps.get("sectors") or []
+              if "records" in s and "error" not in s}
+    counts.update(stamps.get("sector_counts") or {})
+    return counts
+
+
 def fetch_delta(since: str | None,
-                deadline: float | None = None) -> tuple[list[dict], dict]:
+                deadline: float | None = None,
+                previous: list[dict] | None = None,
+                last_counts: dict | None = None) -> tuple[list[dict], dict]:
     """Fetch the register, optionally windowed. Returns (records, per-sector stats).
 
-    A sector that failed is asked once more after all the others. On a GitHub
-    runner a failure is usually the route, not the service: on 2026-10-20
-    sector 2 met a refused connect on our own address and sector 6 a dead SOCKS
-    proxy, while the sectors read between them answered. Ten minutes later
-    the routes are different ones, and one faulty night in three turns the job
-    red (PARTIAL_FAIL_AFTER). The second round stays inside `deadline`.
+    Every window of every sector is read in parallel (SWEEP_WORKERS). A window
+    that failed is asked once more after all the others: on a GitHub runner a
+    failure is usually the route, not the service, and minutes later the
+    routes are different ones. The second round stays inside `deadline`.
+
+    `previous` (the cached register) places the window edges; `last_counts`
+    (rows per sector at its last good read) is what a windowed sector's
+    total is held to.
     """
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    jobs: list[tuple] = []
+    for sid, name in SECTORS.items():
+        if since:
+            windows = [(since, today, 0)]
+        else:
+            windows = plan_windows(previous or [], name, today)
+        jobs.extend((sid, name, w) for w in windows)
+
+    answers: dict[tuple, list[dict]] = {}
+    errors: dict[tuple, str] = {}
+    _read_windows(jobs, deadline, answers, errors)
+    retry = [j for j in jobs if j in errors]
+    if retry and (deadline is None or time.time() < deadline):
+        log(f"  second round for {len(retry)} failed window(s)")
+        for job in retry:
+            del errors[job]
+        _read_windows(retry, deadline, answers, errors)
+
     records: list[dict] = []
     stats: dict = {}
     for sid, name in SECTORS.items():
-        records.extend(read_sector(sid, name, since, today, deadline, stats))
-    failed = [(sid, name) for sid, name in SECTORS.items() if "error" in stats[name]]
-    if failed and (deadline is None or time.time() < deadline):
-        log(f"  second round for {len(failed)} failed sector(s)")
-        for sid, name in failed:
-            records.extend(read_sector(sid, name, since, today, deadline, stats))
+        mine = [j for j in jobs if j[0] == sid]
+        rows = _union(answers.get(j, []) for j in mine)
+        records.extend(rows)
+        failed = [j for j in mine if j in errors]
+        stat = {"records": len(rows), "windows": len(mine)}
+        expected = (last_counts or {}).get(name)
+        if failed:
+            stat["error"] = (f"{len(failed)} of {len(mine)} window(s) failed; "
+                             f"first: {errors[failed[0]]}")[:200]
+        elif len(mine) > 1 and expected and len(rows) < expected * SECTOR_KEEP_SHARE:
+            stat["error"] = (f"windows returned {len(rows):,} rows where its last "
+                             f"good read returned {expected:,}")
+        stats[name] = stat
+        if "error" in stat:
+            log(f"  sector {sid:2} {name[:32]:34} FAILED: {stat['error']}")
+        else:
+            log(f"  sector {sid:2} {name[:32]:34} {len(rows):>6,} rows  "
+                f"in {len(mine)} window(s)")
     return records, stats
 
 
-def read_sector(sid: int, name: str, since: str | None, today: str,
-                deadline: float | None, stats: dict) -> list[dict]:
-    """One sector's rows; records its outcome in `stats[name]`, [] on failure."""
+def _union(parts) -> list[dict]:
+    """Rows of a sector's windows, each proposal once (windows share an edge day)."""
+    seen: set = set()
+    rows: list[dict] = []
+    for part in parts:
+        for row in part:
+            key = row.get("proposal_id", row.get("id"))
+            if key is not None and key in seen:
+                continue
+            seen.add(key)
+            rows.append(row)
+    return rows
+
+
+def _read_windows(jobs: list[tuple], deadline: float | None,
+                  answers: dict, errors: dict) -> None:
+    with ThreadPoolExecutor(max_workers=SWEEP_WORKERS) as ex:
+        futures = {ex.submit(read_window, sid, start, end, held, deadline):
+                   (sid, name, (start, end, held))
+                   for sid, name, (start, end, held) in jobs}
+        for fut, job in futures.items():
+            try:
+                answers[job] = fut.result()
+            except Exception as exc:  # noqa: BLE001 - any failure is the window's
+                errors[job] = str(exc)[:200]
+                sid, name, (start, end, _) = job
+                log(f"  sector {sid:2} window {start or 'all'}..{end or ''} "
+                    f"FAILED: {exc}")
+
+
+def read_window(sid: int, start: str | None, end: str | None, held: int,
+                deadline: float | None) -> list[dict]:
+    """One window of one sector's rows. Raises on any failed or doubtful answer."""
     url = PARIVESH_SEARCH.format(sector=sid)
-    if since:
-        url += f"&startDate={since}&endDate={today}"
-    t0 = time.time()
-    try:
-        raw = fetch(url, deadline=deadline)
-        payload = json.loads(raw.decode("utf-8", "replace"))
-        # The HTTP status is not the answer. This API carries its own
-        # status inside a 200 body - both per-proposal fetchers already
-        # check it - so a sector whose backing query failed server-side
-        # arrives here as a perfectly good 200 with no `data`. Read as
-        # "zero rows", that is indistinguishable from a quiet day: the
-        # sector counts as covered, the watermark advances past it, and
-        # every status change in that window is never asked for again.
-        env = payload.get("status")
-        if env is not None and int(env) != 200:
-            raise RuntimeError(
-                f"sector answered HTTP 200 carrying status {env}: "
-                f"{str(payload.get('message') or payload)[:160]}")
-        # `is None` too, not just absent. {"data": null} collapsed to
-        # zero rows one line later and read as a quiet day - the exact
-        # case this check was written to reject.
-        if payload.get("data") is None:
-            raise RuntimeError(
-                "sector answered HTTP 200 with no `data` key at all, so "
-                "there is no way to tell an empty window from a failed "
-                "query: " + str(payload)[:160])
-        rows = payload.get("data") or []
-        stats[name] = {"records": len(rows), "bytes": len(raw),
-                       "seconds": round(time.time() - t0, 1)}
-        log(f"  sector {sid:2} {name[:32]:34} {len(rows):>6,} rows  "
-            f"{len(raw)/1024:>8,.0f} KB  {time.time()-t0:>5.1f}s")
-        return rows
-    except Exception as exc:  # noqa: BLE001
-        stats[name] = {"error": str(exc)[:200]}
-        log(f"  sector {sid:2} {name[:32]:34} FAILED: {exc}")
-    return []
+    if start:
+        url += f"&startDate={start}&endDate={end}"
+    label = f"sector {sid} {start}..{end} " if start else f"sector {sid} "
+    # A whole-sector call (a cold cache) can be 92 MB and keeps the long
+    # timeout; a window is a few MB.
+    raw = fetch(url, timeout=WINDOW_TIMEOUT if start else 300,
+                deadline=deadline, backoff=WINDOW_BACKOFF, label=label)
+    payload = json.loads(raw.decode("utf-8", "replace"))
+    # The HTTP status is not the answer. This API carries its own
+    # status inside a 200 body - both per-proposal fetchers already
+    # check it - so a sector whose backing query failed server-side
+    # arrives here as a perfectly good 200 with no `data`. Read as
+    # "zero rows", that is indistinguishable from a quiet day: the
+    # sector counts as covered, the watermark advances past it, and
+    # every status change in that window is never asked for again.
+    env = payload.get("status")
+    if env is not None and int(env) != 200:
+        raise RuntimeError(
+            f"sector answered HTTP 200 carrying status {env}: "
+            f"{str(payload.get('message') or payload)[:160]}")
+    # `is None` too, not just absent. {"data": null} collapsed to
+    # zero rows one line later and read as a quiet day - the exact
+    # case this check was written to reject.
+    if payload.get("data") is None:
+        raise RuntimeError(
+            "sector answered HTTP 200 with no `data` key at all, so "
+            "there is no way to tell an empty window from a failed "
+            "query: " + str(payload)[:160])
+    rows = payload["data"]
+    if not rows and held >= EMPTY_WINDOW_FLOOR:
+        raise RuntimeError(f"answered with no rows where {held:,} were held")
+    return rows
 
 
 # The forest-clearance register is swept by STATE, and its state filter takes
@@ -281,6 +432,27 @@ def forest_rows_in(path: Path) -> int:
         return len(json.loads(path.read_text(encoding="utf-8")).get("data") or [])
     except Exception:  # noqa: BLE001
         return 0
+
+
+def read_forest_state(folder: Path, code: int,
+                      deadline: float | None) -> tuple[Path, bytes]:
+    """One State's forest records, checked; raises rather than return a bad answer."""
+    if deadline is not None and time.time() > deadline:
+        raise RuntimeError("out of time")
+    raw = fetch(FOREST_SEARCH.format(code=code), timeout=300, deadline=deadline,
+                backoff=WINDOW_BACKOFF, label=f"forest {code} ")
+    payload = json.loads(raw.decode("utf-8", "replace"))
+    env = payload.get("status")
+    if env is not None and int(env) != 200:
+        raise RuntimeError(f"answered HTTP 200 carrying status {env}")
+    if payload.get("data") is None:
+        raise RuntimeError("no `data` in the answer")
+    target = folder / f"state_{code}.json"
+    held = forest_rows_in(target) if target.exists() else 0
+    if not payload["data"] and held:
+        raise RuntimeError(f"answered with no records where {held:,} "
+                           "were held; keeping the previous copy")
+    return target, raw
 
 
 def fetch_forest(cache: Path, deadline: float | None = None) -> dict:
@@ -306,24 +478,15 @@ def fetch_forest(cache: Path, deadline: float | None = None) -> dict:
     folder = cache / "parivesh" / "forest"
     folder.mkdir(parents=True, exist_ok=True)
     stats = {"codes": 0, "failed": [], "records": 0}
-    for code in LGD_STATE_CODES:
-        if deadline is not None and time.time() > deadline:
-            stats["failed"].append({"code": code, "error": "out of time"})
-            continue
+    # In parallel, like the register's windows, and for the same reason: read
+    # one after another through free proxies, the 2026-10-21 runs reached 0
+    # of 38 codes inside the forest's share of the time.
+    with ThreadPoolExecutor(max_workers=SWEEP_WORKERS) as ex:
+        futures = {code: ex.submit(read_forest_state, folder, code, deadline)
+                   for code in LGD_STATE_CODES}
+    for code, fut in futures.items():
         try:
-            raw = fetch(FOREST_SEARCH.format(code=code), timeout=300,
-                        deadline=deadline)
-            payload = json.loads(raw.decode("utf-8", "replace"))
-            env = payload.get("status")
-            if env is not None and int(env) != 200:
-                raise RuntimeError(f"answered HTTP 200 carrying status {env}")
-            if payload.get("data") is None:
-                raise RuntimeError("no `data` in the answer")
-            target = folder / f"state_{code}.json"
-            held = forest_rows_in(target) if target.exists() else 0
-            if not payload["data"] and held:
-                raise RuntimeError(f"answered with no records where {held:,} "
-                                   "were held; keeping the previous copy")
+            target, raw = fut.result()
             target.write_bytes(raw)
             stats["codes"] += 1
             stats.setdefault("read", {})[str(code)] = datetime.now(timezone.utc).isoformat()
@@ -427,6 +590,10 @@ def merge(cache: Path, delta: list[dict], read_something: bool = True,
     # weeks earlier - a record that disagreed with itself.
     if sector_stats is not None:
         stamps["sectors"] = [{"name": n, **v} for n, v in sector_stats.items()]
+        counts = dict(stamps.get("sector_counts") or {})
+        counts.update({n: v["records"] for n, v in sector_stats.items()
+                       if "error" not in v})
+        stamps["sector_counts"] = counts
     stamps["merged_records"] = len(merged)
     stamp_path.write_text(json.dumps(stamps, indent=2), encoding="utf-8")
 
@@ -786,7 +953,12 @@ def main() -> None:
             "run should sweep in full.")
     log(f"register fetch: {'full sweep' if not since else f'delta since {since}'}")
     sweep_deadline = (deadline - REBUILD_RESERVE_S) if deadline else None
-    delta, sector_stats = fetch_delta(since, sweep_deadline)
+    previous_path = cache / "parivesh" / "all_records.json"
+    previous = (json.loads(previous_path.read_text(encoding="utf-8"))
+                if previous_path.exists() else [])
+    delta, sector_stats = fetch_delta(since, sweep_deadline, previous,
+                                      last_sector_counts(cache))
+    del previous
     # WHEN THE REGISTER WAS READ, captured here. The run continues for a long
     # while after this - two backfills and a full rebuild - and stamping the
     # end of all that as the read time overstates currency by however long the
