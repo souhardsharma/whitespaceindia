@@ -69,7 +69,14 @@ jobs:
       SEED_ASSET: instruments-cache-seed.tar.gz
 
     steps:
+      # The branch head, not the commit that triggered the run. A run queued
+      # behind another (the concurrency group) otherwise starts from the data
+      # before that run's commit: it builds the change log and the shard
+      # vocabulary on stale files, and its push conflicts on every one
+      # (2026-10-21: a scheduled run queued behind a dispatch lost its night).
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
       - uses: actions/setup-python@v5
         with:
