@@ -1,3 +1,5 @@
+import { withBotId } from "botid/next/config";
+
 /** @type {import('next').NextConfig} */
 
 /**
@@ -79,12 +81,17 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // Every route, including the API ones.
-        source: "/:path*",
+        // Every route, including the API ones - except BotID's proxied
+        // challenge path, which withBotId gives its own frame-ancestors
+        // 'self'. Two CSPs on one response both apply, so ours would have
+        // denied the frame BotID's challenge needs.
+        source: "/:path((?!149e9513-01fa-4fb0-aad4-566afd725d1b/).*)",
         headers: SECURITY_HEADERS,
       },
     ];
   },
 };
 
-export default nextConfig;
+// BotID (instrumentation-client.ts) needs its challenge script and proxy
+// served from this origin; withBotId adds those rewrites.
+export default withBotId(nextConfig);

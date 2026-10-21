@@ -113,7 +113,8 @@ export function generateStaticParams() {
   return rows.filter((r) => r.n > 0).map((r) => ({ code: String(r.code) }));
 }
 
-export function generateMetadata({ params }: { params: { code: string } }) {
+export async function generateMetadata(props: { params: Promise<{ code: string }> }) {
+  const params = await props.params;
   try {
     const districts = read<Record<string, DistrictRecord>>("districts.json");
     const d = districts[params.code];
@@ -153,7 +154,8 @@ function SECTOR_PARTS(
   return Array.from(by.entries()).map(([label, value]) => ({ label, value }));
 }
 
-export default function DistrictPage({ params }: { params: { code: string } }) {
+export default async function DistrictPage(props: { params: Promise<{ code: string }> }) {
+  const params = await props.params;
   if (!/^\d{1,3}$/.test(params.code)) notFound();
 
   // Read EVERY shard that holds a proposal for this district, not just the one

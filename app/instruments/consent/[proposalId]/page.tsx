@@ -51,7 +51,8 @@ function shortName(name: string): string {
   return name.length > 90 ? name.slice(0, 87).replace(/\s+\S*$/, "") + "…" : name;
 }
 
-export async function generateMetadata({ params }: { params: { proposalId: string } }) {
+export async function generateMetadata(props: { params: Promise<{ proposalId: string }> }) {
+  const params = await props.params;
   const id = decodeURIComponent(params.proposalId);
   const found = findProposal(id);
   if (!found) {
@@ -84,7 +85,8 @@ export async function generateMetadata({ params }: { params: { proposalId: strin
   });
 }
 
-export default function ProposalPage({ params }: { params: { proposalId: string } }) {
+export default async function ProposalPage(props: { params: Promise<{ proposalId: string }> }) {
+  const params = await props.params;
   const id = decodeURIComponent(params.proposalId);
   const bundle = proposalBundle(id);
   if (!bundle) notFound();

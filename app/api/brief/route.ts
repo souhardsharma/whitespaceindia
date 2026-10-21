@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { checkBotId } from 'botid/server';
 import { isAllowedOrigin, clientIp } from '@/lib/request-identity';
 import { SECTORS, sectorPOS, type District, type Weights } from '@/lib/csr/score';
 import fs from 'fs';
@@ -444,6 +445,14 @@ function buildDocument(d: BriefInput, briefText: string) {
 
 export async function POST(req: NextRequest) {
   if (!isAllowedOrigin(req)) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
+  // A script can send any Origin, so the check above only stops other
+  // websites. BotID's browser challenge, verified by Vercel on this request,
+  // is what keeps a script from spending the Gemini keys.
+  const verdict = await checkBotId();
+  if (verdict.isBot) {
     return new Response('Forbidden', { status: 403 });
   }
 
