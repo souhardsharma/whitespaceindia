@@ -21,7 +21,13 @@ export function middleware(req: NextRequest) {
   if (!LEGACY_CSR_HOSTS.has(host)) return NextResponse.next();
 
   const { pathname, search } = req.nextUrl;
-  const target = new URL(pathname === "/" ? "/csr" : pathname, SITE_URL);
+  // Joined as text, never resolved against the origin: `new URL("//evil.com",
+  // SITE_URL)` is https://evil.com, an open redirect waiting for the platform
+  // to stop collapsing `//`. Collapsing leading slashes here and checking the
+  // result's origin keeps every redirect on SITE_URL whatever the path holds.
+  const path = pathname === "/" ? "/csr" : "/" + pathname.replace(/^[/\\]+/, "");
+  const target = new URL(SITE_URL + path);
+  if (target.origin !== new URL(SITE_URL).origin) return NextResponse.next();
   target.search = search;
   return NextResponse.redirect(target, 308);
 }
