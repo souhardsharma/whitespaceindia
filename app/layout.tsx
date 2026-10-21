@@ -1,31 +1,30 @@
 import type { Metadata } from "next";
-import { Newsreader, Public_Sans, Space_Grotesk, Instrument_Serif } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SITE_URL } from "@/lib/site";
 
-const newsreader = Newsreader({
-  subsets: ["latin"],
+// Self-hosted: next/font/google fetches from Google at build time, and one
+// bad answer from it failed a production build (2026-10-21). These are the
+// latin variable files Google serves (SIL Open Font License).
+const newsreader = localFont({
+  src: [
+    { path: "./fonts/newsreader.woff2", weight: "300 700", style: "normal" },
+    { path: "./fonts/newsreader-italic.woff2", weight: "300 700", style: "italic" },
+  ],
   variable: "--font-newsreader",
-  weight: ["300", "400", "500", "700"],
-  style: ["normal", "italic"],
+  adjustFontFallback: "Times New Roman",
 });
-const publicSans = Public_Sans({
-  subsets: ["latin"],
+const publicSans = localFont({
+  src: "./fonts/public-sans.woff2",
+  weight: "300 700",
   variable: "--font-public-sans",
-  weight: ["300", "400", "500", "700"],
 });
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
+const spaceGrotesk = localFont({
+  src: "./fonts/space-grotesk.woff2",
+  weight: "300 700",
   variable: "--font-space-grotesk",
-  weight: ["300", "400", "500", "700"],
-});
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  variable: "--font-instrument",
-  weight: ["400"],
-  style: ["normal", "italic"],
 });
 
 const siteUrl = SITE_URL;
@@ -131,7 +130,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en-IN" className={`${newsreader.variable} ${publicSans.variable} ${spaceGrotesk.variable} ${instrumentSerif.variable}`}>
+    <html lang="en-IN" className={`${newsreader.variable} ${publicSans.variable} ${spaceGrotesk.variable}`}>
       <body className="bg-[#fcf9f4] text-[#1c1c19] font-body antialiased">
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <script
