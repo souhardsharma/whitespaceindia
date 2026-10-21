@@ -62,13 +62,14 @@ function coordinateClause(
   verdict: string | null,
   fallsIn: number | null,
   names: Names,
+  here: string,
 ): { text: string; agrees: boolean | null } {
   switch (verdict) {
     case "inside":
-      return { text: "The coordinates of its site fall inside it.", agrees: true };
+      return { text: `The coordinates of its site fall inside ${here}.`, agrees: true };
     case "boundary":
       return {
-        text: "The coordinates of its site lie on the district's edge, so they neither confirm nor contradict it.",
+        text: `The coordinates of its site lie on the boundary of ${here}, so they neither confirm nor contradict it.`,
         agrees: null,
       };
     case "elsewhere":
@@ -78,16 +79,16 @@ function coordinateClause(
       };
     case "offshore":
       return {
-        text: "The coordinates of its site fall outside every district boundary, so they cannot be tested against it.",
+        text: "The coordinates of its site fall outside every district boundary, at sea, so they cannot be checked against the district.",
         agrees: null,
       };
     case "unmapped":
       return {
-        text: "The coordinates of its site fall on ground the boundary source does not map, so they cannot be tested against it.",
+        text: "The coordinates of its site fall in an area the Census 2011 district map assigns to no district, such as the part of Jammu and Kashmir it marks as data not available, so they cannot be checked against the district.",
         agrees: null,
       };
     default:
-      return { text: "The filing records no site coordinates to test it against.", agrees: null };
+      return { text: "The filing records no site coordinates to check it against.", agrees: null };
   }
 }
 
@@ -98,7 +99,7 @@ export function locationEvidence(
   if (p.district == null) {
     return {
       sentences: [
-        "No part of this filing could be placed below state level, so no district profile is shown.",
+        "Nothing in this filing identifies a place smaller than its state, so no district profile is shown.",
       ],
       contested: false,
       firm: false,
@@ -108,19 +109,19 @@ export function locationEvidence(
   const here = nm(names, p.district);
   const named = new Set<number>([p.district, ...(p.allDistricts ?? [])]);
   const declared = p.declaredDistrict;
-  const coords = coordinateClause(p.verdict, p.fallsIn, names);
+  const coords = coordinateClause(p.verdict, p.fallsIn, names, here);
   const out: string[] = [];
 
   switch (p.resolution) {
     case "adjudicated":
       out.push(
-        `The place codes on the application form point elsewhere, but the district the form declares and the coordinates of its site both place it in ${here}. Two independent statements in the same filing outweigh one, so this profile follows them.`,
+        `The place codes on the application form point to another district, but the district the form declares and the coordinates of its site both place the project in ${here}. Because two of the filing's three statements of place agree, this profile follows them.`,
       );
       return { sentences: out, contested: false, firm: true };
 
     case "project_name":
       out.push(
-        "Placed from the wording of the project's title. That is weaker evidence than a location filed on the form, and should be read as indicative.",
+        "The district comes from the wording of the project's title. That is weaker evidence than a location filed on the form, so the placement is indicative only.",
       );
       return { sentences: out, contested: false, firm: false };
 
@@ -150,17 +151,17 @@ export function locationEvidence(
         return { sentences: out, contested: coords.agrees === false, firm: coords.agrees !== false };
       }
       out.push(
-        `Nothing else in the filing settles which, so this profile uses ${here} provisionally.`,
+        `Neither the coordinates nor the declared district settles which of those districts the site is in, so this profile uses ${here} provisionally.`,
       );
       return { sentences: out, contested: false, firm: false };
     }
 
     case "lgd_district": {
       // The declaration IS the placement here; it cannot also corroborate it.
-      out.push("Placed from the district declared on the application form; it names no village or sub-district.");
+      out.push("The district comes from the one declared on the application form, which names no village or sub-district.");
       out.push(coords.text);
       if (coords.agrees === false) {
-        out.push("With one statement against one, nothing settles the difference - treat the location with caution.");
+        out.push("That leaves one statement against one, and nothing in the filing settles the difference, so the location is uncertain.");
       }
       return { sentences: out, contested: false, firm: coords.agrees !== false };
     }
@@ -169,13 +170,13 @@ export function locationEvidence(
       const n = p.villageCount ?? 0;
       out.push(
         n > 0
-          ? `Placed from ${n} ${n === 1 ? "village or town" : "villages or towns"} named on the application form.`
-          : "Placed from the village and town codes on the application form.",
+          ? `The district comes from the ${n === 1 ? "village or town" : `${n} villages or towns`} named on the application form.`
+          : "The district comes from the village and town codes on the application form.",
       );
       break;
     }
     case "subdistrict":
-      out.push("Placed from the sub-district named on the application form.");
+      out.push("The district comes from the sub-district named on the application form.");
       break;
     default:
       out.push("How this location was established is not recorded.");
@@ -193,25 +194,25 @@ export function locationEvidence(
     declared !== p.fallsIn;
   if (contested) {
     out.push(
-      `The filing is not consistent with itself: its place codes point to ${here}, it declares ${nm(names, declared)}, and its site coordinates fall in ${nm(names, p.fallsIn)}. No two of the three agree, so this profile keeps the most specific of them - treat the location with caution.`,
+      `The filing contradicts itself. Its place codes point to ${here}, it declares ${nm(names, declared)}, and its site coordinates fall in ${nm(names, p.fallsIn)}. Because no two of the three agree, this profile keeps the most specific of them, the place codes, and the location is uncertain.`,
     );
     return { sentences: out, contested: true, firm: false };
   }
 
   const decl =
     declared == null
-      ? "The form declares no district that can be compared."
+      ? "The form declares no district to compare."
       : declaredAgrees
-        ? "The district the form declares agrees."
+        ? `The form also declares ${here}.`
         : `The district the form declares, ${nm(names, declared)}, does not agree.`;
 
   if (declaredAgrees && coords.agrees === true) {
-    out.push("The district the form declares and the coordinates of its site both agree.");
+    out.push("The district the form declares and the coordinates of its site both agree with that placement.");
     return { sentences: out, contested: false, firm: true };
   }
   if (declaredAgrees && coords.agrees === false) {
     out.push(
-      `The district the form declares agrees. The coordinates of its site fall in ${nm(names, p.fallsIn)} instead; with two statements against one, this profile keeps the district the codes and the declaration agree on.`,
+      `The form also declares ${here}. The coordinates of its site fall in ${nm(names, p.fallsIn)} instead, and with two statements against one, this profile keeps the district the codes and the declaration agree on.`,
     );
     return { sentences: out, contested: false, firm: true };
   }

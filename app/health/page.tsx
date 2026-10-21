@@ -96,16 +96,16 @@ function InsightSection({ whitespaceCount }: { whitespaceCount: number }) {
         >
           <div className="md:col-span-3">
             <span className="font-label text-[11px] uppercase tracking-[0.3em] block mb-4" style={{ color: accent }}>
-              03 / Findings
+              03 / Context
             </span>
             <div className="h-px bg-[#1c1c19] w-24" />
           </div>
           <div className="md:col-span-9">
             <h2 className="font-headline text-4xl md:text-6xl lg:text-7xl headline-tight text-[#1c1c19] mb-6">
-              What the data <span className="italic font-light">reveals.</span>
+              The national <span className="italic font-light">picture.</span>
             </h2>
             <p className="font-body text-base md:text-lg text-[#1c1c19]/75 leading-relaxed max-w-2xl">
-              Three signals from the health ledger. Each points to a different kind of gap, and a different lever for intervention.
+              The first two figures are national statistics, given for context. The third counts districts in the placeholder data, so it will change when the real data is in place.
             </p>
           </div>
         </motion.div>
@@ -146,7 +146,7 @@ function BeyondSection() {
         >
           <div className="md:col-span-8 p-10 md:p-14 border-b md:border-b-0 md:border-r border-[#1c1c19]">
             <span className="font-label text-[10px] uppercase tracking-[0.3em] block mb-6" style={{ color: accent }}>
-              What Comes Next
+              What comes next
             </span>
             <motion.h2
               initial={{ opacity: 0, x: -12 }}
@@ -154,7 +154,7 @@ function BeyondSection() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="font-headline text-3xl md:text-5xl headline-tight text-[#1c1c19] mb-6"
             >
-              The same <span className="italic font-light">methodology</span> works across every public dataset.
+              The same <span className="italic font-light">method</span> can be applied to other public datasets.
             </motion.h2>
             <motion.p
               initial={{ opacity: 0 }}
@@ -162,7 +162,7 @@ function BeyondSection() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="font-body text-base text-[#1c1c19]/75 leading-relaxed mb-6"
             >
-              CSR spending patterns, education infrastructure, and energy access are also under investigation.
+              We are also studying CSR spending, school infrastructure and access to electricity.
             </motion.p>
             <div className="flex flex-wrap gap-0 border border-[#1c1c19]">
               {["CSR", "Education", "Energy"].map((v, i) => (
@@ -190,7 +190,7 @@ function BeyondSection() {
               Updates
             </span>
             <p className="font-body text-sm text-[#1c1c19]/80 leading-relaxed">
-              We are building health infrastructure indices using NHM, SRS, and Rural Health Statistics data.
+              The health index will draw on National Health Mission reports, the Sample Registration System and Rural Health Statistics.
             </p>
             <SubscribeForm variant="compact" source="health" vertical={cfg} />
           </motion.div>
@@ -323,19 +323,19 @@ export default function HealthPage() {
             >
               <div className="md:col-span-3">
                 <span className="font-label text-[11px] uppercase tracking-[0.3em] block mb-4" style={{ color: accent }}>
-                  02 / The Simulator
+                  02 / Weighting tool
                 </span>
                 <div className="h-px bg-[#1c1c19] w-24" />
               </div>
               <div className="md:col-span-9">
                 <h2 className="font-headline text-4xl md:text-6xl lg:text-7xl headline-tight text-[#1c1c19] mb-6">
-                  Health <span className="italic font-light">Simulator.</span>
+                  Health <span className="italic font-light">weighting tool.</span>
                 </h2>
                 <p className="font-body text-base md:text-lg text-[#1c1c19]/75 leading-relaxed max-w-2xl">
-                  Adjust weights, select a health domain, and click any state to surface districts with the greatest intervention opportunity.
+                  You can change the weights, choose a health domain or click a state, and the ranking shows which districts then rise to the top.
                 </p>
                 <p className="mt-4 font-label text-[10px] uppercase tracking-[0.2em] text-[#1c1c19]/60 max-w-2xl">
-                  Source · NHM District Reports · SRS Bulletins · Rural Health Statistics 2021-22 · Census 2011
+                  Placeholder data. Planned sources · NHM District Reports · SRS Bulletins · Rural Health Statistics 2021-22 · Census 2011
                 </p>
               </div>
             </motion.div>
@@ -367,10 +367,10 @@ export default function HealthPage() {
                   <div className="px-6 py-5 border-b border-[#1c1c19] bg-[#f6f3ee] flex items-center justify-between">
                     <div>
                       <h3 className="font-label text-[11px] uppercase tracking-[0.3em] font-bold text-[#1c1c19]">
-                        India · Territorial Atlas
+                        Map by state
                       </h3>
                       <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-2">
-                        Click a state to filter rankings
+                        Clicking a state filters the ranking
                       </p>
                     </div>
                     <span className="font-label text-[10px] tracking-widest text-[#1c1c19]/40">
@@ -391,7 +391,7 @@ export default function HealthPage() {
                   <div className="px-6 py-5 border-b border-[#1c1c19] bg-[#f6f3ee] flex items-center justify-between gap-4">
                     <div>
                       <h3 className="font-label text-[11px] uppercase tracking-[0.3em] font-bold text-[#1c1c19]">
-                        District Ledger
+                        District ranking
                       </h3>
                       <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-2">
                         {displayDistricts.length} districts

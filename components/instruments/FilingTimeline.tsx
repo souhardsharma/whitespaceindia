@@ -151,11 +151,11 @@ export default function FilingTimeline({
     return (
       <p className="font-body text-[13px] leading-relaxed opacity-75">
         {total > 0
-          ? `This instrument does not yet hold a dated first filing for any ` +
-            `of the ${nf.format(total)} proposals here, so there is no series ` +
-            `to draw. That is a gap in what this instrument holds, not ` +
-            `evidence that nothing was filed.`
-          : "There are no proposals here to draw."}
+          ? `We have not yet read a first filing date for any of the ` +
+            `${nf.format(total)} proposals here, so there is no timeline to ` +
+            `show. The dates come from each proposal's appraisal history, ` +
+            `which we are still reading, and the gap is in our copy.`
+          : "No proposals are listed here."}
       </p>
     );
   }
@@ -165,17 +165,17 @@ export default function FilingTimeline({
     `${nf.format(drawn)} of ${nf.format(total)} filings placed across ` +
     `${bars.length} quarters, ${bars[0].key} to ${bars[bars.length - 1].key}` +
     (undated > 0
-      ? `. This instrument does not yet hold a filing date for ` +
-        `${nf.format(undated)} more, mostly older ones, so they are not in ` +
-        `this series`
+      ? `. We have not yet read a filing date for ${nf.format(undated)} more` +
+        (olderGap ? `, most of them older proposals,` : ``) +
+        ` so they are left out`
       : "") +
     ". " +
     bars
       .map(
         (b) =>
           `${b.key}: ${b.n}` +
-          (thin.has(b.key) ? " (incomplete, few filing dates held yet)" : "") +
-          (b.key === incompleteKey ? " (quarter incomplete)" : ""),
+          (thin.has(b.key) ? " (undercounted, since few filing dates are read for it)" : "") +
+          (b.key === incompleteKey ? " (quarter still running)" : ""),
       )
       .join(", ");
 
@@ -245,9 +245,9 @@ export default function FilingTimeline({
                   aria-label={
                     `${b.key}: ${b.n} filing${b.n === 1 ? "" : "s"}` +
                     (thin.has(b.key)
-                      ? ", incomplete, few filing dates held yet"
+                      ? ", undercounted, since few filing dates are read for it"
                       : "") +
-                    (b.key === incompleteKey ? ", quarter incomplete" : "")
+                    (b.key === incompleteKey ? ", quarter still running" : "")
                   }
                   onMouseEnter={() => setHover(i)}
                   onMouseLeave={() => setHover(null)}
@@ -269,8 +269,8 @@ export default function FilingTimeline({
           {hover !== null
             ? `${bars[hover].key}: ${bars[hover].n} filing${
                 bars[hover].n === 1 ? "" : "s"
-              }${thin.has(bars[hover].key) ? " (incomplete)" : ""}${
-                bars[hover].key === incompleteKey ? " (quarter incomplete)" : ""
+              }${thin.has(bars[hover].key) ? " (undercounted)" : ""}${
+                bars[hover].key === incompleteKey ? " (quarter still running)" : ""
               }`
             : ""}
         </span>
@@ -284,42 +284,43 @@ export default function FilingTimeline({
       <p className="font-body text-[12px] leading-relaxed opacity-75 mt-2">
         {undated > 0 ? (
           <>
-            Drawn from {nf.format(drawn)} of the {nf.format(total)} proposals
-            here. This instrument does not yet hold a dated first filing for the
-            other {nf.format(undated)}, so they are not on this timeline.{" "}
+            The timeline counts {nf.format(drawn)} of the {nf.format(total)}{" "}
+            proposals here. The first filing date comes from each proposal&apos;s
+            appraisal history, and we have not yet read it for the other{" "}
+            {nf.format(undated)}, so they are left out.{" "}
             {olderGap ? (
               <>
-                They are overwhelmingly older proposals, which means the early
-                part of this series counts far fewer than were actually filed
-                then.{" "}
+                Most of them are older proposals, so the early part of the
+                timeline undercounts what was filed then.{" "}
               </>
             ) : null}
-            The missing dates are a gap in what this instrument holds, not
-            evidence that the register lacks them.
+            The register itself records a date for each of them; the gap is
+            in our copy of the histories.
           </>
         ) : (
           <>
-            Drawn from all {nf.format(total)} proposals here, every one of which
-            records a dated first filing.
+            The timeline counts all {nf.format(total)} proposals here, since
+            each one records the date it was first filed.
           </>
         )}
       </p>
 
       {thin.size > 0 || (incompleteKey && bars.some((b) => b.key === incompleteKey)) ? (
         <p className="font-body text-[12px] leading-relaxed opacity-75 mt-1">
-          Hatched columns are not comparable with solid ones.{" "}
+          Hatched columns undercount, so they cannot be compared with solid
+          ones.{" "}
           {thinShown.length > 0 ? (
             <>
               {thinShown.length === 1
                 ? "One of them covers a period"
                 : `${thinShown.length} of them cover periods`}{" "}
-              for which this instrument holds few filing dates yet, so{" "}
+              for which we have read few filing dates so far, and{" "}
               {thinShown.length === 1 ? "it counts" : "they count"} only the
-              proposals it has one for and under-counts the rest.{" "}
+              proposals whose date we have.{" "}
             </>
           ) : null}
           {incompleteKey && bars.some((b) => b.key === incompleteKey)
-            ? `${incompleteKey} was still running when the register was read, so it holds the filings made by that date and not the quarter's total.`
+            ? `${incompleteKey} was still running when the register was read, so its column counts only the filings made up to that date.`
             : ""}
         </p>
       ) : null}

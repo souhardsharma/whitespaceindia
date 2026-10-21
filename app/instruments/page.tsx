@@ -9,7 +9,7 @@ import {
 } from "@/components/instruments/InstrumentChrome";
 import meta from "@/public/data/instruments/consent/meta.json";
 import freshness from "@/public/data/instruments/consent/freshness.json";
-import { sourceVintageLabel } from "@/lib/instruments/vintage";
+import { CENSUS_YEAR, nextCensusNote, sourceVintageLabel } from "@/lib/instruments/vintage";
 
 /**
  * The instruments shelf.
@@ -43,16 +43,16 @@ const INSTRUMENTS: Shelf[] = [
     status: "live",
     colour: PLUM,
     question:
-      "Who lives where this project would be built, and whose agreement is legally required before it proceeds?",
+      "Who lives where a proposed project would be built, and what does the law require of a project in that place?",
     blurb:
-      "Takes a proposal from the national environmental clearance register and assembles a socio-economic profile of the district it sits in: population and community composition, what people there earn a living from, what community infrastructure exists, and which statutory and international-standard obligations attach to a project of that kind in that place.",
+      "People & Consent takes a proposal from the national environmental clearance register and finds where it would be built. It then reports the Census record for that sub-district or district, which covers its population and community composition, how people there earn a living and what community infrastructure exists, together with the Indian laws and international standards that apply to a project of that type in that place.",
     inputs:
-      "PARIVESH environmental clearance register · Census 2011 Primary Census Abstract and Village Directory · Socio Economic and Caste Census 2011, rural · Census 2011 district boundaries",
+      "Sources: PARIVESH environmental clearance register · Census 2011 Primary Census Abstract and Village Directory · Socio Economic and Caste Census 2011 (rural) · Census 2011 district boundaries",
     stats: [
-      { label: "Proposals indexed", value: nf.format(meta.counts.proposals_published) },
+      { label: "Proposals published", value: nf.format(meta.counts.proposals_published) },
       { label: "Districts profiled", value: nf.format(meta.counts.districts) },
       {
-        label: "Located to a district",
+        label: "Placed in a district",
         value: `${meta.resolution_rate_pct}%`,
       },
     ],
@@ -62,7 +62,7 @@ const INSTRUMENTS: Shelf[] = [
 export default function InstrumentsShelf() {
   return (
     <div className="min-h-screen bg-[#fcf9f4] text-[#1c1c19] flex flex-col">
-      <StructuredData data={pageLd({ path: "/instruments", name: "Instruments", description: "Per-case screening instruments built from India's public records. Bring one project, filing or place and the instrument assembles what the record holds about it.", type: "CollectionPage" })} />
+      <StructuredData data={pageLd({ path: "/instruments", name: "Instruments", description: "Whitespace India's instruments take one case at a time from India's public records, such as a single environmental clearance proposal, and report what those records hold about it.", type: "CollectionPage" })} />
       <InstrumentHeader />
 
       <main id="main-content" className="flex-1">
@@ -73,29 +73,27 @@ export default function InstrumentsShelf() {
               className="font-label text-[11px] uppercase tracking-[0.24em] mb-6"
               style={{ color: GRAPHITE }}
             >
-              The shelf
+              Instruments
             </div>
             <h1 className="font-headline font-bold text-[clamp(34px,6vw,72px)] leading-[0.98] tracking-[-0.03em] max-w-4xl">
-              An index ranks every district.
-              <br />
-              An instrument reads <em>one case</em>.
+              Instruments examine <em>one case</em> at a time
             </h1>
             <div className="mt-10 grid grid-cols-1 md:grid-cols-12 gap-8">
               <p className="md:col-span-7 font-body text-[clamp(16px,1.5vw,19px)] leading-relaxed opacity-80">
-                The indexes on this site are comparative. They score every
-                district in the country against one question and rank them, so
-                they answer <em>where</em> a problem is worst. Instruments work
-                the other way round. You bring a single project, filing, or
-                place, and the instrument assembles what the public record
-                actually holds about that one case. No score. No weighting. No
-                ranking.
+                The indexes on this site compare districts with one another.
+                Each scores districts on a single question and ranks them, which
+                shows <em>where</em> a problem is most severe. An instrument
+                starts instead from a single case, such as one proposal in the
+                environmental clearance register, and gathers what the public
+                record holds about it. It reports that record as it stands,
+                without scoring, weighting or ranking it.
               </p>
               <p className="md:col-span-5 font-body text-[15px] leading-relaxed opacity-70 md:border-l md:border-[#1c1c19]/20 md:pl-8">
-                Every figure an instrument shows carries the dataset it came
-                from and the year that dataset was collected. Where the record
-                does not say something, the instrument says that instead of
-                estimating. That constraint is the point: an instrument is only
-                worth using if it is honest about what it cannot see.
+                Each figure an instrument shows names the dataset it came from
+                and the year that dataset was collected. Where the record is
+                silent on a question, the instrument says so and leaves the gap
+                unfilled, so a reader can see where the evidence ends as well
+                as what it shows.
               </p>
             </div>
           </div>
@@ -111,7 +109,7 @@ export default function InstrumentsShelf() {
               id="shelf-heading"
               className="font-label text-[11px] uppercase tracking-[0.24em] opacity-75 mb-10"
             >
-              On the shelf
+              Available instruments
             </h2>
 
             <ol className="border-t border-[#1c1c19]">
@@ -168,8 +166,8 @@ export default function InstrumentsShelf() {
                       </dl>
                       {it.href ? (
                         <span className="inline-flex items-center gap-2 mt-7 font-label text-[11px] uppercase tracking-[0.2em] group-hover:gap-3 transition-all">
-                          Open the instrument
-                          <span aria-hidden="true">&#8599;</span>
+                          Open {it.name}
+                          <span aria-hidden="true">&rarr;</span>
                         </span>
                       ) : null}
                     </div>
@@ -198,9 +196,9 @@ export default function InstrumentsShelf() {
             </ol>
 
             <p className="mt-10 font-body text-[14px] leading-relaxed opacity-75 max-w-2xl">
-              More instruments will be added to this shelf. Each one takes a
-              different kind of public filing as its input and answers a
-              different question about it.
+              Further instruments are planned, each built around another kind
+              of public record and the question that record can answer about a
+              single case.
             </p>
           </div>
         </section>
@@ -209,10 +207,19 @@ export default function InstrumentsShelf() {
         <section className="px-6 md:px-12 py-12 border-t border-[#1c1c19] bg-[#f6f3ee]">
           <div className="max-w-6xl mx-auto">
             <h2 className="font-label text-[11px] uppercase tracking-[0.24em] opacity-75 mb-6">
-              Data currency
+              How current the data is
             </h2>
+            {/* Written here and not read from meta.vintage_warning, whose
+                account of the next census ("has not been conducted") had
+                fallen out of step with nextCensusNote() on the instrument's
+                own pages. Both pages now word the next census one way. */}
             <p className="font-body text-[15px] leading-relaxed opacity-80 max-w-3xl">
-              {meta.vintage_warning}
+              The socio-economic figures come from Census {CENSUS_YEAR}, the
+              most recent census for which complete sub-district figures
+              exist, and they describe the population as it was counted that
+              year. {nextCensusNote()} The register, by contrast, is read
+              again every night, and the date of the latest read is shown
+              below.
             </p>
             <ul className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
               {meta.sources.map((s) => (

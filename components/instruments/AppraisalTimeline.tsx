@@ -80,13 +80,14 @@ export default function AppraisalTimeline({
       <div className="border border-dashed border-[#1c1c19]/30 p-4">
         <p className="font-body text-[13px] leading-relaxed opacity-70">
           {filedOn
-            ? "This proposal carries a filing date but no decision and no open " +
-              "interval that can be measured, so no duration is drawn. A " +
-              "duration that cannot be reached from the dates beside it is " +
-              "not published."
-            : "This instrument holds no dated first step for this proposal, " +
-              "so no duration is shown. That is a gap in what it holds, not " +
-              "evidence about how the proposal was handled."}
+            ? "This proposal has a filing date, but its history records no " +
+              "decision and no period still open that we can measure, so no " +
+              "duration is shown. We publish a duration only when it can be " +
+              "worked out from the dates printed beside it."
+            : "We have not yet read a dated first step in this proposal's " +
+              "appraisal history, so no duration is shown. The gap is in our " +
+              "copy of the history and says nothing about how the proposal " +
+              "was handled."}
         </p>
       </div>
     );
@@ -108,18 +109,20 @@ export default function AppraisalTimeline({
   const label =
     `Filed ${fmtDate(filedOn)}. ` +
     (sameDay && decided
-      ? `Decided the same day, 0 days with the authority`
+      ? `Decided the same day, after 0 days with the appraising authority`
       : decided
-      ? `Decided ${fmtDate(decidedOn)}, ${active} days with the authority`
-      : `Open ${active} days`) +
-    (suspended > 0 ? `, plus ${suspended} days delisted` : "") +
-    (queryRounds ? `. ${queryRounds} round${queryRounds === 1 ? "" : "s"} of queries` : "");
+      ? `Decided ${fmtDate(decidedOn)}, after ${active} days with the appraising authority`
+      : `Open for ${active} days so far`) +
+    (suspended > 0 ? `, plus ${suspended} days when the portal had delisted it` : "") +
+    (queryRounds
+      ? `. The authority asked for more information ${queryRounds} time${queryRounds === 1 ? "" : "s"}.`
+      : ".");
 
   return (
     <div className="mb-6">
       <div className="flex items-baseline justify-between gap-4 mb-2">
         <h3 className="font-label text-[10px] uppercase tracking-[0.18em] opacity-75">
-          Time with the authority
+          Time with the appraising authority
         </h3>
         <span className="font-label text-[19px] font-bold tabular-nums leading-none">
           {active}
@@ -195,7 +198,7 @@ export default function AppraisalTimeline({
           {decided
             ? `Decided ${fmtDate(decidedOn)}`
             : currentStageLabel || currentStage
-            ? `Now at: ${currentStageLabel ?? currentStage}`
+            ? `Now at ${currentStageLabel ?? currentStage}`
             : "Not yet decided"}
         </span>
       </div>
@@ -204,7 +207,7 @@ export default function AppraisalTimeline({
         {suspended > 0 ? (
           <div>
             <dt className="font-label text-[9px] uppercase tracking-[0.16em] opacity-70">
-              Delisted by the portal, then revived
+              Delisted by the portal, then restored
             </dt>
             <dd className="font-body text-[13px] tabular-nums">
               {suspended} day{suspended === 1 ? "" : "s"}
@@ -215,15 +218,16 @@ export default function AppraisalTimeline({
                 a reader could otherwise report that a live proposal had been
                 thrown out. */}
             <dd className="font-body text-[11.5px] leading-relaxed opacity-70 max-w-[34ch] mt-1">
-              Not counted above: nothing was pending with the authority while
-              the proposal was off the portal.
+              These days are left out of the count above, because nothing
+              was pending with the authority while the proposal was off the
+              portal.
             </dd>
           </div>
         ) : null}
         {queryRounds ? (
           <div>
             <dt className="font-label text-[9px] uppercase tracking-[0.16em] opacity-70">
-              Rounds of queries
+              Requests for more information
             </dt>
             <dd className="font-body text-[13px] tabular-nums">{queryRounds}</dd>
           </div>

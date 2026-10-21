@@ -11,14 +11,15 @@ import { LINKS_BLANK, LINKS_NONE, LINKS_UNREAD, fpNumbers, linkedClearanceLines 
 test("an unread form is never worded as declaring nothing", () => {
   const r = linkedClearanceLines(null);
   assert.equal(r.state, "unread");
-  assert.match(LINKS_UNREAD, /not a statement that there are none/);
+  assert.match(LINKS_UNREAD, /cannot yet say whether the project needs any/);
   assert.doesNotMatch(LINKS_UNREAD, /declares no/);
 });
 
 test("a form that declares nothing says so", () => {
   const r = linkedClearanceLines(0);
   assert.equal(r.state, "none");
-  assert.match(LINKS_NONE, /declares no forest diversion/);
+  assert.match(LINKS_NONE, /declares none of them/);
+  assert.match(LINKS_NONE, /diverts no forest land/);
 });
 
 test("a declared forest diversion carries its number, area and the register's record", () => {
@@ -30,7 +31,7 @@ test("a declared forest diversion carries its number, area and the register's re
   const text = r.lines.map((l) => l.text).join(" ");
   assert.match(text, /FP\/MP\/MIN\/QRY\/574244\/2026/);
   assert.match(text, /965\.86 ha applied/);
-  assert.match(text, /forest register itself records it as "Pending at DFO"/);
+  assert.match(text, /forest clearance register itself records it as "Pending at DFO"/);
 });
 
 test("each declared part gets its own line, and only declared parts appear", () => {
@@ -42,7 +43,7 @@ test("each declared part gets its own line, and only declared parts appear", () 
 test("a form that left every question blank is not a form that declares none", () => {
   const r = linkedClearanceLines({ u: "fwepc" });
   assert.equal(r.state, "blank");
-  assert.match(LINKS_BLANK, /not a declaration that none/);
+  assert.match(LINKS_BLANK, /cannot say whether any of them applies/);
   assert.doesNotMatch(LINKS_BLANK, /declares no /);
   // "none" is reserved for a form that ANSWERED each question.
   assert.match(LINKS_NONE, /answers each question/);

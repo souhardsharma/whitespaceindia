@@ -22,9 +22,9 @@ import instrumentMeta from "@/public/data/instruments/consent/meta.json";
 
 export const metadata = pageMeta({
   path: "/instruments/consent/register",
-  title: "The register by district — People & Consent",
+  title: "Proposals by district | People & Consent",
   description:
-    "Every environmental clearance proposal in India, placed in its district, beside the Census record of who lives there and the place's Fifth Schedule status.",
+    "India's environmental clearance proposals placed in the districts where they would be built, beside the Census record of who lives in each district and its status under the Fifth Schedule.",
 });
 
 const nf = new Intl.NumberFormat("en-IN");
@@ -129,7 +129,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-[#fcf9f4] text-[#1c1c19] flex flex-col">
-      <StructuredData data={pageLd({ path: "/instruments/consent/register", name: "The register by district", description: metadata.description as string, trail: [INSTRUMENTS_TRAIL, CONSENT_TRAIL], type: "CollectionPage" })} />
+      <StructuredData data={pageLd({ path: "/instruments/consent/register", name: "Proposals by district", description: metadata.description as string, trail: [INSTRUMENTS_TRAIL, CONSENT_TRAIL], type: "CollectionPage" })} />
       <InstrumentHeader crumb="People & Consent" crumbHref="/instruments/consent" />
 
       <main id="main-content" className="flex-1">
@@ -139,25 +139,27 @@ export default function RegisterPage() {
               className="font-label text-[11px] uppercase tracking-[0.24em] mb-4"
               style={{ color: PLUM }}
             >
-              The register, by district
+              Proposals by district
             </p>
             <h1 className="font-headline font-bold text-[clamp(28px,4.6vw,52px)] leading-[1.04] tracking-[-0.03em] max-w-4xl">
               What is proposed, and where
             </h1>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-8">
               <p className="md:col-span-7 font-body text-[15px] leading-relaxed opacity-80">
-                PARIVESH publishes every clearance proposal and is the
-                authoritative record of them. It is organised around the
-                proposal: you go to it knowing which filing you want. The
-                location a proponent files sits inside each application rather
-                than in the search index, so the register is hard to read by
-                place.
+                PARIVESH, the Ministry of Environment, Forest and Climate
+                Change&rsquo;s clearance portal, publishes every environmental
+                clearance proposal and is the official record of them. Its
+                register is organised by proposal and has no district field, so
+                a search there works best for someone who already knows which
+                filing they want. The location of each project is recorded
+                inside its application form, where the register&rsquo;s search
+                cannot reach it.
               </p>
               <p className="md:col-span-5 font-body text-[14px] leading-relaxed opacity-70 md:border-l md:border-[#1c1c19]/20 md:pl-8">
-                This view reads that filed location for every proposal and
-                joins it to the Census record for the same place, so the register
-                can also be read the other way round: by district, and by who
-                lives there.
+                This page reads that location from every application and
+                joins it to the Census record for the same district, so the
+                register can also be read by place, together with who lives
+                there.
               </p>
             </div>
 
@@ -167,13 +169,13 @@ export default function RegisterPage() {
                 value={nf.format(t.with_district)}
               />
               <Stat
-                label="Districts with at least one"
+                label="Districts with at least one proposal"
                 value={`${nf.format(t.districts_with_proposals)} of ${nf.format(t.districts_total)}`}
               />
               <Stat
                 label="In wholly Scheduled districts"
                 value={nf.format(scheduledSplit.wholly)}
-                note={`${nf.format(scheduledSplit.partly)} more are in partly Scheduled districts, where the district's status does not settle whether the site itself is in a Scheduled Area.`}
+                note={`A further ${nf.format(scheduledSplit.partly)} are in partly Scheduled districts, where only the Order's named blocks or villages are scheduled and a site's own status depends on where in the district it lies.`}
               />
               <Stat
                 label="Families declared displaced"
@@ -205,25 +207,41 @@ export default function RegisterPage() {
             />
 
             <div className="mt-10 pt-6 border-t border-[#1c1c19]/20 max-w-3xl space-y-3">
+              {/* Written here in place of facets.note and
+                  facets.landUnitCaveat, which the build writes; the facts are
+                  the same. */}
               <p className="font-body text-[13px] leading-relaxed opacity-70">
-                {facets.note}
+                The counts cover the proposals that could be placed in a
+                district. A project naming sites in several districts is
+                counted in each of them, since it may affect each. Declared
+                land and family figures are the proponents&rsquo; own filings,
+                and each is added only to the total of the project&rsquo;s
+                primary district so that no figure is counted twice.
               </p>
               <p className="font-body text-[13px] leading-relaxed opacity-70">
-                {facets.landUnitCaveat}
+                The page gives no total for land area. The application form
+                records a land figure without a unit, although it gives units
+                for its air and water figures. Mining leases are conventionally
+                filed in hectares and township projects in square metres, and
+                since nothing in the record says which unit a figure uses, the
+                figures cannot be added together. Each proposal&rsquo;s land
+                figure is shown as filed, without a unit.
               </p>
               {/* Faded by text colour, not opacity: opacity reaches the link
                   inside and took its plum to 3.7:1. */}
               <p className="font-body text-[13px] leading-relaxed text-[#1c1c19]/70">
                 Scheduled Area status is a legal determination made by
-                Presidential Order, not a property of the population data. Where
-                the curated reference does not cover a district it reads{" "}
-                <em>not determined</em>, which is not the same as outside.{" "}
+                Presidential Order, and it is read from the Orders themselves.
+                A district the transcribed Orders do not settle is marked{" "}
+                <em>not determined</em>, a status kept separate from a finding
+                that it lies outside every Scheduled Area. The methodology
+                explains{" "}
                 <Link
-                  href="/instruments/consent/methodology"
+                  href="/instruments/consent/methodology#scheduled-areas"
                   className="underline underline-offset-2"
                   style={{ color: PLUM }}
                 >
-                  How this was established
+                  how each district was decided
                 </Link>
                 .
               </p>

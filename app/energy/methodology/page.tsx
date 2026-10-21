@@ -38,12 +38,12 @@ export default function EnergyMethodologyPage() {
             <FadeIn delay={0.1}>
               <div className="border-t border-[#1c1c19] pt-10 grid grid-cols-1 md:grid-cols-12 gap-10">
                 <div className="md:col-span-4">
-                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60">Scoring Framework</span>
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60">How the score works</span>
                 </div>
                 <div className="md:col-span-8 font-body text-base text-[#1c1c19]/80 leading-relaxed space-y-6">
-                  <p>The Energy Opportunity Score (EOS) is a composite index built on the OECD Handbook framework for constructing composite indicators. Three normalised dimensions — Supply Gap (S), Access Equity (A), and Transition Readiness (T) — are weighted and combined.</p>
+                  <p>The Energy Opportunity Score (EOS) will be a composite index built on the OECD Handbook framework for composite indicators. It adds three rescaled measures, each with a weight: Supply Gap (S), Access Equity (A) and Transition Gap (T).</p>
                   <p className="font-label text-sm tracking-wide" style={{ color: accent }}>EOS = w<sub>S</sub> · S + w<sub>A</sub> · A + w<sub>T</sub> · T</p>
-                  <p>Default weights: Supply 35%, Access 40%, Transition 25%. Users can adjust these in the simulator to match their intervention priorities.</p>
+                  <p>The default weights are 35% for supply, 40% for access and 25% for transition. They are provisional, and you can change them in the weighting tool.</p>
                 </div>
               </div>
             </FadeIn>
@@ -52,7 +52,7 @@ export default function EnergyMethodologyPage() {
               <FadeIn key={dim.key} delay={0.15 + i * 0.05}>
                 <div className="border-t border-[#1c1c19] pt-10 mt-16 grid grid-cols-1 md:grid-cols-12 gap-10">
                   <div className="md:col-span-4">
-                    <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60">Dimension {dim.shortLabel}</span>
+                    <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60">Measure {dim.shortLabel}</span>
                     <h3 className="font-headline text-2xl text-[#1c1c19] mt-2">{dim.label}</h3>
                   </div>
                   <div className="md:col-span-8 font-body text-base text-[#1c1c19]/80 leading-relaxed">

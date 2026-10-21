@@ -117,7 +117,7 @@ export function generateMetadata({ params }: { params: { code: string } }) {
   try {
     const districts = read<Record<string, DistrictRecord>>("districts.json");
     const d = districts[params.code];
-    if (!d) return { title: "District — People & Consent" };
+    if (!d) return { title: "District | People & Consent" };
     // Its own canonical and og:url. Without them this page inherits the
     // instruments layout's, and 620 district pages all declare themselves a
     // duplicate of /instruments - which asks a search engine to drop the very
@@ -127,16 +127,16 @@ export function generateMetadata({ params }: { params: { code: string } }) {
     // Diu") that the State would push the instrument's name off the end, so
     // there the title names the district alone; the page heads both.
     const place = titleCase(d.district_name);
-    const full = `${place}, ${titleCase(presentState(d.censuscode, d.state_name))} — People & Consent`;
+    const full = `${place}, ${titleCase(presentState(d.censuscode, d.state_name))} | People & Consent`;
     return pageMeta({
       path: `/instruments/consent/district/${params.code}`,
-      title: full.length <= 60 ? full : `${place} — People & Consent`,
-      description: `Every environmental clearance proposal filed for ${titleCase(
+      title: full.length <= 60 ? full : `${place} | People & Consent`,
+      description: `Environmental clearance proposals that name a site in ${titleCase(
         d.district_name
-      )}, with the Census 2011 record of who lives there and the consent obligations that attach.`,
+      )}, with the Census 2011 record of who lives there and the duties of consultation and consent that apply.`,
     });
   } catch {
-    return { title: "District — People & Consent" };
+    return { title: "District | People & Consent" };
   }
 }
 
@@ -260,13 +260,13 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
         data={pageLd({
           path: `/instruments/consent/district/${params.code}`,
           name: `${titleCase(record.district_name)}, ${titleCase(presentState(record.censuscode, record.state_name))}`,
-          description: `Every environmental clearance proposal filed for ${titleCase(
+          description: `Environmental clearance proposals that name a site in ${titleCase(
             record.district_name,
           )}, with the Census 2011 record of who lives there.`,
           trail: [
             { name: "Instruments", path: "/instruments" },
             { name: "People & Consent", path: "/instruments/consent" },
-            { name: "The register by district", path: "/instruments/consent/register" },
+            { name: "Proposals by district", path: "/instruments/consent/register" },
           ],
         })}
       />
@@ -286,7 +286,7 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
             <span className="opacity-65">, {titleCase(presentState(record.censuscode, record.state_name))}</span>
             {presentState(record.censuscode, record.state_name) !== record.state_name ? (
               <span className="block font-label text-[11px] uppercase tracking-[0.16em] opacity-80 mt-2">
-                {titleCase(record.state_name)} in Census 2011, the frame every figure here describes
+                Counted as part of {titleCase(record.state_name)} in Census 2011, whose boundaries every figure here uses
               </span>
             ) : null}
           </h1>
@@ -304,7 +304,7 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
               href={`/instruments/consent/feed?district=${record.censuscode}`}
               className="tap-target inline-flex items-center px-4 py-2 border border-[#1c1c19] font-label text-[10px] uppercase tracking-[0.16em]"
             >
-              Feed (Atom)
+              Follow in a feed reader
             </a>
             {Array.from({ length: csvParts }, (_, i) => (
               <a
@@ -312,7 +312,7 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
                 href={`/api/instruments/consent/proposals.csv?district=${record.censuscode}${i ? `&part=${i + 1}` : ""}`}
                 className="tap-target inline-flex items-center px-4 py-2 border border-[#1c1c19] font-label text-[10px] uppercase tracking-[0.16em]"
               >
-                {csvParts > 1 ? `All proposals (CSV), part ${i + 1} of ${csvParts}` : "All proposals (CSV)"}
+                {csvParts > 1 ? `Download all proposals (CSV), part ${i + 1} of ${csvParts}` : "Download all proposals (CSV)"}
               </a>
             ))}
           </div>
@@ -322,40 +322,42 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
           {registerRow.linksRead ? (
             <section className="mt-10" aria-labelledby="other-clearances">
               <h2 id="other-clearances" className="font-headline font-bold text-[clamp(20px,2.4vw,28px)] tracking-[-0.02em] mb-2">
-                The other clearances these projects need
+                Other clearances these proposals declare
               </h2>
               <dl className="grid grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-6 pb-6 border-b border-[#1c1c19]">
-                <Stat label="Declare forest diversion" value={nf.format(registerRow.nForest ?? 0)} />
+                <Stat label="Forest land diversion declared" value={nf.format(registerRow.nForest ?? 0)} />
                 <Stat
-                  label="Forest area applied for diversion"
+                  label="Forest land sought for diversion"
                   value={registerRow.forestHa
                     ? `${nf.format(Math.round(registerRow.forestHa))} ha`
                     : registerRow.nForest ? "Area not stated" : "None declared"}
                 />
-                <Stat label="Need a wildlife-board recommendation" value={nf.format(registerRow.nWildlife ?? 0)} />
+                <Stat label="Wildlife board recommendation declared" value={nf.format(registerRow.nWildlife ?? 0)} />
                 <Stat label="In or near a protected area" value={nf.format(registerRow.nProtected ?? 0)} />
                 <Stat label="In an eco-sensitive zone" value={nf.format(registerRow.nEsz ?? 0)} />
               </dl>
               <p className="font-body text-[12px] leading-relaxed opacity-70 mt-3 max-w-3xl">
-                As the environmental clearance forms declare them, over the{" "}
+                These counts are taken from the application forms of the{" "}
                 {nf.format(registerRow.linksRead)} of {nf.format(registerRow.n)} proposals
-                naming this district whose form has been read for them
+                naming this district whose forms have been read for these
+                questions.
                 {registerRow.linksBlank
-                  ? `, ${nf.format(registerRow.linksBlank)} of which leave some of these questions unanswered - a blank is not a "no"`
+                  ? ` In ${nf.format(registerRow.linksBlank)} of those forms at least one question was left blank, and a blank answer is counted as unknown.`
                   : ""}
-                . Hectares are the forest-clearance area, each forest proposal
-                counted once, in the district a project is primarily sited in.
-                {registerRow.nCrz ? ` ${nf.format(registerRow.nCrz)} declare activity in a coastal regulation zone.` : ""}
+                {" "}The forest area is the area stated for forest clearance,
+                with each forest proposal counted once, in the district where
+                its project is primarily sited.
+                {registerRow.nCrz ? ` ${nf.format(registerRow.nCrz)} proposals declare activity in a coastal regulation zone.` : ""}
               </p>
             </section>
           ) : null}
 
           <dl className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 pb-8 border-b border-[#1c1c19]">
-            <Stat label="Proposals filed here" value={nf.format(bundle.proposals.length)} />
-            <Stat label="Category A" value={catA ? nf.format(catA) : "None"} />
+            <Stat label="Proposals naming this district" value={nf.format(bundle.proposals.length)} />
+            <Stat label="Category A proposals" value={catA ? nf.format(catA) : "None"} />
             <Stat
               label="Families declared displaced"
-              value={displaced ? nf.format(displaced) : "None declared here"}
+              value={displaced ? nf.format(displaced) : "None declared"}
             />
             {/* The basis, stated once beside the pair. A project sited across
                 several districts declares one national figure, and this counts
@@ -369,15 +371,15 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
           <p className="font-body text-[12px] leading-relaxed opacity-70 mt-3 max-w-3xl">
             Displacement figures are the proponents&rsquo; own declarations. A
             project sited across several districts declares one figure for the
-            whole project; it is counted here in the district it is primarily
-            sited in, not against every district it names.
+            whole project, and that figure is counted once, in the district
+            where the project is primarily sited.
             {declaredElsewhere > 0 ? (
               <>
                 {" "}
                 {nf.format(declaredElsewhere)} of the proposals listed below
                 declare displacement and are sited primarily in another
-                district, so their figures are counted there rather than in
-                this total.
+                district, so their figures are counted in that district&rsquo;s
+                total.
               </>
             ) : null}
           </p>
@@ -408,7 +410,7 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
               {det.instrument ? (
                 <p className="font-body text-[12.5px] leading-relaxed opacity-70 mt-2">
                   <span className="font-label text-[9px] uppercase tracking-[0.16em] mr-2">
-                    Instrument
+                    Order
                   </span>
                   {det.instrument}
                   {det.provision ? ` · ${det.provision}` : ""}
@@ -430,20 +432,20 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12">
             <FactGroup
               title="Who lives there"
-              intro="Census 2011, compared against India computed from the same definition."
+              intro="Figures from Census 2011, each compared with the all-India value computed on the same definition."
               facts={facts("population")}
               emphasise={["pop.total", "pop.st_share"]}
             />
             <FactGroup
               title="What they live on"
-              intro="Worker composition. The land-dependent share is the population most directly exposed to acquisition."
+              intro="How the district's workers earn a living, from Census 2011. The land-dependent share counts cultivators and agricultural labourers as a share of all workers, and it is the group most directly affected when land is acquired."
               facts={facts("livelihood")}
               emphasise={["work.land_dependent_share"]}
             />
           </div>
           <FactGroup
             title="How households live"
-            intro="Rural households in the Socio Economic and Caste Census 2011: land, income and work, which the population census does not record. Urban households are not in this source."
+            intro="Land, income and work among rural households, from the Socio Economic and Caste Census 2011, which recorded these where the population census did not. Only the survey's rural part is used here, so urban households do not appear."
             facts={facts("circumstances")}
           />
 
@@ -453,8 +455,8 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
               When these were filed
             </h2>
             <p className="font-body text-[13px] leading-relaxed opacity-70 max-w-3xl mb-4">
-              Counted from the first step in each proposal&rsquo;s appraisal
-              history.
+              Each proposal is dated by the first step in its appraisal
+              history, the dated record of steps the portal keeps for it.
             </p>
             <FilingTimeline
               filings={bundle.proposals.map((p) => ({
@@ -477,14 +479,14 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
               What kind of projects these are
             </h2>
             <p className="font-body text-[13px] leading-relaxed opacity-70 max-w-3xl mb-4">
-              Every proposal naming this district, by the sector it was filed
-              under.
+              The proposals naming this district, grouped by the sector each
+              was filed under.
             </p>
             <CompositionBar
               parts={SECTOR_PARTS(bundle.proposals)}
               total={bundle.proposals.length}
               unitLabel="proposals"
-              caption="Sectors beyond the fourth are folded into Other rather than taking a generated colour."
+              caption="The four largest sectors are shown by name and the rest are grouped as Other."
             />
           </section>
 
@@ -493,9 +495,10 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
               What is proposed here
             </h2>
             <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-5 max-w-3xl">
-              Every proposal in the national clearance register whose filing
-              names a site in this district, newest first. A project naming sites
-              in several districts appears under each of them.
+              These are the proposals in the national environmental clearance
+              register whose application names a site in this district, newest
+              first. A project with sites in several districts appears under
+              each of them.
             </p>
             <DistrictProposals
               initial={bundle.proposals.slice(0, SERVER_ROWS)}
@@ -506,8 +509,9 @@ export default function DistrictPage({ params }: { params: { code: string } }) {
             <noscript>
               <p className="mt-4 font-body text-[13px] opacity-70">
                 Showing the first {nf.format(Math.min(SERVER_ROWS, bundle.proposals.length))} of{" "}
-                {nf.format(bundle.proposals.length)}. The remainder load in the
-                browser; without scripting they can be read from{" "}
+                {nf.format(bundle.proposals.length)} proposals. The rest load
+                in the browser, and with scripting turned off they can be read
+                from{" "}
                 {registerRow.slugs.map((s, i) => (
                   <span key={s}>
                     {i > 0 ? " and " : ""}
@@ -560,7 +564,7 @@ function ScheduledBadge({ det }: { det: LegalDetermination | null }) {
         ? "Scheduled Area"
         : partial
         ? "Partly Scheduled Area"
-        : "Outside every Order"}
+        : "Not a Scheduled Area"}
     </span>
   );
 }

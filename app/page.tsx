@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
+import csrMeta from "@/public/data/csr/meta.json";
 
 
 /* Sticky compressed topbar — appears once the user scrolls past the
@@ -48,7 +49,7 @@ function StickyHeader() {
           <span className={styles.bIndia}>India</span>
         </span>
       </a>
-      <span className={styles.stickyTag}>Civic Data Instruments</span>
+      <span className={styles.stickyTag}>Public data on India&apos;s districts</span>
     </header>
   );
 }
@@ -188,64 +189,64 @@ const VERTS: Vert[] = [
     vert: "csr",
     num: "01",
     title: "CSR",
-    meta: "Impact finance",
-    img: "/landing/csr-horizon.webp",
+    meta: "Opportunity Index · Live",
+    img: "/landing/csr-horizon-2.webp",
     alt: "A long horizon of pale, dry village plots; a watering can pours on only a few of them",
     active: true,
     accent: "terra",
-    aria: "Open the CSR Opportunity Index, 651 Indian districts",
+    aria: `Open the CSR Opportunity Index, which ranks ${csrMeta.total_districts} Indian districts`,
   },
   {
     href: "/health",
     vert: "health",
     num: "02",
     title: "Health",
-    meta: "Infrastructure gaps · Coming soon",
-    img: "/landing/health-road.webp",
+    meta: "Health care access · Coming soon",
+    img: "/landing/health-road-2.webp",
     alt: "A road winds across the hills from a village to a distant clinic",
     pos: "80% 100%",
     active: true,
     accent: "cobalt",
-    aria: "Whitespace India Health — infrastructure gap analysis, coming soon",
+    aria: "Health index, a preview on placeholder data",
   },
   {
     href: "/energy",
     vert: "energy",
     num: "03",
     title: "Energy",
-    meta: "Access & transition · Coming soon",
-    img: "/landing/energy-line.webp",
+    meta: "Power supply and access · Coming soon",
+    img: "/landing/energy-line-2.webp",
     alt: "Power poles cross the hills and stop short of a village; one house is lit by a solar panel",
     pos: "50% 70%",
     active: true,
     accent: "forest",
-    aria: "Whitespace India Energy — access and transition analysis, coming soon",
+    aria: "Energy index, a preview on placeholder data",
   },
   {
     href: "/education",
     vert: "education",
     num: "04",
     title: "Education",
-    meta: "Outcomes index · Coming soon",
-    img: "/landing/education-paths.webp",
+    meta: "Schools and learning · Coming soon",
+    img: "/landing/education-paths-2.webp",
     alt: "Children walk the footpaths across the hills to a one-room village school",
     pos: "50% 60%",
     active: true,
     accent: "ochre",
-    aria: "Whitespace India Education — outcomes index, coming soon",
+    aria: "Education index, a preview on placeholder data",
   },
   {
     href: "/instruments",
     vert: "instruments",
     num: "05",
     title: "Instruments",
-    meta: "Screening tools · Live",
-    img: "/landing/instruments-lens.webp",
+    meta: "One project at a time · Live",
+    img: "/landing/instruments-lens-2.webp",
     alt: "A magnifying glass held over one house among farms, a mine, a well and a factory",
     pos: "50% 50%",
     active: true,
     accent: "graphite",
-    aria: "Open the Instruments shelf — per-project screening tools",
+    aria: "Open the instruments, which profile one project at a time",
   },
 ];
 
@@ -323,17 +324,16 @@ export default function Landing() {
                 </div>
                 <div className={styles.csrHeading}>
                   <div>
-                    <h3 className={styles.tileTitle}>CSR &amp; Impact Finance</h3>
+                    <h3 className={styles.tileTitle}>CSR Opportunity Index</h3>
                     <div className={styles.tileStats}>
-                      <span className={styles.statLabel}>Opportunity Index</span>
                       <span className={styles.statBig}>
-                        <Odometer to={651} />
-                        <span className={styles.statUnit}>districts</span>
+                        <Odometer to={csrMeta.total_districts} />
+                        <span className={styles.statUnit}>districts ranked</span>
                       </span>
                       <span className={styles.statDivider} />
                       <span className={styles.statBig}>
                         ₹<Odometer to={26000} duration={1800} />
-                        <span className={styles.statUnit}>cr / yr</span>
+                        <span className={styles.statUnit}>crore a year</span>
                       </span>
                     </div>
                   </div>
@@ -394,7 +394,7 @@ export default function Landing() {
         <header className={styles.faqHeader}>
           <div className={styles.faqEyebrow}>About the project</div>
           <h2 id="faq-heading" className={styles.faqHeading}>
-            Frequently <em>asked</em>
+            Frequently asked <em>questions</em>
           </h2>
         </header>
 
@@ -447,41 +447,56 @@ export default function Landing() {
    The structured data below is built from this array, so the two cannot drift. */
 type Faq = { q: string; a: string; more?: { href: string; label: string } };
 
+const PAN_INDIA_SHARE = Math.round(csrMeta.csr_totals.pan_india_pct);
+
 const FAQS: Faq[] = [
   {
     q: "What is Whitespace India?",
-    a: "Free tools built on Indian government data. Two are live. The CSR Opportunity Index ranks 651 districts by how far corporate social responsibility (CSR) spending falls short of poverty there. People & Consent, the first instrument, takes one proposal from the national environmental clearance register and shows who lives where it would be built and which consent rules apply there. The site is built and maintained by Souhard Sharma. It is not a government site, and nothing on it is an official statistic.",
+    a: "Whitespace India reads India's public records against one another to find problems that no single record shows. The Census counts who lives in each district, NITI Aayog measures how many of them are poor, companies report where they spend their CSR money, and the environment ministry logs every project that applies for environmental clearance. Each of these records is usually read on its own. Set side by side, they point to places where need is high and the money or attention reaching it is thin, and we call those gaps white spaces. We publish the evidence for each one together with the data and the method, so that researchers, journalists, funders, officials and the people who live there can check our reading and take the work further.",
+  },
+  {
+    q: "What counts as a white space?",
+    a: `A white space is a place where the evidence of need is strong and the recorded response to it is weak. In the CSR index, a district meets that test when it falls in the poorest quarter of districts on NITI Aayog's poverty measure and in the bottom quarter on CSR spending per person. Being on that list is a reason to look closer, and the explanation can turn out to be ordinary. Money may arrive through channels the filings do not record, or conditions may have changed since the data was collected. Finding out which is the work we hope others will pick up.`,
+    more: { href: "/csr", label: "See the districts" },
+  },
+  {
+    q: "Who is it for?",
+    a: "It is meant for anyone who needs to know where a problem lies before deciding what to do about it. A researcher can use the index to choose districts for fieldwork, and a company or foundation can see where its CSR money has not gone. When a mine or a dam is proposed, a journalist or a member of the village assembly can look up the project and see who lives where it would be built. Everything on the site can also be downloaded for work we have not thought of.",
   },
   {
     q: "What is the difference between an index and an instrument?",
-    a: "An index compares. It scores every district on one question and ranks them, and you can change the weights behind the score. An instrument looks at one case: you pick a proposal and get its profile, with no score and no ranking. Use an index to decide where to look. Use an instrument when you already have a project in front of you.",
+    a: "They work at different scales. An index scores every district on one question and ranks them, and you can change the weights behind the score to see how the ranking moves. The CSR Opportunity Index is the first of these. An instrument starts from a single case and builds its profile with no score or ranking attached, and People & Consent, which profiles one proposed project at a time, is the first of those. The index helps when you are deciding where to look, and the instrument helps once a particular project is in front of you.",
   },
   {
     q: "How does the CSR index rank a district?",
-    a: "It combines three measures. Poverty is the share of people who are multidimensionally poor, from NITI Aayog's 2023 index. The funding gap is how far the district's CSR spending per person falls below the median for districts of a similar population. Persistence is how much of the district's 2015-16 poverty was still there in 2019-21. By default poverty and the funding gap count for 40% each and persistence for 20%. You can change the weights and watch the ranking move. CSR spent \"Pan India\" or without a district, which is most of it, cannot be placed and is left out, so district totals are a floor.",
+    a: `A district's score combines three measures. Poverty is the share of people NITI Aayog counted as multidimensionally poor in its 2023 index. The funding gap takes the CSR spending recorded in a district over the financial years 2021-22 to 2023-24, divides it by the district's population, and compares the result with the median for districts of similar population, so that a small district is judged against small districts. Persistence is the share of a district's 2015-16 poverty that was still there in 2019-21. Poverty and the gap each carry 40% of the score and persistence 20%, and you can change these weights yourself. About ${PAN_INDIA_SHARE}% of all CSR money in the filings is reported as "Pan India" or names no district, so it cannot be placed, and every district total in the index should be read as a floor.`,
     more: { href: "/methodology", label: "Read the method" },
   },
   {
     q: "What does People & Consent show about a proposal?",
-    a: "Where the project is: the Census district and sub-district, read from the developer's own application form on PARIVESH, the environment ministry's portal, and checked against the site coordinates where the form gives them. Who lives there: population, the Scheduled Tribe and Scheduled Caste shares, literacy, how many workers depend on land, schools and health posts. Which consent rules apply: whether the place is a Fifth Schedule Scheduled Area, where PESA gives the Gram Sabha a say, and the forest, wildlife and coastal clearances the form declares. It also shows how long the proposal has been under appraisal. It does not say whether a project should go ahead.",
+    a: "It starts by placing the project. The district and sub-district come from the developer's own application form on PARIVESH, the environment ministry's clearance portal, and are checked against the site coordinates where the form gives them. The profile then describes the people who live there, using the 2011 Census for population, the Scheduled Tribe and Scheduled Caste shares, literacy, the number of workers who depend on land, and the schools and health posts in the area. It says whether the site lies in a Fifth Schedule Area, where the PESA Act of 1996 gives the gram sabha a legal role in decisions about land and local resources, and lists the forest, wildlife and coastal clearances the form declares. It also records how long the proposal has been under appraisal. The profile takes no position on whether the project should go ahead.",
     more: { href: "/instruments/consent", label: "Look up a proposal" },
   },
   {
     q: "How current is it?",
-    a: "The clearance register is re-read every night, and every instrument page says when its copy was last checked. The CSR index is a fixed edition, and its method page lists the years of spending it uses. Population figures come from the 2011 Census, the latest India has published. They describe the people who lived there in 2011 and are labelled that way wherever they appear.",
+    a: "The clearance register is read again every night, and each instrument page states when its copy was last checked. The CSR index is a fixed edition built on spending from 2021-22 to 2023-24. Population figures come from the 2011 Census, which is still the most recent one India has published, so they describe the people who lived in a place in 2011 and are labelled with that year wherever they appear.",
   },
   {
     q: "Where does the data come from?",
-    a: "Government records only. The CSR index uses NITI Aayog's Multidimensional Poverty Index, the Ministry of Corporate Affairs' CSR filings (through Dataful.in) and the 2011 Census. People & Consent reads the PARIVESH register, each proposal's application form and its appraisal history directly from the portal. It adds the 2011 Census and the 2011 Socio Economic and Caste Census (through the SHRUG research dataset), 2011 district boundaries from datameet, and the Presidential Orders that schedule Fifth Schedule Areas. Every figure in an instrument names its source and year.",
+    a: "All of it comes from public records, most of them published by the government and a few made usable by research groups. The CSR index draws on NITI Aayog's Multidimensional Poverty Index, the CSR filings companies make to the Ministry of Corporate Affairs (as compiled by Dataful.in), and the 2011 Census. People & Consent reads the PARIVESH register, each proposal's application form and its appraisal history directly from the portal. To these it adds the 2011 Census and the 2011 Socio Economic and Caste Census as cleaned in the SHRUG research dataset, district boundaries for 2011 from datameet, and the Presidential Orders that define the Scheduled Areas. Each figure on an instrument page names its source and year.",
   },
   {
     q: "Can I reuse the data?",
-    a: "Yes. The data is CC BY 4.0: you can reuse it, commercially too, if you credit Whitespace India. One exception: the Census and SECC district and sub-district profiles in People & Consent come from SHRUG and keep its CC BY-NC-SA 4.0 licence, which does not allow commercial use. The code is open source under AGPL-3.0 on GitHub.",
-    more: { href: "/instruments/consent/data", label: "Every file and endpoint" },
+    a: "Yes, as long as you credit Whitespace India. The data is published under CC BY 4.0, which allows commercial use. The one exception is the district and sub-district profiles in People & Consent, which carry figures from SHRUG and keep its CC BY-NC-SA 4.0 licence, so they cannot be used commercially. The code is open source under AGPL-3.0, and the data page lists each file with its licence.",
+    more: { href: "/instruments/consent/data", label: "Every file and its licence" },
   },
   {
     q: "What about Health, Energy and Education?",
-    a: "Those pages show how each index will work, but they run on placeholder numbers, not real data. Do not quote them. They are kept out of search results. Each goes live only once it has real district data and a written method. There is no set order or date.",
+    a: "These are planned indexes. Their pages show how each will work, but the numbers on them are placeholders that describe no actual district, and for that reason the pages are kept out of search results. Each will go live once its data and method are ready, and no order or date has been set.",
+  },
+  {
+    q: "Who runs it?",
+    a: "Whitespace India is built and maintained independently by Souhard Sharma. It has no official status, and the figures on it are the project's own calculations from official sources. Corrections are welcome through GitHub or LinkedIn, both linked below.",
   },
 ];
 

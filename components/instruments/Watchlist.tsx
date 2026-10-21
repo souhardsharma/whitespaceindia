@@ -99,9 +99,11 @@ export default function Watchlist() {
       <section className="mb-12 border border-dashed border-[#1c1c19]/30 p-5">
         <h2 className="font-label text-[11px] uppercase tracking-[0.18em] mb-1">Following</h2>
         <p className="font-body text-[13.5px] opacity-75 max-w-3xl">
-          Follow a proposal or a district from its page and it appears here, with
-          what has moved since you last looked. The list is kept in this browser
-          only; nothing is sent anywhere and no account is needed.
+          When you follow a proposal or a district from its page, it appears
+          here with any change recorded since you last looked. The list is kept
+          in this browser and needs no account. To check for changes, the page
+          sends the numbers of the proposals and districts on the list to this
+          site&apos;s server.
         </p>
       </section>
     );
@@ -130,7 +132,7 @@ export default function Watchlist() {
     <section className="mb-12 border border-[#1c1c19] p-5" aria-labelledby="watch-heading">
       <div className="flex flex-wrap items-baseline justify-between gap-3 mb-3">
         <h2 id="watch-heading" className="font-label text-[11px] uppercase tracking-[0.18em]">
-          Following · {moved.length + Object.values(districtCounts).filter((n) => n > 0).length} with news
+          Following, {moved.length + Object.values(districtCounts).filter((n) => n > 0).length} with changes
         </h2>
         <button type="button" onClick={markSeen}
                 className="tap-target font-label text-[10px] uppercase tracking-[0.16em] underline underline-offset-2">
@@ -150,7 +152,7 @@ export default function Watchlist() {
               <span className="opacity-75">{s ? s.stage : "…"}</span>
               {changed ? (
                 <strong className="font-label text-[10px] uppercase tracking-[0.14em]" style={{ color: PLUM }}>
-                  moved since you last looked
+                  changed since you last looked
                 </strong>
               ) : null}
             </li>

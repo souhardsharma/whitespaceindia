@@ -26,23 +26,23 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
 const PLANNED_REPORTS = [
   {
     tag: "District Profile",
-    title: "Whitespace districts: a 44-district atlas",
-    body: "Profiles of every district in the top whitespace tier: places where multidimensional poverty sits in the worst quartile and CSR per person in the lowest. Each profile pairs the district's POS components with its sector funding history and dominant donor categories.",
+    title: "An atlas of the 44 whitespace districts",
+    body: "The atlas will profile each whitespace district, meaning a district where CSR spending per person is in the bottom 25% of all districts in the index and the share of people in multidimensional poverty is in the top 25%. Each profile will set the parts of the district's score beside its CSR spending by sector.",
   },
   {
     tag: "Sector Study",
-    title: "Where India's CSR education spending actually lands",
-    body: "Education absorbs about a third of attributable CSR every year. This report maps that spending against district-level school infrastructure deficits and child-poverty headcounts, then surfaces the widest mismatches.",
+    title: "Where CSR spending on education goes",
+    body: "This report will set the CSR money spent on education in each district against measures of school provision and child poverty, and identify the districts where spending and need diverge most.",
   },
   {
     tag: "Funder Analysis",
-    title: "The top fifty CSR spenders, mapped",
-    body: "The fifty largest corporate donors broken down by district footprint, sector concentration, and the gap between where each spends and where need is highest. Built on ten fiscal years of MCA filings, normalized to constant rupees.",
+    title: "The fifty largest CSR spenders, mapped",
+    body: "For each of the fifty companies that spend most on CSR, this study will show which districts and sectors receive the money and how that compares with where poverty is highest. It will use ten fiscal years of Ministry of Corporate Affairs filings, adjusted for inflation.",
   },
   {
     tag: "Methodological Note",
-    title: "Carve-out districts and the ghost-population problem",
-    body: "Over fifty districts in the current MPI list did not exist at the time of Census 2011. This note documents how proportional splitting of parent-district populations affects per-capita CSR estimates and where the residual uncertainty concentrates.",
+    title: "Districts drawn after Census 2011",
+    body: "More than fifty districts in NITI Aayog's poverty index did not exist at the time of Census 2011, so the index has to estimate their 2011 populations by dividing the population of the district they were carved from in proportion. This note will show how much those estimates move each district's CSR per person and where the uncertainty is largest.",
   },
 ];
 
@@ -65,7 +65,7 @@ export default function ReportsPage() {
         <div className="relative z-10 max-w-7xl mx-auto">
           <div className="mb-10">
             <span className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.4em] text-[#BD402C]">
-              Reports &amp; Analysis
+              CSR Opportunity Index
             </span>
             <div className="h-px bg-[#1c1c19] mt-4 w-24" />
           </div>
@@ -74,12 +74,12 @@ export default function ReportsPage() {
             <div className="md:col-span-8">
               <h1 className="font-headline text-5xl sm:text-6xl md:text-7xl lg:text-8xl headline-tight text-[#1c1c19]">
                 Reports &amp;<br />
-                <span className="italic font-light">analysis.</span>
+                <span className="italic font-light">analysis</span>
               </h1>
               <p className="mt-8 md:mt-10 max-w-2xl font-body text-lg md:text-xl leading-relaxed text-[#1c1c19]/90">
-                District whitespace profiles, sector funding analyses, and funder
-                studies. All built on NITI Aayog poverty data and ten fiscal
-                years of MCA CSR filings.
+                Whitespace India is preparing a series of reports on CSR spending
+                and need, built on NITI Aayog&apos;s poverty index and the CSR
+                filings companies make to the Ministry of Corporate Affairs.
               </p>
             </div>
 
@@ -92,7 +92,7 @@ export default function ReportsPage() {
                   Coming Soon
                 </div>
                 <p className="font-body text-[10px] uppercase tracking-[0.15em] text-[#1c1c19]/55 mt-3 leading-relaxed">
-                  First reports listed below.
+                  The first four are described below.
                 </p>
               </div>
             </div>
@@ -113,11 +113,11 @@ export default function ReportsPage() {
               </div>
               <div className="md:col-span-9">
                 <h2 className="font-headline text-3xl md:text-5xl headline-tight text-[#1c1c19] mb-4">
-                  What&apos;s coming, <span className="italic font-light">in order.</span>
+                  Reports in <span className="italic font-light">preparation</span>
                 </h2>
                 <p className="font-body text-base text-[#1c1c19]/75 leading-relaxed max-w-2xl">
-                  Four reports come first. Each ships as a long-form PDF with
-                  an interactive companion on this site.
+                  Each report will be published as a long PDF, with an
+                  interactive version on this site.
                 </p>
               </div>
             </div>
@@ -164,11 +164,11 @@ export default function ReportsPage() {
               </div>
               <div className="md:col-span-9">
                 <h2 className="font-headline text-3xl md:text-5xl headline-tight text-[#1c1c19] mb-4">
-                  Read in the <span className="italic font-light">meantime.</span>
+                  Already <span className="italic font-light">published</span>
                 </h2>
                 <p className="font-body text-base text-[#1c1c19]/75 leading-relaxed max-w-2xl">
-                  The CSR opportunity index, the full methodology, and the
-                  project background are live and free to use.
+                  The index itself is free to use, and its method and background
+                  are documented alongside it.
                 </p>
               </div>
             </div>
@@ -178,20 +178,20 @@ export default function ReportsPage() {
                 {
                   href: "/csr",
                   tag: "Tool",
-                  title: "Opportunity Index",
-                  body: "Rank every Indian district by the gap between poverty and CSR funding. Generate per-district research briefs.",
+                  title: "CSR Opportunity Index",
+                  body: "The index ranks 651 districts by their poverty against the CSR spending they receive, and you can download a research brief on any of them.",
                 },
                 {
                   href: "/methodology",
                   tag: "Reference",
-                  title: "Full Methodology",
-                  body: "Six pipeline stages, three datasets, normalization choices, and every assumption documented in the open.",
+                  title: "Methodology",
+                  body: "The methodology sets out each step from the raw data to the score, with the reason for each choice.",
                 },
                 {
                   href: "/about",
                   tag: "Background",
-                  title: "About the Project",
-                  body: "The mismatch this project documents, who it serves, and the public data behind it.",
+                  title: "About the index",
+                  body: "The about page explains why the index was built and which public data it draws on.",
                 },
               ].map((c, i) => (
                 <Link
@@ -228,14 +228,14 @@ export default function ReportsPage() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
                 <div className="md:col-span-7">
                   <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#fcf9f4]/60 block mb-4">
-                    Be Notified
+                    Updates
                   </span>
                   <h2 className="font-headline text-3xl md:text-4xl headline-tight mb-3">
-                    Reports drop <span className="italic font-light">straight to inbox.</span>
+                    Hear when a report is <span className="italic font-light">published</span>
                   </h2>
                   <p className="font-body text-sm md:text-base text-[#fcf9f4]/80 max-w-md leading-relaxed">
-                    One short note when a new report or district atlas goes
-                    live. Usually once or twice a quarter.
+                    We send one short email, with a link, each time a new report
+                    or district atlas is published.
                   </p>
                 </div>
                 <div className="md:col-span-5">

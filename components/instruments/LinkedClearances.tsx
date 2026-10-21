@@ -39,12 +39,13 @@ export default function LinkedClearances({
         id="links-heading"
         className="font-headline font-bold text-[clamp(22px,2.6vw,32px)] tracking-[-0.02em] mb-2"
       >
-        Other clearances, and the land
+        Other clearances and land tenure
       </h2>
       <p className="font-body text-[13.5px] leading-relaxed opacity-75 max-w-3xl mb-4">
-        What the application form declares about the other clearances this
-        project needs and how its land is held. These are the proponent&rsquo;s
-        declarations, not an independent finding.
+        This section reports what the application form declares about the
+        other clearances the project needs and about how its land is held. The
+        applicant made these declarations, and we have not checked them against
+        any other record.
       </p>
       {state === "unread" ? (
         <p className="font-body text-[14px] border border-dashed border-[#1c1c19]/30 p-5 opacity-80">

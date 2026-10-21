@@ -187,8 +187,10 @@ export function evaluateTrigger(
     case "acquisition_any":
     case "acquisition_private_or_ppp":
       // The clearance register records land area but not the tenure route by
-      // which it was obtained. Land bought through private negotiation does not
-      // engage the Act at all, and nothing in the filing distinguishes the two.
+      // which it was obtained. Land bought through private negotiation is
+      // outside the Act's acquisition provisions (its R&R duties reach such a
+      // purchase only above the s.2(3) limit), and the filing distinguishes
+      // neither route.
       return declared.totalLandHa ? "conditional" : "not_determined";
 
     case "critical_wildlife_habitat":

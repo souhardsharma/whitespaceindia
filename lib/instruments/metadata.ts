@@ -26,7 +26,7 @@
 
 import { SITE_URL } from "@/lib/site";
 
-const OG_IMAGE = "/og/consent-2.jpg";
+const OG_IMAGE = "/og/consent-3.jpg";
 
 export interface PageMetaInput {
   /** Absolute path from the site root, e.g. "/instruments/consent/register". */

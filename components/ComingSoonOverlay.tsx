@@ -69,7 +69,7 @@ export default function ComingSoonOverlay({
 
       <div ref={overlayRef} className={styles.overlay}>
         <div className={styles.overlayInner}>
-          <span className={styles.badge}>Coming Soon</span>
+          <span className={styles.badge}>Preview</span>
           <h1 className={styles.title}>
             Whitespace India{" "}
             <span className={styles.titleAccent} style={{ color: accentColor }}>
@@ -77,12 +77,13 @@ export default function ComingSoonOverlay({
             </span>
           </h1>
           <p className={styles.subtitle}>
-            We are building this research vertical. The same methodology,
-            applied to {verticalName.toLowerCase()} data across Indian
-            districts. Stay tuned.
+            This index is being built with the method of the CSR index,
+            applied to {verticalName.toLowerCase()} data for Indian districts.
+            The page behind this notice runs on placeholder numbers until
+            the real data is in place.
           </p>
           <a href="/" className={styles.backLink}>
-            &larr; Back to Home
+            &larr; Whitespace India home
           </a>
           <div className={styles.brandLine}>Whitespace India</div>
         </div>

@@ -10,26 +10,26 @@ const defaultSteps = [
   {
     number: "01",
     tag: "Input",
-    title: "Choose Your Sector",
-    text: "Pick a development sector (education, health, sanitation, or any of ten focus areas). When a sector is selected, only CSR spending in that sector is used to compute the funding gap (G). Districts with no activity in the chosen sector will show a maximum gap. Need (N) and Persistence (U) remain unchanged.",
+    title: "Sector",
+    text: "The index can be scored on all CSR spending or on one of ten sectors, such as education, health care or sanitation. With a sector chosen, the funding gap is calculated from that sector's spending alone, so a district with no spending in it gets the largest possible gap, while poverty and persistence stay as they are.",
   },
   {
     number: "02",
     tag: "Weighting",
-    title: "Set Your Priorities",
-    text: "Three weight sliders. Drag them to reflect what matters most to your foundation. Poverty severity, funding gap, persistence. Weight each to match your theory of change, or pick a preset.",
+    title: "Weights",
+    text: "The score combines poverty, the funding gap and persistence, each with its own weight. You can move the sliders to weight them differently, or choose one of the presets.",
   },
   {
     number: "03",
     tag: "Output",
-    title: "See Ranked Districts",
-    text: "A live-ranked ledger of every scored district, ordered by philanthropic opportunity. Click any state on the map to filter down to that geography.",
+    title: "Ranking",
+    text: "Every scored district is listed by its score, highest first, and the order updates as the weights change. Clicking a state on the map lists only that state's districts.",
   },
   {
     number: "04",
     tag: "Export",
-    title: "Download a Brief",
-    text: "Click any district to generate a research brief with key data, context, and gaps worth studying. Export as PDF.",
+    title: "Research brief",
+    text: "Clicking a district opens a short research brief on it, which you can download as a PDF.",
   },
 ];
 
@@ -57,10 +57,10 @@ export default function HowItWorks({ vertical }: { vertical?: VerticalConfig }) 
           </div>
           <div className="md:col-span-9">
             <h2 className="font-headline text-4xl md:text-6xl lg:text-7xl headline-tight text-[#1c1c19] mb-6">
-              From data <span className="italic font-light">to decision.</span>
+              How the index <span className="italic font-light">works</span>
             </h2>
             <p className="font-body text-base md:text-lg text-[#1c1c19]/75 leading-relaxed max-w-2xl">
-              Four steps to surface your highest-opportunity district. No dashboards, no noise. Just evidence, ranked.
+              A district&apos;s score depends on the sector and the weights chosen in the first two steps, and the ranking and the research briefs follow from that score.
             </p>
           </div>
         </motion.div>
@@ -107,7 +107,7 @@ export default function HowItWorks({ vertical }: { vertical?: VerticalConfig }) 
           className="flex justify-end mt-6"
         >
           <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/40">
-            Precomputed scores · Reproducible via scripts/csr/rebuild_data.py
+            Scores are precomputed from the published data
           </span>
         </motion.div>
       </div>

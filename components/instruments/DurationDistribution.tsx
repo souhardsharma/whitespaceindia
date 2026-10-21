@@ -62,8 +62,9 @@ export default function DurationDistribution({
   if (drawable.length === 0) {
     return (
       <p className="font-body text-[13px] opacity-75">
-        No group here reaches {minGroup} decided proposals, which is the floor
-        below which a distribution is not published.
+        Every group here has fewer than {minGroup} decided proposals. We
+        publish a spread only for groups at least that large, because a smaller
+        one moves too much with a single case.
       </p>
     );
   }
@@ -79,10 +80,10 @@ export default function DurationDistribution({
       <ul className="space-y-3">
         {drawable.map(({ label, d }) => {
           const aria =
-            `${label}: median ${d.median} ${unitLabel}, ` +
-            `half of ${nf.format(d.n)} proposals between ${d.p25} and ${d.p75}, ` +
-            `middle 80% between ${d.p10} and ${d.p90} ${unitLabel} — one in ` +
-            `ten is faster, one in ten slower, and the slowest are not shown`;
+            `${label}: median ${d.median} ${unitLabel} over ${nf.format(d.n)} ` +
+            `proposals. Half took between ${d.p25} and ${d.p75} ${unitLabel}, ` +
+            `and the middle 80% between ${d.p10} and ${d.p90} ${unitLabel}. ` +
+            `The fastest and slowest tenth lie outside the range drawn.`;
           return (
             <li key={label} role="img" aria-label={aria}>
               <div className="flex items-baseline justify-between gap-4 mb-1">
@@ -92,7 +93,7 @@ export default function DurationDistribution({
                 <span className="font-label text-[12px] tabular-nums shrink-0">
                   <strong>{d.median}</strong>
                   <span className="opacity-70"> {unitLabel}</span>
-                  <span className="opacity-65"> · n {nf.format(d.n)}</span>
+                  <span className="opacity-65"> · {nf.format(d.n)} proposals</span>
                 </span>
               </div>
               <div className="relative h-[14px]">
@@ -137,7 +138,7 @@ export default function DurationDistribution({
             style={{ background: RAMP[1] }}
           />
           <span className="font-body text-[12px] opacity-70">
-            Middle half (p25&ndash;p75)
+            Middle half of proposals
           </span>
         </span>
         <span className="flex items-center gap-1.5">
@@ -147,8 +148,8 @@ export default function DurationDistribution({
             style={{ background: "rgba(28,28,25,0.35)" }}
           />
           <span className="font-body text-[12px] opacity-70">
-            p10&ndash;p90 &mdash; the middle 80%, so one in ten is faster and
-            one in ten is slower
+            Middle 80%, with one proposal in ten faster and one in ten
+            slower
           </span>
         </span>
         <span className="flex items-center gap-1.5">
@@ -160,7 +161,7 @@ export default function DurationDistribution({
           <span className="font-body text-[12px] opacity-70">Median</span>
         </span>
         <span className="font-body text-[12px] opacity-70 tabular-nums">
-          scale 0&ndash;{Math.round(ceiling)} {unitLabel}
+          Scale runs from 0 to {Math.round(ceiling)} {unitLabel}
         </span>
       </div>
     </div>

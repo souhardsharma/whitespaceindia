@@ -37,7 +37,7 @@ export default function Findings({
           aria-expanded={open}
           className="font-label text-[10px] uppercase tracking-[0.16em] opacity-70 hover:opacity-90 transition-opacity"
         >
-          {open ? "Hide the rules" : "Why these appear"}
+          {open ? "Hide the rules" : "Show the rules"}
         </button>
       </div>
 
@@ -60,7 +60,7 @@ export default function Findings({
                 </span>
                 {f.rule}
                 <span className="font-label text-[9px] uppercase tracking-[0.16em] mx-2">
-                  From
+                  Measures used
                 </span>
                 {f.basis.join(", ")}
               </p>
@@ -70,9 +70,10 @@ export default function Findings({
       </ul>
 
       <p className="font-body text-[12.5px] leading-relaxed opacity-75 mt-3 max-w-3xl">
-        These are observations produced by fixed rules from the figures on this
-        page. The same inputs always produce the same sentences, no model wrote
-        them, and none of them says whether a project should proceed.
+        Each of these observations appears when a fixed rule is met by the
+        figures on this page, so the same figures always give the same
+        sentences. None of them is a view on whether a project should go
+        ahead.
       </p>
     </section>
   );

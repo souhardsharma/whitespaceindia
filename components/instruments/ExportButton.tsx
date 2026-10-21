@@ -33,7 +33,7 @@ export default function ExportButton({
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || `export failed (${res.status})`);
+        throw new Error(j.error || `The PDF could not be prepared (error ${res.status}).`);
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -45,7 +45,7 @@ export default function ExportButton({
       a.remove();
       URL.revokeObjectURL(url);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "export failed");
+      setError(e instanceof Error ? e.message : "The PDF could not be prepared.");
     } finally {
       setBusy(false);
     }
@@ -76,7 +76,7 @@ export default function ExportButton({
         <span className="font-body text-[11.5px] opacity-70">{error}</span>
       ) : (
         <span className="font-body text-[11px] opacity-70">
-          PDF · no generated prose, every figure carries its source
+          PDF, with the source of every figure
         </span>
       )}
     </div>

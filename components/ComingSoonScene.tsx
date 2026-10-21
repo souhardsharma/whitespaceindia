@@ -30,15 +30,15 @@ export default function ComingSoonScene({
         rel="noopener noreferrer"
         className={styles.contact}
       >
-        Get in touch
+        Contact on LinkedIn
       </a>
 
       <div className={styles.content}>
         <h1 className={styles.title}>{title}</h1>
         <div className={styles.subtitle}>Coming Soon</div>
         <p className={styles.blurb}>
-          A new Whitespace India research initiative, currently in development.
-          The opportunity index for {title.toLowerCase()} arrives later this year.
+          Whitespace India is building an opportunity index for{" "}
+          {title.toLowerCase()}, which is due later this year.
         </p>
       </div>
 

@@ -180,7 +180,7 @@ export default function ProjectProfile({
       ) : !district ? (
         <Notice
           title="No Census record for this district"
-          body="This proposal names a Census 2011 district that is missing from the population data this instrument uses, so there is no profile of who lives there to show. The gap is reported rather than filled in with a neighbouring district's figures."
+          body="This proposal names a Census 2011 district that is missing from the population data we use, so there is no profile of its people to show. We leave the gap visible and do not borrow a neighbouring district's figures."
         />
       ) : (
         <>
@@ -195,7 +195,7 @@ export default function ProjectProfile({
 
           <Findings
             findings={findingsForProject(project, district, determination)}
-            title="What this filing says"
+            title="What the record shows"
           />
 
           {/* Where the filed coordinates put it, against the district it
@@ -282,26 +282,26 @@ export default function ProjectProfile({
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12">
             <FactGroup
-              title="Who lives there"
-              intro={`Census 2011 for ${place ? placeName(place) : ""}. Compared against India computed from the same definition.`}
+              title="Population"
+              intro={`Figures for ${place ? placeName(place) : ""} come from Census 2011 and are compared with India figures calculated the same way.`}
               facts={facts("population")}
               emphasise={["pop.total", "pop.st_share"]}
             />
             <FactGroup
-              title="What they live on"
-              intro="Worker composition. The land-dependent share is the population most directly exposed to acquisition."
+              title="Work and livelihood"
+              intro="These figures show what kind of work people do. Cultivators and agricultural labourers, together the land-dependent share, earn their living by working the land, so a project that takes land can also take their work."
               facts={facts("livelihood")}
               emphasise={["work.land_dependent_share"]}
             />
           </div>
           <FactGroup
-            title="What is already there"
-            intro="Community infrastructure recorded in the Census 2011 Village Directory. Rural areas only; urban facilities are not counted."
+            title="Village facilities"
+            intro="Schools, health centres and other facilities come from the Census 2011 Village Directory, which covers villages only, so facilities in towns are left out."
             facts={facts("infrastructure")}
           />
           <FactGroup
-            title="How households live"
-            intro="Rural households in the Socio Economic and Caste Census 2011: land, income and work, which the population census does not record. Urban households are not in this source."
+            title="Household circumstances"
+            intro="The Socio Economic and Caste Census 2011 records household land, income and work, which the population census does not. The figures here cover rural households only, because the dataset we draw them from publishes only its rural part."
             facts={facts("circumstances")}
           />
         </>
@@ -321,7 +321,7 @@ function ProjectHeader({ project: p }: { project: Project }) {
           className="font-label text-[10px] uppercase tracking-[0.16em] px-2 py-1"
           style={{ background: PLUM, color: "#fcf9f4" }}
         >
-          Category {p.category ?? "—"}
+          {p.category ? `Category ${p.category}` : "No category recorded"}
         </span>
         <span className="font-label text-[10px] uppercase tracking-[0.16em] opacity-65">
           {stageLabel(p.appraisal?.statusKey, p.status, STAGE_LABELS)}
@@ -341,7 +341,7 @@ function ProjectHeader({ project: p }: { project: Project }) {
       </h1>
 
       <dl className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-5">
-        <Meta label="Proponent" value={p.agency || "Not recorded"} />
+        <Meta label="Applicant" value={p.agency || "Not recorded"} />
         <Meta label="Sector" value={p.sector} />
         <Meta label="Submitted" value={p.date || "Not recorded"} />
         <Meta
@@ -349,7 +349,7 @@ function ProjectHeader({ project: p }: { project: Project }) {
           value={d.totalLandHa != null ? nf.format(d.totalLandHa) : "Not declared"}
           hint={
             d.totalLandHa != null
-              ? "unit not recorded in the filing"
+              ? "The filing gives no unit for this figure."
               : undefined
           }
         />
@@ -365,32 +365,33 @@ function ProjectHeader({ project: p }: { project: Project }) {
           style={{ borderColor: PLUM, background: "rgba(122,59,107,0.04)" }}
         >
           <p className="font-label text-[10px] uppercase tracking-[0.18em] opacity-75 mb-2">
-            Declared by the proponent in the application
+            Declared by the applicant on the form
           </p>
           <ul className="font-body text-[14px] leading-relaxed space-y-1">
             {(d.displacedFamilies ?? 0) > 0 ? (
-              <li>{nf.format(d.displacedFamilies!)} families to be displaced</li>
+              <li>{nf.format(d.displacedFamilies!)} families will be displaced.</li>
             ) : null}
             {(d.affectedFamilies ?? 0) > 0 ? (
-              <li>{nf.format(d.affectedFamilies!)} families affected</li>
+              <li>{nf.format(d.affectedFamilies!)} families will be affected.</li>
             ) : null}
             {d.rnrInvolved === "YES" ? (
-              <li>Rehabilitation and resettlement is involved</li>
+              <li>The project involves rehabilitation and resettlement.</li>
             ) : null}
-            {d.litigationPending === "YES" ? <li>Litigation is pending</li> : null}
+            {d.litigationPending === "YES" ? <li>Litigation concerning the project is pending.</li> : null}
             {d.violationInvolved === "YES" ? (
-              <li>A violation is involved</li>
+              <li>The project is a violation case, meaning work began before the clearance it needed.</li>
             ) : null}
             {(d.forestLandHa ?? 0) > 0 ? (
               <li>
-                {nf.format(d.forestLandHa!)} of forest land
-                <span className="opacity-75"> — unit not recorded</span>
+                The project involves forest land, recorded as{" "}
+                {nf.format(d.forestLandHa!)}
+                <span className="opacity-75"> with no unit given.</span>
               </li>
             ) : null}
           </ul>
           <p className="font-body text-[12px] leading-relaxed opacity-75 mt-2">
-            These are the proponent&rsquo;s own figures from their filing, not an
-            independent assessment.
+            These figures come from the applicant&rsquo;s own filing, and we
+            have not checked them against any other record.
           </p>
         </div>
       ) : null}
@@ -443,7 +444,7 @@ function LocationPanel({
       <div className="flex flex-wrap items-end justify-between gap-4 mb-3">
         <div>
           <p className="font-label text-[10px] uppercase tracking-[0.2em] opacity-70 mb-1">
-            Where this profile describes
+            Area profiled
           </p>
           <h2 className="font-headline font-bold text-[clamp(22px,2.8vw,34px)] tracking-[-0.02em]">
             {titleCase(district.district_name)}
@@ -483,23 +484,24 @@ function LocationPanel({
 
       <p className="font-body text-[13.5px] leading-relaxed opacity-70 max-w-3xl">
         {evidence.contested ? (
-          <strong className="font-semibold">Location contested. </strong>
+          <strong className="font-semibold">The location is uncertain. </strong>
         ) : null}
         {evidence.sentences.join(" ")}
         {p.allDistricts && p.allDistricts.length > 1 ? (
           <>
             {" "}
-            The filing names {p.allDistricts.length} districts; this profile
-            describes the one with the most sites. A linear project affects all
-            of them.
+            The filing names {p.allDistricts.length} districts, and this profile
+            describes the one where it names the most places. A project that
+            runs across districts, such as a road or a pipeline, may affect
+            people in each of them.
           </>
         ) : null}
         {scope === "subdistrict" && subdistricts[0] ? (
           <>
             {" "}
-            Showing the {titleCase(subdistricts[0].name || "")} sub-district, which
-            is a far closer description of who a project actually affects than a
-            district of several million people.
+            The figures below are for the {titleCase(subdistricts[0].name || "")}{" "}
+            sub-district, which describes the people living near the project
+            more closely than figures for the whole district.
             {/* A tehsil that straddles a district boundary is one Census unit
                 published once, so its figures cover ground outside the
                 district named above. Saying nothing would let a reader take
@@ -508,9 +510,11 @@ function LocationPanel({
             {(subdistricts[0].districts?.length ?? 0) > 1 ? (
               <>
                 {" "}
-                This sub-district crosses a district boundary, so the figures
-                cover all {subdistricts[0].districts!.length} districts it lies
-                in and not this district alone.
+                This sub-district crosses a district boundary, so its figures
+                cover the whole sub-district, including the parts that lie in
+                the other {subdistricts[0].districts!.length - 1 === 1
+                  ? "district"
+                  : `${subdistricts[0].districts!.length - 1} districts`}.
               </>
             ) : null}
           </>
@@ -538,36 +542,37 @@ function UnresolvedLocation({ project: p }: { project: Project }) {
       <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl">
         {p.formStatus === "none" ? (
           <>
-            The Ministry&rsquo;s portal serves no Common Application Form for
-            this proposal, so no filed location could be read from it, and the
-            project name carries no district that resolves against the Census
-            gazetteer. The finest location available is the state.
+            The PARIVESH portal of the Ministry of Environment, Forest and
+            Climate Change serves no Common Application Form for this proposal,
+            so we could read no filed location. The project&rsquo;s title names
+            no district we can match to the Census 2011 list either, so the
+            state is the most precise location available.
           </>
         ) : p.formStatus === "pend" ? (
           <>
-            This instrument has not yet read the Common Application Form for
-            this proposal, and the project name carries no district that
-            resolves against the Census gazetteer. The finest location
-            available for now is the state.
+            We have not yet read the Common Application Form for this
+            proposal, and the project&rsquo;s title names no district we can
+            match to the Census 2011 list, so for now the state is the most
+            precise location available.
           </>
         ) : (
           <>
-            This proposal&rsquo;s Common Application Form does not record a
-            village, sub-district or district for the project site, and the
-            project name carries no district that resolves against the Census
-            gazetteer. The finest location available is the state.
+            This proposal&rsquo;s Common Application Form records no village,
+            sub-district or district for the project site, and the
+            project&rsquo;s title names no district we can match to the Census
+            2011 list, so the state is the most precise location available.
           </>
         )}
       </p>
       <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl mt-3">
-        No population profile is shown, because there is no place to profile.
-        Showing the state average here would answer a question nobody asked and
-        imply a precision that does not exist.
+        No population profile is shown, because a state average would describe
+        a far larger area than the project site and suggest a precision the
+        record lacks.
       </p>
       {p.certificateUrl ? (
         <p className="font-body text-[13.5px] leading-relaxed opacity-70 mt-3">
-          The signed clearance letter often names the site in prose. It is linked
-          above.
+          The signed clearance letter, linked above, may name the site in its
+          text.
         </p>
       ) : null}
     </section>
@@ -578,7 +583,7 @@ function DataCurrency({ meta }: { meta: InstrumentMeta }) {
   return (
     <section className="mt-14 pt-8 border-t border-[#1c1c19]">
       <h2 className="font-label text-[10px] uppercase tracking-[0.22em] opacity-70 mb-4">
-        Data currency
+        How current the data is
       </h2>
       <p className="font-body text-[13.5px] leading-relaxed opacity-75 max-w-3xl mb-5">
         {meta.vintage_warning}
@@ -599,7 +604,7 @@ function DataCurrency({ meta }: { meta: InstrumentMeta }) {
         className="inline-flex items-center gap-2 mt-6 font-label text-[11px] uppercase tracking-[0.18em]"
         style={{ color: PLUM }}
       >
-        How every figure here was produced <span aria-hidden="true">↗</span>
+        How the figures here were produced
       </Link>
     </section>
   );
@@ -657,23 +662,24 @@ function AppraisalComparison({ c }: { c: NonNullable<ProposalBundle["appraisalCo
   const rows = [
     c.sector ? { label: `${c.sector.name} proposals`, d: c.sector } : null,
     c.state ? { label: `proposals filed in ${titleCase(c.state.name)}`, d: c.state } : null,
-    c.national ? { label: "all of India", d: c.national } : null,
+    c.national ? { label: "proposals across India", d: c.national } : null,
   ].filter((r): r is { label: string; d: { n: number; p25: number; median: number; p75: number } } => r !== null);
   if (!rows.length) return null;
   return (
     <p className="font-body text-[13.5px] leading-relaxed opacity-80 max-w-3xl -mt-4 mb-10">
       This environmental clearance was decided in{" "}
-      <strong>{nf.format(c.days)} days</strong>. The middle half of EC decisions
-      took{" "}
+      <strong>{nf.format(c.days)} days</strong>. For comparison, the middle
+      half of environmental clearance decisions took{" "}
       {rows.map((r, i) => (
         <span key={r.label}>
           {i > 0 ? (i === rows.length - 1 ? " and " : ", ") : ""}
-          {nf.format(r.d.p25)}–{nf.format(r.d.p75)} days for {r.label} (median{" "}
-          {nf.format(r.d.median)}, of {nf.format(r.d.n)})
+          {nf.format(r.d.p25)} to {nf.format(r.d.p75)} days for {r.label} (a
+          median of {nf.format(r.d.median)} days across {nf.format(r.d.n)}{" "}
+          decisions)
         </span>
       ))}
-      . Days run from first filing to decision, less time the portal had the
-      proposal delisted.
+      . Each duration runs from first filing to decision and leaves out any
+      time the portal had the proposal delisted.
     </p>
   );
 }

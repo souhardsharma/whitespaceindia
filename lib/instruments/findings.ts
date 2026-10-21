@@ -108,17 +108,17 @@ export function findingsForDistrict(
   if (st !== null && st !== undefined && st >= 50) {
     out.push({
       id: "st.majority",
-      text: `Most people counted here in 2011 were Scheduled Tribe — ${st.toFixed(1)}%, against ${INDIA.stShare}% nationally.`,
+      text: `Half or more of the people counted here in 2011 were Scheduled Tribe: ${st.toFixed(1)}%, against ${INDIA.stShare}% nationally.`,
       basis: ["pop.st_share"],
-      rule: `fires when the Scheduled Tribe share is at least 50%, i.e. a majority of the population`,
+      rule: "Shown when the Scheduled Tribe share is 50% or more.",
       kind: "population",
     });
   } else if (st !== null && st !== undefined && st >= INDIA.stShare * 2) {
     out.push({
       id: "st.elevated",
-      text: `The Scheduled Tribe share here, ${st.toFixed(1)}%, is more than double the national ${INDIA.stShare}%.`,
+      text: `The Scheduled Tribe share here, ${st.toFixed(1)}%, is at least double the national figure of ${INDIA.stShare}%.`,
       basis: ["pop.st_share"],
-      rule: "fires at twice the national Scheduled Tribe share",
+      rule: "Shown when the Scheduled Tribe share is at least twice the national share.",
       kind: "population",
     });
   }
@@ -127,9 +127,9 @@ export function findingsForDistrict(
   if (land !== null && land !== undefined && land >= 75) {
     out.push({
       id: "land.dominant",
-      text: `Three in four workers here derive their income directly from land — ${land.toFixed(0)}%, against ${INDIA.landDependent.toFixed(0)}% nationally. Land taken here is income taken.`,
+      text: `Cultivators and agricultural labourers make up ${land.toFixed(0)}% of workers here, against ${INDIA.landDependent.toFixed(0)}% nationally, so at least three in four people who work here do so on the land.`,
       basis: ["work.land_dependent_share"],
-      rule: "fires when cultivators and agricultural labourers together are at least 75% of workers",
+      rule: "Shown when cultivators and agricultural labourers together are 75% of workers or more.",
       kind: "livelihood",
     });
   }
@@ -146,9 +146,9 @@ export function findingsForDistrict(
       // provides to precisely the people this instrument exists to serve -
       // an error in the direction that reads as sympathetic, which is the
       // easiest kind to leave standing.
-      text: `${agLab.toFixed(0)}% of workers are agricultural labourers, who work land they do not own. Compensation for the land itself follows the title, so it does not reach them; the 2013 Act's rehabilitation and resettlement entitlements do, because section 3(c) counts a family whose livelihood depends on the land as an affected family. That distinction decides what this group can claim, and it only holds where the 2013 Act applies at all.`,
+      text: `Agricultural labourers, who work other people's land for wages, make up ${agLab.toFixed(0)}% of workers here. Compensation for acquired land is paid to those who hold title to it, so it does not reach them. They can still claim the rehabilitation and resettlement entitlements of the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 (RFCTLARR), because its section 3(c) counts a family whose livelihood depends on the land as an affected family, wherever that Act governs how the land is obtained.`,
       basis: ["work.ag_labourer_share"],
-      rule: "fires when agricultural labourers are at least 40% of workers, well above the national share",
+      rule: "Shown when agricultural labourers are 40% of workers or more, well above their national share.",
       kind: "livelihood",
     });
   }
@@ -156,9 +156,9 @@ export function findingsForDistrict(
   if (lit !== null && lit !== undefined && lit <= 60) {
     out.push({
       id: "literacy.low",
-      text: `Literacy was ${lit.toFixed(1)}% in 2011 against ${INDIA.literacy}% nationally, which bears on how a written consultation process actually reaches people.`,
+      text: `Literacy was ${lit.toFixed(1)}% in 2011 against ${INDIA.literacy}% nationally, so notices and documents issued in writing during a consultation may reach fewer people here.`,
       basis: ["pop.literacy_rate"],
-      rule: "fires at or below 60% literacy, measured over population aged 7 and above",
+      rule: "Shown when literacy is 60% or lower, measured over the population aged 7 and above.",
       kind: "population",
     });
   }
@@ -167,17 +167,17 @@ export function findingsForDistrict(
   if (determination?.status === "within") {
     out.push({
       id: "legal.scheduled",
-      text: `This district is a Fifth Schedule Scheduled Area. Prior consent of the Gram Sabha is a legal precondition for land acquisition here under RFCTLARR section 41(3) — consent, not consultation, and it applies even in cases of urgency.`,
+      text: `This district is a Fifth Schedule Scheduled Area. Under section 41(3) of the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 (RFCTLARR), land here can be acquired only with the prior consent of the Gram Sabha, and the requirement holds even when an acquisition is urgent.`,
       basis: ["legal_reference.determinations"],
-      rule: "fires where a Presidential Order names the whole district",
+      rule: "Shown where a Presidential Order names the whole district as a Scheduled Area.",
       kind: "legal",
     });
   } else if (determination?.status === "partial") {
     out.push({
       id: "legal.partial",
-      text: `Part of this district is a Fifth Schedule Scheduled Area. Whether a particular site falls inside it decides whether Gram Sabha consent is legally required, and that cannot be settled at district level.`,
+      text: `Part of this district is a Fifth Schedule Scheduled Area. Acquiring land for a project sited in that part needs the Gram Sabha's prior consent under section 41(3) of RFCTLARR, and the district-level record cannot settle whether a particular site lies there.`,
       basis: ["legal_reference.determinations"],
-      rule: "fires where a Presidential Order names only blocks, tehsils or villages within the district",
+      rule: "Shown where a Presidential Order names only some blocks, tehsils or villages in the district.",
       kind: "legal",
     });
   }
@@ -190,13 +190,13 @@ export function findingsForDistrict(
   ) {
     out.push({
       id: "combined.exposure",
-      text: `${nf.format(context!.proposals!)} clearance proposals sit in a district that is ${st.toFixed(0)}% Scheduled Tribe and where ${land.toFixed(0)}% of workers depend on land${
+      text: `${nf.format(context!.proposals!)} clearance proposals name this district, where ${st.toFixed(0)}% of people are Scheduled Tribe and ${land.toFixed(0)}% of workers depend on the land${
         (context?.categoryA ?? 0) > 0
-          ? `, ${nf.format(context!.categoryA!)} of them Category A`
+          ? `. ${nf.format(context!.categoryA!)} of those proposals are Category A, the class the central government appraises`
           : ""
       }.`,
       basis: ["pop.st_share", "work.land_dependent_share", "register.proposals"],
-      rule: "fires where a majority-Scheduled-Tribe district with at least 70% land dependence also holds active proposals",
+      rule: "Shown where the Scheduled Tribe share is 50% or more, at least 70% of workers depend on the land, and at least one proposal names the district.",
       kind: "declared",
     });
   }
@@ -204,9 +204,9 @@ export function findingsForDistrict(
   if ((context?.displaced ?? 0) > 0) {
     out.push({
       id: "declared.displacement",
-      text: `Proponents filing here have declared ${nf.format(context!.displaced!)} families to be displaced. That is their own figure from their own applications, not an independent assessment.`,
+      text: `Applicants for projects sited mainly in this district have declared ${nf.format(context!.displaced!)} families to be displaced. The figure comes from their applications, and we have not verified it.`,
       basis: ["register.declared_displaced"],
-      rule: "fires when the declared displaced-family total across the district is above zero",
+      rule: "Shown when the families declared displaced across the district's proposals number more than zero.",
       kind: "declared",
     });
   }
@@ -226,17 +226,15 @@ export function findingsForProject(
   if ((d.displacedFamilies ?? 0) > 0) {
     out.push({
       id: "project.displacement",
-      // NOT "which engages the Second Schedule ... in full". That is a
-      // statement about the law, made from a number on an environmental
-      // clearance form, and the form does not establish it: the Second
-      // Schedule attaches to acquisition UNDER the 2013 Act, and land bought
-      // through private negotiation is outside it. The obligations panel on
-      // this same page says "MAY APPLY" for exactly that reason, so the two
-      // halves of one profile were making different claims about the same
-      // proposal. What the filing does establish is the declaration.
-      text: `The proponent has declared ${nf.format(d.displacedFamilies!)} families to be displaced by this project. Where land for it is acquired under the 2013 Act, that engages the Second Schedule rehabilitation and resettlement entitlements; where it is bought through private negotiation, it does not, and this filing does not say which.`,
+      // Conditional, as the obligations panel is ("MAY APPLY"): the Second
+      // Schedule attaches to acquisition under the 2013 Act and, by s.2(3)
+      // read with s.46, to a private company's purchase by negotiation above
+      // the area the State prescribes. The form records neither the route nor
+      // the area test, so the sentence states both routes and says the filing
+      // settles neither.
+      text: `The applicant has declared that ${nf.format(d.displacedFamilies!)} families will be displaced by this project. Those families are owed the rehabilitation and resettlement entitlements in the Second Schedule of RFCTLARR if the land is acquired under that Act, or if a private company buys it by negotiation above an area the State government sets (section 2(3)). The filing does not say how the land is being obtained.`,
       basis: ["declared.displacedFamilies"],
-      rule: "fires when the application declares displaced families above zero",
+      rule: "Shown when the application declares more than zero displaced families.",
       kind: "declared",
     });
   }
@@ -250,9 +248,9 @@ export function findingsForProject(
       // Act 2006 rights-recognition and Gram Sabha consent step first - but
       // whether either has been sought or completed is not on this form, and
       // the instrument does not know it.
-      text: `The proponent has declared that this project involves forest land. Diverting forest land requires prior approval under the Forest (Conservation) Act 1980, and the recognition of forest rights under the Forest Rights Act 2006 is a step in that process rather than a parallel one. Whether either has been sought for this project is not recorded in this filing.`,
+      text: `The applicant has declared that this project involves forest land. Diverting forest land needs the central government's prior approval under the Forest (Conservation) Act, 1980, renamed the Van (Sanrakshan Evam Samvardhan) Adhiniyam in 2023, and settling forest rights under the Forest Rights Act, 2006 is one of the steps in that approval. The filing does not record whether either has been sought.`,
       basis: ["declared.forestLandHa"],
-      rule: "fires when the application declares forest land above zero",
+      rule: "Shown when the application declares any forest land.",
       kind: "declared",
     });
   }
@@ -260,9 +258,9 @@ export function findingsForProject(
   if (d.litigationPending === "YES") {
     out.push({
       id: "project.litigation",
-      text: `The proponent has declared that litigation is pending in relation to this project.`,
+      text: `The applicant has declared that litigation concerning this project is pending.`,
       basis: ["declared.litigationPending"],
-      rule: "fires when the application declares pending litigation",
+      rule: "Shown when the application declares pending litigation.",
       kind: "declared",
     });
   }
@@ -270,9 +268,9 @@ export function findingsForProject(
   if (d.violationInvolved === "YES") {
     out.push({
       id: "project.violation",
-      text: `The proponent has declared that a violation is involved, meaning work began before the clearance it required was obtained.`,
+      text: `The applicant has declared the project a violation case, which means work began before the clearance it needed was obtained.`,
       basis: ["declared.violationInvolved"],
-      rule: "fires when the application declares a violation",
+      rule: "Shown when the application declares a violation.",
       kind: "declared",
     });
   }
@@ -280,9 +278,9 @@ export function findingsForProject(
   if (project.multiDistrictCount && project.multiDistrictCount > 1) {
     out.push({
       id: "project.linear",
-      text: `The filing names sites in ${project.multiDistrictCount} districts. The profile below describes only the district holding the most of them.`,
+      text: `The filing names sites in ${project.multiDistrictCount} districts, so the project may affect people in each of them, while the population profile below covers only the district with the most sites.`,
       basis: ["district.allDistricts"],
-      rule: "fires when the filing names more than one district",
+      rule: "Shown when the filing names more than one district.",
       kind: "declared",
     });
   }
@@ -290,9 +288,9 @@ export function findingsForProject(
   if (district && determination?.status === "within") {
     out.push({
       id: "project.scheduled",
-      text: `The site is in a Fifth Schedule Scheduled Area, where Gram Sabha consent is a precondition for acquisition rather than an outcome of consultation.`,
+      text: `The site is in a Fifth Schedule Scheduled Area, so acquiring land for it needs the prior consent of the Gram Sabha under section 41(3) of RFCTLARR.`,
       basis: ["legal_reference.determinations"],
-      rule: "fires where a Presidential Order names the whole district",
+      rule: "Shown where a Presidential Order names the whole district as a Scheduled Area.",
       kind: "legal",
     });
   }

@@ -9,9 +9,9 @@ import type { VerticalConfig, ScoringDimension, WeightPreset } from "@/lib/verti
 const DEFAULT_ACCENT = "#BD402C";
 
 const DEFAULT_DIMENSIONS: ScoringDimension[] = [
-  { key: "w_N", label: "Poverty Severity", shortLabel: "N", description: "Weight given to MPI headcount ratio", defaultWeight: 0.40, hintLow: "LOW", hintHigh: "HIGH" },
-  { key: "w_G", label: "Funding Gap", shortLabel: "G", description: "Weight given to CSR under-funding vs tier median", defaultWeight: 0.40, hintLow: "FUNDED", hintHigh: "NEGLECTED" },
-  { key: "w_U", label: "Persistent Poverty", shortLabel: "U", description: "Weight given to districts where poverty has not improved", defaultWeight: 0.20, hintLow: "IMPROVED", hintHigh: "STUCK" },
+  { key: "w_N", label: "Poverty", shortLabel: "N", description: "The weight given to the share of people in multidimensional poverty.", defaultWeight: 0.40, hintLow: "LOW", hintHigh: "HIGH" },
+  { key: "w_G", label: "Funding gap", shortLabel: "G", description: "The weight given to how far CSR per person falls below the median for districts of similar population.", defaultWeight: 0.40, hintLow: "SMALL GAP", hintHigh: "LARGE GAP" },
+  { key: "w_U", label: "Persistence", shortLabel: "U", description: "The weight given to how much of the 2015-16 poverty remained in 2019-21.", defaultWeight: 0.20, hintLow: "FELL", hintHigh: "PERSISTED" },
 ];
 
 const DEFAULT_PRESETS: WeightPreset[] = WEIGHT_PRESETS.map((p) => ({
@@ -49,6 +49,7 @@ export default function WeightsPanel({
   const dimensions = vertical?.dimensions ?? DEFAULT_DIMENSIONS;
   const sectors = vertical?.sectors ?? [...SECTORS];
   const presets = vertical?.weightPresets ?? DEFAULT_PRESETS;
+  const isCsr = !vertical || vertical.slug === "csr";
   const methodologyHref = vertical && vertical.slug !== "csr" ? `/${vertical.slug}/methodology` : "/methodology";
 
   const defaultPct = useMemo(() => {
@@ -172,10 +173,10 @@ export default function WeightsPanel({
       <div className="px-6 py-5 border-b border-[#1c1c19] bg-[#f6f3ee] flex items-center justify-between gap-4">
         <div>
           <h3 className="font-label text-[11px] uppercase tracking-[0.3em] font-bold text-[#1c1c19]">
-            Scoring Controls
+            Score settings
           </h3>
           <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-2">
-            Calibrate the Index
+            Sector and weights
           </p>
         </div>
         <button
@@ -194,14 +195,14 @@ export default function WeightsPanel({
             className="font-label text-[10px] uppercase tracking-[0.3em] font-bold mb-3 block"
             style={{ color: accent }}
           >
-            Focus Sector
+            Sector
           </label>
           <div className="relative">
             <select
               id="sector-select"
               value={sector}
               onChange={(e) => handleSectorChange(e.target.value)}
-              aria-label="Filter districts by sector"
+              aria-label="Sector whose spending the score uses"
               className="w-full bg-transparent text-[#1c1c19] border-0 border-b border-[#1c1c19] py-3 px-0 pr-8 font-body text-sm focus:ring-0 focus:outline-none appearance-none cursor-pointer"
             >
               {sectors.map((s) => (
@@ -220,11 +221,11 @@ export default function WeightsPanel({
         <div className="pt-2">
           <div className="flex items-center justify-between mb-6">
             <label className="font-label text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: accent }}>
-              Scoring Weights
+              Weights
             </label>
             {total !== 100 && (
               <span className="font-label text-[10px] uppercase tracking-widest" style={{ color: accent }}>
-                Σ {total}%
+                Total {total}%
               </span>
             )}
           </div>
@@ -296,7 +297,7 @@ export default function WeightsPanel({
         {/* Presets */}
         <div className="pt-2">
           <p className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60 font-bold mb-4">
-            Quick Presets
+            Presets
           </p>
           <div className="flex flex-wrap gap-0 border border-[#1c1c19]" role="group" aria-label="Scoring weight presets">
             {presets.map((preset, idx) => {
@@ -326,15 +327,17 @@ export default function WeightsPanel({
           <button
             onClick={handleWhitespaceToggle}
             aria-pressed={whitespaceOnly}
-            aria-label={`Show neglected districts only: ${whitespaceOnly ? "on" : "off"}`}
+            aria-label={`Show whitespace districts only: ${whitespaceOnly ? "on" : "off"}`}
             className="flex items-center justify-between w-full group gap-4"
           >
             <div className="text-left">
               <span className="font-label text-[11px] uppercase tracking-[0.15em] text-[#1c1c19] block">
-                Neglected Only
+                Whitespace districts only
               </span>
               <span className="font-body text-xs text-[#1c1c19]/60 block mt-1 italic">
-                Bottom 25% CSR + Top 25% poverty
+                {isCsr
+                  ? "Bottom 25% for CSR per person and top 25% for poverty"
+                  : "Districts this index flags as whitespace"}
               </span>
             </div>
             <div
@@ -360,7 +363,7 @@ export default function WeightsPanel({
             onMouseEnter={e => (e.currentTarget.style.color = accent)}
             onMouseLeave={e => (e.currentTarget.style.color = '#1c1c19')}
           >
-            <span>Full Methodology</span>
+            <span>Methodology</span>
             <span className="text-[10px]">→</span>
           </Link>
         </div>

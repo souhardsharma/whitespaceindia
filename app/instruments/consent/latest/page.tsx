@@ -36,9 +36,9 @@ export const revalidate = 3600;
 
 export const metadata = pageMeta({
   path: "/instruments/consent/latest",
-  title: "What moved in the register — People & Consent",
+  title: "Recent changes in the register | People & Consent",
   description:
-    "Environmental clearance proposals filed, queried, decided and closed across India in the last sixty days, dated by the regulator's own appraisal history.",
+    "A day-by-day log of environmental clearance proposals filed, decided, closed or sent back for more details across India over the last sixty days, dated by the regulator's own appraisal history.",
 });
 
 const STAGE_LABELS: Record<string, string> = Object.fromEntries(
@@ -51,7 +51,7 @@ const KIND_ORDER: ChangeKind[] = ["filed", "query", "moved", "decided", "closed"
 const KIND_LABEL: Record<ChangeKind, string> = {
   filed: "Filed",
   query: "Details sought",
-  moved: "Moved",
+  moved: "Other step",
   decided: "Decided",
   closed: "Closed",
 };
@@ -135,8 +135,8 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
       <StructuredData
         data={pageLd({
           path: "/instruments/consent/latest",
-          name: "What moved in the register",
-          description: "Environmental clearance proposals filed, queried, decided and closed in the last sixty days.",
+          name: "Recent changes in the register",
+          description: "Environmental clearance proposals filed, decided, closed or sent back for more details across India over the last sixty days.",
           trail: [
             { name: "Instruments", path: "/instruments" },
             { name: "People & Consent", path: "/instruments/consent" },
@@ -148,16 +148,17 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
       <main id="main-content" className="flex-1 px-6 md:px-12 py-10 md:py-14">
         <div className="max-w-6xl mx-auto">
           <p className="font-label text-[10px] uppercase tracking-[0.2em] opacity-70 mb-2">
-            The register, as it moves
+            Change log
           </p>
           <h1 className="font-headline font-bold text-[clamp(30px,4.6vw,54px)] leading-[1.03] tracking-[-0.03em] mb-4">
-            What moved in the register
+            What changed in the register
           </h1>
           <p className="font-body text-[15px] leading-relaxed max-w-3xl opacity-85 mb-2">
-            Every environmental clearance proposal filed, queried, decided or
-            closed across India, day by day. Each event is dated by the
-            regulator&rsquo;s own appraisal history; a proposal with no recorded
-            history appears on the date it was submitted.
+            This log lists, day by day, the environmental clearance proposals
+            across India that were filed, decided, closed or sent back to the
+            proponent for more details. Each event carries the date the
+            regulator&rsquo;s own appraisal history gives it, and a proposal
+            with no recorded history appears on the date it was submitted.
           </p>
           <p className="font-label text-[10px] uppercase tracking-[0.16em] opacity-65 mb-10">
             {file
@@ -166,7 +167,7 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
                     ? new Date(String((freshness as { checked_at?: string }).checked_at))
                         .toLocaleDateString("en-IN", { day: "numeric", month: "short",
                           year: "numeric", timeZone: "Asia/Kolkata" })
-                    : "—"
+                    : "date unavailable"
                 }`
               : "The change log has not been built."}
           </p>
@@ -182,11 +183,11 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
                 ["Details sought", sum("query")],
                 ["Decided", sum("decided")],
                 ["Closed", sum("closed")],
-                ["Filed or decided in a Scheduled Area district", scheduledWeek],
+                ["Filed or decided in a district wholly or partly scheduled", scheduledWeek],
               ] as [string, number][]).map(([label, n]) => (
                 <div key={label}>
                   <dt className="font-label text-[10px] uppercase tracking-[0.16em] opacity-70 mb-1">
-                    {label} · 7 complete days to {weekEnd ? fmtDate(weekEnd) : "—"}
+                    {label}
                   </dt>
                   <dd className="font-headline text-[34px] leading-none" style={{ color: PLUM }}>
                     {nf.format(n)}
@@ -194,6 +195,13 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
                 </div>
               ))}
             </dl>
+            {/* One caption for the five tiles, in place of the same
+                qualifier repeated under each label. */}
+            <p className="font-label text-[10px] uppercase tracking-[0.14em] opacity-70 mt-3">
+              {weekEnd
+                ? `Totals for the seven complete days to ${fmtDate(weekEnd)}`
+                : "Totals for the seven complete days before the register was read"}
+            </p>
           </section>
 
           {/* ── the window, day by day ── */}
@@ -226,7 +234,7 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
               <p className="font-label text-[10px] uppercase tracking-[0.14em] opacity-70 mt-2">
                 <span className="inline-block w-3 h-3 align-middle mr-1" style={{ background: "rgba(28,28,25,0.35)" }} /> filed
                 <span className="inline-block w-3 h-3 align-middle ml-4 mr-1" style={{ background: PLUM }} /> decided
-                · weekends and holidays fall to near zero
+                · counts fall close to zero on weekends and holidays
               </p>
               <details className="mt-3">
                 <summary className="cursor-pointer font-label text-[10px] uppercase tracking-[0.16em] opacity-75">
@@ -272,7 +280,7 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
             ) : null}
             <fieldset className="md:col-span-12 flex flex-wrap gap-x-5 gap-y-2">
               <legend className="font-label text-[10px] uppercase tracking-[0.18em] opacity-75 mb-1">
-                What happened
+                Event type
               </legend>
               {KIND_ORDER.map((k) => (
                 <label key={k} className="flex items-center gap-2 font-body text-[13px]">
@@ -283,10 +291,10 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
               ))}
             </fieldset>
             <label className="md:col-span-4 block">
-              <span className="font-label text-[10px] uppercase tracking-[0.18em] opacity-75 block mb-1.5">Filed in</span>
+              <span className="font-label text-[10px] uppercase tracking-[0.18em] opacity-75 block mb-1.5">Filing state (may differ from the site)</span>
               <select name="state" defaultValue={state}
                       className="w-full bg-[#fcf9f4] border border-[#1c1c19] px-3 py-2.5 font-body text-[14px]">
-                <option value="">All of India</option>
+                <option value="">All states</option>
                 {states.map((s) => (
                   <option key={s.slug} value={s.slug}>{titleCase(s.name)}</option>
                 ))}
@@ -306,12 +314,12 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
               <span className="font-label text-[10px] uppercase tracking-[0.18em] opacity-75 block mb-1.5">Period</span>
               <select name="days" defaultValue={String(days)}
                       className="w-full bg-[#fcf9f4] border border-[#1c1c19] px-3 py-2.5 font-body text-[14px]">
-                {/* Ending on the read day, which is only partly recorded -
-                    unlike the headline, which counts complete days only. The
-                    labels say which, so the two never read as one figure. */}
+                {/* Ending on the read day, which is only partly recorded,
+                    while the headline counts complete days only. The labels
+                    say which, so the two never read as one figure. */}
                 {[7, 30, 60].map((n) => (
                   <option key={n} value={String(n)}>
-                    {to ? `${n} days to ${fmtDate(to)}, incl. the read day` : `Last ${n} days`}
+                    {to ? `${n} days to ${fmtDate(to)}, the read day (partly recorded)` : `Last ${n} days`}
                   </option>
                 ))}
               </select>
@@ -319,24 +327,24 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
             <label className="md:col-span-2 flex items-end gap-2 font-body text-[13px] pb-3">
               <input type="checkbox" name="scheduled" value="1" defaultChecked={scheduled}
                      className="accent-[#7a3b6b]" />
-              Scheduled Area districts only
+              Only districts wholly or partly scheduled
             </label>
             <div className="md:col-span-12 flex flex-wrap gap-3">
               <button type="submit"
                       className="tap-target px-5 py-2.5 font-label text-[11px] uppercase tracking-[0.18em]"
                       style={{ background: PLUM, color: "#fcf9f4" }}>
-                Show
+                Apply filters
               </button>
               <a href={`/instruments/consent/feed?${qs.toString()}`}
                  className="tap-target inline-flex items-center px-5 py-2.5 border border-[#1c1c19] font-label text-[11px] uppercase tracking-[0.18em]">
-                Feed for this view (Atom)
+                Follow this view in a feed reader
               </a>
               {Array.from({ length: partsFor(total) }, (_, i) => (
                 <a key={i}
                    href={`/api/instruments/consent/changes.csv?${qs.toString()}${i ? `&part=${i + 1}` : ""}`}
                    className="tap-target inline-flex items-center px-5 py-2.5 border border-[#1c1c19] font-label text-[11px] uppercase tracking-[0.18em]">
                   {partsFor(total) > 1
-                    ? `CSV, part ${i + 1} of ${partsFor(total)}`
+                    ? `Download this view (CSV), part ${i + 1} of ${partsFor(total)}`
                     : "Download this view (CSV)"}
                 </a>
               ))}
@@ -350,15 +358,15 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
             {total === 1 ? "event" : "events"} in this view
             {total > events.length ? (
               <span className="opacity-75">
-                {" "}— the newest {nf.format(events.length)} are listed; the CSV holds all{" "}
-                {nf.format(total)}
+                {", "}of which the newest {nf.format(events.length)} are listed
+                here and all {nf.format(total)} are in the CSV
               </span>
             ) : null}
             .
           </p>
           {events.length === 0 ? (
             <p className="font-body text-[14px] opacity-75 border border-dashed border-[#1c1c19]/30 p-6">
-              Nothing in this view. That is a real empty result, not a failure.
+              No events match these filters in this period.
             </p>
           ) : (
             <ol className="border-t border-[#1c1c19]/25">
@@ -379,7 +387,7 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
                     </Link>
                     <p className="font-body text-[12px] opacity-70 mt-0.5">
                       {e.proposal.agency || "Proponent not recorded"} · {e.proposal.sector} ·
-                      Category {e.proposal.category ?? "—"} · {e.proposal.no}
+                      {e.proposal.category ? `Category ${e.proposal.category}` : "Category not recorded"} · {e.proposal.no}
                     </p>
                   </div>
                   <div className="md:col-span-3 md:text-right font-body text-[12.5px]">
@@ -390,7 +398,7 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
                           {e.proposal.districtName}
                         </Link>
                       ) : (
-                        titleCase(presentState(null, index.states[e.proposal.stateSlug]?.name ?? ""))
+                        `District not determined (filed in ${titleCase(presentState(null, index.states[e.proposal.stateSlug]?.name ?? ""))})`
                       )}
                     </span>
                   </div>
@@ -400,9 +408,14 @@ export default function LatestPage({ searchParams }: { searchParams: SP }) {
           )}
           {file ? (
             <p className="font-body text-[12.5px] opacity-70 mt-6 max-w-3xl">
-              {file.basis} {nf.format(file.coverage.with_history)} of{" "}
-              {nf.format(file.coverage.published)} published proposals have a recorded
-              appraisal history; the rest contribute only their submission.
+              {/* Written here in place of file.basis, which the build
+                  writes; the two say the same thing. */}
+              Dates are taken from the portal&rsquo;s appraisal history and
+              converted to India Standard Time.{" "}
+              {nf.format(file.coverage.with_history)} of the{" "}
+              {nf.format(file.coverage.published)} published proposals have a
+              recorded history. Each of the others appears once, on the date
+              the register gives for its submission.
             </p>
           ) : null}
         </div>

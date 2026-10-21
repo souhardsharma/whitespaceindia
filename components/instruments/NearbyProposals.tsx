@@ -38,27 +38,27 @@ export default function NearbyProposals({
       </h2>
       {!hasSite ? (
         <p className="font-body text-[14px] leading-relaxed opacity-75 max-w-3xl">
-          This filing places no site on a map, so what else is proposed around it
-          cannot be measured.
+          This filing gives no site coordinates, so we cannot measure what else
+          is proposed around it.
         </p>
       ) : nearby.total === 0 ? (
         <p className="font-body text-[14px] leading-relaxed opacity-75 max-w-3xl">
-          No other proposal in the register maps a site within {nearby.radiusKm} km
-          of this one.
+          No other proposal in the register gives site coordinates within{" "}
+          {nearby.radiusKm} km of this one.
         </p>
       ) : (
         <>
           <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl mb-4">
             <strong style={{ color: PLUM }}>{nf.format(nearby.total)}</strong>{" "}
-            other {nearby.total === 1 ? "proposal maps its site" : "proposals map their sites"}{" "}
+            other {nearby.total === 1 ? "proposal gives site coordinates" : "proposals give site coordinates"}{" "}
             within {nearby.radiusKm} km of this one
             {nearby.total > nearby.items.length
-              ? `; the nearest ${nearby.items.length} are listed`
+              ? `, and the nearest ${nearby.items.length} are listed`
               : ""}
-            . Each is appraised on its own, so this is the only place their
-            combined presence shows. Distances run between the mapped points
-            each filing&rsquo;s location rests on; a large site can lie closer
-            than its point.
+            . Each proposal is appraised separately, so a list like this is one
+            way to see them together. Distances are measured between the single
+            points we publish for each filing, so parts of a large site can lie
+            closer than its point suggests.
           </p>
           <ScrollRegion label="Nearby proposals" className="border-t border-[#1c1c19]/25">
             <table className="w-full text-left font-body text-[13px]">
@@ -89,7 +89,7 @@ export default function NearbyProposals({
                       </span>
                     </td>
                     <td className="py-2 pr-4">{n.sector}</td>
-                    <td className="py-2">{n.statusKey ? labels[n.statusKey] ?? n.statusKey : "—"}</td>
+                    <td className="py-2">{n.statusKey ? labels[n.statusKey] ?? n.statusKey : "Not recorded"}</td>
                   </tr>
                 ))}
               </tbody>

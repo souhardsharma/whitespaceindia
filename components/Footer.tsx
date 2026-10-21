@@ -46,7 +46,7 @@ export default function Footer({ vertical }: { vertical?: VerticalConfig }) {
             </Link>
           </div>
           <p className="text-sm text-[#1c1c19]/70 leading-relaxed max-w-sm font-body">
-            A research project mapping the gap between CSR spending and poverty across Indian districts. All data sourced from public government records.
+            Whitespace India reads India&apos;s public records against one another to find districts where need is high and money or scrutiny is thin.
           </p>
           <a
             href="https://www.linkedin.com/in/souhardsharma/"
@@ -58,7 +58,7 @@ export default function Footer({ vertical }: { vertical?: VerticalConfig }) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
               <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
             </svg>
-            Get in Touch
+            Contact on LinkedIn
           </a>
         </motion.div>
 
@@ -70,7 +70,7 @@ export default function Footer({ vertical }: { vertical?: VerticalConfig }) {
           className="md:col-span-3"
         >
           <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/50 block mb-5">
-            Primary Sources
+            Sources
           </span>
           <ul className="space-y-3 text-sm text-[#1c1c19]/80 font-body">
             <li>
@@ -90,7 +90,7 @@ export default function Footer({ vertical }: { vertical?: VerticalConfig }) {
                 rel="noopener noreferrer"
                 className="hover:text-[#BD402C] transition-colors border-b border-transparent hover:border-[#BD402C]"
               >
-                MCA CSR Data via Dataful.in
+                Ministry of Corporate Affairs CSR data, via Dataful
               </a>
             </li>
             <li>
@@ -163,7 +163,7 @@ export default function Footer({ vertical }: { vertical?: VerticalConfig }) {
                 rel="noopener noreferrer"
                 className="text-[#1c1c19]/80 hover:text-[#BD402C] transition-colors"
               >
-                OECD Handbook
+                OECD handbook on composite indicators
               </a>
             </li>
           </ul>
@@ -181,15 +181,15 @@ export default function Footer({ vertical }: { vertical?: VerticalConfig }) {
         <div className="flex flex-wrap gap-10">
           <div>
             <span className="font-label text-[9px] uppercase tracking-[0.3em] text-[#1c1c19]/60 block mb-1">
-              Access
+              Code
             </span>
             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19]">
-              Open Data
+              AGPL-3.0
             </span>
           </div>
           <div>
             <span className="font-label text-[9px] uppercase tracking-[0.3em] text-[#1c1c19]/60 block mb-1">
-              License
+              Data and text
             </span>
             <span className="font-label text-[11px] uppercase tracking-[0.2em]" style={{ color: accent }}>
               CC BY 4.0
@@ -197,10 +197,10 @@ export default function Footer({ vertical }: { vertical?: VerticalConfig }) {
           </div>
           <div>
             <span className="font-label text-[9px] uppercase tracking-[0.3em] text-[#1c1c19]/60 block mb-1">
-              Framework
+              Method
             </span>
             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19]">
-              OECD Composite
+              OECD composite index
             </span>
           </div>
         </div>

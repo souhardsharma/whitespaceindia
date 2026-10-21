@@ -46,8 +46,8 @@ test("an adjudicated location says what overruled the codes", () => {
   );
   assert.equal(e.firm, true);
   const text = e.sentences.join(" ");
-  assert.match(text, /place codes .* point elsewhere/);
-  assert.match(text, /both place it in Mumbai/);
+  assert.match(text, /place codes .* point to another district/);
+  assert.match(text, /both place the project in Mumbai/);
 });
 
 test("three-way disagreement is published as contested and names all three", () => {
@@ -90,7 +90,7 @@ test("a location from the title alone is never firm", () => {
 test("no district, no claim", () => {
   const e = locationEvidence({ ...base, district: null }, NAMES);
   assert.equal(e.firm, false);
-  assert.match(e.sentences[0], /could be placed below state level/);
+  assert.match(e.sentences[0], /smaller than its state/);
 });
 
 test("a location placed from the declared district is not corroborated by it", () => {

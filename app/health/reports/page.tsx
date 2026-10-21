@@ -38,16 +38,16 @@ export default function HealthReportsPage() {
             <FadeIn delay={0.1}>
               <div className="border-t border-[#1c1c19] pt-10">
                 <p className="font-body text-base text-[#1c1c19]/80 leading-relaxed mb-10">
-                  District-level health infrastructure reports will be available here once the Health vertical launches. Each report will include health access metrics, outcomes data, infrastructure gaps, and contextual analysis.
+                  District reports on health services will appear here when the Health index goes live. Each will cover access to care, health outcomes and gaps in infrastructure, with notes on the local context.
                 </p>
 
                 <div className="border border-[#1c1c19] bg-[#f6f3ee] p-8 md:p-12 text-center">
-                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60 block mb-4">No Reports Yet</span>
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em] text-[#1c1c19]/60 block mb-4">No reports yet</span>
                   <h3 className="font-headline text-2xl md:text-3xl text-[#1c1c19] mb-4">
-                    Reports are <span className="italic font-light">in progress.</span>
+                    Reports are <span className="italic font-light">still being prepared.</span>
                   </h3>
                   <p className="font-body text-sm text-[#1c1c19]/60 italic">
-                    Health district reports will be published when the vertical goes live.
+                    The first health reports will be published when the index goes live.
                   </p>
                 </div>
               </div>
