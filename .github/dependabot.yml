@@ -1,0 +1,30 @@
+# Version updates arrive as pull requests that CI tests; nothing is merged for us.
+#
+# pip is left out on purpose: requirements.txt is compiled with hashes by uv for
+# the nightly sync's runner (see its header), and a PR that rewrites it by hand
+# would bypass that. Major releases are left out too, so a framework jump is a
+# decision and not a Monday surprise.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
