@@ -13,6 +13,12 @@
       "mitigate": {
         "action": "deny"
       }
+    },
+    {
+      "src": "^/instruments/consent/(?!(?:appraisal|data|district|feed|latest|methodology|register|sitemap)(?:[/.]|$))[^/0-9][^/]*/?$",
+      "mitigate": {
+        "action": "deny"
+      }
     }
   ]
 }

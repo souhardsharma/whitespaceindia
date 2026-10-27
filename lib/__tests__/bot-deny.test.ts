@@ -9,7 +9,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 type Has = { type: string; key: string; value: string };
 type Route = { src: string; has?: Has[]; mitigate?: { action: string } };
@@ -19,7 +19,9 @@ const config = JSON.parse(readFileSync(new URL("../../vercel.json", import.meta.
   [key: string]: unknown;
 };
 
-const denyRoute = config.routes?.find((r) => r.mitigate?.action === "deny");
+const denyRoutes = (config.routes ?? []).filter((r) => r.mitigate?.action === "deny");
+const denyRoute = denyRoutes.find((r) => r.has?.some((h) => h.key === "user-agent"));
+const junkRoute = denyRoutes.find((r) => !r.has);
 
 /** A `has` value is matched against the whole header, so it is anchored here. */
 function userAgentPattern(): RegExp {
@@ -28,8 +30,15 @@ function userAgentPattern(): RegExp {
   return new RegExp(`^(?:${has.value})$`);
 }
 
-test("vercel.json carries one deny route and no key that conflicts with `routes`", () => {
+/** A route's `src` is anchored by Vercel; it is anchored here the same way. */
+function junkPattern(): RegExp {
+  assert.ok(junkRoute, "a deny route that tests the path alone");
+  return new RegExp(junkRoute.src);
+}
+
+test("vercel.json carries its deny routes and no key that conflicts with `routes`", () => {
   assert.ok(denyRoute, "a route with mitigate.action = deny");
+  assert.equal(denyRoutes.length, 2, "one deny route by user-agent, one by path");
   // `routes` cannot be combined with these in the same vercel.json; Vercel
   // refuses the deployment, which would also stop the nightly data deploy.
   for (const key of ["rewrites", "redirects", "headers", "cleanUrls", "trailingSlash"]) {
@@ -64,4 +73,53 @@ test("search engines, link previews and readers are not denied", () => {
     "",
   ];
   for (const s of welcome) assert.ok(!ua.test(s), `not denied: ${JSON.stringify(s)}`);
+});
+
+test("a word where a proposal number belongs is denied at the edge", () => {
+  // 2026-10-27, 12 hours: /contact, /about and /home under the proposal route
+  // drew 15,700 requests, each a function run that ended in notFound().
+  const path = junkPattern();
+  for (const word of ["contact", "about", "home", "wp-login.php", "admin", "index.html", "Contact"]) {
+    assert.ok(path.test(`/instruments/consent/${word}`), `denied: ${word}`);
+    assert.ok(path.test(`/instruments/consent/${word}/`), `denied with a slash: ${word}`);
+  }
+});
+
+test("proposal numbers, the instrument's own pages and everything below them are not denied", () => {
+  const path = junkPattern();
+  const served = [
+    "/instruments/consent",
+    "/instruments/consent/",
+    "/instruments/consent/1244578275",
+    "/instruments/consent/969361",
+    "/instruments/consent/latest",
+    "/instruments/consent/data",
+    "/instruments/consent/feed",
+    "/instruments/consent/sitemap/0.xml",
+    "/instruments/consent/sitemap.xml",
+    "/instruments/consent/district/jaipur",
+    "/instruments/consent/register/rajasthan",
+    "/instruments/consent/methodology",
+    "/instruments/consent/appraisal",
+    "/instruments/consent/latest/anything/below",
+    "/instruments",
+    "/csr",
+    "/about",
+    "/contact",
+    "/api/instruments/consent/search",
+  ];
+  for (const s of served) assert.ok(!path.test(s), `not denied: ${s}`);
+});
+
+test("every page the instrument serves is named in the path rule's exceptions", () => {
+  // A new folder under app/instruments/consent is a new URL. Left out of the
+  // rule it would answer 403 to everyone, and nothing but this test would say so.
+  const path = junkPattern();
+  const root = new URL("../../app/instruments/consent/", import.meta.url);
+  const own = readdirSync(root).map((n) => n.replace(/\.[^.]+$/, "")).filter((n) => !/^[\[(]/.test(n));
+  assert.ok(own.length >= 8, `the folder's entries were read: ${own.join(", ")}`);
+  for (const name of own) {
+    if (name === "page" || name === "layout") continue;
+    assert.ok(!path.test(`/instruments/consent/${name}`), `served, so not denied: ${name}`);
+  }
 });

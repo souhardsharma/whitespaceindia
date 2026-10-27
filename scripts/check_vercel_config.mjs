@@ -26,6 +26,12 @@ if (!agent) {
   process.exit(1);
 }
 console.log(`deny rule kept, at position ${routes.indexOf(rule)}: ${JSON.stringify(rule)}`);
+const pathRule = routes.find((r) => r.mitigate?.action === "deny" && !r.has && /instruments\/consent/.test(r.src));
+if (!pathRule) {
+  console.error("no deny route tests the proposal path alone: Vercel dropped the junk-path rule");
+  process.exit(1);
+}
+console.log(`path rule kept, at position ${routes.indexOf(pathRule)}: ${JSON.stringify(pathRule)}`);
 // The rule must sit beside the framework's own routes, not replace them.
 const filesystem = routes.some((r) => r.handle === "filesystem");
 console.log(`framework routes kept (handle: filesystem): ${filesystem}`);
