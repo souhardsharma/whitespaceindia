@@ -78,6 +78,7 @@ class Probe(NamedTuple):
     method: str = "GET"
     body: bytes | None = None
     headers: dict | None = None
+    head: int = BODY_HEAD
 
 
 def plan(today: date) -> list[Probe]:
@@ -92,6 +93,47 @@ def plan(today: date) -> list[Probe]:
         Probe("forest", f"{SEARCH}?majorClearanceType=2&state=7"),
         Probe("search_again", small),
     ]
+
+
+# The new application (newupgrade) calls its search on environment.baseURLMisNew,
+# not on baseURL (parivesh_api), which is where the sweep still asks. Its scripts
+# name three forms: the plain route, a /v2 route for the public view, and
+# advanceSearchData1 with paging (inPage, inSize). All of them end in the same query.
+MIS = "https://parivesh.nic.in/mis/"
+MIS_HEAD = 1500
+
+
+def mis_probes() -> list[Probe]:
+    """The search where the new application asks for it, next to the control the
+    other probes use, so a route that cannot reach the service is told apart."""
+    small = f"majorClearanceType=1&sector={SMALL_SECTOR}"
+    paged = f"{small}&inPage=0&inSize=5"
+    return [
+        Probe("control", API + "getListOfSector"),
+        Probe("mis_search", f"{MIS}trackYourProposal/{NEEDLE}?{small}", head=MIS_HEAD),
+        Probe("mis_search_paged", f"{MIS}trackYourProposal/{NEEDLE}?{paged}", head=MIS_HEAD),
+        Probe("mis_search_plain", f"{MIS}trackYourProposal/{NEEDLE}?{paged}",
+              headers=PLAIN_HEADERS, head=MIS_HEAD),
+        Probe("mis_v2", f"{MIS}v2/trackYourProposal/{NEEDLE}?{paged}", head=MIS_HEAD),
+        Probe("mis_search1", f"{MIS}trackYourProposal/{NEEDLE}1?{paged}", head=MIS_HEAD),
+        Probe("mis_forest", f"{MIS}trackYourProposal/{NEEDLE}?majorClearanceType=2&state=7&inPage=0&inSize=5",
+              head=MIS_HEAD),
+    ]
+
+
+def report_mis(rows: list[dict]) -> None:
+    """Per probe, how the routes answered, then one sample of each kind of answer."""
+    print("\n=== the search where the new application asks for it ===")
+    for name, row in summarise(rows).items():
+        print(f"  {name:22} n={row['n']:3} median {row['median_s']}s  {row['outcomes']}")
+    seen: set = set()
+    for r in rows:
+        key = (r["probe"], r["label"])
+        if r["probe"] == "control" or r["status"] is None or key in seen:
+            continue
+        seen.add(key)
+        print(f"  sample {r['probe']}/{r['label']} via {r['route']} in {r['seconds']}s "
+              f"{r['bytes']}B headers={dict(r['headers'])} head={r['head']!r}")
 
 
 def require_runner(env) -> None:
@@ -150,7 +192,7 @@ def probe_once(route, probe: Probe, timeout: int) -> dict:
     out["seconds"] = round(time.time() - sent, 2)
     headers = out["headers"]
     out["headers"] = {k: headers[k] for k in KEEP_HEADERS if k in headers} if headers else {}
-    out["head"] = body[:BODY_HEAD].decode("utf-8", "replace")
+    out["head"] = body[:probe.head].decode("utf-8", "replace")
     out["label"] = (judge_200(body) if out["status"] == 200
                     else classify(out["status"], out["error"]))
     out["skew_s"] = clock_skew(out["headers"].get("date"), sent)
@@ -631,6 +673,8 @@ def main() -> int:
     ap.add_argument("--chunks", choices=("all", "track", "none"), default="all",
                     help="with --discover, which lazy chunks to read: every one a script names, "
                          "only those the Track Your Proposal route loads, or none")
+    ap.add_argument("--mis", action="store_true",
+                    help="ask the search where the new application asks for it (baseURLMisNew)")
     args = ap.parse_args()
     require_runner(os.environ)
     run_lock.hold_or_exit("diagnose_register")
@@ -663,6 +707,15 @@ def main() -> int:
         asked = probe_candidates(ordered, search_candidates(found), args.timeout)
         report_discovery(found, asked)
         everything.append({"discovery": found, "candidates": asked})
+    if args.mis:
+        probes = mis_probes()
+        with ThreadPoolExecutor(max_workers=args.workers) as ex:
+            mis_rows = [r for walked in ex.map(lambda rt: walk(rt, probes, args.timeout), routes)
+                        for r in walked]
+        report_mis(mis_rows)
+        everything += mis_rows
+        answered = sum(1 for r in mis_rows if r["probe"] == "control" and r["status"] == 200)
+        print(f"  {answered} of {len(routes)} routes answered the control", flush=True)
     if args.out:
         Path(args.out).write_text(json.dumps(everything, indent=1), encoding="utf-8")
     reached = sum(1 for r in everything if r.get("probe") == "control" and r["status"] == 200)
