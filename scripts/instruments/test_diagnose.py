@@ -228,6 +228,86 @@ def test_another_government_host_is_probed_for_the_search_itself() -> None:
           str(DG.search_candidates(found)))
 
 
+def test_service_bases_are_asked_for_the_search_and_links_are_not_bases() -> None:
+    print("\nevery service base the application names is asked for the search")
+    js = ('e={baseURL:"https://parivesh.nic.in/parivesh_api/",baseURLMisNew:"https://parivesh.nic.in/mis/",'
+          'baseURLGis:"https://parivesh.nic.in/pariveshgis/#/apps/dss",'
+          'baseURLCms:"https://sb-dgateway.napix.gov.in/nic/parivesh/",'
+          'baseURLSigner:"https://eoffsigner.eoffice.gov.in:55103/",'
+          'LINK1:"https://forestsclearance.nic.in/search.aspx",'
+          'FORM:"https://parivesh.nic.in/certificates/forms/a.pdf",href:"https://parivesh.nic.in/x/"};')
+    sites = DG.call_sites(js)
+    check("links and documents are not kept among the hosts",
+          sites["hosts"] == ["baseURL=https://parivesh.nic.in/parivesh_api/",
+                             "baseURLCms=https://sb-dgateway.napix.gov.in/nic/parivesh/",
+                             "baseURLGis=https://parivesh.nic.in/pariveshgis/#/apps/dss",
+                             "baseURLMisNew=https://parivesh.nic.in/mis/",
+                             "baseURLSigner=https://eoffsigner.eoffice.gov.in:55103/"],
+          str(sites["hosts"]))
+    found = {"bundles": {"u": sites}}
+    check("a base is a directory with no fragment or port, and the one the sweep calls is left out",
+          DG.service_bases(found) == ["https://parivesh.nic.in/mis/",
+                                      "https://sb-dgateway.napix.gov.in/nic/parivesh/"],
+          str(DG.service_bases(found)))
+    check("the search is asked on each, before any other candidate; a link's path is not a route",
+          DG.search_candidates(found) == [
+              "https://parivesh.nic.in/mis/trackYourProposal/advanceSearchData",
+              "https://sb-dgateway.napix.gov.in/nic/parivesh/trackYourProposal/advanceSearchData"],
+          str(DG.search_candidates(found)))
+    many = {"bundles": {"u": {"hosts": [f"base{i}=https://parivesh.nic.in/s{i}/" for i in range(100)]}}}
+    check("a long list of hosts is not cut at forty", len(DG.service_bases(many)) == 100)
+
+
+def test_the_track_route_names_the_chunks_that_hold_its_calls() -> None:
+    print("\nthe lazily loaded Track Your Proposal route names its chunks")
+    routes = ('{path:"trackYourProposal",loadChildren:()=>Promise.all([n.e(481),n.e("track-x")])'
+              '.then(n.bind(n,77)).then(m=>m.TrackModule)},'
+              '{path:"admin",loadChildren:()=>n.e(333).then(n.bind(n,5))}')
+    lazy = DG.lazy_track(routes)
+    check("the chunks after a route about tracking are named, and another route's are not",
+          lazy["ids"] == ["481", "track-x"] and len(lazy["texts"]) == 1, str(lazy))
+    check("a script with no lazy route names none", DG.lazy_track("var a = 1;") == {"texts": [], "ids": []})
+    runtime = "x" * 200 + "n.u=e=>e+'.'+{481:'0123456789abcdef'}[e]+'.js'"
+    shown = DG.chunk_namer(runtime)
+    check("the runtime's chunk naming is shown from just before it",
+          shown.startswith("x") and "n.u=e=>" in shown and "481" in shown and len(shown) < len(runtime), shown)
+    check("a script without one is shown from its start", DG.chunk_namer("abc") == "abc")
+
+
+def test_only_the_tracks_chunks_are_read_whichever_script_comes_first() -> None:
+    print("\nwith chunks on 'track', the ids and the id-to-file map may arrive in either order")
+    main = ('{path:"trackYourProposal",loadChildren:()=>n.e(481).then(n.bind(n,77))}'
+            '{path:"admin",loadChildren:()=>n.e(333).then(n.bind(n,5))}').encode()
+    runtime = b'n.u=e=>e+"."+{481:"0123456789abcdef",333:"fedcba9876543210"}[e]+".js"'
+    wanted, other = DG.FRONT + "481.0123456789abcdef.js", DG.FRONT + "333.fedcba9876543210.js"
+
+    def fake_for(order):
+        def fake_fetch(routes, url, timeout, limit, good=None):
+            if url == DG.FRONT:
+                return "".join(f'<script src="{name}"></script>' for name in order).encode(), "200 via x"
+            if url in DG.FRONTS:
+                return b"<html></html>", "200 via x"
+            return {"main.js": main, "runtime.js": runtime}.get(url.rsplit("/", 1)[-1], b"a()"), "200 via x"
+        return fake_fetch
+
+    real_fetch, real_pause = DG.fetch_page, DG.BATCH_PAUSE_S
+    DG.BATCH_PAUSE_S = 0.0
+    try:
+        for order in (["main.js", "runtime.js"], ["runtime.js", "main.js"]):
+            DG.fetch_page = fake_for(order)
+            found = DG.discover([FakeRoute("a")], 1, budget_s=60, chunks="track")
+            check(f"{order[0]} first: the track chunk is read and the other route's is not",
+                  wanted in found["bundles"] and other not in found["bundles"], str(list(found["bundles"])))
+        everything = DG.discover([FakeRoute("a")], 1, budget_s=60, chunks="all")
+        check("'all' reads both", wanted in everything["bundles"] and other in everything["bundles"],
+              str(list(everything["bundles"])))
+        check("the runtime's chunk naming is reported for the runtime only",
+              "chunk_namer" in everything["bundles"][DG.FRONT + "runtime.js"]
+              and "chunk_namer" not in everything["bundles"][DG.FRONT + "main.js"])
+    finally:
+        DG.fetch_page, DG.BATCH_PAUSE_S = real_fetch, real_pause
+
+
 def test_chunks_can_be_left_unfollowed() -> None:
     print("\nwith chunks off, the scripts the page names are read and nothing they name")
     asked: list[str] = []
@@ -244,7 +324,7 @@ def test_chunks_can_be_left_unfollowed() -> None:
     real_fetch, real_pause = DG.fetch_page, DG.BATCH_PAUSE_S
     DG.fetch_page, DG.BATCH_PAUSE_S = fake_fetch, 0.0
     try:
-        off = DG.discover([FakeRoute("a")], 1, budget_s=60, follow_chunks=False)
+        off = DG.discover([FakeRoute("a")], 1, budget_s=60, chunks="none")
         asked.clear()
         on = DG.discover([FakeRoute("a")], 1, budget_s=60)
     finally:
@@ -303,6 +383,9 @@ def main() -> int:
                test_a_base_url_off_the_portal_is_followed_to_where_it_is_used,
                test_a_script_no_route_delivered_is_retried_and_then_reported,
                test_another_government_host_is_probed_for_the_search_itself,
+               test_service_bases_are_asked_for_the_search_and_links_are_not_bases,
+               test_the_track_route_names_the_chunks_that_hold_its_calls,
+               test_only_the_tracks_chunks_are_read_whichever_script_comes_first,
                test_chunks_can_be_left_unfollowed):
         fn()
     print()

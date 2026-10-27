@@ -238,7 +238,7 @@ READ_TRIES = 3
 READ_ROUTES = 4
 BATCH_PAUSE_S = 4.0
 DISCOVER_BUDGET_S = 1200
-CANDIDATE_LIMIT = 24
+CANDIDATE_LIMIT = 60
 CONTEXT = 110
 # A lazily loaded chunk is named in the script that loads it, either as a file
 # (esbuild: chunk-<hash>.js) or as an id -> content-hash map (webpack:
@@ -246,7 +246,7 @@ CONTEXT = 110
 # 8-character hash - the portal's own main.<hash>.js is that kind).
 ESBUILD_CHUNK = re.compile(r"""["'](?:\./)?(chunk-[\w-]+\.js)["']""")
 WEBPACK_CHUNK = re.compile(r"""(?<![\w.])(\d+|[A-Za-z_][\w-]*)\s*:\s*["']([0-9a-f]{8,20})["']""")
-SEARCH_ROUTE = re.compile(r"(?:[A-Za-z]\w*/)+\w*[Ss]earch\w*")
+SEARCH_ROUTE = re.compile(r"(?<![\w.])(?:[A-Za-z]\w*/)+\w*[Ss]earch\w*")
 TRACK_ROUTE = re.compile(r"trackYourProposal/\w+(?:/\w+)*")
 # Where an application says its API lives: FOO_URL: "https://..." / BASE_URL = `...`.
 BASE_URL = re.compile(r"""\b([A-Z][A-Z0-9_]*URL[A-Z0-9_]*)\s*[:=]\s*[`"']([^`"'\s]{4,120})[`"']""")
@@ -254,7 +254,17 @@ BASE_URL = re.compile(r"""\b([A-Z][A-Z0-9_]*URL[A-Z0-9_]*)\s*[:=]\s*[`"']([^`"'\
 # spells it: an Angular environment has frontendURL / apiUrl, not API_URL.
 HOST_URL = re.compile(r"""\b([A-Za-z_$][\w$]*)\s*[:=]\s*[`"'](https?://[^`"'\s]{4,120})[`"']""")
 HOST_SUFFIXES = (".nic.in", ".gov.in")
-HOST_LIMIT = 40
+HOST_LIMIT = 150
+# Links and documents are not where an application sends its calls.
+NOT_A_BASE_KEY = ("href", "src", "hindiLink")
+NOT_A_BASE_FILE = re.compile(r"\.(pdf|aspx?|docx?|xlsx?|png|jpe?g|gif|svg|css|js)$", re.I)
+# A script that lazily loads the Track Your Proposal route names the chunks it needs.
+LAZY_ROUTE = re.compile(r"loadChildren(?!\w)")
+LAZY_BEFORE, LAZY_AFTER = 120, 420
+CHUNK_ID = re.compile(r"""\.e\(["']?([\w-]+)["']?\)""")
+# How a webpack runtime turns a chunk id into a file name: `<runtime>.u=e=>...`.
+CHUNK_NAMER = re.compile(r"\.u\s*=")
+RUNTIME_SHOWN = 1800
 # The text around these, and how much of it, shows how an application joins a base to a route.
 WIDE_CONTEXTS = (("TRACK_YOUR_PROPOSAL_ADVANCE_DATA", 220, 300), ("frontendURL", 80, 600))
 WIDE_LIMIT = 4
@@ -274,12 +284,26 @@ def script_sources(html: str, base: str = FRONT) -> list[str]:
     return list(seen)
 
 
+def webpack_chunks(js: str, base: str) -> list[tuple[str, str]]:
+    """(chunk id, absolute URL) for each id -> content-hash pair a script holds."""
+    suffix = ".chunk.js" if "/static/js/" in base else ".js"
+    return [(ident, urllib.parse.urljoin(base, f"{ident}.{digest}{suffix}"))
+            for ident, digest in sorted(set(WEBPACK_CHUNK.findall(js)))]
+
+
 def chunk_sources(js: str, base: str) -> list[str]:
     """Absolute URLs of the lazy chunks a script names."""
-    names = set(ESBUILD_CHUNK.findall(js))
-    suffix = ".chunk.js" if "/static/js/" in base else ".js"
-    names.update(f"{ident}.{digest}{suffix}" for ident, digest in WEBPACK_CHUNK.findall(js))
-    return [urllib.parse.urljoin(base, name) for name in sorted(names)]
+    urls = {urllib.parse.urljoin(base, name) for name in ESBUILD_CHUNK.findall(js)}
+    urls.update(url for _, url in webpack_chunks(js, base))
+    return sorted(urls)
+
+
+def chunk_namer(js: str) -> str:
+    """The text where a webpack runtime builds a chunk's file name - what to read
+    when no id -> hash pair was found in a script that should have them."""
+    m = CHUNK_NAMER.search(js)
+    start = max(0, m.start() - 60) if m else 0
+    return js[start: start + RUNTIME_SHOWN]
 
 
 def base_uses(js: str, limit: int) -> list[str]:
@@ -299,10 +323,32 @@ def base_uses(js: str, limit: int) -> list[str]:
 
 
 def government_hosts(js: str) -> list[str]:
-    """Every key the script binds to an absolute URL on a government host."""
+    """Every key the script binds to an absolute URL on a government host, other
+    than links and documents."""
     found = {f"{k}={v}" for k, v in HOST_URL.findall(js)
-             if (urllib.parse.urlsplit(v).hostname or "").endswith(HOST_SUFFIXES)}
+             if k not in NOT_A_BASE_KEY and not NOT_A_BASE_FILE.search(v)
+             and (urllib.parse.urlsplit(v).hostname or "").endswith(HOST_SUFFIXES)}
     return sorted(found)[:HOST_LIMIT]
+
+
+def lazy_track(js: str) -> dict:
+    """The routes this script loads lazily that are about Track Your Proposal: the
+    text around each, and the chunk ids it names - the chunks that hold the call."""
+    texts: list[str] = []
+    ids: set[str] = set()
+    starts = [m.start() for m in LAZY_ROUTE.finditer(js)]
+    for i, start in enumerate(starts):
+        # A route's chunks follow its loadChildren, up to the next route's.
+        end = start + len("loadChildren") + LAZY_AFTER
+        if i + 1 < len(starts):
+            end = min(end, starts[i + 1])
+        # ...and its own path is the last one before it, not the previous route's.
+        head = js[max(0, start - LAZY_BEFORE): start]
+        text = head[max(head.rfind("path:"), 0):] + js[start: end]
+        if "rack" in text and text not in texts:
+            texts.append(text)
+            ids.update(CHUNK_ID.findall(text))
+    return {"texts": texts[:WIDE_LIMIT], "ids": sorted(ids)}
 
 
 def wide_contexts(js: str) -> dict[str, list[str]]:
@@ -353,6 +399,7 @@ def call_sites(js: str, limit: int = 6) -> dict:
             "base_uses": base_uses(js, limit),
             "hosts": government_hosts(js),
             "wide": wide_contexts(js),
+            "lazy": lazy_track(js),
             "api_paths": api_paths[:API_PATH_LIMIT],
             "routes": sorted(set(TRACK_ROUTE.findall(js))),
             "search_routes": sorted(set(SEARCH_ROUTE.findall(js)))}
@@ -382,10 +429,11 @@ def fetch_page(routes: list, url: str, timeout: int, limit: int,
 
 
 def discover(routes: list, timeout: int, budget_s: float = DISCOVER_BUDGET_S,
-             follow_chunks: bool = True) -> dict:
-    """Read the portal's page, its scripts and (unless follow_chunks is off) the
-    lazy chunks they name, for the search's call sites and every route the
-    application knows."""
+             chunks: str = "all") -> dict:
+    """Read the portal's page, its scripts and the lazy chunks they name, for the
+    search's call sites and every route the application knows. `chunks` is "all"
+    (every chunk named), "track" (only those the Track Your Proposal route loads)
+    or "none"."""
     deadline = time.time() + budget_s
     found: dict = {"page": None, "pages": {}, "bundles": {}}
     queue: list[str] = []
@@ -403,6 +451,18 @@ def discover(routes: list, timeout: int, budget_s: float = DISCOVER_BUDGET_S,
     turn = 6
     tries: dict[str, int] = {}
     good: list = []
+    wanted: set[str] = set()
+    named: list[tuple[str, str]] = []
+
+    def next_chunks(js: str, url: str, lazy_ids: list[str]) -> list[str]:
+        if chunks == "all":
+            return chunk_sources(js, url)
+        if chunks == "none":
+            return []
+        # The ids are in one script and the id -> file map in another, in either order.
+        wanted.update(lazy_ids)
+        named.extend(webpack_chunks(js, url))
+        return [chunk for ident, chunk in named if ident in wanted]
 
     def read(url: str, start: int):
         # One route that has already delivered a file, if there is one, then
@@ -426,7 +486,9 @@ def discover(routes: list, timeout: int, budget_s: float = DISCOVER_BUDGET_S,
                 if body:
                     js = body.decode("utf-8", "replace")
                     entry.update(call_sites(js))
-                    for chunk in chunk_sources(js, url) if follow_chunks else ():
+                    if "runtime" in url.rsplit("/", 1)[-1]:
+                        entry["chunk_namer"] = chunk_namer(js)
+                    for chunk in next_chunks(js, url, entry["lazy"]["ids"]):
                         if chunk not in seen:
                             seen.add(chunk)
                             queue.append(chunk)
@@ -448,11 +510,26 @@ def other_hosts(found: dict) -> list[str]:
     return sorted(hosts)
 
 
+def service_bases(found: dict) -> list[str]:
+    """The service bases a script names other than the one the sweep calls: a
+    directory URL on a government host, with no fragment, query or port."""
+    bases: set[str] = set()
+    for entry in found["bundles"].values():
+        for pair in entry.get("hosts", []):
+            parts = urllib.parse.urlsplit(pair.partition("=")[2])
+            if (parts.fragment or parts.query or parts.port or not parts.path.endswith("/")
+                    or parts.path == "/"):
+                continue
+            if parts.geturl() != PARIVESH_API:
+                bases.add(parts.geturl())
+    return sorted(bases)
+
+
 def search_candidates(found: dict) -> list[str]:
-    """What to ask: the search and its control on every other PARIVESH host a
-    script names, then the routes the application knows whose name says search
-    and the search's siblings (the track routes first), other than the one the
-    sweep calls, which answers 404."""
+    """What to ask: the search on every other service base a script names, the
+    search and its control on every other PARIVESH host, then the routes the
+    application knows whose name says search and the search's siblings (the
+    track routes first), other than the one the sweep calls, which answers 404."""
     names: set[str] = set()
     for entry in found["bundles"].values():
         names.update(n.removeprefix("parivesh_api/") for n in entry.get("search_routes", []))
@@ -461,7 +538,8 @@ def search_candidates(found: dict) -> list[str]:
                     key=lambda n: (not n.startswith("trackYourProposal/"), n))
     elsewhere = [f"https://{host}/parivesh_api/trackYourProposal/{leaf}"
                  for host in other_hosts(found) for leaf in ("getListOfSector", NEEDLE)]
-    return (elsewhere + routes)[:CANDIDATE_LIMIT]
+    services = [f"{base}trackYourProposal/{NEEDLE}" for base in service_bases(found)]
+    return (services + elsewhere + routes)[:CANDIDATE_LIMIT]
 
 
 def probe_candidates(routes: list, candidates: list[str], timeout: int) -> list[dict]:
@@ -497,6 +575,13 @@ def report_discovery(found: dict, candidates: list[dict]) -> None:
         for needle, texts in entry.get("wide", {}).items():
             for text in texts:
                 print(f"      {needle} ...{text!r}...")
+        lazy = entry.get("lazy", {})
+        if lazy.get("ids"):
+            print(f"      chunks the Track Your Proposal route loads: {lazy['ids']}")
+        for text in lazy.get("texts", []):
+            print(f"      lazy route ...{text!r}...")
+        if entry.get("chunk_namer"):
+            print(f"      chunk namer ...{entry['chunk_namer']!r}...")
         if entry.get("api_paths"):
             print(f"      paths about proposals or search: {entry['api_paths']}")
         if entry.get("routes"):
@@ -543,8 +628,9 @@ def main() -> int:
     ap.add_argument("--out", default="", help="write every answer here as JSON")
     ap.add_argument("--discover", action="store_true",
                     help="also read the portal's scripts for how it calls the search")
-    ap.add_argument("--no-chunks", action="store_true",
-                    help="with --discover, read only the pages' own scripts, not the lazy chunks they name")
+    ap.add_argument("--chunks", choices=("all", "track", "none"), default="all",
+                    help="with --discover, which lazy chunks to read: every one a script names, "
+                         "only those the Track Your Proposal route loads, or none")
     args = ap.parse_args()
     require_runner(os.environ)
     run_lock.hold_or_exit("diagnose_register")
@@ -573,7 +659,7 @@ def main() -> int:
         # Routes that answered the control above come first.
         live = {r["route"] for r in everything if r["probe"] == "control" and r["status"] == 200}
         ordered = [rt for rt in routes if rt.host in live] + [rt for rt in routes if rt.host not in live]
-        found = discover(ordered, args.timeout, follow_chunks=not args.no_chunks)
+        found = discover(ordered, args.timeout, chunks=args.chunks)
         asked = probe_candidates(ordered, search_candidates(found), args.timeout)
         report_discovery(found, asked)
         everything.append({"discovery": found, "candidates": asked})
