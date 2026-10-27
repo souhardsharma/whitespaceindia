@@ -3,7 +3,7 @@
 Single-file and reproducible. Regenerates every artifact the instrument reads.
 
 Sources (all open, no authentication):
-  PARIVESH  https://parivesh.nic.in/parivesh_api/trackYourProposal/advanceSearchData
+  PARIVESH  https://parivesh.nic.in/mis/trackYourProposal/advanceSearchData
             National environmental clearance register. Fetched per sector; the
             API ignores `page`/`size` and an unfiltered call returns ~128 MB.
   SHRUG v5  Harvard Dataverse doi:10.7910/DVN/DPESAK
@@ -111,6 +111,9 @@ SCRIPTS_DIR = Path(__file__).resolve().parent
 
 # ── Constants ─────────────────────────────────────────────────────────────
 PARIVESH_BASE = "https://parivesh.nic.in/parivesh_api/trackYourProposal"
+# Where the register is searched since the portal's new application: its
+# `baseURLMisNew`. The same route on PARIVESH_BASE answers 404.
+PARIVESH_REGISTER = "https://parivesh.nic.in/mis/trackYourProposal"
 SHRUG_DOI = "doi:10.7910/DVN/DPESAK"
 SHRUG_VERSION = "5.0"
 DATAMEET_URL = (
@@ -382,7 +385,7 @@ def fetch_sources(since: str | None = None) -> dict:
 
     log("fetching PARIVESH register, one sector at a time")
     for sid, sname in SECTORS.items():
-        url = f"{PARIVESH_BASE}/advanceSearchData?majorClearanceType=1&sector={sid}"
+        url = f"{PARIVESH_REGISTER}/advanceSearchData?majorClearanceType=1&sector={sid}"
         dest = CACHE / "parivesh" / f"sector_{sid}.json"
         t0 = time.time()
         try:
@@ -2180,7 +2183,7 @@ def main() -> None:
         "sources": [
             {"name": "PARIVESH environmental clearance register",
              "publisher": "Ministry of Environment, Forest and Climate Change",
-             "url": PARIVESH_BASE, "vintage": "live",
+             "url": PARIVESH_REGISTER, "vintage": "live",
              "fetched": fetched_at["register"],
              "coverage": (f"proposals submitted {register_span['earliest'][:4]} onward"
                           if register_span else "proposals as the register serves them")},
