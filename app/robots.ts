@@ -40,16 +40,6 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: ["GoogleOther", "GoogleOther-Image", "GoogleOther-Video"],
         disallow: "/",
       },
-      {
-        // Vercel's bot breakdown for the twelve hours to 2026-10-27 06:30 UTC:
-        // of 33,000 requests, Amazonbot made ~11,000 (0.5% served from the
-        // edge cache) and SemrushBot ~5,900 (1.8%), against 42 from Googlebot.
-        // Neither feeds a search result a researcher uses; both honour
-        // robots.txt. Whether to turn away AI crawlers as well is a question
-        // of what the register is for, and is left open.
-        userAgent: ["Amazonbot", "SemrushBot"],
-        disallow: "/",
-      },
     ],
     // One index naming the site's own sitemap and the per-state proposal
     // sitemaps (app/sitemap-index.xml/route.ts), so a new filing state needs
