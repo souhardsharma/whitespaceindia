@@ -23,7 +23,7 @@ concurrency:
 jobs:
   data-pipeline:
     name: Resolver tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -78,7 +78,7 @@ jobs:
     # and a file Vercel refuses fails the deployment - the nightly data
     # publish with it. This builds the way Vercel does and checks the rule
     # came out the other side. Needs no account: the project file is a stub.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -98,7 +98,7 @@ jobs:
 
   app:
     name: Typecheck and build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
