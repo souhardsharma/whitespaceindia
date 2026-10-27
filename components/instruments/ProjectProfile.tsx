@@ -32,6 +32,7 @@ import {
 import AppraisalTimeline from "./AppraisalTimeline";
 import SiteLocator, { type GeoFeature } from "./SiteLocator";
 import stagesFile from "@/public/data/instruments/consent/stages.json";
+import measuresFile from "@/public/data/instruments/consent/measures.json";
 import freshness from "@/public/data/instruments/consent/freshness.json";
 import { sourceVintageLabel } from "@/lib/instruments/vintage";
 import { stageLabel } from "@/lib/instruments/projects";
@@ -67,6 +68,11 @@ const STAGE_LABELS: Record<string, string> = Object.fromEntries(
   ).map(([k, v]) => [k, String(v?.label ?? k)]),
 );
 
+/** The measure registry, the same for every proposal. It ships once in this
+ *  route's cached script. As a prop it was 73 KB of every proposal page, in the
+ *  HTML and again in every navigation payload, each one a miss at the origin. */
+const REGISTRY = measuresFile as unknown as MeasureRegistry;
+
 /**
  * The profile, rendered from a bundle the SERVER assembled (see
  * lib/instruments/server.ts). It used to fetch the whole state shard and the
@@ -91,14 +97,14 @@ export default function ProjectProfile({
     return bundle.district;
   }, [bundle, scope]);
 
-  const { project, district, subdistricts, registry, districtNames,
+  const { project, district, subdistricts, districtNames,
           stateSlug: resolvedState } = bundle;
   const ref: LegalReference | null = bundle.legal.available ? bundle.legal : null;
 
   const stateName = district?.state_name ?? "";
   const facts = (group: string) =>
     place
-      ? factsForGroup(group, registry, place.values, {
+      ? factsForGroup(group, REGISTRY, place.values, {
           benchmarkScope: "india",
           stateName,
         })
@@ -107,8 +113,8 @@ export default function ProjectProfile({
   const indicators = place
     ? ["pop.st_share", "pop.sc_share", "work.land_dependent_share", "work.ag_labourer_share"]
         .map((id) =>
-          factsForGroup("population", registry, place.values, {}).find((f) => f.id === id) ||
-          factsForGroup("livelihood", registry, place.values, {}).find((f) => f.id === id)
+          factsForGroup("population", REGISTRY, place.values, {}).find((f) => f.id === id) ||
+          factsForGroup("livelihood", REGISTRY, place.values, {}).find((f) => f.id === id)
         )
         // A type guard, not `.filter(Boolean)`: TypeScript cannot narrow
         // through Boolean, and the result was then cast `as never[]` at the
