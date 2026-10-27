@@ -393,4 +393,4 @@ jobs:
           echo "pool: $(wc -l < "$INSTRUMENTS_CACHE_DIR/proxies.txt" 2>/dev/null || echo 0) routes"
 
       - name: Ask PARIVESH, route by route
-        run: python scripts/instruments/diagnose_register.py --out "$RUNNER_TEMP/diagnose_register.json"
+        run: python scripts/instruments/diagnose_register.py --waves 1 --discover --out "$RUNNER_TEMP/diagnose_register.json"

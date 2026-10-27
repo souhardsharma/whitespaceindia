@@ -21,6 +21,10 @@ verifies routes with).
     search_again          the first search, repeated: does a route's answer
                           stick, or vary from one request to the next?
 
+With --discover it also reads the portal's own page and scripts and reports
+how the application itself now calls the search: a 404 that names the path is
+what a moved route looks like.
+
 GITHUB'S RUNNER ONLY. PARIVESH answers addresses in India and this project's
 own address is never to be used for it (see net.py), and a diagnostic is
 exactly what someone would otherwise try from a laptop. It refuses to start
@@ -35,10 +39,12 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import statistics
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
@@ -52,7 +58,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import net as NET  # noqa: E402
 import run_lock  # noqa: E402
 
-API = "https://parivesh.nic.in/parivesh_api/trackYourProposal/"
+PARIVESH_API = "https://parivesh.nic.in/parivesh_api/"
+API = PARIVESH_API + "trackYourProposal/"
 SEARCH = API + "advanceSearchData"
 # The smallest sector, so a success costs the proxy little.
 SMALL_SECTOR = 7
@@ -215,6 +222,151 @@ def distinct_exits(proxies: list[str], limit: int) -> list:
     return routes
 
 
+FRONT = "https://parivesh.nic.in/"
+NEEDLE = "advanceSearchData"
+BUNDLE_LIMIT = 8
+BUNDLE_BYTES = 8_000_000
+MAX_FILES = 60
+DISCOVER_BUDGET_S = 600
+CANDIDATE_LIMIT = 12
+CONTEXT = 110
+# A lazily loaded chunk is named in the script that loads it, either as a file
+# (esbuild: chunk-<hash>.js) or as an id -> content-hash map (webpack:
+# <id>.<hash>.js).
+ESBUILD_CHUNK = re.compile(r"""["'](?:\./)?(chunk-[\w-]+\.js)["']""")
+WEBPACK_CHUNK = re.compile(r"""(?<![\w.])(\d+|[A-Za-z_][\w-]*)\s*:\s*["']([0-9a-f]{16,20})["']""")
+SEARCH_ROUTE = re.compile(r"(?:[A-Za-z]\w*/)+\w*[Ss]earch\w*")
+
+
+def script_sources(html: str, base: str = FRONT) -> list[str]:
+    """Absolute URLs of the page's scripts, in page order, without repeats."""
+    seen: dict[str, None] = {}
+    for src in re.findall(r"""<script[^>]+\bsrc=["']([^"']+)["']""", html, re.I):
+        seen[urllib.parse.urljoin(base, src)] = None
+    return list(seen)
+
+
+def chunk_sources(js: str, base: str) -> list[str]:
+    """Absolute URLs of the lazy chunks a script names."""
+    names = set(ESBUILD_CHUNK.findall(js))
+    names.update(f"{ident}.{digest}.js" for ident, digest in WEBPACK_CHUNK.findall(js))
+    return [urllib.parse.urljoin(base, name) for name in sorted(names)]
+
+
+def call_sites(js: str, limit: int = 6) -> dict:
+    """How a script refers to the search: the text around each mention, every
+    trackYourProposal/<name> route it knows (the search's siblings, to see
+    whether they are still where they were) and every other route whose name
+    says search, in case it moved."""
+    contexts = []
+    for m in re.finditer(NEEDLE, js):
+        text = js[max(0, m.start() - CONTEXT): m.end() + CONTEXT]
+        if text not in contexts:
+            contexts.append(text)
+        if len(contexts) == limit:
+            break
+    return {"mentions": js.count(NEEDLE), "contexts": contexts,
+            "routes": sorted(set(re.findall(r"trackYourProposal/\w+", js))),
+            "search_routes": sorted(set(SEARCH_ROUTE.findall(js)))}
+
+
+def fetch_page(routes: list, url: str, timeout: int, limit: int) -> tuple[bytes | None, str]:
+    """The first of `routes` that returns `url` with a 200, and what each said."""
+    said = []
+    for route in routes:
+        req = urllib.request.Request(url, headers=NET.DEFAULT_HEADERS)
+        try:
+            with route.opener().open(req, timeout=timeout) as r:
+                body = r.read(limit)
+                if r.status == 200:
+                    return body, f"200 via {route.host}"
+                said.append(f"{r.status} via {route.host}")
+        except urllib.error.HTTPError as e:
+            said.append(f"{e.code} via {route.host}")
+        except Exception as exc:  # noqa: BLE001 - any transport failure is the answer
+            said.append(f"{type(exc).__name__} via {route.host}")
+        time.sleep(1.0)
+    return None, "; ".join(said)
+
+
+def discover(routes: list, timeout: int, budget_s: float = DISCOVER_BUDGET_S) -> dict:
+    """Read the portal's page, its scripts and the lazy chunks they name, for
+    the search's call sites and every route the application knows."""
+    deadline = time.time() + budget_s
+    found: dict = {"page": None, "bundles": {}}
+    html, found["page"] = fetch_page(routes[:6], FRONT, timeout, BUNDLE_BYTES)
+    if html is None:
+        return found
+    queue = script_sources(html.decode("utf-8", "replace"))[:BUNDLE_LIMIT]
+    found["scripts"] = list(queue)
+    seen = set(queue)
+    turn = 6
+
+    def read(url: str, start: int):
+        # Three routes from a different place in the pool for each file, so an
+        # exit IP is asked about once per pass.
+        picks = [routes[(start + k) % len(routes)] for k in range(3)]
+        return url, fetch_page(picks, url, timeout, BUNDLE_BYTES)
+
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        while queue and time.time() < deadline and len(found["bundles"]) < MAX_FILES:
+            batch, queue = queue[:8], queue[8:]
+            jobs = [(url, turn + 3 * i) for i, url in enumerate(batch)]
+            turn += 3 * len(batch)
+            for url, (body, said) in ex.map(lambda job: read(*job), jobs):
+                entry: dict = {"fetched": said, "bytes": len(body) if body else 0}
+                if body:
+                    js = body.decode("utf-8", "replace")
+                    entry.update(call_sites(js))
+                    for chunk in chunk_sources(js, url):
+                        if chunk not in seen:
+                            seen.add(chunk)
+                            queue.append(chunk)
+                found["bundles"][url] = entry
+            time.sleep(4)
+    found["unread"] = len(queue)
+    return found
+
+
+def search_candidates(found: dict) -> list[str]:
+    """Routes the application knows whose name says search, other than the one
+    the sweep calls, which is the one that answers 404."""
+    names: set[str] = set()
+    for entry in found["bundles"].values():
+        names.update(n.removeprefix("parivesh_api/") for n in entry.get("search_routes", []))
+    return sorted(n for n in names if "/" in n and not n.endswith("/" + NEEDLE))[:CANDIDATE_LIMIT]
+
+
+def probe_candidates(routes: list, candidates: list[str], timeout: int) -> list[dict]:
+    """Each candidate asked the sweep's smallest question on two routes."""
+    query = f"?majorClearanceType=1&sector={SMALL_SECTOR}"
+
+    def ask(item):
+        i, name = item
+        probe = Probe("candidate:" + name, PARIVESH_API + name + query, headers=PLAIN_HEADERS)
+        return [probe_once(routes[(2 * i + k) % len(routes)], probe, timeout) for k in range(2)]
+
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        return [row for rows in ex.map(ask, enumerate(candidates)) for row in rows]
+
+
+def report_discovery(found: dict, candidates: list[dict]) -> None:
+    print(f"\n=== portal page: {found['page']} ===")
+    for url, entry in found["bundles"].items():
+        print(f"  {url}: {entry['fetched']}, {entry['bytes']:,} B, "
+              f"{entry.get('mentions', 0)} mention(s) of {NEEDLE}")
+        for text in entry.get("contexts", []):
+            print(f"      ...{text!r}...")
+        if entry.get("routes"):
+            print(f"      trackYourProposal routes: {entry['routes']}")
+        if entry.get("search_routes"):
+            print(f"      routes that say search: {entry['search_routes']}")
+    print(f"  {len(found['bundles'])} file(s) read, {found.get('unread', 0)} left unread")
+    for r in candidates:
+        print(f"  candidate {r['probe'][len('candidate:'):]} via {r['route']}: {r['label']} "
+              f"{r['bytes']}B head={r['head']!r}")
+
+
 def report(results: list[dict]) -> None:
     for name, s in summarise(results).items():
         print(f"  {name:22} n={s['n']:3}  median {s['median_s']}s  {s['outcomes']}")
@@ -243,6 +395,8 @@ def main() -> int:
     ap.add_argument("--workers", type=int, default=24)
     ap.add_argument("--timeout", type=int, default=45)
     ap.add_argument("--out", default="", help="write every answer here as JSON")
+    ap.add_argument("--discover", action="store_true",
+                    help="also read the portal's scripts for how it calls the search")
     args = ap.parse_args()
     require_runner(os.environ)
     run_lock.hold_or_exit("diagnose_register")
@@ -267,9 +421,17 @@ def main() -> int:
         if wave < args.waves:
             time.sleep(args.wave_gap_minutes * 60)
 
+    if args.discover:
+        # Routes that answered the control above come first.
+        live = {r["route"] for r in everything if r["probe"] == "control" and r["status"] == 200}
+        ordered = [rt for rt in routes if rt.host in live] + [rt for rt in routes if rt.host not in live]
+        found = discover(ordered, args.timeout)
+        asked = probe_candidates(ordered, search_candidates(found), args.timeout)
+        report_discovery(found, asked)
+        everything.append({"discovery": found, "candidates": asked})
     if args.out:
         Path(args.out).write_text(json.dumps(everything, indent=1), encoding="utf-8")
-    reached = sum(1 for r in everything if r["probe"] == "control" and r["status"] == 200)
+    reached = sum(1 for r in everything if r.get("probe") == "control" and r["status"] == 200)
     if not reached:
         print("\nNo route reached the service at all: the pool, not the endpoint, is what failed.")
         return 3
