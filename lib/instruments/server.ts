@@ -26,6 +26,7 @@ import path from "path";
 import type {
   DistrictRecord,
   InstrumentMeta,
+  MeasureRegistry,
   Project,
   SubdistrictRecord,
 } from "./types";
@@ -94,6 +95,7 @@ export function stateSlugs(): string[] {
 }
 
 export const districts = () => json<Record<string, DistrictRecord>>("districts.json");
+export const measures = () => json<MeasureRegistry>("measures.json");
 export const meta = () => json<InstrumentMeta>("meta.json");
 export const legal = () => jsonOrNull<LegalReference>("legal_reference.json");
 
@@ -268,6 +270,7 @@ export interface ProposalBundle {
   stateSlug: string;
   district: DistrictRecord | null;
   subdistricts: SubdistrictRecord[];
+  registry: MeasureRegistry;
   /** The reference cut to the determinations this proposal's districts need. */
   legal: (LegalReference & { available: true }) | { available: false };
   districtNames: Record<string, string>;
@@ -342,6 +345,7 @@ export function proposalBundle(id: string): ProposalBundle | null {
     stateSlug: slug,
     district,
     subdistricts,
+    registry: measures(),
     legal: legalCut,
     districtNames,
     nearby: nearby(project),
