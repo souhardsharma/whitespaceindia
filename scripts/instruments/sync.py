@@ -76,8 +76,12 @@ from register_cache import merge_forest_states  # noqa: E402
 ROOT = SCRIPTS.parent.parent
 PUBLISHED = ROOT / "public" / "data" / "instruments" / "consent"
 
-PARIVESH_SEARCH = ("https://parivesh.nic.in/parivesh_api/trackYourProposal/"
-                   "advanceSearchData?majorClearanceType=1&sector={sector}")
+# The portal's current application (/newupgrade) calls the search on its
+# `baseURLMisNew`, https://parivesh.nic.in/mis/. The same route on `parivesh_api`,
+# where the sweep asked until 2026-10-23, answers Spring's own 404. Read from the
+# application's scripts and confirmed on a runner, 2026-10-27.
+SEARCH_ROOT = "https://parivesh.nic.in/mis/trackYourProposal/advanceSearchData"
+PARIVESH_SEARCH = SEARCH_ROOT + "?majorClearanceType=1&sector={sector}"
 SECTORS = {
     2: "Industrial Projects - 1", 3: "Non-Coal Mining", 4: "Thermal Projects",
     5: "River Valley and Hydroelectric Projects", 6: "INFRA-2",
@@ -496,8 +500,7 @@ def read_window(sid: int, start: str | None, end: str | None, held: int,
 # list's id 36, it answered with Telangana (LGD 36), not West Bengal. Every
 # code 1..38 is asked, and proposals are de-duplicated by id, so a code that
 # names no State costs one empty answer and nothing is missed by a mapping.
-FOREST_SEARCH = ("https://parivesh.nic.in/parivesh_api/trackYourProposal/"
-                 "advanceSearchData?majorClearanceType=2&state={code}")
+FOREST_SEARCH = SEARCH_ROOT + "?majorClearanceType=2&state={code}"
 LGD_STATE_CODES = range(1, 39)
 
 
