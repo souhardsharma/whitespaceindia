@@ -61,6 +61,10 @@ on:
         description: "Run the read-only PARIVESH diagnostic (diagnose_register.py) instead of the sync. Commits nothing."
         type: boolean
         default: false
+      diagnose_args:
+        description: "Arguments for the diagnostic, e.g. '--waves 0 --discover --no-chunks' to read the portal's scripts only."
+        type: string
+        default: "--waves 1 --discover"
 
 concurrency:
   # A diagnostic writes nothing, so it does not queue behind a nightly run that
@@ -393,4 +397,7 @@ jobs:
           echo "pool: $(wc -l < "$INSTRUMENTS_CACHE_DIR/proxies.txt" 2>/dev/null || echo 0) routes"
 
       - name: Ask PARIVESH, route by route
-        run: python scripts/instruments/diagnose_register.py --waves 1 --discover --out "$RUNNER_TEMP/diagnose_register.json"
+        # Through the environment, never spliced into the script text.
+        env:
+          DIAGNOSE_ARGS: ${{ inputs.diagnose_args }}
+        run: python scripts/instruments/diagnose_register.py $DIAGNOSE_ARGS --out "$RUNNER_TEMP/diagnose_register.json"
