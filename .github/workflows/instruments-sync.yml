@@ -71,7 +71,7 @@ concurrency:
 jobs:
   sync:
     if: ${{ !inputs.diagnose }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 330
     permissions:
       contents: write
@@ -353,7 +353,7 @@ jobs:
   # read the repository and nothing more: no push token, no commit.
   diagnose:
     if: ${{ inputs.diagnose }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 75
     permissions:
       contents: read
