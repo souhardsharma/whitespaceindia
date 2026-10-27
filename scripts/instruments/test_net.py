@@ -16,6 +16,8 @@ Everything runs offline against fabricated routes. No network.
 """
 from __future__ import annotations
 
+import io
+import json
 import sys
 import threading
 import urllib.error
@@ -706,6 +708,43 @@ def test_attempt_wiring() -> None:
               not any(c.startswith("observe") for c in p.calls), str(p.calls))
         check("a 404 does not stand the direct route down",
               "direct_refused" not in p.calls, str(p.calls))
+
+        # ── the origin's own 404: the PATH is gone, not the route ────────
+        # The incident (2026-10-24 to 27): every route that reached PARIVESH
+        # drew Spring's 404 for the register search, each was charged to its
+        # route, and the pool rested itself empty.
+        spring = json.dumps({"timestamp": "2026-10-27T06:39:53.340+00:00",
+                             "status": 404, "error": "Not Found",
+                             "path": "/parivesh_api/trackYourProposal/x"}).encode()
+
+        def not_found(body, status=404):
+            return urllib.error.HTTPError("https://x/y", status, "nf", {}, io.BytesIO(body))
+
+        r = _FakeRoute(not_found(spring), proxy="10.0.0.3:8080")
+        p = _SpyPool(r)
+        status, body = NET._attempt(p, "https://x/y", None, "GET", 5, 3, None)
+        check("the origin's 404 is returned at once, not retried down other routes",
+              status == 404 and len(r.records) == 1, f"{status} {r.records}")
+        check("the origin's 404 is credited to the route that carried it",
+              r.records == [True], str(r.records))
+        check("the origin's 404 returns its body", body == spring, repr(body))
+        check("the origin's 404 does not move the pace",
+              not any(c.startswith("observe") for c in p.calls), str(p.calls))
+
+        r = _FakeRoute(not_found(b"<html>404 proxy error</html>"), proxy="10.0.0.4:8080")
+        p = _SpyPool(r)
+        NET._attempt(p, "https://x/y", None, "GET", 5, 3, None)
+        check("a proxy's own 404 page is still charged to the proxy, every attempt",
+              r.records == [False, False, False], str(r.records))
+
+        for name, doc in (("a status that disagrees with the wire",
+                           {"status": 500, "path": "/p"}),
+                          ("no path", {"status": 404}),
+                          ("a list", [{"status": 404, "path": "/p"}])):
+            check(f"not the origin's: {name}",
+                  not NET.is_origin_answer(404, json.dumps(doc).encode()))
+        check("not the origin's: not JSON", not NET.is_origin_answer(404, b"Not Found"))
+        check("the origin's own error body is recognised", NET.is_origin_answer(404, spring))
 
         # ── 403 on a proxy: that proxy's problem, not ours ───────────────
         r = _FakeRoute((403, b"no"), proxy="10.0.0.1:8080")

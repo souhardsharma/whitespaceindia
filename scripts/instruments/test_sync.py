@@ -749,6 +749,11 @@ def test_a_night_that_read_nothing_is_red() -> None:
                              "partial_streak": SY.PARTIAL_FAIL_AFTER}) is not None)
     check("a clean night is green", SY.failure_reason({"failed_sectors": [], "partial_streak": 0}) is None)
     check("an empty state (no run yet) is green", SY.failure_reason({}) is None)
+    gone = SY.failure_reason({"failed_sectors": every, "partial_streak": 1,
+                              "endpoint_gone": ["/parivesh_api/trackYourProposal/advanceSearchData"]})
+    check("when the search path is gone the night's failure names it and the 404",
+          gone is not None and "advanceSearchData" in gone and "404" in gone
+          and "moved or been removed" in gone, str(gone))
 
 
 def test_a_pass_out_of_time_pays_what_it_read(tmp: Path) -> None:
@@ -809,6 +814,93 @@ def test_no_form_is_rechecked(tmp: Path) -> None:
           "rolling" in SY.REVISIT_PASSES)
 
 
+SPRING_404 = (b'{"timestamp":"2026-10-27T07:00:52.678+00:00","status":404,'
+              b'"error":"Not Found","path":"/p/search"}')
+
+
+def test_a_path_the_origin_dropped_is_not_asked_again() -> None:
+    print("\na path PARIVESH itself answers 404 for, and never 200, stops being asked")
+    url = "https://x/p/search?sector=1"
+    w = SY.Witness(gone_after=3)
+    for _ in range(2):
+        w.note(url, 404, SPRING_404)
+    check("below the count it is not gone", not w.is_gone(url))
+    w.note(url, 404, b"<html>404 Not Found</html>")
+    check("a proxy's own 404 page is not the service's answer", not w.is_gone(url))
+    w.note(url, 404, SPRING_404)
+    check("the third 404 from the service itself, and no 200, is gone",
+          w.is_gone(url) and w.gone_paths() == ["/p/search"], str(w.gone_paths()))
+    check("the path decides, not the query", w.is_gone("https://x/p/search?sector=9"))
+    check("a different path is its own", not w.is_gone("https://x/p/other"))
+    w.note(url, 200, b"{}")
+    check("one 200 clears it", not w.is_gone(url) and w.gone_paths() == [])
+
+    saved = (SY.NET.get, SY.pool, SY.time.sleep, SY.log, SY.ENDPOINTS)
+    sent: list[str] = []
+    try:
+        SY.NET.get = lambda p, u, **k: (sent.append(u), (404, SPRING_404))[1]
+        SY.pool = lambda: None
+        SY.time.sleep = lambda s: None
+        SY.log = lambda *_: None
+        SY.ENDPOINTS = SY.Witness(gone_after=2)
+        try:
+            SY.fetch(url)
+            raised = None
+        except SY.EndpointGone as exc:
+            raised = exc
+        check("a call stops retrying once its path is gone, and says why",
+              raised is not None and len(sent) == 2 and "/p/search" in str(raised),
+              f"{len(sent)} sent, {raised}")
+        sent.clear()
+        try:
+            SY.fetch(url)
+            raised = None
+        except SY.EndpointGone as exc:
+            raised = exc
+        check("a later call to that path sends nothing", raised is not None and sent == [],
+              str(sent))
+        check("it is a RuntimeError, so every caller's failure handling covers it",
+              issubclass(SY.EndpointGone, RuntimeError))
+    finally:
+        SY.NET.get, SY.pool, SY.time.sleep, SY.log, SY.ENDPOINTS = saved
+
+
+def test_no_second_round_for_a_gone_path(tmp: Path) -> None:
+    print("\na second round is not spent on a path that is gone")
+    gone = SY.Witness(gone_after=1)
+    gone.note("https://x/?sector=1", 404, SPRING_404)
+    calls: list[str] = []
+
+    def failing(url: str, timeout: int = 300, deadline=None, **_) -> bytes:
+        calls.append(url)
+        raise RuntimeError("register fetch failed after retries: HTTP 404")
+
+    saved = (SY.fetch, SY.log, SY.PARIVESH_SEARCH, SY.FOREST_SEARCH,
+             SY.merge_forest_states, SY.ENDPOINTS)
+    logged: list[str] = []
+    try:
+        SY.fetch, SY.log = failing, logged.append
+        SY.PARIVESH_SEARCH = "https://x/?sector={sector}"
+        SY.FOREST_SEARCH = "https://x/?code={code}"
+        SY.merge_forest_states = lambda cache: 0
+        SY.ENDPOINTS = gone
+        _, stats = SY.fetch_delta(None)
+        check("each sector is asked once and not again",
+              len(calls) == len(SY.SECTORS) and all("error" in s for s in stats.values()),
+              str(len(calls)))
+        check("the log says why there was no second round",
+              any("no second round" in line and "moved or been removed" in line for line in logged))
+        calls.clear()
+        stats = SY.fetch_forest(tmp)
+        check("each State code is asked once and not again",
+              len(calls) == len(SY.LGD_STATE_CODES), str(len(calls)))
+        check("a State left unasked is blamed on the path, not on time",
+              {f["error"] for f in stats["failed"]} == {"search path gone"}, str(stats["failed"][:2]))
+    finally:
+        (SY.fetch, SY.log, SY.PARIVESH_SEARCH, SY.FOREST_SEARCH,
+         SY.merge_forest_states, SY.ENDPOINTS) = saved
+
+
 def main() -> int:
     import tempfile
     test_watermark()
@@ -825,6 +917,9 @@ def main() -> int:
     test_failed_sector_gets_a_second_round()
     with tempfile.TemporaryDirectory() as d:
         test_failed_forest_state_gets_a_second_round(Path(d))
+    test_a_path_the_origin_dropped_is_not_asked_again()
+    with tempfile.TemporaryDirectory() as d:
+        test_no_second_round_for_a_gone_path(Path(d))
     test_windows_cover_every_day()
     test_windowed_sector_is_checked_whole()
     test_link_silences()

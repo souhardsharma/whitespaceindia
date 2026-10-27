@@ -62,6 +62,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+from urllib.parse import urlsplit
 from concurrent.futures import ThreadPoolExecutor
 from itertools import zip_longest
 from datetime import datetime, timedelta, timezone
@@ -218,6 +219,58 @@ def _build_pool():
     return built
 
 
+# The origin's own 404s for one path, with no 200 from it, before every sweep
+# call to that path stops being sent.
+GONE_AFTER = 6
+
+
+GONE_MESSAGE = ("PARIVESH itself answers 404 for the search path and has not "
+                "answered 200; the path has moved or been removed")
+
+
+class EndpointGone(RuntimeError):
+    """PARIVESH itself keeps answering 404 for a path and has never answered 200."""
+
+
+class Witness:
+    """What each endpoint has answered this run, across every thread.
+
+    From 2026-10-24 the register search answered Spring's "404 Not Found" on
+    every route that reached the service, while a sibling endpoint on the same
+    exits answered 200. A service that has dropped a path is not struggling, so
+    the sweep's eight-attempt backoff on each of 53 windows (ten minutes a
+    round) only spent the night's time and routes asking again. A path with
+    GONE_AFTER of the origin's own 404s (net.is_origin_answer: a proxy's error
+    page does not count) and not one 200 is reported gone; one 200 clears it.
+    """
+
+    def __init__(self, gone_after: int = GONE_AFTER):
+        self.gone_after = gone_after
+        self._lock = threading.Lock()
+        self._seen: dict[str, list[int]] = {}   # path -> [origin 404s, 200s]
+
+    def note(self, url: str, status: int, body: bytes) -> None:
+        with self._lock:
+            row = self._seen.setdefault(urlsplit(url).path, [0, 0])
+            if status == 200:
+                row[1] += 1
+            elif status == 404 and NET.is_origin_answer(404, body):
+                row[0] += 1
+
+    def is_gone(self, url: str) -> bool:
+        with self._lock:
+            not_found, answered = self._seen.get(urlsplit(url).path, (0, 0))
+        return answered == 0 and not_found >= self.gone_after
+
+    def gone_paths(self) -> list[str]:
+        with self._lock:
+            return sorted(p for p, (n, ok) in self._seen.items()
+                          if ok == 0 and n >= self.gone_after)
+
+
+ENDPOINTS = Witness()
+
+
 def fetch(url: str, timeout: int = 300, deadline: float | None = None,
           backoff: tuple = SWEEP_BACKOFF, label: str = "") -> bytes:
     """One register call, over whichever route is healthy.
@@ -226,6 +279,7 @@ def fetch(url: str, timeout: int = 300, deadline: float | None = None,
     sees a failure rather than an empty body it might merge as "no records".
     `deadline` bounds it, retries included: five attempts at a 300-second
     timeout is 25 minutes for one sector, and the sweeps had no bound at all.
+    Raises EndpointGone, without asking, once the path is known to be gone.
     """
     # A sector or State call has no "absent" answer: its 500 is retried. Each
     # failed attempt is logged and waited out before the next. Retried back to
@@ -234,8 +288,12 @@ def fetch(url: str, timeout: int = 300, deadline: float | None = None,
     # so what our own route had answered was never seen.
     status, body = -1, b""
     for i, pause in enumerate(tuple(backoff) + (None,), 1):
+        if ENDPOINTS.is_gone(url):
+            raise EndpointGone(f"{urlsplit(url).path} answers 404 from PARIVESH "
+                               "itself and has never answered 200 this run")
         status, body = NET.get(pool(), url, timeout=timeout, attempts=1,
                                deadline=deadline, final=frozenset())
+        ENDPOINTS.note(url, status, body)
         if status == 200:
             return body
         log(f"    {label}attempt {i}: HTTP {status} "
@@ -334,7 +392,10 @@ def fetch_delta(since: str | None,
     errors: dict[tuple, str] = {}
     _read_windows(jobs, deadline, answers, errors)
     retry = [j for j in jobs if j in errors]
-    if retry and (deadline is None or time.time() < deadline):
+    if retry and ENDPOINTS.is_gone(PARIVESH_SEARCH):
+        log(f"  register search: {GONE_MESSAGE}; no second round for "
+            f"{len(retry)} window(s)")
+    elif retry and (deadline is None or time.time() < deadline):
         log(f"  second round for {len(retry)} failed window(s)")
         for job in retry:
             del errors[job]
@@ -500,6 +561,10 @@ def fetch_forest(cache: Path, deadline: float | None = None) -> dict:
     pending = list(LGD_STATE_CODES)
     for timeout, final in ((WINDOW_TIMEOUT, False), (FOREST_RETRY_TIMEOUT, True)):
         if final and pending:
+            if ENDPOINTS.is_gone(FOREST_SEARCH):
+                log(f"  forest register: {GONE_MESSAGE}; no second round for "
+                    f"{len(pending)} State code(s)")
+                break
             if deadline is not None and time.time() > deadline:
                 break
             log(f"  forest register: second round for {len(pending)} State code(s)")
@@ -520,9 +585,10 @@ def fetch_forest(cache: Path, deadline: float | None = None) -> dict:
                     log(f"  forest register, state code {code}: FAILED ({exc})")
                 else:
                     pending.append(code)
+    unasked = "search path gone" if ENDPOINTS.is_gone(FOREST_SEARCH) else "out of time"
     for code in pending:
-        stats["failed"].append({"code": code, "error": "out of time"})
-        log(f"  forest register, state code {code}: FAILED (out of time)")
+        stats["failed"].append({"code": code, "error": unasked})
+        log(f"  forest register, state code {code}: FAILED ({unasked})")
     stats["records"] = merge_forest_states(cache)
     meta_path = cache / "parivesh" / "forest_meta.json"
     try:
@@ -839,9 +905,14 @@ def failure_reason(state: dict) -> str | None:
     site said so only in a footer. Nothing was wrong with what was published;
     the point is that nobody was told the register had stopped moving."""
     if register_unread(state.get("failed_sectors")):
-        return (f"the register was not read tonight: all {len(SECTORS)} sectors "
-                "failed. What is published is the last good read, and the site "
-                "says so; nothing newer has been fetched.")
+        gone = state.get("endpoint_gone")
+        cause = (f"PARIVESH itself answers 404 for {', '.join(gone)} and has "
+                 "not answered 200: the search has moved or been removed, and "
+                 "the sweep needs its new route" if gone
+                 else f"all {len(SECTORS)} sectors failed")
+        return (f"the register was not read tonight: {cause}. What is "
+                "published is the last good read, and the site says so; "
+                "nothing newer has been fetched.")
     streak = int(state.get("partial_streak") or 0)
     if streak >= PARTIAL_FAIL_AFTER:
         return (f"{streak} consecutive nights did not cover the register or the "
@@ -1321,6 +1392,7 @@ def main() -> None:
         "last_success": advanced_to,
         "complete": complete,
         "failed_sectors": failed_sectors,
+        "endpoint_gone": ENDPOINTS.gone_paths(),
         "incomplete_backfill": incomplete_backfill,
         "egress": {
             "direct_blocked": egress["direct_blocked"],
