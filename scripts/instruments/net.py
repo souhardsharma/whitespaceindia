@@ -993,16 +993,28 @@ def _attempt(pool, url, data, method, timeout, attempts, last, deadline=None,
         except urllib.error.HTTPError as e:
             dt = time.time() - t0
             note_answer(e.code, route=route)
+            try:
+                err_body = e.read()[:2000]
+            except Exception:  # noqa: BLE001
+                err_body = b""
             if e.code in final:
                 # The origin answered about the proposal. The route did its
                 # job, so it is credited, and the answer is returned rather
                 # than retried three more times against three more routes.
                 route.record(True, dt)
                 pool.release(route)
-                try:
-                    return e.code, e.read()[:2000]
-                except Exception:  # noqa: BLE001
-                    return e.code, b""
+                return e.code, err_body
+            if e.code in REQUEST_ANSWERS and is_origin_answer(e.code, err_body):
+                # The origin saying the PATH or the request is wrong, in its
+                # own error format. A route that carried that answer worked:
+                # on 2026-10-24 to 27 every route that reached PARIVESH drew
+                # a Spring "404 Not Found" for the register search while the
+                # same exits answered the control with 200, and charging each
+                # 404 to its route rested and retired the pool - "every route
+                # full; not sent" - for an answer no other route could change.
+                route.record(True, dt)
+                pool.release(route)
+                return e.code, err_body
             if e.code == RATE_LIMITED:
                 cool(route)
             # A 429 is the address over its allowance, not a bad route. And a
@@ -1033,10 +1045,7 @@ def _attempt(pool, url, data, method, timeout, attempts, last, deadline=None,
                 # expires and re-tests, so a lifted block is noticed.
                 pool.note_direct_refused()
 
-            try:
-                last = (e.code, e.read()[:400])
-            except Exception:  # noqa: BLE001
-                last = (e.code, b"")
+            last = (e.code, err_body[:400])
             if is_capacity_signal(e.code):
                 time.sleep(2 + random.random() * 3)
         except Exception as exc:  # noqa: BLE001
@@ -1101,6 +1110,26 @@ IDENTITY_REJECTIONS = frozenset({401, 403, 407})
 # per-proposal answer rested healthy routes. The fetchers settle an id only
 # on a confirmed 500, and note_answer still counts it toward the pace.
 RESOURCE_ANSWERS = frozenset({500})
+# The origin saying the request or its path is wrong: not found, bad request,
+# method not allowed, gone. Asking again down another route cannot change it,
+# and it says nothing about the route that carried it - provided the answer is
+# the origin's (is_origin_answer), which a proxy's own error page is not.
+REQUEST_ANSWERS = frozenset({400, 404, 405, 410})
+
+
+def is_origin_answer(status: int, body: bytes) -> bool:
+    """Whether an HTTP error is PARIVESH's own Spring error body.
+
+    Spring writes {"timestamp", "status", "error", "path"}; a proxy's error
+    page does not, and a 404 from a proxy IS a fact about the proxy. The
+    status in the body has to agree with the one on the wire.
+    """
+    try:
+        doc = json.loads(body.decode("utf-8", "replace"))
+    except ValueError:
+        return False
+    return (isinstance(doc, dict) and doc.get("status") == status
+            and isinstance(doc.get("path"), str))
 
 
 def is_resource_answer(status: int) -> bool:
