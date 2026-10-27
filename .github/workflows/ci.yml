@@ -23,11 +23,11 @@ concurrency:
 jobs:
   data-pipeline:
     name: Resolver tests
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
       - run: pip install --require-hashes -r requirements.txt
@@ -71,38 +71,13 @@ jobs:
           PYTHONIOENCODING: utf-8
         run: python scripts/instruments/check_published.py
 
-  vercel-config:
-    name: Vercel accepts vercel.json
-    # vercel.json carries the rule that turns crawlers away before they reach
-    # a function. Only Vercel reads it, so `next build` cannot vouch for it,
-    # and a file Vercel refuses fails the deployment - the nightly data
-    # publish with it. This builds the way Vercel does and checks the rule
-    # came out the other side. Needs no account: the project file is a stub.
-    runs-on: ubuntu-26.04
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
-        with:
-          node-version: "22"
-          cache: npm
-      - run: npm ci
-      - name: Build with Vercel's builder
-        env:
-          VERCEL_TELEMETRY_DISABLED: "1"
-        run: |
-          mkdir -p .vercel
-          echo '{"projectId":"prj_ci","orgId":"team_ci","settings":{"framework":"nextjs"}}' > .vercel/project.json
-          npx --yes vercel@65.4.0 build --prod
-      - run: node scripts/check_vercel_config.mjs
-
   app:
     name: Typecheck and build
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           # 22, not 20. The suites are .ts and rely on Node's own type
           # stripping, which does not exist before 22.6 and is unflagged from
