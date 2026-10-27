@@ -136,11 +136,16 @@ def test_the_portal_pages_are_read_for_the_searchs_call_sites() -> None:
     sites = DG.call_sites(js)
     check("a mention is reported with the text around it",
           sites["mentions"] == 1 and "v2/advanceSearchData" in sites["contexts"][0], str(sites))
-    check("every sibling route is listed", sites["routes"] == [
+    check("every sibling route is listed, with the whole path it was called by", sites["routes"] == [
         "trackYourProposal/getListOfSector", "trackYourProposal/getProcessHis",
-        "trackYourProposal/v2"], str(sites["routes"]))
+        "trackYourProposal/v2/advanceSearchData"], str(sites["routes"]))
     check("a script that never mentions it reports none",
           DG.call_sites("var a = 1;")["mentions"] == 0)
+    moved = DG.call_sites('a.get(`${b}trackYourProposal/V1/proposalList?x=1`);'
+                          'a.get(`${b}trackYourProposal/getListOfSector`);')
+    check("with the search unnamed, a sibling's call site is shown and a known one is not",
+          moved["mentions"] == 0 and len(moved["track_contexts"]) == 1
+          and "V1/proposalList" in moved["track_contexts"][0], str(moved))
 
 
 def test_lazy_chunks_are_followed_and_a_moved_search_is_found() -> None:
@@ -157,12 +162,23 @@ def test_lazy_chunks_are_followed_and_a_moved_search_is_found() -> None:
               "https://parivesh.nic.in/12.0123456789abcdef.js",
               "https://parivesh.nic.in/foo.fedcba9876543210.js"],
           str(DG.chunk_sources(webpack, "https://parivesh.nic.in/")))
+    cra = '{3:"a1b2c3d4",51:"0f1e2d3c",x:"zzzzzzzz"}'
+    check("a create-react-app script names 8-character chunks under static/js",
+          DG.chunk_sources(cra, "https://parivesh.nic.in/static/js/main.ff788027.js") == [
+              "https://parivesh.nic.in/static/js/3.a1b2c3d4.chunk.js",
+              "https://parivesh.nic.in/static/js/51.0f1e2d3c.chunk.js"],
+          str(DG.chunk_sources(cra, "https://parivesh.nic.in/static/js/main.ff788027.js")))
     js = ('a.get("trackYourProposal/v2/advanceSearchData");'
           'a.get("trackYourProposal/v2/proposalSearch");'
+          'a.get("trackYourProposal/V1/proposalList");'
+          'a.get("trackYourProposal/getListOfSector");'
           'a.get("parivesh_api/master/searchState");')
     found = {"bundles": {"u": DG.call_sites(js)}}
-    check("the route the sweep calls is not a candidate; its neighbours are, from the API root",
-          DG.search_candidates(found) == ["master/searchState", "trackYourProposal/v2/proposalSearch"],
+    check("the route the sweep calls and the known siblings are not candidates; the other "
+          "siblings and the search-named routes are, from the API root",
+          DG.search_candidates(found) == [
+              "master/searchState", "trackYourProposal/V1/proposalList",
+              "trackYourProposal/v2/proposalSearch"],
           str(DG.search_candidates(found)))
 
 
