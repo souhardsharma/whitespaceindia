@@ -186,10 +186,10 @@ def test_lazy_chunks_are_followed_and_a_moved_search_is_found() -> None:
           'a.get("parivesh_api/master/searchState");')
     found = {"bundles": {"u": DG.call_sites(js)}}
     check("the route the sweep calls and the known siblings are not candidates; the other "
-          "siblings and the search-named routes are, from the API root",
+          "siblings and the search-named routes are, track routes first, from the API root",
           DG.search_candidates(found) == [
-              "master/searchState", "trackYourProposal/V1/proposalList",
-              "trackYourProposal/v2/proposalSearch"],
+              "trackYourProposal/V1/proposalList", "trackYourProposal/v2/proposalSearch",
+              "master/searchState"],
           str(DG.search_candidates(found)))
 
 
@@ -204,6 +204,55 @@ def test_a_base_url_off_the_portal_is_followed_to_where_it_is_used() -> None:
     own = DG.call_sites('r={BASE_URL:"https://parivesh.nic.in"};a.get(`${r.BASE_URL}x/y`);')
     check("the portal's own host is not a foreign base", own["base_uses"] == [], str(own["base_uses"]))
     check("a script with no base reports none", DG.call_sites("var a = 1;")["base_uses"] == [])
+
+
+def test_another_government_host_is_probed_for_the_search_itself() -> None:
+    print("\na script that binds a URL on another PARIVESH host sends the probe there")
+    js = ('e={frontendURL:"https://cpc.parivesh.nic.in/",CDN:"https://cdn.example.com/x",'
+          'api:"https://parivesh.nic.in/parivesh_api/",TRACK_YOUR_PROPOSAL_ADVANCE_DATA:"trackYourProposal/advanceSearchData"};')
+    sites = DG.call_sites(js)
+    check("only government hosts are kept, each with the name the script gave it",
+          sites["hosts"] == ["api=https://parivesh.nic.in/parivesh_api/",
+                             "frontendURL=https://cpc.parivesh.nic.in/"], str(sites["hosts"]))
+    check("a needle the script contains is shown with the text around it; one it lacks is not",
+          list(sites["wide"]) == ["TRACK_YOUR_PROPOSAL_ADVANCE_DATA", "frontendURL"]
+          and "CDN" in sites["wide"]["frontendURL"][0], str(sites["wide"]))
+    check("a script naming neither reports none", DG.call_sites("var a = 1;")["wide"] == {})
+    found = {"bundles": {"u": sites}}
+    check("the portal's own host is not 'another'", DG.other_hosts(found) == ["cpc.parivesh.nic.in"],
+          str(DG.other_hosts(found)))
+    check("the search and its control are asked on that host before any route on this one",
+          DG.search_candidates(found)[:2] == [
+              "https://cpc.parivesh.nic.in/parivesh_api/trackYourProposal/getListOfSector",
+              "https://cpc.parivesh.nic.in/parivesh_api/trackYourProposal/advanceSearchData"],
+          str(DG.search_candidates(found)))
+
+
+def test_chunks_can_be_left_unfollowed() -> None:
+    print("\nwith chunks off, the scripts the page names are read and nothing they name")
+    asked: list[str] = []
+    body = b'import("./chunk-AB12CD.js");a.get(`${b}trackYourProposal/V1/proposalList`);'
+
+    def fake_fetch(routes, url, timeout, limit, good=None):
+        asked.append(url)
+        if url == DG.FRONT:
+            return b'<script src="main.js"></script>', "200 via x"
+        if url in DG.FRONTS:
+            return b"<html></html>", "200 via x"
+        return body, "200 via x"
+
+    real_fetch, real_pause = DG.fetch_page, DG.BATCH_PAUSE_S
+    DG.fetch_page, DG.BATCH_PAUSE_S = fake_fetch, 0.0
+    try:
+        off = DG.discover([FakeRoute("a")], 1, budget_s=60, follow_chunks=False)
+        asked.clear()
+        on = DG.discover([FakeRoute("a")], 1, budget_s=60)
+    finally:
+        DG.fetch_page, DG.BATCH_PAUSE_S = real_fetch, real_pause
+    check("the chunk is not read with chunks off", list(off["bundles"]) == [DG.FRONT + "main.js"],
+          str(list(off["bundles"])))
+    check("the chunk is read by default", DG.FRONT + "chunk-AB12CD.js" in on["bundles"],
+          str(list(on["bundles"])))
 
 
 class FakeRoute:
@@ -252,7 +301,9 @@ def main() -> int:
                test_the_portal_pages_are_read_for_the_searchs_call_sites,
                test_lazy_chunks_are_followed_and_a_moved_search_is_found,
                test_a_base_url_off_the_portal_is_followed_to_where_it_is_used,
-               test_a_script_no_route_delivered_is_retried_and_then_reported):
+               test_a_script_no_route_delivered_is_retried_and_then_reported,
+               test_another_government_host_is_probed_for_the_search_itself,
+               test_chunks_can_be_left_unfollowed):
         fn()
     print()
     if FAIL:

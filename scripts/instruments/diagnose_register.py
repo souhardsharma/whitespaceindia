@@ -250,6 +250,14 @@ SEARCH_ROUTE = re.compile(r"(?:[A-Za-z]\w*/)+\w*[Ss]earch\w*")
 TRACK_ROUTE = re.compile(r"trackYourProposal/\w+(?:/\w+)*")
 # Where an application says its API lives: FOO_URL: "https://..." / BASE_URL = `...`.
 BASE_URL = re.compile(r"""\b([A-Z][A-Z0-9_]*URL[A-Z0-9_]*)\s*[:=]\s*[`"']([^`"'\s]{4,120})[`"']""")
+# Any key bound to an absolute URL on a government host, in whatever case the application
+# spells it: an Angular environment has frontendURL / apiUrl, not API_URL.
+HOST_URL = re.compile(r"""\b([A-Za-z_$][\w$]*)\s*[:=]\s*[`"'](https?://[^`"'\s]{4,120})[`"']""")
+HOST_SUFFIXES = (".nic.in", ".gov.in")
+HOST_LIMIT = 40
+# The text around these, and how much of it, shows how an application joins a base to a route.
+WIDE_CONTEXTS = (("TRACK_YOUR_PROPOSAL_ADVANCE_DATA", 220, 300), ("frontendURL", 80, 600))
+WIDE_LIMIT = 4
 # A relative path inside a string that is about proposals or searching, whatever its prefix.
 API_PATH = re.compile(r"""["'`](?:\$\{[^}]{1,30}\})?/?((?:[A-Za-z][\w-]*/){1,5}[A-Za-z][\w-]*)(?=[?"'`])""")
 API_WORDS = ("proposal", "search", "track")
@@ -290,6 +298,29 @@ def base_uses(js: str, limit: int) -> list[str]:
     return uses
 
 
+def government_hosts(js: str) -> list[str]:
+    """Every key the script binds to an absolute URL on a government host."""
+    found = {f"{k}={v}" for k, v in HOST_URL.findall(js)
+             if (urllib.parse.urlsplit(v).hostname or "").endswith(HOST_SUFFIXES)}
+    return sorted(found)[:HOST_LIMIT]
+
+
+def wide_contexts(js: str) -> dict[str, list[str]]:
+    """For each WIDE_CONTEXTS needle the script contains, the text around its first uses."""
+    out: dict[str, list[str]] = {}
+    for needle, before, after in WIDE_CONTEXTS:
+        texts: list[str] = []
+        for m in re.finditer(re.escape(needle), js):
+            text = js[max(0, m.start() - before): m.end() + after]
+            if text not in texts:
+                texts.append(text)
+            if len(texts) == WIDE_LIMIT:
+                break
+        if texts:
+            out[needle] = texts
+    return out
+
+
 def call_sites(js: str, limit: int = 6) -> dict:
     """How a script refers to the search: the text around each mention, every
     trackYourProposal/<name> route it knows (the search's siblings, to see
@@ -320,6 +351,8 @@ def call_sites(js: str, limit: int = 6) -> dict:
             "track_contexts": track_contexts,
             "bases": sorted({f"{k}={v}" for k, v in BASE_URL.findall(js)}),
             "base_uses": base_uses(js, limit),
+            "hosts": government_hosts(js),
+            "wide": wide_contexts(js),
             "api_paths": api_paths[:API_PATH_LIMIT],
             "routes": sorted(set(TRACK_ROUTE.findall(js))),
             "search_routes": sorted(set(SEARCH_ROUTE.findall(js)))}
@@ -343,14 +376,16 @@ def fetch_page(routes: list, url: str, timeout: int, limit: int,
         except urllib.error.HTTPError as e:
             said.append(f"{e.code} via {route.host}")
         except Exception as exc:  # noqa: BLE001 - any transport failure is the answer
-            said.append(f"{type(exc).__name__} via {route.host}")
+            said.append(f"{type(exc).__name__}: {str(exc)[:70]} via {route.host}")
         time.sleep(1.0)
     return None, "; ".join(said)
 
 
-def discover(routes: list, timeout: int, budget_s: float = DISCOVER_BUDGET_S) -> dict:
-    """Read the portal's page, its scripts and the lazy chunks they name, for
-    the search's call sites and every route the application knows."""
+def discover(routes: list, timeout: int, budget_s: float = DISCOVER_BUDGET_S,
+             follow_chunks: bool = True) -> dict:
+    """Read the portal's page, its scripts and (unless follow_chunks is off) the
+    lazy chunks they name, for the search's call sites and every route the
+    application knows."""
     deadline = time.time() + budget_s
     found: dict = {"page": None, "pages": {}, "bundles": {}}
     queue: list[str] = []
@@ -391,7 +426,7 @@ def discover(routes: list, timeout: int, budget_s: float = DISCOVER_BUDGET_S) ->
                 if body:
                     js = body.decode("utf-8", "replace")
                     entry.update(call_sites(js))
-                    for chunk in chunk_sources(js, url):
+                    for chunk in chunk_sources(js, url) if follow_chunks else ():
                         if chunk not in seen:
                             seen.add(chunk)
                             queue.append(chunk)
@@ -402,14 +437,31 @@ def discover(routes: list, timeout: int, budget_s: float = DISCOVER_BUDGET_S) ->
     return found
 
 
+def other_hosts(found: dict) -> list[str]:
+    """PARIVESH hosts other than the portal's own that a script binds to a URL."""
+    hosts: set[str] = set()
+    for entry in found["bundles"].values():
+        for pair in entry.get("hosts", []):
+            host = urllib.parse.urlsplit(pair.partition("=")[2]).hostname or ""
+            if host.endswith(".parivesh.nic.in"):
+                hosts.add(host)
+    return sorted(hosts)
+
+
 def search_candidates(found: dict) -> list[str]:
-    """Routes the application knows whose name says search, and the search's
-    other siblings, other than the one the sweep calls, which answers 404."""
+    """What to ask: the search and its control on every other PARIVESH host a
+    script names, then the routes the application knows whose name says search
+    and the search's siblings (the track routes first), other than the one the
+    sweep calls, which answers 404."""
     names: set[str] = set()
     for entry in found["bundles"].values():
         names.update(n.removeprefix("parivesh_api/") for n in entry.get("search_routes", []))
         names.update(n for n in entry.get("routes", []) if not n.startswith(KNOWN_TRACK))
-    return sorted(n for n in names if "/" in n and not n.endswith("/" + NEEDLE))[:CANDIDATE_LIMIT]
+    routes = sorted((n for n in names if "/" in n and not n.endswith("/" + NEEDLE)),
+                    key=lambda n: (not n.startswith("trackYourProposal/"), n))
+    elsewhere = [f"https://{host}/parivesh_api/trackYourProposal/{leaf}"
+                 for host in other_hosts(found) for leaf in ("getListOfSector", NEEDLE)]
+    return (elsewhere + routes)[:CANDIDATE_LIMIT]
 
 
 def probe_candidates(routes: list, candidates: list[str], timeout: int) -> list[dict]:
@@ -418,7 +470,8 @@ def probe_candidates(routes: list, candidates: list[str], timeout: int) -> list[
 
     def ask(item):
         i, name = item
-        probe = Probe("candidate:" + name, PARIVESH_API + name + query, headers=PLAIN_HEADERS)
+        url = name + query if name.startswith("https://") else PARIVESH_API + name + query
+        probe = Probe("candidate:" + name, url, headers=PLAIN_HEADERS)
         return [probe_once(routes[(2 * i + k) % len(routes)], probe, timeout) for k in range(2)]
 
     with ThreadPoolExecutor(max_workers=6) as ex:
@@ -439,6 +492,11 @@ def report_discovery(found: dict, candidates: list[dict]) -> None:
             print(f"      base urls: {entry['bases']}")
         for text in entry.get("base_uses", []):
             print(f"      base use ...{text!r}...")
+        if entry.get("hosts"):
+            print(f"      urls on government hosts: {entry['hosts']}")
+        for needle, texts in entry.get("wide", {}).items():
+            for text in texts:
+                print(f"      {needle} ...{text!r}...")
         if entry.get("api_paths"):
             print(f"      paths about proposals or search: {entry['api_paths']}")
         if entry.get("routes"):
@@ -485,6 +543,8 @@ def main() -> int:
     ap.add_argument("--out", default="", help="write every answer here as JSON")
     ap.add_argument("--discover", action="store_true",
                     help="also read the portal's scripts for how it calls the search")
+    ap.add_argument("--no-chunks", action="store_true",
+                    help="with --discover, read only the pages' own scripts, not the lazy chunks they name")
     args = ap.parse_args()
     require_runner(os.environ)
     run_lock.hold_or_exit("diagnose_register")
@@ -513,14 +573,14 @@ def main() -> int:
         # Routes that answered the control above come first.
         live = {r["route"] for r in everything if r["probe"] == "control" and r["status"] == 200}
         ordered = [rt for rt in routes if rt.host in live] + [rt for rt in routes if rt.host not in live]
-        found = discover(ordered, args.timeout)
+        found = discover(ordered, args.timeout, follow_chunks=not args.no_chunks)
         asked = probe_candidates(ordered, search_candidates(found), args.timeout)
         report_discovery(found, asked)
         everything.append({"discovery": found, "candidates": asked})
     if args.out:
         Path(args.out).write_text(json.dumps(everything, indent=1), encoding="utf-8")
     reached = sum(1 for r in everything if r.get("probe") == "control" and r["status"] == 200)
-    if not reached:
+    if args.waves and not reached:
         print("\nNo route reached the service at all: the pool, not the endpoint, is what failed.")
         return 3
     return 0
