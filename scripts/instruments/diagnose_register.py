@@ -226,16 +226,20 @@ FRONT = "https://parivesh.nic.in/"
 NEEDLE = "advanceSearchData"
 BUNDLE_LIMIT = 8
 BUNDLE_BYTES = 8_000_000
-MAX_FILES = 60
+MAX_FILES = 120
 DISCOVER_BUDGET_S = 600
-CANDIDATE_LIMIT = 12
+CANDIDATE_LIMIT = 24
 CONTEXT = 110
 # A lazily loaded chunk is named in the script that loads it, either as a file
 # (esbuild: chunk-<hash>.js) or as an id -> content-hash map (webpack:
-# <id>.<hash>.js).
+# <id>.<hash>.js; create-react-app: static/js/<id>.<hash>.chunk.js, with an
+# 8-character hash - the portal's own main.<hash>.js is that kind).
 ESBUILD_CHUNK = re.compile(r"""["'](?:\./)?(chunk-[\w-]+\.js)["']""")
-WEBPACK_CHUNK = re.compile(r"""(?<![\w.])(\d+|[A-Za-z_][\w-]*)\s*:\s*["']([0-9a-f]{16,20})["']""")
+WEBPACK_CHUNK = re.compile(r"""(?<![\w.])(\d+|[A-Za-z_][\w-]*)\s*:\s*["']([0-9a-f]{8,20})["']""")
 SEARCH_ROUTE = re.compile(r"(?:[A-Za-z]\w*/)+\w*[Ss]earch\w*")
+TRACK_ROUTE = re.compile(r"trackYourProposal/\w+(?:/\w+)*")
+# Siblings of the search that are known and not worth asking again.
+KNOWN_TRACK = ("trackYourProposal/getListOf", "trackYourProposal/getProcessHis")
 
 
 def script_sources(html: str, base: str = FRONT) -> list[str]:
@@ -249,7 +253,8 @@ def script_sources(html: str, base: str = FRONT) -> list[str]:
 def chunk_sources(js: str, base: str) -> list[str]:
     """Absolute URLs of the lazy chunks a script names."""
     names = set(ESBUILD_CHUNK.findall(js))
-    names.update(f"{ident}.{digest}.js" for ident, digest in WEBPACK_CHUNK.findall(js))
+    suffix = ".chunk.js" if "/static/js/" in base else ".js"
+    names.update(f"{ident}.{digest}{suffix}" for ident, digest in WEBPACK_CHUNK.findall(js))
     return [urllib.parse.urljoin(base, name) for name in sorted(names)]
 
 
@@ -265,8 +270,20 @@ def call_sites(js: str, limit: int = 6) -> dict:
             contexts.append(text)
         if len(contexts) == limit:
             break
+    # The siblings' own call sites, when the search is no longer named: how the
+    # application builds a trackYourProposal URL shows where the search went.
+    track_contexts = []
+    for m in TRACK_ROUTE.finditer(js):
+        if m.group().startswith(KNOWN_TRACK):
+            continue
+        text = js[max(0, m.start() - CONTEXT): m.end() + CONTEXT]
+        if text not in track_contexts:
+            track_contexts.append(text)
+        if len(track_contexts) == limit:
+            break
     return {"mentions": js.count(NEEDLE), "contexts": contexts,
-            "routes": sorted(set(re.findall(r"trackYourProposal/\w+", js))),
+            "track_contexts": track_contexts,
+            "routes": sorted(set(TRACK_ROUTE.findall(js))),
             "search_routes": sorted(set(SEARCH_ROUTE.findall(js)))}
 
 
@@ -329,11 +346,12 @@ def discover(routes: list, timeout: int, budget_s: float = DISCOVER_BUDGET_S) ->
 
 
 def search_candidates(found: dict) -> list[str]:
-    """Routes the application knows whose name says search, other than the one
-    the sweep calls, which is the one that answers 404."""
+    """Routes the application knows whose name says search, and the search's
+    other siblings, other than the one the sweep calls, which answers 404."""
     names: set[str] = set()
     for entry in found["bundles"].values():
         names.update(n.removeprefix("parivesh_api/") for n in entry.get("search_routes", []))
+        names.update(n for n in entry.get("routes", []) if not n.startswith(KNOWN_TRACK))
     return sorted(n for n in names if "/" in n and not n.endswith("/" + NEEDLE))[:CANDIDATE_LIMIT]
 
 
@@ -357,6 +375,8 @@ def report_discovery(found: dict, candidates: list[dict]) -> None:
               f"{entry.get('mentions', 0)} mention(s) of {NEEDLE}")
         for text in entry.get("contexts", []):
             print(f"      ...{text!r}...")
+        for text in entry.get("track_contexts", []):
+            print(f"      track ...{text!r}...")
         if entry.get("routes"):
             print(f"      trackYourProposal routes: {entry['routes']}")
         if entry.get("search_routes"):
