@@ -146,6 +146,17 @@ def test_the_portal_pages_are_read_for_the_searchs_call_sites() -> None:
     check("with the search unnamed, a sibling's call site is shown and a known one is not",
           moved["mentions"] == 0 and len(moved["track_contexts"]) == 1
           and "V1/proposalList" in moved["track_contexts"][0], str(moved))
+    app = ('r={IMAGE_URL:"https://parivesh.nic.in/",API_BASE_URL:`https://parivesh.nic.in/newapi/`};'
+           'a.post(`${API_BASE_URL}proposal/v3/advancedSearch?x=1`);'
+           'a.get("assests/img/proposal-icon/a");import x from "react/jsx-runtime";'
+           'a.get("master/getListOfState");')
+    sites = DG.call_sites(app)
+    check("where an application says its API lives is reported",
+          sites["bases"] == ["API_BASE_URL=https://parivesh.nic.in/newapi/",
+                             "IMAGE_URL=https://parivesh.nic.in/"], str(sites["bases"]))
+    check("a path about proposals or search is reported whatever its prefix; assets and "
+          "unrelated paths are not",
+          sites["api_paths"] == ["proposal/v3/advancedSearch"], str(sites["api_paths"]))
 
 
 def test_lazy_chunks_are_followed_and_a_moved_search_is_found() -> None:

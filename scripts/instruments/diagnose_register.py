@@ -223,6 +223,9 @@ def distinct_exits(proxies: list[str], limit: int) -> list:
 
 
 FRONT = "https://parivesh.nic.in/"
+# The front page links its Track Your Proposal tile out to /newupgrade/#/trackYourProposal/V1:
+# a second single-page application, and the one whose scripts name the search now.
+FRONTS = (FRONT, FRONT + "newupgrade/")
 NEEDLE = "advanceSearchData"
 BUNDLE_LIMIT = 8
 BUNDLE_BYTES = 8_000_000
@@ -238,6 +241,12 @@ ESBUILD_CHUNK = re.compile(r"""["'](?:\./)?(chunk-[\w-]+\.js)["']""")
 WEBPACK_CHUNK = re.compile(r"""(?<![\w.])(\d+|[A-Za-z_][\w-]*)\s*:\s*["']([0-9a-f]{8,20})["']""")
 SEARCH_ROUTE = re.compile(r"(?:[A-Za-z]\w*/)+\w*[Ss]earch\w*")
 TRACK_ROUTE = re.compile(r"trackYourProposal/\w+(?:/\w+)*")
+# Where an application says its API lives: FOO_URL: "https://..." / BASE_URL = `...`.
+BASE_URL = re.compile(r"""\b([A-Z][A-Z0-9_]*URL[A-Z0-9_]*)\s*[:=]\s*[`"']([^`"'\s]{4,120})[`"']""")
+# A relative path inside a string that is about proposals or searching, whatever its prefix.
+API_PATH = re.compile(r"""["'`](?:\$\{[^}]{1,30}\})?/?((?:[A-Za-z][\w-]*/){1,5}[A-Za-z][\w-]*)(?=[?"'`])""")
+API_WORDS = ("proposal", "search", "track")
+API_PATH_LIMIT = 40
 # Siblings of the search that are known and not worth asking again.
 KNOWN_TRACK = ("trackYourProposal/getListOf", "trackYourProposal/getProcessHis")
 
@@ -281,8 +290,13 @@ def call_sites(js: str, limit: int = 6) -> dict:
             track_contexts.append(text)
         if len(track_contexts) == limit:
             break
+    api_paths = sorted({m.group(1) for m in API_PATH.finditer(js)
+                        if any(w in m.group(1).lower() for w in API_WORDS)
+                        and not m.group(1).startswith(("static/", "assests/", "assets/"))})
     return {"mentions": js.count(NEEDLE), "contexts": contexts,
             "track_contexts": track_contexts,
+            "bases": sorted({f"{k}={v}" for k, v in BASE_URL.findall(js)}),
+            "api_paths": api_paths[:API_PATH_LIMIT],
             "routes": sorted(set(TRACK_ROUTE.findall(js))),
             "search_routes": sorted(set(SEARCH_ROUTE.findall(js)))}
 
@@ -310,11 +324,17 @@ def discover(routes: list, timeout: int, budget_s: float = DISCOVER_BUDGET_S) ->
     """Read the portal's page, its scripts and the lazy chunks they name, for
     the search's call sites and every route the application knows."""
     deadline = time.time() + budget_s
-    found: dict = {"page": None, "bundles": {}}
-    html, found["page"] = fetch_page(routes[:6], FRONT, timeout, BUNDLE_BYTES)
-    if html is None:
+    found: dict = {"page": None, "pages": {}, "bundles": {}}
+    queue: list[str] = []
+    for front in FRONTS:
+        html, said = fetch_page(routes[:6], front, timeout, BUNDLE_BYTES)
+        found["pages"][front] = said
+        if html is not None:
+            queue += script_sources(html.decode("utf-8", "replace"), front)[:BUNDLE_LIMIT]
+    found["page"] = found["pages"][FRONT]
+    if not queue:
         return found
-    queue = script_sources(html.decode("utf-8", "replace"))[:BUNDLE_LIMIT]
+    queue = list(dict.fromkeys(queue))
     found["scripts"] = list(queue)
     seen = set(queue)
     turn = 6
@@ -369,7 +389,8 @@ def probe_candidates(routes: list, candidates: list[str], timeout: int) -> list[
 
 
 def report_discovery(found: dict, candidates: list[dict]) -> None:
-    print(f"\n=== portal page: {found['page']} ===")
+    for front, said in found.get("pages", {FRONT: found["page"]}).items():
+        print(f"\n=== portal page {front}: {said} ===")
     for url, entry in found["bundles"].items():
         print(f"  {url}: {entry['fetched']}, {entry['bytes']:,} B, "
               f"{entry.get('mentions', 0)} mention(s) of {NEEDLE}")
@@ -377,6 +398,10 @@ def report_discovery(found: dict, candidates: list[dict]) -> None:
             print(f"      ...{text!r}...")
         for text in entry.get("track_contexts", []):
             print(f"      track ...{text!r}...")
+        if entry.get("bases"):
+            print(f"      base urls: {entry['bases']}")
+        if entry.get("api_paths"):
+            print(f"      paths about proposals or search: {entry['api_paths']}")
         if entry.get("routes"):
             print(f"      trackYourProposal routes: {entry['routes']}")
         if entry.get("search_routes"):
