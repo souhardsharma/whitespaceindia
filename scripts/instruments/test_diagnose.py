@@ -119,13 +119,62 @@ def test_the_plan_asks_the_sweeps_own_questions() -> None:
           "endDate=2026-10-29" in window.url and "startDate=2026-09-27" in window.url, window.url)
 
 
+def test_the_portal_pages_are_read_for_the_searchs_call_sites() -> None:
+    print("\nthe portal's own scripts show where the search now lives")
+    html = ('<html><script src="main.abc.js"></script><script src="/static/x.js"></script>'
+            "<script src='https://cdn.example/y.js'></script><script>inline()</script>"
+            '<script src="main.abc.js"></script></html>')
+    check("scripts resolve against the page, once each, in page order",
+          DG.script_sources(html, "https://parivesh.nic.in/") == [
+              "https://parivesh.nic.in/main.abc.js",
+              "https://parivesh.nic.in/static/x.js",
+              "https://cdn.example/y.js"],
+          str(DG.script_sources(html, "https://parivesh.nic.in/")))
+    js = ('a.get(`${b}trackYourProposal/getListOfSector`);'
+          'a.get(`${b}trackYourProposal/v2/advanceSearchData?x=1`);'
+          'a.post(`${b}trackYourProposal/getProcessHis`);')
+    sites = DG.call_sites(js)
+    check("a mention is reported with the text around it",
+          sites["mentions"] == 1 and "v2/advanceSearchData" in sites["contexts"][0], str(sites))
+    check("every sibling route is listed", sites["routes"] == [
+        "trackYourProposal/getListOfSector", "trackYourProposal/getProcessHis",
+        "trackYourProposal/v2"], str(sites["routes"]))
+    check("a script that never mentions it reports none",
+          DG.call_sites("var a = 1;")["mentions"] == 0)
+
+
+def test_lazy_chunks_are_followed_and_a_moved_search_is_found() -> None:
+    print("\nlazy chunks are named, and routes that say search are candidates")
+    esbuild = 'import("./chunk-AB12CD.js");import("chunk-x_9.js");load("not-a-chunk.js")'
+    check("esbuild chunks resolve against the script that names them",
+          DG.chunk_sources(esbuild, "https://parivesh.nic.in/static/main.js") == [
+              "https://parivesh.nic.in/static/chunk-AB12CD.js",
+              "https://parivesh.nic.in/static/chunk-x_9.js"],
+          str(DG.chunk_sources(esbuild, "https://parivesh.nic.in/static/main.js")))
+    webpack = '{12:"0123456789abcdef",foo:"fedcba9876543210",7:"short"}'
+    check("webpack id-to-hash maps give <id>.<hash>.js, and a short value is not a hash",
+          DG.chunk_sources(webpack, "https://parivesh.nic.in/") == [
+              "https://parivesh.nic.in/12.0123456789abcdef.js",
+              "https://parivesh.nic.in/foo.fedcba9876543210.js"],
+          str(DG.chunk_sources(webpack, "https://parivesh.nic.in/")))
+    js = ('a.get("trackYourProposal/v2/advanceSearchData");'
+          'a.get("trackYourProposal/v2/proposalSearch");'
+          'a.get("parivesh_api/master/searchState");')
+    found = {"bundles": {"u": DG.call_sites(js)}}
+    check("the route the sweep calls is not a candidate; its neighbours are, from the API root",
+          DG.search_candidates(found) == ["master/searchState", "trackYourProposal/v2/proposalSearch"],
+          str(DG.search_candidates(found)))
+
+
 def main() -> int:
     for fn in (test_it_refuses_to_run_off_the_runner,
                test_answers_are_labelled_by_what_came_back,
                test_the_summary_counts_outcomes_per_probe,
                test_stickiness_tells_a_bad_route_from_a_flapping_service,
                test_one_exit_ip_is_one_route,
-               test_the_plan_asks_the_sweeps_own_questions):
+               test_the_plan_asks_the_sweeps_own_questions,
+               test_the_portal_pages_are_read_for_the_searchs_call_sites,
+               test_lazy_chunks_are_followed_and_a_moved_search_is_found):
         fn()
     print()
     if FAIL:
