@@ -54,6 +54,14 @@ jobs:
           PYTHONIOENCODING: utf-8
         run: python scripts/instruments/test_sync.py
 
+      - name: Register diagnostic
+        # The one tool that asks PARIVESH questions on purpose. Pins that it
+        # refuses to run off GitHub's runner and that its summary says what the
+        # service answered. Needs no network.
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python scripts/instruments/test_diagnose.py
+
       - name: Boundary reader and site verdict
         # Skips cleanly when the fetch cache is absent, which is the state of a
         # fresh clone; the structural checks it does run are the ones that would

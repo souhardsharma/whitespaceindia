@@ -53,13 +53,20 @@ on:
         description: "Optional YYYY-MM-DD for a targeted catch-up. Leave empty for the normal full sweep."
         type: string
         default: ""
+      diagnose:
+        description: "Run the read-only PARIVESH diagnostic (diagnose_register.py) instead of the sync. Commits nothing."
+        type: boolean
+        default: false
 
 concurrency:
-  group: instruments-sync
+  # A diagnostic writes nothing, so it does not queue behind a nightly run that
+  # can hold the group for five hours - and the sync keeps its single lane.
+  group: ${{ inputs.diagnose && 'instruments-diagnose' || 'instruments-sync' }}
   cancel-in-progress: false
 
 jobs:
   sync:
+    if: ${{ !inputs.diagnose }}
     runs-on: ubuntu-latest
     timeout-minutes: 330
     permissions:
@@ -318,3 +325,52 @@ jobs:
         # what it read. Three in a row is a fault nobody is looking at, and a
         # red job is what makes someone look.
         run: python scripts/instruments/sync.py --check-streak
+
+  # Dispatched by hand (diagnose = true) when the sweep reads nothing and the
+  # log cannot say whose fault it is: the routes, the endpoint or the request.
+  # It is the only sanctioned way to ask PARIVESH a question outside the sync,
+  # because it runs where the sync runs and is refused anywhere else. It can
+  # read the repository and nothing more: no push token, no commit.
+  diagnose:
+    if: ${{ inputs.diagnose }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    permissions:
+      contents: read
+    env:
+      INSTRUMENTS_CACHE_DIR: ${{ github.workspace }}/.instruments-cache
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --require-hashes -r requirements.txt
+
+      - name: Diagnostic tests
+        run: python scripts/instruments/test_diagnose.py
+
+      - name: Restore the source cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .instruments-cache
+          key: instruments-cache-${{ github.run_id }}
+          restore-keys: |
+            instruments-cache-
+
+      - name: Refresh the proxy pool
+        # As the nightly run does, so the pool tested is the pool the sync
+        # would have had, and the refresh's own yield is on record.
+        continue-on-error: true
+        timeout-minutes: 12
+        run: |
+          python scripts/instruments/refresh_proxies.py --out "$INSTRUMENTS_CACHE_DIR/proxies.txt" --workers 4000 --max-minutes 10 --target 400 || true
+          echo "pool: $(wc -l < "$INSTRUMENTS_CACHE_DIR/proxies.txt" 2>/dev/null || echo 0) routes"
+
+      - name: Ask PARIVESH, route by route
+        run: python scripts/instruments/diagnose_register.py --out "$RUNNER_TEMP/diagnose_register.json"
