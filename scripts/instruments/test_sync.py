@@ -722,6 +722,33 @@ def test_debts_and_streaks() -> None:
     check("an aborted fetcher is a fault, and faults accumulate",
           SY.next_streak(2, [], {"caf": {"exit": 0}, "history": {"exit": 2}}) == 3)
     check("a failed sector is a fault", SY.next_streak(0, ["Mining"], {}) == 1)
+    nothing = {"codes": 0, "failed": [{"code": c, "error": "HTTP -1 timed out"} for c in range(1, 39)]}
+    check("a forest register read nowhere is a fault",
+          SY.next_streak(1, [], {}, nothing) == 2)
+    check("a forest register read in part is not",
+          SY.next_streak(1, [], {}, {"codes": 30, "failed": [{"code": 3, "error": "x"}]}) == 0)
+    check("a forest register never asked for want of time is budget, not a fault",
+          SY.next_streak(1, [], {}, {"codes": 0, "failed": [{"code": 1, "error": "out of time"}]}) == 0)
+    check("a skipped forest register (dry run) is not a fault",
+          SY.next_streak(1, [], {}, {"skipped": True}) == 0)
+
+
+def test_a_night_that_read_nothing_is_red() -> None:
+    print("\na night that read no register sector fails the job that night")
+    every = [f"sector {i}" for i in range(len(SY.SECTORS))]
+    check("all sectors failed is an unread register", SY.register_unread(every))
+    check("one sector read is not", not SY.register_unread(every[1:]))
+    check("no failure is not", not SY.register_unread([]) and not SY.register_unread(None))
+    reason = SY.failure_reason({"failed_sectors": every, "partial_streak": 1})
+    check("the first such night fails, and says why",
+          reason is not None and "not read tonight" in reason, str(reason))
+    check("a partial night is still green until the streak",
+          SY.failure_reason({"failed_sectors": every[:3], "partial_streak": 2}) is None)
+    check("the third faulty night in a row fails",
+          SY.failure_reason({"failed_sectors": every[:1],
+                             "partial_streak": SY.PARTIAL_FAIL_AFTER}) is not None)
+    check("a clean night is green", SY.failure_reason({"failed_sectors": [], "partial_streak": 0}) is None)
+    check("an empty state (no run yet) is green", SY.failure_reason({}) is None)
 
 
 def test_a_pass_out_of_time_pays_what_it_read(tmp: Path) -> None:
@@ -802,6 +829,7 @@ def main() -> int:
     test_windowed_sector_is_checked_whole()
     test_link_silences()
     test_debts_and_streaks()
+    test_a_night_that_read_nothing_is_red()
     with tempfile.TemporaryDirectory() as d:
         test_a_pass_out_of_time_pays_what_it_read(Path(d))
     with tempfile.TemporaryDirectory() as d:
