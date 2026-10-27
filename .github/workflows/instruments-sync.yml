@@ -53,6 +53,10 @@ on:
         description: "Optional YYYY-MM-DD for a targeted catch-up. Leave empty for the normal full sweep."
         type: string
         default: ""
+      budget_minutes:
+        description: "Minutes the sync may spend fetching (default 270). A shorter budget is how a change on a branch is proven without a five-hour run."
+        type: string
+        default: "270"
       diagnose:
         description: "Run the read-only PARIVESH diagnostic (diagnose_register.py) instead of the sync. Commits nothing."
         type: boolean
@@ -81,6 +85,13 @@ jobs:
       PYTHONIOENCODING: utf-8
       SEED_RELEASE: instruments-cache-seed
       SEED_ASSET: instruments-cache-seed.tar.gz
+      # Whether this run may publish. A run dispatched from a feature branch is
+      # how a change to this workflow is proven: it fetches, builds and checks
+      # everything, and commits nothing, because a data commit on that branch
+      # would conflict with the nightly commits on main. A scheduled run is on
+      # the default branch by definition, and is named so that an event payload
+      # without a repository object can never silence a night's publish.
+      PUBLISH: ${{ github.event_name == 'schedule' || github.ref_name == github.event.repository.default_branch }}
 
     steps:
       # The branch head, not the commit that triggered the run. A run queued
@@ -189,6 +200,7 @@ jobs:
         env:
           INSTRUMENTS_GEO_DBF: ${{ github.workspace }}/.instruments-cache/geo/2011_Dist.dbf
           SYNC_SINCE: ${{ inputs.since }}
+          SYNC_BUDGET: ${{ inputs.budget_minutes || '270' }}
           # The sync runs the full published-data contract over its candidate
           # with this set; a stale read time there means this run's read was
           # not recorded.
@@ -218,9 +230,9 @@ jobs:
           REFRESHER=$!
           status=0
           if [ -n "$SYNC_SINCE" ]; then
-            python scripts/instruments/sync.py --since "$SYNC_SINCE" --budget-minutes 270 || status=$?
+            python scripts/instruments/sync.py --since "$SYNC_SINCE" --budget-minutes "$SYNC_BUDGET" || status=$?
           else
-            python scripts/instruments/sync.py --full --budget-minutes 270 || status=$?
+            python scripts/instruments/sync.py --full --budget-minutes "$SYNC_BUDGET" || status=$?
           fi
           kill "$REFRESHER" 2>/dev/null || true
           pkill -f refresh_proxies.py || true
@@ -254,6 +266,7 @@ jobs:
         run: python scripts/instruments/test_geometry.py
 
       - name: Commit regenerated data
+        if: env.PUBLISH == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
@@ -286,11 +299,16 @@ jobs:
         # instrument reports matches the regulator's own letter.
         # 12 minutes: through proxies its ~150 requests took over 6 and the
         # step timed out (2026-10-21).
+        # The script stops starting letters at 9 minutes and reports on the
+        # ones it read; killed at 12, it wrote nothing, and the report was
+        # last committed on 2026-10-20.
         continue-on-error: true
         timeout-minutes: 12
         run: |
-          python scripts/instruments/crosscheck_location.py --sample 150
-          if [ -f scripts/instruments/crosscheck_report.json ]; then
+          python scripts/instruments/crosscheck_location.py --sample 150 --budget-minutes 9
+          if [ "$PUBLISH" != "true" ]; then
+            echo "not the default branch; the report is not committed"
+          elif [ -f scripts/instruments/crosscheck_report.json ]; then
             git add scripts/instruments/crosscheck_report.json
             if ! git diff --staged --quiet; then
               git commit -m "data(instruments): location cross-check report"
@@ -309,7 +327,7 @@ jobs:
         # Off until the repository variable INSTRUMENTS_SEED_REFRESH is "true":
         # the first seed is published by hand (see
         # docs/instrument-01-people-and-consent/04-engineering-reference.md).
-        if: success() && vars.INSTRUMENTS_SEED_REFRESH == 'true'
+        if: success() && vars.INSTRUMENTS_SEED_REFRESH == 'true' && env.PUBLISH == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

@@ -63,6 +63,8 @@ import run_lock  # noqa: E402
 OUTCOMES = ("agree", "disagree", "no-district-in-letter", "no-location-text",
             "download-failed", "unreadable", "no-text-layer")
 
+MIN_STOPPED_SAMPLE = 50
+
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126 Safari/537.36")
 
@@ -146,8 +148,10 @@ def pool():
     return _POOL
 
 
-def download(url: str, dest: Path, timeout: int = 90) -> str | None:
-    status, data = NET.get(pool(), url, timeout=timeout, attempts=3)
+def download(url: str, dest: Path, timeout: int = 90,
+             deadline: float | None = None) -> str | None:
+    status, data = NET.get(pool(), url, timeout=timeout, attempts=3,
+                           deadline=deadline)
     if status != 200:
         return f"http-{status}" if status > 0 else "transport"
     if not data.startswith(b"%PDF"):
@@ -161,6 +165,9 @@ def main() -> None:
     ap.add_argument("--sample", type=int, default=250)
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--cache", default="", help="directory for downloaded PDFs")
+    ap.add_argument("--budget-minutes", type=float, default=0,
+                    help=("stop starting letters after this long and report on "
+                          "those read; 0 for no limit"))
     args = ap.parse_args()
     run_lock.hold_or_exit("crosscheck_location")  # one run against PARIVESH at a time
 
@@ -215,11 +222,20 @@ def main() -> None:
     # so the same word meant two things eighteen points apart in one object.
     comparable_by_method = Counter()
 
-    def check(rec: dict) -> dict:
+    started = time.time()
+    deadline = started + args.budget_minutes * 60 if args.budget_minutes else None
+
+    def check(rec: dict) -> dict | None:
+        """None when the budget ran out before this letter could be read: it
+        was not checked, which is not the same as being unreadable."""
+        if deadline and time.time() >= deadline:
+            return None
         dest = pdf_dir / f"{rec['id']}.pdf"
         if not dest.exists():
-            err = download(rec["cert"], dest)
+            err = download(rec["cert"], dest, deadline=deadline)
             if err:
+                if deadline and time.time() >= deadline:
+                    return None
                 return {**rec, "outcome": "download-failed", "detail": err}
         try:
             with pdfplumber.open(dest) as pdf:
@@ -249,10 +265,14 @@ def main() -> None:
                 "found": sorted(found)}
 
     t0 = time.time()
+    unchecked = 0
     with ThreadPoolExecutor(max_workers=args.workers) as ex:
         futs = [ex.submit(check, r) for r in sample]
         for i, f in enumerate(as_completed(futs), 1):
             res = f.result()
+            if res is None:
+                unchecked += 1
+                continue
             if res["outcome"] not in OUTCOMES:
                 raise ValueError(f"unknown cross-check outcome {res['outcome']!r}")
             stats[res["outcome"]] += 1
@@ -270,6 +290,12 @@ def main() -> None:
             if i % 50 == 0:
                 print(f"  {i}/{len(sample)}  {dict(stats)}", flush=True)
 
+    # A run the budget cut short is reported on what it read, but not when that
+    # is so little that it would replace a committed report with a thinner one.
+    if unchecked and len(sample) - unchecked < MIN_STOPPED_SAMPLE:
+        sys.exit(f"stopped early with {len(sample) - unchecked} letters read "
+                 f"(fewer than {MIN_STOPPED_SAMPLE}); the committed report stands")
+
     comparable = stats["agree"] + stats["disagree"]
     rate = (100 * stats["agree"] / comparable) if comparable else None
 
@@ -281,7 +307,11 @@ def main() -> None:
             "not the applicant's own form. Corroborates or refutes the single "
             "source the whole profile depends on."
         ),
-        "sampled": len(sample),
+        # What was actually read. The methodology page words this as the
+        # sample, so it must be the letters checked, not the letters asked for.
+        "sampled": len(sample) - unchecked,
+        "requested": len(sample),
+        "stopped_early": bool(unchecked),
         "seconds": round(time.time() - t0, 1),
         "outcomes": {k: stats[k] for k in OUTCOMES},
         "comparable": comparable,
@@ -324,7 +354,10 @@ def main() -> None:
     print()
     print("=== CROSS-CHECK AGAINST THE SIGNED CLEARANCE LETTER ===")
     for k, v in stats.most_common():
-        print(f"  {k:24} {v:5,}  {100*v/len(sample):5.1f}%")
+        print(f"  {k:24} {v:5,}  {100*v/max(1, len(sample) - unchecked):5.1f}%")
+    if unchecked:
+        print(f"\n  stopped early: {unchecked} of {len(sample)} letters not "
+              f"reached within {args.budget_minutes:g} minutes")
     if rate is not None:
         print(f"\n  comparable cases        {comparable:,}")
         print(f"  AGREEMENT RATE          {rate:.2f}%")
