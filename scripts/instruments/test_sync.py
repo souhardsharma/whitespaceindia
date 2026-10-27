@@ -818,6 +818,24 @@ SPRING_404 = (b'{"timestamp":"2026-10-27T07:00:52.678+00:00","status":404,'
               b'"error":"Not Found","path":"/p/search"}')
 
 
+def test_the_register_and_the_forest_are_searched_where_the_portal_asks() -> None:
+    print("\nthe register and the forest are searched on the base the portal's own application uses")
+    from urllib.parse import parse_qs, urlsplit
+    reg, forest = urlsplit(SY.PARIVESH_SEARCH), urlsplit(SY.FOREST_SEARCH)
+    check("both searches are the /mis/ route, on https, on the portal's host",
+          reg.scheme == forest.scheme == "https" and reg.netloc == forest.netloc == "parivesh.nic.in"
+          and reg.path == forest.path == "/mis/trackYourProposal/advanceSearchData",
+          f"{reg.geturl()} {forest.geturl()}")
+    check("neither asks the parivesh_api route that answers 404",
+          "parivesh_api" not in SY.PARIVESH_SEARCH and "parivesh_api" not in SY.FOREST_SEARCH)
+    check("the register is the EC clearance type, one sector at a time",
+          parse_qs(reg.query) == {"majorClearanceType": ["1"], "sector": ["{sector}"]}, reg.query)
+    check("the forest register is the forest clearance type, one State code at a time",
+          parse_qs(forest.query) == {"majorClearanceType": ["2"], "state": ["{code}"]}, forest.query)
+    check("the register's query ends in the sector, so a date window can be appended to it",
+          SY.PARIVESH_SEARCH.format(sector=3).endswith("sector=3"))
+
+
 def test_a_path_the_origin_dropped_is_not_asked_again() -> None:
     print("\na path PARIVESH itself answers 404 for, and never 200, stops being asked")
     url = "https://x/p/search?sector=1"
@@ -917,6 +935,7 @@ def main() -> int:
     test_failed_sector_gets_a_second_round()
     with tempfile.TemporaryDirectory() as d:
         test_failed_forest_state_gets_a_second_round(Path(d))
+    test_the_register_and_the_forest_are_searched_where_the_portal_asks()
     test_a_path_the_origin_dropped_is_not_asked_again()
     with tempfile.TemporaryDirectory() as d:
         test_no_second_round_for_a_gone_path(Path(d))
