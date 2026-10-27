@@ -87,7 +87,7 @@ const PAGE_LD = {
       isAccessibleForFree: true,
       creator: { "@id": `${siteUrl}/#org` },
       keywords: ["CSR", "India", "philanthropy", "NITI Aayog", "MPI", "MCA"],
-      spatialCoverage: { "@type": "Country", name: "India" },
+      spatialCoverage: { "@type": "Place", name: "India" },
       temporalCoverage: "2014-04-01/2024-03-31",
       url: PAGE_URL,
     },
