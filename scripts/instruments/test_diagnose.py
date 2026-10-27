@@ -371,8 +371,35 @@ def test_a_script_no_route_delivered_is_retried_and_then_reported() -> None:
     check("what was read is not reported as unread", found["unread"] == 0, str(found.get("unread")))
 
 
+def test_the_search_is_asked_where_the_new_application_calls_it() -> None:
+    print("\nthe search is asked on the base the new application uses, beside the control")
+    probes = DG.mis_probes()
+    by_name = {p.name: p for p in probes}
+    check("the control comes first, so a route that cannot reach the service is told apart",
+          probes[0].name == "control" and probes[0].url == DG.API + "getListOfSector", probes[0].url)
+    searches = [p for p in probes if p.name.startswith("mis_")]
+    check("every other probe is on the MIS base, not on parivesh_api",
+          searches and all(p.url.startswith(DG.MIS) and "parivesh_api" not in p.url for p in searches))
+    check("the plain, v2 and advanceSearchData1 forms are each asked",
+          DG.MIS + "trackYourProposal/advanceSearchData?" in by_name["mis_search"].url
+          and "/v2/trackYourProposal/advanceSearchData?" in by_name["mis_v2"].url
+          and "/advanceSearchData1?" in by_name["mis_search1"].url)
+    check("the forest register is asked in the same place", "majorClearanceType=2" in by_name["mis_forest"].url)
+    check("an answer is kept long enough to read its shape",
+          all(p.head == DG.MIS_HEAD for p in searches) and DG.MIS_HEAD > DG.BODY_HEAD)
+    check("every probe is a read", all(p.method == "GET" and p.body is None for p in probes))
+    rows = [row("a", "mis_search", "400", 400), row("b", "mis_search", "400", 400),
+            row("a", "mis_v2", "transport:timeout")]
+    rows[0].update(bytes=10, headers={}, head="{}")
+    seen = DG.summarise(rows)
+    check("the summary groups the MIS answers by probe",
+          seen["mis_search"]["outcomes"] == {"400": 2} and seen["mis_v2"]["outcomes"] == {"transport:timeout": 1},
+          str(seen))
+
+
 def main() -> int:
-    for fn in (test_it_refuses_to_run_off_the_runner,
+    for fn in (test_the_search_is_asked_where_the_new_application_calls_it,
+               test_it_refuses_to_run_off_the_runner,
                test_answers_are_labelled_by_what_came_back,
                test_the_summary_counts_outcomes_per_probe,
                test_stickiness_tells_a_bad_route_from_a_flapping_service,
