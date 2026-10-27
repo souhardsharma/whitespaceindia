@@ -225,12 +225,19 @@ def distinct_exits(proxies: list[str], limit: int) -> list:
 FRONT = "https://parivesh.nic.in/"
 # The front page links its Track Your Proposal tile out to /newupgrade/#/trackYourProposal/V1:
 # a second single-page application, and the one whose scripts name the search now.
-FRONTS = (FRONT, FRONT + "newupgrade/")
+# The portal's own script also carries NEW_BASE_URL=https://cpc.parivesh.nic.in.
+FRONTS = (FRONT, FRONT + "newupgrade/", "https://cpc.parivesh.nic.in/")
 NEEDLE = "advanceSearchData"
 BUNDLE_LIMIT = 8
 BUNDLE_BYTES = 8_000_000
 MAX_FILES = 120
-DISCOVER_BUDGET_S = 600
+# Free proxies drop about half of what they are asked, and the two scripts that
+# matter most (an application's runtime and main) are the large ones, so a file
+# is asked for on READ_TRIES passes, each on READ_ROUTES routes of its own.
+READ_TRIES = 3
+READ_ROUTES = 4
+BATCH_PAUSE_S = 4.0
+DISCOVER_BUDGET_S = 1200
 CANDIDATE_LIMIT = 24
 CONTEXT = 110
 # A lazily loaded chunk is named in the script that loads it, either as a file
@@ -267,6 +274,22 @@ def chunk_sources(js: str, base: str) -> list[str]:
     return [urllib.parse.urljoin(base, name) for name in sorted(names)]
 
 
+def base_uses(js: str, limit: int) -> list[str]:
+    """The text around each use of a base URL that names a host other than the
+    portal's own - where an application sends its calls to a second service."""
+    uses: list[str] = []
+    for name, value in sorted(set(BASE_URL.findall(js))):
+        host = urllib.parse.urlsplit(value).hostname
+        if host in (None, "parivesh.nic.in"):
+            continue
+        # A use is an occurrence that is not the definition (NAME: "https://...").
+        for m in re.finditer(r"(?<![\w$])" + re.escape(name) + r"""(?!\s*[:=]\s*[`"'])""", js):
+            uses.append(f"{name}: {js[max(0, m.start() - CONTEXT): m.end() + CONTEXT]}")
+            if len(uses) >= limit:
+                return uses
+    return uses
+
+
 def call_sites(js: str, limit: int = 6) -> dict:
     """How a script refers to the search: the text around each mention, every
     trackYourProposal/<name> route it knows (the search's siblings, to see
@@ -296,13 +319,16 @@ def call_sites(js: str, limit: int = 6) -> dict:
     return {"mentions": js.count(NEEDLE), "contexts": contexts,
             "track_contexts": track_contexts,
             "bases": sorted({f"{k}={v}" for k, v in BASE_URL.findall(js)}),
+            "base_uses": base_uses(js, limit),
             "api_paths": api_paths[:API_PATH_LIMIT],
             "routes": sorted(set(TRACK_ROUTE.findall(js))),
             "search_routes": sorted(set(SEARCH_ROUTE.findall(js)))}
 
 
-def fetch_page(routes: list, url: str, timeout: int, limit: int) -> tuple[bytes | None, str]:
-    """The first of `routes` that returns `url` with a 200, and what each said."""
+def fetch_page(routes: list, url: str, timeout: int, limit: int,
+               good: list | None = None) -> tuple[bytes | None, str]:
+    """The first of `routes` that returns `url` with a 200, and what each said.
+    A route that delivers is added to `good`, for the next file to try first."""
     said = []
     for route in routes:
         req = urllib.request.Request(url, headers=NET.DEFAULT_HEADERS)
@@ -310,6 +336,8 @@ def fetch_page(routes: list, url: str, timeout: int, limit: int) -> tuple[bytes 
             with route.opener().open(req, timeout=timeout) as r:
                 body = r.read(limit)
                 if r.status == 200:
+                    if good is not None and route not in good:
+                        good.append(route)
                     return body, f"200 via {route.host}"
                 said.append(f"{r.status} via {route.host}")
         except urllib.error.HTTPError as e:
@@ -338,19 +366,27 @@ def discover(routes: list, timeout: int, budget_s: float = DISCOVER_BUDGET_S) ->
     found["scripts"] = list(queue)
     seen = set(queue)
     turn = 6
+    tries: dict[str, int] = {}
+    good: list = []
 
     def read(url: str, start: int):
-        # Three routes from a different place in the pool for each file, so an
-        # exit IP is asked about once per pass.
-        picks = [routes[(start + k) % len(routes)] for k in range(3)]
-        return url, fetch_page(picks, url, timeout, BUNDLE_BYTES)
+        # One route that has already delivered a file, if there is one, then
+        # routes from a different place in the pool for each file, so an exit
+        # IP is asked about once per pass.
+        picks = good[(start // READ_ROUTES) % len(good):][:1] if good else []
+        picks += [routes[(start + k) % len(routes)] for k in range(READ_ROUTES)]
+        return url, fetch_page(picks, url, timeout, BUNDLE_BYTES, good)
 
     with ThreadPoolExecutor(max_workers=8) as ex:
         while queue and time.time() < deadline and len(found["bundles"]) < MAX_FILES:
             batch, queue = queue[:8], queue[8:]
-            jobs = [(url, turn + 3 * i) for i, url in enumerate(batch)]
-            turn += 3 * len(batch)
+            jobs = [(url, turn + READ_ROUTES * i) for i, url in enumerate(batch)]
+            turn += READ_ROUTES * len(batch)
             for url, (body, said) in ex.map(lambda job: read(*job), jobs):
+                tries[url] = tries.get(url, 0) + 1
+                if body is None and tries[url] < READ_TRIES:
+                    queue.append(url)
+                    continue
                 entry: dict = {"fetched": said, "bytes": len(body) if body else 0}
                 if body:
                     js = body.decode("utf-8", "replace")
@@ -360,8 +396,9 @@ def discover(routes: list, timeout: int, budget_s: float = DISCOVER_BUDGET_S) ->
                             seen.add(chunk)
                             queue.append(chunk)
                 found["bundles"][url] = entry
-            time.sleep(4)
+            time.sleep(BATCH_PAUSE_S)
     found["unread"] = len(queue)
+    found["failed"] = [url for url, entry in found["bundles"].items() if not entry["bytes"]]
     return found
 
 
@@ -400,13 +437,19 @@ def report_discovery(found: dict, candidates: list[dict]) -> None:
             print(f"      track ...{text!r}...")
         if entry.get("bases"):
             print(f"      base urls: {entry['bases']}")
+        for text in entry.get("base_uses", []):
+            print(f"      base use ...{text!r}...")
         if entry.get("api_paths"):
             print(f"      paths about proposals or search: {entry['api_paths']}")
         if entry.get("routes"):
             print(f"      trackYourProposal routes: {entry['routes']}")
         if entry.get("search_routes"):
             print(f"      routes that say search: {entry['search_routes']}")
-    print(f"  {len(found['bundles'])} file(s) read, {found.get('unread', 0)} left unread")
+    failed = found.get("failed", [])
+    print(f"  {len(found['bundles']) - len(failed)} file(s) read, {len(failed)} never delivered, "
+          f"{found.get('unread', 0)} not reached")
+    for url in failed:
+        print(f"    NOT READ: {url}")
     for r in candidates:
         print(f"  candidate {r['probe'][len('candidate:'):]} via {r['route']}: {r['label']} "
               f"{r['bytes']}B head={r['head']!r}")

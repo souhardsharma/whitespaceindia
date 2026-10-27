@@ -193,6 +193,55 @@ def test_lazy_chunks_are_followed_and_a_moved_search_is_found() -> None:
           str(DG.search_candidates(found)))
 
 
+def test_a_base_url_off_the_portal_is_followed_to_where_it_is_used() -> None:
+    print("\na base URL on another host is shown where the application uses it")
+    js = ('r={BASE_URL:"https://parivesh.nic.in",NEW_BASE_URL:"https://cpc.parivesh.nic.in",IMAGE_URL:"assests/"};'
+          'a.get(`${r.BASE_URL}trackYourProposal/getListOfSector`);'
+          'a.post(`${r.NEW_BASE_URL}api/v1/proposalList`,b);')
+    uses = DG.call_sites(js)["base_uses"]
+    check("the use is shown with its path; the definition is not a second use",
+          len(uses) == 1 and "r.NEW_BASE_URL}api/v1/proposalList" in uses[0], str(uses))
+    own = DG.call_sites('r={BASE_URL:"https://parivesh.nic.in"};a.get(`${r.BASE_URL}x/y`);')
+    check("the portal's own host is not a foreign base", own["base_uses"] == [], str(own["base_uses"]))
+    check("a script with no base reports none", DG.call_sites("var a = 1;")["base_uses"] == [])
+
+
+class FakeRoute:
+    def __init__(self, host: str) -> None:
+        self.host = host
+
+
+def test_a_script_no_route_delivered_is_retried_and_then_reported() -> None:
+    print("\na script that failed is asked again, and one that never arrives is reported, not counted as read")
+    calls: dict[str, int] = {}
+    body = b"a.get(`${b}trackYourProposal/V1/proposalList`);"
+    flaky, dead = DG.FRONT + "flaky.js", DG.FRONT + "dead.js"
+
+    def fake_fetch(routes, url, timeout, limit, good=None):
+        calls[url] = calls.get(url, 0) + 1
+        if url == DG.FRONT:
+            return b'<script src="flaky.js"></script><script src="dead.js"></script>', "200 via x"
+        if url in DG.FRONTS:
+            return b"<html></html>", "200 via x"
+        if url == flaky and calls[url] < DG.READ_TRIES:
+            return None, "URLError via x"
+        if url == dead:
+            return None, "URLError via x"
+        return body, "200 via x"
+
+    real_fetch, real_pause = DG.fetch_page, DG.BATCH_PAUSE_S
+    DG.fetch_page, DG.BATCH_PAUSE_S = fake_fetch, 0.0
+    try:
+        found = DG.discover([FakeRoute("a"), FakeRoute("b"), FakeRoute("c")], 1, budget_s=60)
+    finally:
+        DG.fetch_page, DG.BATCH_PAUSE_S = real_fetch, real_pause
+    check("a script that arrives on a later try is read",
+          found["bundles"][flaky]["bytes"] == len(body) and calls[flaky] == DG.READ_TRIES, str(calls))
+    check("a script that never arrives is tried READ_TRIES times and listed as failed",
+          calls[dead] == DG.READ_TRIES and found["failed"] == [dead], f"{calls} {found.get('failed')}")
+    check("what was read is not reported as unread", found["unread"] == 0, str(found.get("unread")))
+
+
 def main() -> int:
     for fn in (test_it_refuses_to_run_off_the_runner,
                test_answers_are_labelled_by_what_came_back,
@@ -201,7 +250,9 @@ def main() -> int:
                test_one_exit_ip_is_one_route,
                test_the_plan_asks_the_sweeps_own_questions,
                test_the_portal_pages_are_read_for_the_searchs_call_sites,
-               test_lazy_chunks_are_followed_and_a_moved_search_is_found):
+               test_lazy_chunks_are_followed_and_a_moved_search_is_found,
+               test_a_base_url_off_the_portal_is_followed_to_where_it_is_used,
+               test_a_script_no_route_delivered_is_retried_and_then_reported):
         fn()
     print()
     if FAIL:
