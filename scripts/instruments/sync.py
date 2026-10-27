@@ -804,15 +804,50 @@ FETCHERS = {"caf": ("fetch_caf.py", "1500"),
 PARTIAL_FAIL_AFTER = 3
 
 
-def next_streak(previous: int, failed_sectors, backfills: dict) -> int:
-    """Nights in a row with a FAULT: a sector that failed, or a fetcher that
-    aborted or died. A pass that ran out of time (exit 3) is not one - it is
-    how a backfill after an EXTRACT_VERSION bump, or a start without a seed,
-    makes progress for several nights, and counting it would turn the job red
-    on the third night of expected work. A --since run is not one either."""
-    faulty = bool(failed_sectors) or any(
+def register_unread(failed_sectors) -> bool:
+    """Tonight read no sector at all: the register is exactly as stale as it
+    was last night, whatever else the run did."""
+    return len(failed_sectors or []) >= len(SECTORS)
+
+
+def forest_unread(forest: dict | None) -> bool:
+    """Every State code of the forest register failed. A code that was not
+    asked for want of time is budget, not a fault."""
+    f = forest or {}
+    return (not f.get("skipped") and not f.get("codes")
+            and any(x.get("error") != "out of time" for x in f.get("failed") or []))
+
+
+def next_streak(previous: int, failed_sectors, backfills: dict,
+                forest: dict | None = None) -> int:
+    """Nights in a row with a FAULT: a sector that failed, a forest register
+    read nowhere, or a fetcher that aborted or died. A pass that ran out of
+    time (exit 3) is not one - it is how a backfill after an EXTRACT_VERSION
+    bump, or a start without a seed, makes progress for several nights, and
+    counting it would turn the job red on the third night of expected work. A
+    --since run is not one either."""
+    faulty = bool(failed_sectors) or forest_unread(forest) or any(
         (b or {}).get("exit") not in (0, 3, None) for b in (backfills or {}).values())
     return int(previous or 0) + 1 if faulty else 0
+
+
+def failure_reason(state: dict) -> str | None:
+    """Why the job should be red after tonight's publish, or None.
+
+    A night that read nothing was green until the third in a row: the 10-24 and
+    10-25 runs re-published the 10-23 register and reported success, and the
+    site said so only in a footer. Nothing was wrong with what was published;
+    the point is that nobody was told the register had stopped moving."""
+    if register_unread(state.get("failed_sectors")):
+        return (f"the register was not read tonight: all {len(SECTORS)} sectors "
+                "failed. What is published is the last good read, and the site "
+                "says so; nothing newer has been fetched.")
+    streak = int(state.get("partial_streak") or 0)
+    if streak >= PARTIAL_FAIL_AFTER:
+        return (f"{streak} consecutive nights did not cover the register or the "
+                "forest register. What was read was published and passed every "
+                "check, but something is persistently wrong.")
+    return None
 
 
 def recover_published(published: Path) -> None:
@@ -936,17 +971,20 @@ def main() -> None:
                           "and published null durations for anything decided "
                           "since."))
     ap.add_argument("--check-streak", action="store_true", help=(
-        "read the last run's state and exit 4 if the register has not been "
-        f"covered for {PARTIAL_FAIL_AFTER} nights running; no network"))
+        "read the last run's state and exit 4 if tonight read no register "
+        f"sector, or {PARTIAL_FAIL_AFTER} nights running did not cover it; "
+        "no network"))
     args = ap.parse_args()
     if args.check_streak:
         st = load_state(cache_dir())
-        streak = int(st.get("partial_streak") or 0)
-        log(f"partial nights in a row: {streak}")
-        if streak >= PARTIAL_FAIL_AFTER:
-            log(f"FAILING: {streak} consecutive nights did not cover the "
-                "register. What was read was published and passed every "
-                "check, but something is persistently wrong.")
+        log(f"partial nights in a row: {int(st.get('partial_streak') or 0)}")
+        reason = failure_reason(st)
+        if reason:
+            # An annotation, because "Process completed with exit code 4" is
+            # all the run page would otherwise say.
+            print(f"::error title=Instrument 01 sync did not refresh the data::"
+                  f"{reason}", flush=True)
+            log(f"FAILING: {reason}")
             sys.exit(4)
         return
     run_lock.hold_or_exit("sync")  # one run against PARIVESH at a time
@@ -1301,7 +1339,7 @@ def main() -> None:
         # Nights in a row that did not cover the register. See
         # PARTIAL_FAIL_AFTER.
         "partial_streak": next_streak(state.get("partial_streak"), failed_sectors,
-                                      backfills),
+                                      backfills, forest_stats),
     }
     # The state file is written AFTER the promote below. Written here, a
     # failure in the change log, the contract or the promote left it claiming
@@ -1377,12 +1415,12 @@ def main() -> None:
         print(f"::warning::partial sync ({streak} faulty night(s) in a row): "
               f"failed sectors {failed_sectors or 'none'}, backfills "
               f"{ {k: v.get('exit') for k, v in backfills.items()} }", flush=True)
-    if streak >= PARTIAL_FAIL_AFTER:
+    reason = failure_reason(freshness)
+    if reason:
         # Not an exit here: the job still has to save the cache and commit
         # what was published. The workflow's last step runs
         # `sync.py --check-streak`, which fails the job.
-        log(f"{streak} consecutive nights have not covered the register; "
-            f"the job will be failed after the commit so a person looks.")
+        log(f"the job will be failed after the commit so a person looks: {reason}")
 
 
 if __name__ == "__main__":

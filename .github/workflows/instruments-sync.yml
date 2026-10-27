@@ -320,10 +320,12 @@ jobs:
           python scripts/instruments/cache_seed.py pack --out "$RUNNER_TEMP/$SEED_ASSET"
           gh release upload "$SEED_RELEASE" "$RUNNER_TEMP/$SEED_ASSET" --clobber
 
-      - name: Fail on repeated partial nights
+      - name: Fail when the register was not refreshed
         # Last, after the data is committed: a partial night still publishes
-        # what it read. Three in a row is a fault nobody is looking at, and a
-        # red job is what makes someone look.
+        # what it read. A night that read no register sector at all fails the
+        # same night (the runs of 2026-10-24 and 10-25 re-published the old
+        # register and went green), and so do three faulty nights in a row.
+        # A red job is what makes someone look.
         run: python scripts/instruments/sync.py --check-streak
 
   # Dispatched by hand (diagnose = true) when the sweep reads nothing and the
