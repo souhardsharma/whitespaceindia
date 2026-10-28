@@ -8,13 +8,13 @@
  * every other proposal whose mapped site lies within the radius, nearest
  * first.
  *
- * Server-rendered. Distances are between the published points - the block
+ * Distances are between the published points - the block
  * each proposal's own location verdict rests on - so a large project may lie
  * nearer than its point suggests; the sentence says so.
  */
 import ScrollRegion from "./ScrollRegion";
 import Link from "next/link";
-import type { NearbyProposal } from "@/lib/instruments/server";
+import type { NearbyProposal } from "@/lib/instruments/bundle";
 import { PLUM } from "./InstrumentChrome";
 
 const nf = new Intl.NumberFormat("en-IN");

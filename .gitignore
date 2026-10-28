@@ -10,6 +10,8 @@
 /.next/
 # the server's index into public/data, rebuilt by every build and dev start
 /.runtime/
+# the static files proposal pages are assembled from, rebuilt the same way
+/public/view/
 /out/
 build/
 
