@@ -138,8 +138,14 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD) }}
         />
         {children}
-        <Analytics />
-        <SpeedInsights />
+        {/* Both load their script from /_vercel/, which only Vercel serves;
+            elsewhere (Cloudflare Pages) they were a 404 on every page. */}
+        {process.env.VERCEL && (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        )}
       </body>
     </html>
   );
