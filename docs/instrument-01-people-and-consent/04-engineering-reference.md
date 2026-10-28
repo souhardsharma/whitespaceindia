@@ -27,7 +27,9 @@ There are two species of page on this site and conflating them will cause real d
 ```
 app/instruments/            page.tsx (the shelf), layout.tsx (metadata + OG)
   consent/                  Instrument 01 - "People & Consent"
-    [proposalId]/           one proposal, server-rendered from lib/instruments/server.ts
+    view/                   the one static page every /instruments/consent/<id> is
+                            rewritten to; assembled in the browser from public/view
+                            (scripts/instruments/proposal_pages.mjs, lib/instruments/bundle.ts)
     latest/                 what moved in the register (the change log)
     data/                   every published file and endpoint, documented
     feed/                   Atom feed of the change log, under the page's filters

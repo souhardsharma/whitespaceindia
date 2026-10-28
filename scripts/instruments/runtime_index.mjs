@@ -4,19 +4,16 @@
  *
  * WHY
  * ---
- * A proposal page needs one row of one shard and the proposals mapped near its
- * site. Read the plain way, that meant parsing the filing State's shard (11 MB
- * for Rajasthan) for the row and all 35 shards (~47 MB) for the neighbours, on
- * every cold server instance. Across a crawl of ~90,000 pages that parsing was
- * most of the deployment's Active CPU. This index lets the server read exactly
- * the bytes it needs:
+ * The PDF export and the status endpoint need one row of one shard. Read the
+ * plain way, that meant parsing the filing State's shard (11 MB for Rajasthan)
+ * on every cold server instance. This index lets the server read exactly the
+ * bytes it needs. (Proposal pages are assembled in the browser from
+ * scripts/instruments/proposal_pages.mjs and do not use it.)
  *
  *   headers.json        each shard's vocabulary (fields, sectors, statuses...)
  *                       without its rows, and the slugs in shard order
  *   ids/<b>.json        id -> [slug index, byte offset, byte length] of its row
  *                       in projects/<slug>.json; b = Number(id) % ID_BUCKETS
- *   near/<lat>_<lon>.json  every proposal with a mapped site, by whole-degree
- *                       cell: [order, id, slug index, lat, lon, offset, length]
  *
  * It is DERIVED from public/data at build time and never committed, so it can
  * never disagree with the shards it was built from in a deployment. Every
@@ -89,8 +86,7 @@ function main() {
 
   const shards = {};
   const buckets = Array.from({ length: ID_BUCKETS }, () => ({}));
-  const cells = new Map();
-  let order = 0, indexed = 0, located = 0;
+  let indexed = 0;
 
   slugs.forEach((slug, si) => {
     const buf = fs.readFileSync(path.join(DATA, "projects", `${slug}.json`));
@@ -102,8 +98,8 @@ function main() {
       throw new Error(`${slug}: found ${spans.length} row spans for ${rows.length} rows`);
     }
     const I = (k) => header.fields.indexOf(k);
-    const iId = I("id"), iLat = I("lat"), iLon = I("lon");
-    if (iId < 0 || iLat < 0 || iLon < 0) throw new Error(`${slug}: shard lacks id/lat/lon fields`);
+    const iId = I("id");
+    if (iId < 0) throw new Error(`${slug}: shard lacks an id field`);
 
     const seen = new Set();
     rows.forEach((r, ri) => {
@@ -117,23 +113,16 @@ function main() {
         indexed++;
       }
       seen.add(id);
-      const lat = r[iLat], lon = r[iLon];
-      if (lat == null || lon == null) return;
-      const cell = `${Math.floor(lat)}_${Math.floor(lon)}`;
-      if (!cells.has(cell)) cells.set(cell, []);
-      cells.get(cell).push([order++, id, si, lat, lon, start, end - start]);
-      located++;
     });
   });
 
   const unindexed = Object.keys(lookup).filter((id) => !(id in buckets[Number(id) % ID_BUCKETS]));
   writeJson("headers.json", { idBuckets: ID_BUCKETS, slugs, shards });
   buckets.forEach((b, i) => writeJson(`ids/${i}.json`, b));
-  for (const [cell, pts] of cells) writeJson(`near/${cell}.json`, pts);
 
   console.log(
-    `runtime index: ${indexed} ids in ${ID_BUCKETS} buckets, ${located} mapped sites in ` +
-    `${cells.size} cells, from ${slugs.length} shards in ${Date.now() - started} ms` +
+    `runtime index: ${indexed} ids in ${ID_BUCKETS} buckets, ` +
+    `from ${slugs.length} shards in ${Date.now() - started} ms` +
     (unindexed.length ? ` (${unindexed.length} lookup ids have no row in their shard)` : ""),
   );
 }
