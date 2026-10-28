@@ -62,7 +62,7 @@ function allowedOrigins(): string[] {
     // The primary origin (lib/site.ts), so a deployment with no env configured
     // at all still works rather than refusing every request. Spelled out, not
     // imported: the node test runner loads this file without the @/ alias.
-    out.push("https://whitespaceindia.vercel.app");
+    out.push("https://whitespaceindia.pages.dev");
   }
   return out;
 }

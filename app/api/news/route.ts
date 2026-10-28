@@ -81,7 +81,7 @@ export async function GET() {
       next: { revalidate },
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; WhitespaceIndia/1.0; +https://whitespaceindia.vercel.app)",
+          "Mozilla/5.0 (compatible; WhitespaceIndia/1.0; +https://whitespaceindia.pages.dev)",
         Accept: "application/rss+xml, application/xml;q=0.9, */*;q=0.8",
       },
     });

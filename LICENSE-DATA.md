@@ -17,7 +17,7 @@ The **data and written content** are licensed as follows.
 
 CC BY 4.0 allows any use, commercial use included, if you credit the source:
 
-> Whitespace India (https://whitespaceindia.vercel.app)
+> Whitespace India (https://whitespaceindia.pages.dev)
 
 CC BY-NC-SA 4.0 forbids commercial use, and anything you build from those files
 must be shared under the same licence. Credit SHRUG (Development Data Lab) as

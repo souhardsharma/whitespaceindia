@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { checkBotId } from 'botid/server';
+import { isBot } from '@/lib/bot-check';
 import { isAllowedOrigin, clientIp } from '@/lib/request-identity';
 import { SECTORS, sectorPOS, type District, type Weights } from '@/lib/csr/score';
 import fs from 'fs';
@@ -449,10 +449,10 @@ export async function POST(req: NextRequest) {
   }
 
   // A script can send any Origin, so the check above only stops other
-  // websites. BotID's browser challenge, verified by Vercel on this request,
-  // is what keeps a script from spending the Gemini keys.
-  const verdict = await checkBotId();
-  if (verdict.isBot) {
+  // websites. On Vercel, BotID's browser challenge, verified on this request,
+  // keeps a script from spending the Gemini keys; elsewhere (lib/bot-check.ts)
+  // the per-address rate limit below is what bounds it.
+  if (await isBot()) {
     return new Response('Forbidden', { status: 403 });
   }
 
