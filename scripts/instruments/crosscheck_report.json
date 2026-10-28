@@ -1,155 +1,140 @@
 {
-  "generated_at": "2026-10-20T08:10:06.026083+00:00",
-  "purpose": "Tests the district the instrument reports against the district named in the regulator's signed clearance letter - a different document, not the applicant's own form. Corroborates or refutes the single source the whole profile depends on.",
-  "sampled": 150,
-  "seconds": 461.5,
-  "outcomes": {
-    "agree": 77,
-    "disagree": 10,
-    "no-district-in-letter": 18,
-    "no-location-text": 0,
-    "download-failed": 45,
-    "unreadable": 0,
-    "no-text-layer": 0
+ "generated_at": "2026-10-28T11:39:25.654327+00:00",
+ "purpose": "Tests the district the instrument reports against the district named in the regulator's signed clearance letter - a different document, not the applicant's own form. Corroborates or refutes the single source the whole profile depends on.",
+ "sampled": 150,
+ "requested": 150,
+ "stopped_early": false,
+ "seconds": 573.1,
+ "outcomes": {
+  "agree": 56,
+  "disagree": 9,
+  "no-district-in-letter": 11,
+  "no-location-text": 0,
+  "download-failed": 74,
+  "unreadable": 0,
+  "no-text-layer": 0
+ },
+ "comparable": 65,
+ "agreement_rate_pct": 86.15,
+ "agreement_by_resolution_method": {
+  "s": {
+   "agree": 9,
+   "comparable": 12,
+   "sampled": 25,
+   "rate_pct": 75.0
   },
-  "comparable": 87,
-  "agreement_rate_pct": 88.51,
-  "agreement_by_resolution_method": {
-    "v": {
-      "agree": 60,
-      "comparable": 68,
-      "sampled": 115,
-      "rate_pct": 88.24
-    },
-    "s": {
-      "agree": 14,
-      "comparable": 15,
-      "sampled": 30,
-      "rate_pct": 93.33
-    },
-    "c": {
-      "agree": 3,
-      "comparable": 4,
-      "sampled": 4,
-      "rate_pct": 75.0
-    },
-    "a": {
-      "agree": 0,
-      "comparable": 0,
-      "sampled": 1,
-      "rate_pct": null
-    }
+  "v": {
+   "agree": 47,
+   "comparable": 53,
+   "sampled": 124,
+   "rate_pct": 88.68
   },
-  "disagreements": [
-    {
-      "proposalNo": "SIA/UK/MIN/484894/2024",
-      "state": "UTTARAKHAND",
-      "claimed": 68,
-      "foundInLetter": [
-        60
-      ],
-      "method": "v",
-      "certificate": "https://parivesh.nic.in/certificates/AMIT_PATWARI/246/79829603/V_0_SIA_UK_MIN_484894_2024_79829604_-signed.pdf"
-    },
-    {
-      "proposalNo": "SIA/TN/MIN/464757/2024",
-      "state": "TAMIL NADU",
-      "claimed": 625,
-      "foundInLetter": [
-        603
-      ],
-      "method": "v",
-      "certificate": "https://parivesh.nic.in/certificates/KRISHNASAMY_PALANIAPPAN/246/50820837/SIA_TN_MIN_464757_2024_50820838_-signed.pdf"
-    },
-    {
-      "proposalNo": "SIA/GJ/MIN/481502/2024",
-      "state": "GUJARAT",
-      "claimed": 473,
-      "foundInLetter": [
-        472,
-        482
-      ],
-      "method": "v",
-      "certificate": "https://parivesh.nic.in/certificates/rajeshkumar_v_raval_/5/76701377/V_0_SIA_GJ_MIN_481502_2024_76701379_-signed.pdf"
-    },
-    {
-      "proposalNo": "SIA/AS/MIN/537554/2025",
-      "state": "ASSAM",
-      "claimed": 325,
-      "foundInLetter": [
-        300,
-        321
-      ],
-      "method": "v",
-      "certificate": "https://parivesh.nic.in/certificates/_GUWAHATI_INTERNATIONAL_AIRPORT_LIMITED/5/126898440/V_0_SIA_AS_MIN_537554_2025_126898441_-signed.pdf"
-    },
-    {
-      "proposalNo": "SIA/GJ/MIN/537720/2025",
-      "state": "GUJARAT",
-      "claimed": 486,
-      "foundInLetter": [
-        482
-      ],
-      "method": "v",
-      "certificate": "https://parivesh.nic.in/certificates/HIRENKUMAR_VASAVA/5/126975673/V_0_SIA_GJ_MIN_537720_2025_126975674_-signed.pdf"
-    },
-    {
-      "proposalNo": "SIA/GJ/MIN/502994/2024",
-      "state": "GUJARAT",
-      "claimed": 484,
-      "foundInLetter": [
-        473
-      ],
-      "method": "v",
-      "certificate": "https://parivesh.nic.in/certificates/PRABHATBHAI_S_BARIYA/246/110297585/SIA_GJ_MIN_502994_2024_110297586_-signed.pdf"
-    },
-    {
-      "proposalNo": "SIA/WB/INFRA1/504425/2025",
-      "state": "WEST BENGAL",
-      "claimed": 343,
-      "foundInLetter": [
-        342
-      ],
-      "method": "s",
-      "certificate": "https://parivesh.nic.in/certificates/Syama_Prasad_Mookerjee_Port_Kolkata/5/110937726/V_0_SIA_WB_INFRA1_504425_2025_110937752_-signed.pdf"
-    },
-    {
-      "proposalNo": "SIA/GJ/MIN/551742/2025",
-      "state": "GUJARAT",
-      "claimed": 486,
-      "foundInLetter": [
-        482
-      ],
-      "method": "v",
-      "certificate": "https://parivesh.nic.in/certificates/JAIMIN_MOTIVARAS/5/136344102/V_0_SIA_GJ_MIN_551742_2025_136344103_-signed.pdf"
-    },
-    {
-      "proposalNo": "SIA/MH/INFRA2/566453/2026",
-      "state": "MAHARASHTRA",
-      "claimed": 518,
-      "foundInLetter": [
-        519
-      ],
-      "method": "c",
-      "certificate": "https://parivesh.nic.in/certificates/_R_E_INFRA_PRIVATE_LIMITED/5/1217383182/V_0_SIA_MH_INFRA2_566453_2026_1217383183_-signed.pdf"
-    },
-    {
-      "proposalNo": "SIA/KA/MIN/516988/2025",
-      "state": "KARNATAKA",
-      "claimed": 555,
-      "foundInLetter": [
-        556,
-        572
-      ],
-      "method": "v",
-      "certificate": "https://parivesh.nic.in/certificates/HOLABASU_KAJAGAR/38/116508795/V_0_SIA_KA_MIN_516988_2025_116508812_-signed.pdf"
-    }
-  ],
-  "method_notes": [
-    "The addressee block is stripped before scanning. It carries the applicant's registered office, which is often a metro far from the site and produces confident false matches.",
-    "The scan is constrained to districts of the proposal's own state.",
-    "A letter naming several districts counts as agreement if the claimed district is among them: linear projects legitimately span districts, and the instrument reports a primary.",
-    "'no-district-in-letter' is not a disagreement. Many letters describe the site only by village and tehsil, or refer to an annexure.",
-    "Only text within 240 characters of a location cue (village, tehsil, district, situated, located, khasra, survey no) is scanned. Scanning the whole letter matches the letterhead and signature block, which carry the issuing SEIAA's own address - Gandhinagar for Gujarat, Bangalore for Karnataka, Chennai for Tamil Nadu. That bias made an earlier version of this check understate agreement at 87.34%."
-  ]
+  "d": {
+   "agree": 0,
+   "comparable": 0,
+   "sampled": 1,
+   "rate_pct": null
+  }
+ },
+ "disagreements": [
+  {
+   "proposalNo": "SIA/AS/MIN/537539/2025",
+   "state": "ASSAM",
+   "claimed": 325,
+   "foundInLetter": [
+    300,
+    321
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/_GUWAHATI_INTERNATIONAL_AIRPORT_LIMITED/5/126893466/V_0_SIA_AS_MIN_537539_2025_126893467_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/TN/MIN/475931/2024",
+   "state": "TAMIL NADU",
+   "claimed": 628,
+   "foundInLetter": [
+    603
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/SUNDARAIAH/5/70935733/V_0_SIA_TN_MIN_475931_2024_70935736_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/GJ/MIN/495733/2024",
+   "state": "GUJARAT",
+   "claimed": 478,
+   "foundInLetter": [
+    473,
+    476
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/pithiya_karan_kanjibhai/246/100605001/V_0_SIA_GJ_MIN_495733_2024_100605002_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/AS/MIN/453076/2023",
+   "state": "ASSAM",
+   "claimed": 304,
+   "foundInLetter": [
+    305
+   ],
+   "method": "s",
+   "certificate": "https://parivesh.nic.in/certificates/_DIVISIONAL_FOREST_OFFICER/5/26336332/V_0_SIA_AS_MIN_453076_2023_26336333_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/MH/INFRA2/540999/2025",
+   "state": "MAHARASHTRA",
+   "claimed": 520,
+   "foundInLetter": [
+    519
+   ],
+   "method": "s",
+   "certificate": "https://parivesh.nic.in/certificates/METRO_BUILDERS/5/129710737/V_0_SIA_MH_INFRA2_540999_2025_129710738_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/GJ/MIN/501840/2024",
+   "state": "GUJARAT",
+   "claimed": 486,
+   "foundInLetter": [
+    473
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/tadvi_ashokbhai_/246/109915774/V_0_SIA_GJ_MIN_501840_2024_109915775_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/UP/MIN/539305/2025",
+   "state": "UTTAR PRADESH",
+   "claimed": 166,
+   "foundInLetter": [
+    168
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/SATYAOM_DEVELOPERS_PRIVATE_LIMITED/5/128175178/V_0_SIA_UP_MIN_539305_2025_128175179_-signed.pdf"
+  },
+  {
+   "proposalNo": "IA/KA/IND2/516889/2025/S1",
+   "state": "KARNATAKA",
+   "claimed": 565,
+   "foundInLetter": [
+    572
+   ],
+   "method": "s",
+   "certificate": "https://parivesh.nic.in/certificates/FORM_12_116424945M/s__EPSILON_C2GR_PRIVATE_LIMITED/IA_KA_IND2_516889_2025_116424955_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/TN/MIN/453908/2023",
+   "state": "TAMIL NADU",
+   "claimed": 625,
+   "foundInLetter": [
+    603
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/MARIMUTHU_S/2/28165109/V_0_SIA_TN_MIN_453908_2023_28165113_-signed.pdf"
+  }
+ ],
+ "method_notes": [
+  "The addressee block is stripped before scanning. It carries the applicant's registered office, which is often a metro far from the site and produces confident false matches.",
+  "The scan is constrained to districts of the proposal's own state.",
+  "A letter naming several districts counts as agreement if the claimed district is among them: linear projects legitimately span districts, and the instrument reports a primary.",
+  "'no-district-in-letter' is not a disagreement. Many letters describe the site only by village and tehsil, or refer to an annexure.",
+  "Only text within 240 characters of a location cue (village, tehsil, district, situated, located, khasra, survey no) is scanned. Scanning the whole letter matches the letterhead and signature block, which carry the issuing SEIAA's own address - Gandhinagar for Gujarat, Bangalore for Karnataka, Chennai for Tamil Nadu. That bias made an earlier version of this check understate agreement at 87.34%."
+ ]
 }
