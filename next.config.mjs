@@ -66,6 +66,10 @@ const SECURITY_HEADERS = [
     value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
   },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  // Browsers already reach a .dev host only over HTTPS (the TLD is preloaded);
+  // this keeps it so for any domain the site moves to. No includeSubDomains:
+  // that would bind hosts this project does not control.
+  { key: "Strict-Transport-Security", value: "max-age=63072000" },
 ];
 
 const EDGE_CACHED_PAGES = ["/instruments/consent/latest"];
@@ -113,6 +117,8 @@ const ON_VERCEL = Boolean(process.env.VERCEL);
 const BACKEND_BUILD = process.env.BACKEND_BUILD || (process.env.RENDER_GIT_COMMIT || "").slice(0, 12);
 
 const nextConfig = {
+  // The backend's answers named their framework to anyone who asked.
+  poweredByHeader: false,
   ...(BUILD_CPUS ? { experimental: { cpus: BUILD_CPUS } } : {}),
   ...(BACKEND_BUILD ? { assetPrefix: ASSET_PREFIX, deploymentId: BACKEND_BUILD } : {}),
   // Vercel production redirects every request to the Cloudflare Pages origin
