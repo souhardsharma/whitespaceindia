@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isBot } from "@/lib/bot-check";
 import { clientIp, isAllowedOrigin } from "@/lib/request-identity";
+import { kitFormId, parseSource } from "@/lib/subscribe-sources";
 
 export const runtime = "nodejs";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_IN_TEXT = /[^\s@"]+@[^\s@"]+\.[^\s@"]+/g;
-// Numeric form IDs used by Kit's /forms/:id/subscriptions endpoint.
-// The public embed UIDs (96285e43e0, 324b05edcf) are NOT accepted here — must
-// be the numeric ID found inside each embed script's submission URL.
-// Reports form embed uid 96285e43e0 -> form id 9364278
-// Landing form embed uid 324b05edcf -> form id 9364340
-const DEFAULT_FORM_ID_REPORTS = "9364278";
-const DEFAULT_FORM_ID_LANDING = "9364340";
 
 const rateLimitMap = new Map<string, { tokens: number; lastRefill: number }>();
 const RATE_LIMIT_MAX_TOKENS = 3;
@@ -99,9 +93,7 @@ export async function POST(req: NextRequest) {
   const name = clean(b.name, 100);
   const company = clean(b.company, 100);
   const phone = clean(b.phone, 30);
-  const source = typeof b.source === "string" && (b.source === "reports" || b.source === "landing")
-    ? b.source
-    : null;
+  const source = parseSource(b.source);
 
   if (!email || !EMAIL_RE.test(email)) {
     return NextResponse.json(
@@ -113,10 +105,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, message: "The form could not be read. Please reload the page and try again." }, { status: 400 });
   }
 
-  const formId =
-    source === "landing"
-      ? process.env.KIT_FORM_ID_LANDING || DEFAULT_FORM_ID_LANDING
-      : process.env.KIT_FORM_ID || DEFAULT_FORM_ID_REPORTS;
+  const formId = kitFormId(source);
 
   const apiKey = process.env.KIT_API_KEY;
   if (!apiKey) {
