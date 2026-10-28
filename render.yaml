@@ -21,5 +21,9 @@ services:
         value: https://whitespaceindia.pages.dev
       - key: NEXT_TELEMETRY_DISABLED
         value: "1"
+      # The build container is held to 8 GB; with a worker per visible core
+      # the first build ran out of it (next.config.mjs).
+      - key: NEXT_BUILD_CPUS
+        value: "2"
       - key: BACKEND_KEY
         generateValue: true
