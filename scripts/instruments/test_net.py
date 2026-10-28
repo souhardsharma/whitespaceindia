@@ -16,6 +16,7 @@ Everything runs offline against fabricated routes. No network.
 """
 from __future__ import annotations
 
+import contextlib
 import io
 import json
 import sys
@@ -1643,6 +1644,51 @@ def test_the_refresher_counts_addresses() -> None:
           and RP.as_route("socks4", "1.2.3.4:80") == "socks4://1.2.3.4:80")
 
 
+def test_the_refresher_stops_when_no_probe_finishes() -> None:
+    """The time bound holds when every probe hangs (run 40647611570, 2026-10-28:
+    no probe finished after 07:09, the bound was checked only as one did, and
+    the step was killed at its timeout without rotating the pool)."""
+    print("\nthe pool refresher stops on time when every probe hangs")
+    import tempfile
+    import refresh_proxies as RP
+    hang = threading.Event()
+    saved = (RP.gather, RP.india_ranges, RP.probe, getattr(RP, "KNOWN_PASS_S", 120), sys.argv)
+    tmp = Path(tempfile.mkdtemp()) / "proxies.txt"
+    tmp.write_text("10.8.0.1:8080 0.5 900\n10.8.0.2:8080 0.6 900\n", encoding="utf-8")
+    box: dict = {}
+
+    def go() -> None:
+        try:
+            RP.main()
+            box["code"] = 0
+        except SystemExit as e:
+            box["code"] = e.code
+
+    try:
+        RP.gather = lambda: [f"10.8.1.{i}:3128" for i in range(20)]
+        RP.india_ranges = lambda: None
+        RP.probe = lambda proxy, timeout=12: hang.wait(60)
+        RP.KNOWN_PASS_S = 0.5
+        sys.argv = ["refresh_proxies.py", "--out", str(tmp),
+                    "--max-minutes", "0.02", "--workers", "4"]
+        t = threading.Thread(target=go, daemon=True)
+        t0 = __import__("time").time()
+        with contextlib.redirect_stdout(io.StringIO()):
+            t.start()
+            t.join(15)
+        took = __import__("time").time() - t0
+        check("main returns at its time bound although no probe ever finishes",
+              not t.is_alive() and took < 6, f"{took:.1f} s, alive={t.is_alive()}")
+        check("nothing verified, so it reports failure (exit 1)", box.get("code") == 1,
+              str(box))
+        kept = tmp.read_text(encoding="utf-8").split()
+        check("known routes that never answered are kept, not dropped",
+              "10.8.0.1:8080" in kept and "10.8.0.2:8080" in kept, str(kept))
+    finally:
+        hang.set()
+        RP.gather, RP.india_ranges, RP.probe, RP.KNOWN_PASS_S, sys.argv = saved
+
+
 def test_a_settle_storm_stops_the_run() -> None:
     """Settled 500s too common to be absences stop a run (review 2026-10-20).
 
@@ -1726,6 +1772,7 @@ def main() -> int:
                test_waiting_sleeps_until_a_route_clears,
                test_a_settle_storm_stops_the_run,
                test_the_refresher_counts_addresses,
+               test_the_refresher_stops_when_no_probe_finishes,
                test_the_history_pass_survives_an_error_answer,
                test_a_rolling_slice_carries_what_it_did_not_read,
                test_the_form_pass_keeps_a_settled_500_owed,

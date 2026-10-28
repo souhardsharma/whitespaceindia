@@ -39,6 +39,7 @@ import time
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import TimeoutError as FuturesTimeout
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -279,6 +280,10 @@ def cap_ports(routes: list[str]) -> tuple[list[str], set]:
 # is not evidence the route is dead, so it is never dropped for it.
 LIMITED = "limited"
 
+# The known pool's gentle pass is bounded by the clock as well: a route that
+# has not answered by then is neither verified nor disproved, and is kept.
+KNOWN_PASS_S = 120
+
 
 def probe(proxy: str, timeout: int = 12):
     """(proxy, seconds, bytes) when this route delivers the real answer;
@@ -353,21 +358,31 @@ def main() -> None:
     # 806 routes "disproved" in a wide pass verified at 200 wide / 20 s.
     known_ok: list = []
     limited: set = set()
+    unanswered: set = set()
     if prior_routes:
-        with ThreadPoolExecutor(max_workers=200) as kx:
-            for p_, r in zip(prior_routes,
-                             kx.map(lambda p: probe(p, timeout=20), prior_routes)):
+        kx = ThreadPoolExecutor(max_workers=200)
+        kfuts = {kx.submit(probe, p, 20): p for p in prior_routes}
+        unanswered = set(prior_routes)
+        try:
+            for fut in as_completed(kfuts, timeout=KNOWN_PASS_S):
+                p_, r = kfuts[fut], fut.result()
+                unanswered.discard(p_)
                 if r == LIMITED:
                     limited.add(p_)
                 elif r:
                     known_ok.append(r)
+        except FuturesTimeout:
+            pass
+        finally:
+            kx.shutdown(wait=False, cancel_futures=True)
         print(f"  known routes: {len(known_ok)} of {len(prior_routes)} verify "
-              f"(200 wide, 20 s)", flush=True)
+              f"(200 wide, 20 s); {len(unanswered)} did not answer in "
+              f"{KNOWN_PASS_S} s and are kept", flush=True)
     known_ok_set = {r[0] for r in known_ok}
     cands = [c for c in cands if c not in front]
     print(f"probing against {PROBE.split('/')[2]}")
     good, done, t0 = list(known_ok), 0, time.time()
-    failed: set = set(front) - known_ok_set - limited
+    failed: set = set(front) - known_ok_set - limited - unanswered
     out = Path(args.out)
     # Written AS ROUTES VERIFY, not only at the end. Probing ~100,000
     # candidates takes over an hour; a run stopped by a timeout used to leave
@@ -382,9 +397,15 @@ def main() -> None:
     known = {ln.split()[0] for ln in prior}
     live = open(out, "a", encoding="utf-8")
     ex = ThreadPoolExecutor(max_workers=args.workers)
+    # The time bound is a deadline on the wait itself. Checked only as a probe
+    # finished, it never fired on 2026-10-28: no probe finished after 07:09,
+    # every worker held by a route that would not let go, and the step was
+    # killed at its 12-minute timeout without rotating the pool.
+    deadline = t0 + args.max_minutes * 60 if args.max_minutes else None
     try:
         futs = {ex.submit(probe, c): c for c in cands}
-        for fut in as_completed(futs):
+        for fut in as_completed(futs, timeout=None if deadline is None
+                                else max(0.0, deadline - time.time())):
             done += 1
             res = fut.result()
             # A LIMITED route is neither verified nor failed, and still falls
@@ -406,6 +427,9 @@ def main() -> None:
                       + ("target reached" if args.target and len(good) >= args.target
                          else "time budget reached"), flush=True)
                 break
+    except FuturesTimeout:
+        print(f"  stopping at {done:,} probed: time budget reached "
+              "(probes still in flight are abandoned)", flush=True)
     finally:
         live.close()
         ex.shutdown(wait=False, cancel_futures=True)
@@ -456,5 +480,25 @@ def main() -> None:
         raise SystemExit(1)
 
 
+def run() -> int:
+    """main(), then leave at once. Python joins every worker thread before it
+    exits, so probes abandoned at the deadline would hold the process - and
+    the job step - for as long as their routes hang. Everything worth keeping
+    is on disk by now: routes are appended as they verify and the rotation is
+    written through a temporary file."""
+    code = 0
+    try:
+        main()
+    except SystemExit as e:
+        code = e.code if isinstance(e.code, int) else (0 if e.code is None else 1)
+    except BaseException:  # noqa: BLE001
+        import traceback
+        traceback.print_exc()
+        code = 1
+    sys.stdout.flush()
+    sys.stderr.flush()
+    return code
+
+
 if __name__ == "__main__":
-    main()
+    os._exit(run())
