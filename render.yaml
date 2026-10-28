@@ -17,6 +17,7 @@ services:
       ignoredPaths:
         - scripts/instruments/crosscheck_report.json
         - "**/*.md"
+        - ".github/**"
     # 512 MB instance; `next start` peaked at 468 MB in testing, so the heap
     # is capped below the instance rather than left to grow into a kill.
     startCommand: node --max-old-space-size=384 scripts/cloudflare/backend.mjs
