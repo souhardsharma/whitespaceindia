@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkBotId } from "botid/server";
+import { isBot } from "@/lib/bot-check";
 import { clientIp, isAllowedOrigin } from "@/lib/request-identity";
 
 export const runtime = "nodejs";
@@ -61,11 +61,12 @@ export async function POST(req: NextRequest) {
   }
 
   // The Origin check stops other websites; it does not stop a script, which
-  // can send any Origin it likes. BotID does: the challenge runs in the
-  // visitor's browser and Vercel verifies it on this request. Without it,
-  // anyone could sign other people's addresses up and have Kit mail them.
-  const verdict = await checkBotId();
-  if (verdict.isBot) {
+  // can send any Origin it likes. On Vercel, BotID does: the challenge runs
+  // in the visitor's browser and Vercel verifies it on this request. Without
+  // it, anyone could sign other people's addresses up and have Kit mail them;
+  // elsewhere (lib/bot-check.ts) the rate limit and honeypot below are what
+  // bound that.
+  if (await isBot()) {
     return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }
 

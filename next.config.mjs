@@ -1,4 +1,5 @@
 import { withBotId } from "botid/next/config";
+import { movedRedirects } from "./lib/moved-hosts.mjs";
 
 /** @type {import('next').NextConfig} */
 
@@ -99,8 +100,22 @@ const RUNTIME_INDEX = [
 // default stands - an `undefined` here would replace it, not defer to it.
 const BUILD_CPUS = Number(process.env.NEXT_BUILD_CPUS) || 0;
 
+const ON_VERCEL = Boolean(process.env.VERCEL);
+
 const nextConfig = {
   ...(BUILD_CPUS ? { experimental: { cpus: BUILD_CPUS } } : {}),
+  // Vercel production redirects every request to the Cloudflare Pages origin
+  // (lib/moved-hosts.mjs). Previews still serve the app.
+  async redirects() {
+    return process.env.VERCEL_ENV === "production" ? movedRedirects() : [];
+  },
+  // The images are WebPs already sized for the page. Off Vercel there is no
+  // optimiser worth paying for: on Pages each /_next/image request would run
+  // a function against the daily allowance, so the files are linked directly.
+  images: { unoptimized: !ON_VERCEL },
+  // BotID's challenge is verified by Vercel and works nowhere else; the
+  // browser half loads only where the server half can check it.
+  env: { NEXT_PUBLIC_BOTID: ON_VERCEL ? "1" : "" },
   // Metadata in <head> for every client, as a prerendered page has it. Next
   // streams a dynamic page's title and og: tags in after the body to clients
   // it does not list as limited bots - Googlebot and browsers among them - so
