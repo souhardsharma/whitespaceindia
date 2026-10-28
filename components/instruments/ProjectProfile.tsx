@@ -35,7 +35,7 @@ import stagesFile from "@/public/data/instruments/consent/stages.json";
 import freshness from "@/public/data/instruments/consent/freshness.json";
 import { sourceVintageLabel } from "@/lib/instruments/vintage";
 import { stageLabel } from "@/lib/instruments/projects";
-import type { ProposalBundle } from "@/lib/instruments/server";
+import type { ProposalBundle } from "@/lib/instruments/bundle";
 import {
   obligationsFor,
   sortObligations,

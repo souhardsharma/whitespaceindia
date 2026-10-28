@@ -12,6 +12,12 @@
  * - placeholder verticals indexed on synthetic data.
  * Each is silent in the browser, so each is asserted here.
  *
+ * Proposal pages are one static file shared by every proposal, which sets its
+ * title and canonical in the browser (components/instruments/ProposalView).
+ * Their HTML must therefore name NO canonical and carry no noindex - either
+ * would apply to all ~92,000 - and the file holding each sampled proposal
+ * must be served.
+ *
  * The build answers on localhost but names the public origin, so a URL's
  * origin is swapped for the server under test when fetching and compared
  * as published.
@@ -69,6 +75,23 @@ async function checkPage(url, titles) {
   }
 }
 
+const ROW_BUCKETS = 4096; // lib/instruments/bundle.ts
+
+async function checkProposal(url) {
+  const { status, location, body } = await get(url);
+  if (status !== 200) return fail(url, `listed in a sitemap but answered ${status}${location ? ` -> ${location}` : ""}`);
+  const h = headOf(body);
+  if (h.canonical) fail(url, `the shared proposal page names canonical ${h.canonical}`);
+  if (h.ogUrl) fail(url, `the shared proposal page names og:url ${h.ogUrl}`);
+  if (/noindex/i.test(h.robots)) fail(url, "the shared proposal page is marked noindex");
+  if (h.titles !== 1 || !h.title) fail(url, `expected one non-empty <title>, found ${h.titles}`);
+  if (!h.description) fail(url, "no meta description");
+  if (body.includes(LEGACY)) fail(url, `names the legacy host ${LEGACY}`);
+  const id = new URL(url).pathname.split("/").pop();
+  const rows = await get(`${PRIMARY}/view/consent/rows/${Number(id) % ROW_BUCKETS}.json`);
+  if (rows.status !== 200 || !(id in JSON.parse(rows.body))) fail(url, "its row file is missing or does not hold it");
+}
+
 function legacyRequest(path) {
   const { hostname, port } = new URL(SERVER);
   return new Promise((resolve, reject) => {
@@ -104,9 +127,12 @@ async function main() {
     const rows = locs((await get(s)).body);
     for (const u of rows.slice(0, 1)) {
       if (sampled++ >= PROPOSAL_SAMPLE) break;
-      await checkPage(u, null);
+      await checkProposal(u);
     }
   }
+  // Only digits are proposals; anything else under the instrument is a 404.
+  const stray = await get(`${PRIMARY}/instruments/consent/not-a-proposal`);
+  if (stray.status !== 404) fail("/instruments/consent/not-a-proposal", `answered ${stray.status}, not 404`);
 
   // The placeholder verticals stay out of the index while coming soon.
   for (const p of ["/health", "/energy/about", "/education/methodology"]) {
