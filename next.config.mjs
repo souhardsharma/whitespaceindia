@@ -92,7 +92,15 @@ const RUNTIME_INDEX = [
   ".runtime/instruments/consent/ids/*.json",
 ];
 
+// Next prerenders with one worker per CPU it can see, and each worker loads
+// the instrument data: 17 workers peaked at 6.65 GB here. A build container
+// that sees the host's cores but is held to 8 GB (Render's, which failed out
+// of memory) needs the count set; NEXT_BUILD_CPUS does that. Left unset, the
+// default stands - an `undefined` here would replace it, not defer to it.
+const BUILD_CPUS = Number(process.env.NEXT_BUILD_CPUS) || 0;
+
 const nextConfig = {
+  ...(BUILD_CPUS ? { experimental: { cpus: BUILD_CPUS } } : {}),
   // Metadata in <head> for every client, as a prerendered page has it. Next
   // streams a dynamic page's title and og: tags in after the body to clients
   // it does not list as limited bots - Googlebot and browsers among them - so
