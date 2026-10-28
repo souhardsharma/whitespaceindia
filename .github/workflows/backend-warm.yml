@@ -6,21 +6,45 @@ name: backend-warm
 # hours people read the site: about 530 of the free plan's 750 instance hours
 # a month, leaving the rest for wakes at night. Never round the clock: past 750
 # hours Render suspends the service until the month ends.
+#
+# One run does the asking, every 10 minutes, until the window closes or the
+# run's own time is nearly up. A schedule every 10 minutes was never delivered
+# at all: added at 12:41 UTC on 2026-10-28, it had not run once by 17:30, and
+# the backend was asleep (27 s to answer). GitHub delays and drops frequent
+# schedules; any ONE of these two-hourly triggers is now enough. Runs queue in
+# one group, so a trigger that arrives while a run is pinging waits and takes
+# over when it ends, and one that starts after the window pings once and ends.
 on:
   schedule:
-    - cron: "*/10 1-17 * * *"
+    - cron: "7 1-17/2 * * *"
   workflow_dispatch:
+
+concurrency:
+  group: backend-warm
+  cancel-in-progress: false
 
 permissions: {}
 
 jobs:
   ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 350
     steps:
-      # A miss is reported, not failed: a run failing every ten minutes while
-      # Render is down would only bury the sync's own failures.
+      # A miss is reported, not failed: a run failing while Render is down
+      # would only bury the sync's own failures.
       - run: |
-          curl -fsS --retry 3 --retry-delay 20 --max-time 90 -o /dev/null -w "%{http_code} in %{time_total}s\n" \
-            https://whitespaceindia-backend.onrender.com/healthz \
-            || echo "::warning::the backend did not answer /healthz"
+          ping() {
+            curl -fsS --retry 3 --retry-delay 20 --max-time 90 -o /dev/null \
+              -w "$(date -u +%H:%M) %{http_code} in %{time_total}s\n" \
+              https://whitespaceindia-backend.onrender.com/healthz \
+              || echo "::warning::the backend did not answer /healthz"
+          }
+          # 18:00 UTC is 23:30 IST; 340 minutes leaves the job its margin.
+          stop=$(( $(date -u +%s) + 340 * 60 ))
+          close=$(date -u -d "today 18:00" +%s)
+          [ "$close" -lt "$stop" ] && stop=$close
+          ping
+          while [ $(( $(date -u +%s) + 600 )) -lt "$stop" ]; do
+            sleep 600
+            ping
+          done

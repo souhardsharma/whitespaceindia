@@ -26,6 +26,7 @@ import { loadProposal, type ProposalView as View, type ReadJson } from "@/lib/in
 import { pageLd } from "@/lib/instruments/metadata";
 import { stageLabel } from "@/lib/instruments/projects";
 import { presentState } from "@/lib/instruments/place";
+import { applyHead, type Head } from "@/lib/instruments/head";
 import { SITE_URL } from "@/lib/site";
 import meta from "@/public/data/instruments/consent/meta.json";
 import stagesFile from "@/public/data/instruments/consent/stages.json";
@@ -64,8 +65,6 @@ function shortName(name: string): string {
   return name.length > 90 ? name.slice(0, 87).replace(/\s+\S*$/, "") + "…" : name;
 }
 
-interface Head { title: string; description: string; path: string; index: boolean }
-
 function headFor(view: View): Head {
   const { project: p, district: where } = view.bundle;
   const stage = stageLabel(p.appraisal?.statusKey, p.status, STAGE_LABELS);
@@ -97,38 +96,6 @@ function missingHead(id: string): Head {
   };
 }
 
-/** Sets the document's head for this proposal; returns what undoes it. */
-function applyHead(head: Head): () => void {
-  const previousTitle = document.title;
-  const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
-  const previousDescription = description?.content;
-  document.title = head.title;
-  if (description) description.content = head.description;
-  // The layouts already write "index, follow"; a second robots tag would
-  // leave the page saying both, so the one there is rewritten instead.
-  const robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
-  const previousRobots = robots?.content;
-  const added: HTMLElement[] = [];
-  const canonical = document.createElement("link");
-  canonical.rel = "canonical";
-  canonical.href = `${SITE_URL}${head.path}`;
-  added.push(canonical);
-  if (!head.index && robots) robots.content = "noindex, follow";
-  if (!head.index && !robots) {
-    const noindex = document.createElement("meta");
-    noindex.name = "robots";
-    noindex.content = "noindex, follow";
-    added.push(noindex);
-  }
-  for (const el of added) document.head.appendChild(el);
-  return () => {
-    document.title = previousTitle;
-    if (description && previousDescription != null) description.content = previousDescription;
-    if (robots && previousRobots != null) robots.content = previousRobots;
-    for (const el of added) el.remove();
-  };
-}
-
 export default function ProposalView() {
   // The address, not the rewritten file, names the proposal; the pathname is
   // a dependency so moving between proposals in the app reloads.
@@ -144,7 +111,7 @@ export default function ProposalView() {
     loadProposal(id, read, stagesFile)
       .then((view) => {
         if (!live) return;
-        undoHead = applyHead(view ? headFor(view) : missingHead(id));
+        undoHead = applyHead(view ? headFor(view) : missingHead(id), SITE_URL);
         setState(view ? { phase: "ready", view } : { phase: "missing", id });
       })
       .catch(() => {
