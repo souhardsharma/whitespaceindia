@@ -13,6 +13,9 @@
 # the static files proposal pages are assembled from, rebuilt the same way
 /public/view/
 /out/
+# the Cloudflare Pages copy of a build (scripts/cloudflare/assemble.mjs)
+/dist/
+/.wrangler/
 build/
 
 # production
