@@ -1,0 +1,25 @@
+# The Node server behind the Cloudflare Pages site (scripts/cloudflare/).
+# Pages serves every prerendered page; this answers only the routes Next
+# renders per request, and only when the request carries BACKEND_KEY.
+# After the first deploy, copy BACKEND_KEY into the Pages project's secrets.
+services:
+  - type: web
+    name: whitespaceindia-backend
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: npm ci && npm run build
+    # 512 MB instance; `next start` peaked at 468 MB in testing, so the heap
+    # is capped below the instance rather than left to grow into a kill.
+    startCommand: node --max-old-space-size=384 scripts/cloudflare/backend.mjs
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://whitespaceindia.pages.dev
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: BACKEND_KEY
+        generateValue: true
