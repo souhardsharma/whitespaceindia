@@ -116,6 +116,19 @@ function main() {
     }
   }
   rows.forEach((b, i) => writeJson(`rows/${i}.json`, b));
+  // A proposal page asks for every cell its 10 km search box touches
+  // (nearCells in lib/instruments/bundle.ts, mirrored here). A cell holding no
+  // site is written empty, so that ask is an answer and not a 404.
+  for (const points of [...cells.values()]) {
+    for (const [, , , lat, lon] of points) {
+      const dLat = 10 / 110, dLon = 10 / (110 * Math.cos((Math.abs(lat) + 1) * Math.PI / 180));
+      for (let a = Math.floor((lat - dLat) * CELLS_PER_DEGREE); a <= Math.floor((lat + dLat) * CELLS_PER_DEGREE); a++) {
+        for (let b = Math.floor((lon - dLon) * CELLS_PER_DEGREE); b <= Math.floor((lon + dLon) * CELLS_PER_DEGREE); b++) {
+          if (!cells.has(`${a}_${b}`)) cells.set(`${a}_${b}`, []);
+        }
+      }
+    }
+  }
   for (const [cell, points] of cells) writeJson(`near/${cell}.json`, points);
 
   const districts = readData("districts.json");

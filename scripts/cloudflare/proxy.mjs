@@ -20,9 +20,20 @@ const DROP = [
 // crawler or a busy page reads it from there instead of from the backend.
 export const CACHE_SECONDS = 3600;
 
-export function backendRequest(request, env) {
+// The backend's pages load their scripts and styles from its own build, under
+// this prefix (next.config.mjs): /_be/_next/static/x is the backend's
+// /_next/static/x. Those names are content hashes, so an edge copy is kept for
+// thirty days.
+export const ASSET_PREFIX = "/_be";
+export const ASSET_CACHE_SECONDS = 30 * 86400;
+const ASSET = { strip: ASSET_PREFIX, ttl: ASSET_CACHE_SECONDS };
+// The most of a page's files fetched into the cache alongside it (warmAssets).
+const WARM_LIMIT = 40;
+
+export function backendRequest(request, env, strip = "") {
   const url = new URL(request.url);
-  const target = new URL(url.pathname + url.search, env.BACKEND_ORIGIN);
+  const path = strip && url.pathname.startsWith(strip + "/") ? url.pathname.slice(strip.length) : url.pathname;
+  const target = new URL(path + url.search, env.BACKEND_ORIGIN);
   const headers = new Headers(request.headers);
   for (const h of DROP) headers.delete(h);
   const ip = request.headers.get("cf-connecting-ip");
@@ -52,10 +63,10 @@ export function isCacheable(request) {
 // fetch() hands over the body already decoded, so the stored copy must not
 // keep the backend's Content-Encoding: kept, a hit was served as the decoded
 // bytes encoded a second time, which no browser can read.
-function forCache(res) {
+function forCache(res, ttl) {
   const copy = new Response(res.body, res);
   copy.headers.set("x-origin-cache-control", res.headers.get("cache-control") || "");
-  copy.headers.set("cache-control", `public, max-age=${CACHE_SECONDS}`);
+  copy.headers.set("cache-control", `public, max-age=${ttl}`);
   for (const h of ["vary", "content-encoding", "content-length"]) copy.headers.delete(h);
   return copy;
 }
@@ -70,9 +81,9 @@ function fromCache(res) {
   return out;
 }
 
-async function fetchBackend(request, env) {
+async function fetchBackend(request, env, strip = "") {
   try {
-    return await fetch(backendRequest(request, env));
+    return await fetch(backendRequest(request, env, strip));
   } catch {
     // The free backend sleeps when idle and can be restarting; say so rather
     // than hand the browser Cloudflare's generic error page.
@@ -83,22 +94,65 @@ async function fetchBackend(request, env) {
   }
 }
 
-export async function proxy({ request, env, waitUntil }) {
-  if (!env.BACKEND_ORIGIN) {
-    return new Response("This part of the site is offline for now.", { status: 503 });
-  }
-  if (!isCacheable(request)) return fetchBackend(request, env);
+function offline() {
+  return new Response("This part of the site is offline for now.", { status: 503 });
+}
 
+async function cached(request, env, waitUntil, { strip = "", ttl = CACHE_SECONDS } = {}) {
   const cache = caches.default;
   const key = new Request(request.url, { method: "GET" });
   const hit = await cache.match(key);
   if (hit) return fromCache(hit);
 
-  const res = await fetchBackend(request, env);
+  const res = await fetchBackend(request, env, strip);
   if (res.status !== 200 || res.headers.has("set-cookie")) return res;
-  const stored = forCache(res.clone());
-  waitUntil(cache.put(key, stored));
+  waitUntil(cache.put(key, forCache(res.clone(), ttl)));
   const out = new Response(res.body, res);
   out.headers.set("x-proxy-cache", "miss");
   return out;
+}
+
+// A page is kept for an hour, and the backend can deploy inside that hour,
+// after which it no longer has the files the kept page names. So the files a
+// page names are put in the cache when the page is: a page a crawler fetched
+// without its scripts would otherwise be served later with none that load.
+export function assetPaths(html) {
+  const re = new RegExp(String.raw`["'](${ASSET_PREFIX}/_next/static/[^"'\s<>\\]+)["']`, "g");
+  return [...new Set([...html.matchAll(re)].map((m) => m[1].replace(/&amp;/g, "&")))].slice(0, WARM_LIMIT);
+}
+
+async function warmAssets(page, request, env) {
+  const origin = new URL(request.url).origin;
+  const cache = caches.default;
+  await Promise.all(
+    assetPaths(await page.text()).map(async (p) => {
+      const key = new Request(origin + p, { method: "GET" });
+      if (await cache.match(key)) return;
+      const res = await fetchBackend(key, env, ASSET_PREFIX);
+      if (res.status === 200 && !res.headers.has("set-cookie")) await cache.put(key, forCache(res, ASSET_CACHE_SECONDS));
+    }),
+  );
+}
+
+export async function proxy({ request, env, waitUntil }) {
+  if (!env.BACKEND_ORIGIN) return offline();
+  if (!isCacheable(request)) return fetchBackend(request, env);
+
+  const res = await cached(request, env, waitUntil);
+  const html = (res.headers.get("content-type") || "").startsWith("text/html");
+  if (html && res.headers.get("x-proxy-cache") === "miss") {
+    waitUntil(warmAssets(res.clone(), request, env).catch(() => {}));
+  }
+  return res;
+}
+
+// /_be/*: only the backend build's static files, never a page through a path
+// that would keep it for thirty days.
+export async function proxyAsset({ request, env, waitUntil }) {
+  if (!env.BACKEND_ORIGIN) return offline();
+  if (!new URL(request.url).pathname.startsWith(`${ASSET_PREFIX}/_next/static/`)) {
+    return new Response("Not found", { status: 404 });
+  }
+  if (!isCacheable(request)) return fetchBackend(request, env, ASSET_PREFIX);
+  return cached(request, env, waitUntil, ASSET);
 }

@@ -1,5 +1,6 @@
 import { withBotId } from "botid/next/config";
 import { movedRedirects } from "./lib/moved-hosts.mjs";
+import { ASSET_PREFIX } from "./scripts/cloudflare/proxy.mjs";
 
 /** @type {import('next').NextConfig} */
 
@@ -102,8 +103,18 @@ const BUILD_CPUS = Number(process.env.NEXT_BUILD_CPUS) || 0;
 
 const ON_VERCEL = Boolean(process.env.VERCEL);
 
+// The Render backend renders /latest and /feed from a build of its own, whose
+// chunks have other names than the Pages build's and are not on Pages. So its
+// pages name their files under ASSET_PREFIX, which a Pages Function passes back
+// to it (functions/_be), and its build carries a deployment id, which its pages
+// send with every RSC request; scripts/cloudflare/backend.mjs answers a request
+// from any other build with a full page load. Render names the commit it
+// builds in RENDER_GIT_COMMIT; BACKEND_BUILD names a build anywhere else.
+const BACKEND_BUILD = process.env.BACKEND_BUILD || (process.env.RENDER_GIT_COMMIT || "").slice(0, 12);
+
 const nextConfig = {
   ...(BUILD_CPUS ? { experimental: { cpus: BUILD_CPUS } } : {}),
+  ...(BACKEND_BUILD ? { assetPrefix: ASSET_PREFIX, deploymentId: BACKEND_BUILD } : {}),
   // Vercel production redirects every request to the Cloudflare Pages origin
   // (lib/moved-hosts.mjs). Previews still serve the app.
   async redirects() {

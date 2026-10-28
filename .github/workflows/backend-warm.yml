@@ -1,0 +1,26 @@
+name: backend-warm
+
+# The Render backend (render.yaml) sleeps after 15 idle minutes and takes about
+# 50 s to wake, and the CSR brief, the subscribe form and /latest wait on it.
+# Asked every 10 minutes from 06:30 to 23:30 IST, it stays awake through the
+# hours people read the site: about 530 of the free plan's 750 instance hours
+# a month, leaving the rest for wakes at night. Never round the clock: past 750
+# hours Render suspends the service until the month ends.
+on:
+  schedule:
+    - cron: "*/10 1-17 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      # A miss is reported, not failed: a run failing every ten minutes while
+      # Render is down would only bury the sync's own failures.
+      - run: |
+          curl -fsS --retry 3 --retry-delay 20 --max-time 90 -o /dev/null -w "%{http_code} in %{time_total}s\n" \
+            https://whitespaceindia-backend.onrender.com/healthz \
+            || echo "::warning::the backend did not answer /healthz"
