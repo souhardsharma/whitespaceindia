@@ -2,14 +2,13 @@
 
 import { useState, FormEvent } from "react";
 import type { VerticalConfig } from "@/lib/verticals/types";
-
-type Source = "reports" | "landing" | "health" | "energy" | "education" | "csr";
+import type { SubscribeSource } from "@/lib/subscribe-sources";
 
 const DEFAULT_ACCENT = "#BD402C";
 
 interface Props {
   variant: "full" | "compact";
-  source: Source;
+  source: SubscribeSource;
   vertical?: VerticalConfig;
 }
 
