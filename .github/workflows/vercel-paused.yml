@@ -1,0 +1,42 @@
+name: vercel-paused
+
+# The Vercel team is paused (2026-10-27) and Vercel answers every push with a
+# failed "Vercel" status reading "Account is blocked.", which marks every
+# commit with a red cross although nothing in it failed: the site is served by
+# Cloudflare Pages and its checks pass. The Vercel integration stays connected
+# on purpose, so the first push after the pause lifts deploys the build that
+# redirects every Vercel host to the Pages origin.
+#
+# This answers exactly that status, in the same "Vercel" slot, with one that
+# says Vercel is paused. Any other Vercel result - every real deploy once the
+# pause lifts, and any real failure - is left as Vercel wrote it, so this goes
+# quiet by itself and can be deleted once Vercel deploys again. A status
+# written with the workflow token raises no new event, so it cannot loop.
+on:
+  status:
+
+permissions:
+  statuses: write
+
+jobs:
+  relabel:
+    if: >-
+      github.event.context == 'Vercel' &&
+      github.event.state == 'failure' &&
+      startsWith(github.event.description, 'Account is blocked')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.sha }}
+          TARGET: ${{ github.event.target_url }}
+        run: |
+          gh api "repos/$REPO/statuses/$SHA" \
+            -f state=success \
+            -f context=Vercel \
+            -f description="Vercel (temporarily paused): not deployed. The live site is Cloudflare Pages." \
+            -f target_url="$TARGET" \
+            --silent
+          echo "Vercel status on $SHA relabelled as paused"
