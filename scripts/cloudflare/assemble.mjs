@@ -51,13 +51,17 @@ walk(appDir, (p, rel) => {
 
 // Proposal URLs are digits; Pages has no regex, so the named one-segment
 // routes under /instruments/consent are matched first and served as they are.
+// Proposals are then matched by their first digit, not by any segment: with
+// `:id`, a mistyped address such as /instruments/consent/not-a-proposal was
+// answered 200 with the proposal page saying "not found" - a soft 404 - where
+// it now gets the site's real 404.
 const consent = fs
   .readdirSync(path.join(appDir, "instruments/consent"))
   .filter((n) => n.endsWith(".html"))
   .map((n) => n.slice(0, -5));
 const redirects = [
   ...consent.map((n) => `/instruments/consent/${n} /instruments/consent/${n} 200`),
-  "/instruments/consent/:id /instruments/consent/view 200",
+  ..."0123456789".split("").map((d) => `/instruments/consent/${d}* /instruments/consent/view 200`),
 ];
 fs.writeFileSync(path.join(out, "_redirects"), redirects.join("\n") + "\n");
 
