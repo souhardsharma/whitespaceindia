@@ -7,12 +7,12 @@ Whitespace India builds public tools on government records, free for anyone to u
 - **Indexes** rank every district on a single question.
 - **Instruments** take one case, such as a single clearance proposal, and set out what the public records say about it.
 
-**Live site:** [whitespaceindia.vercel.app](https://whitespaceindia.vercel.app)
+**Live site:** [whitespaceindia.pages.dev](https://whitespaceindia.pages.dev)
 
 | Tool | What it does | Status |
 |-----|--------------|--------|
-| [CSR Opportunity Index](https://whitespaceindia.vercel.app/csr) | Ranks 651 districts by the gap between multidimensional poverty and corporate social responsibility (CSR) spending | Live |
-| [Instrument 01: People & Consent](https://whitespaceindia.vercel.app/instruments/consent) | Takes an environmental clearance proposal and shows who lives where it would be built, what they live on, and which consent obligations attach | Live, refreshed nightly |
+| [CSR Opportunity Index](https://whitespaceindia.pages.dev/csr) | Ranks 651 districts by the gap between multidimensional poverty and corporate social responsibility (CSR) spending | Live |
+| [Instrument 01: People & Consent](https://whitespaceindia.pages.dev/instruments/consent) | Takes an environmental clearance proposal and shows who lives where it would be built, what they live on, and which consent obligations attach | Live, refreshed nightly |
 | Health, Education, Energy indexes | District indexes built on the same framework as CSR | In preview: placeholder data, not indexed |
 
 ## CSR Opportunity Index
@@ -25,7 +25,7 @@ The POS has three dimensions:
 - **G, funding gap:** the CSR shortfall against the median for the district's population tier (default 40%).
 - **U, persistence:** the share of 2015-16 poverty still present in 2019-21 (default 20%).
 
-Only the funding gap compares a district with others in its population tier; each dimension is then rescaled across all districts. Every weight can be changed on the index page, and any district can be downloaded as a research brief. The full write-up is at [/methodology](https://whitespaceindia.vercel.app/methodology).
+Only the funding gap compares a district with others in its population tier; each dimension is then rescaled across all districts. Every weight can be changed on the index page, and any district can be downloaded as a research brief. The full write-up is at [/methodology](https://whitespaceindia.pages.dev/methodology).
 
 | Source | Coverage | Link |
 |--------|----------|------|
@@ -45,7 +45,7 @@ The instrument scores and ranks nothing. Each proposal gets its own profile.
 
 A scheduled job re-reads the register every night. It publishes only data that passes the published-data contract (`scripts/instruments/check_published.py`). Every page states how current its copy of the register is.
 
-Its files and endpoints are documented at [/instruments/consent/data](https://whitespaceindia.vercel.app/instruments/consent/data).
+Its files and endpoints are documented at [/instruments/consent/data](https://whitespaceindia.pages.dev/instruments/consent/data).
 
 | Source | Publisher |
 |--------|-----------|
@@ -61,7 +61,7 @@ Its files and endpoints are documented at [/instruments/consent/data](https://wh
 - **Charts and maps:** Recharts, react-simple-maps, D3
 - **PDF briefs:** @react-pdf/renderer, with text from the Google Gemini API
 - **Data pipelines:** Python 3.12
-- **Hosting and scheduled jobs:** Vercel and GitHub Actions
+- **Hosting and scheduled jobs:** Cloudflare Pages (the site), Render (the routes rendered per request) and GitHub Actions
 
 ## Local development
 

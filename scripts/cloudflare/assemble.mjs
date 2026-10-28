@@ -63,7 +63,7 @@ fs.writeFileSync(path.join(out, "_redirects"), redirects.join("\n") + "\n");
 
 // Only these paths run a function; everything else is a static asset, which
 // Pages serves without counting a request.
-const dynamic = ["/api/*", "/instruments/consent/latest", "/instruments/consent/feed", "/_next/image"];
+const dynamic = ["/api/*", "/instruments/consent/latest", "/instruments/consent/feed"];
 fs.writeFileSync(
   path.join(out, "_routes.json"),
   JSON.stringify({ version: 1, include: dynamic, exclude: ["/api/news"] }, null, 2),

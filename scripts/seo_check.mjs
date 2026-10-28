@@ -8,7 +8,8 @@
  *   dropped in favour of the shelf, and the landing canonicalised to another
  *   host's CSR page;
  * - a sitemap listing pages the site marks noindex, or URLs that redirect;
- * - one page served at two URLs on two hosts;
+ * - one page served at two URLs on two hosts, and pages naming a host the
+ *   site has moved away from;
  * - placeholder verticals indexed on synthetic data.
  * Each is silent in the browser, so each is asserted here.
  *
@@ -22,11 +23,18 @@
  * origin is swapped for the server under test when fetching and compared
  * as published.
  */
-import http from "node:http";
-
 const SERVER = (process.argv[2] || "http://localhost:3000").replace(/\/+$/, "");
-const PRIMARY = "https://whitespaceindia.vercel.app";
-const LEGACY = "whitespaceindia-csr.vercel.app";
+const PRIMARY = "https://whitespaceindia.pages.dev";
+// Hosts the site has moved away from (lib/site.ts MOVED_HOSTS). Each now
+// redirects to PRIMARY - Vercel's in its routing layer, which a local build
+// does not reproduce, so those rules are tested in lib/__tests__/site.test.ts.
+// What is checked here is that no page still names one.
+const MOVED = [
+  "whitespaceindia.vercel.app",
+  "whitespaceindia-csr.vercel.app",
+  "csr.whitespaceindia.com",
+  "whitespaceindia-backend.onrender.com",
+];
 const PROPOSAL_SAMPLE = 15;
 
 const failures = [];
@@ -68,7 +76,7 @@ async function checkPage(url, titles) {
   if (h.titles !== 1 || !h.title) fail(url, `expected one non-empty <title>, found ${h.titles}`);
   if (!h.description) fail(url, "no meta description");
   if (h.h1 !== 1) fail(url, `expected one <h1>, found ${h.h1}`);
-  if (body.includes(LEGACY)) fail(url, `names the legacy host ${LEGACY}`);
+  for (const host of MOVED) if (body.includes(host)) fail(url, `names the moved host ${host}`);
   if (titles) {
     if (titles.has(h.title)) fail(url, `title duplicates ${titles.get(h.title)}`);
     else titles.set(h.title, url);
@@ -86,22 +94,10 @@ async function checkProposal(url) {
   if (/noindex/i.test(h.robots)) fail(url, "the shared proposal page is marked noindex");
   if (h.titles !== 1 || !h.title) fail(url, `expected one non-empty <title>, found ${h.titles}`);
   if (!h.description) fail(url, "no meta description");
-  if (body.includes(LEGACY)) fail(url, `names the legacy host ${LEGACY}`);
+  for (const host of MOVED) if (body.includes(host)) fail(url, `names the moved host ${host}`);
   const id = new URL(url).pathname.split("/").pop();
   const rows = await get(`${PRIMARY}/view/consent/rows/${Number(id) % ROW_BUCKETS}.json`);
   if (rows.status !== 200 || !(id in JSON.parse(rows.body))) fail(url, "its row file is missing or does not hold it");
-}
-
-function legacyRequest(path) {
-  const { hostname, port } = new URL(SERVER);
-  return new Promise((resolve, reject) => {
-    http
-      .get({ hostname, port, path, headers: { host: LEGACY } }, (res) => {
-        res.resume();
-        resolve({ status: res.statusCode, location: res.headers.location });
-      })
-      .on("error", reject);
-  });
 }
 
 async function main() {
@@ -140,14 +136,6 @@ async function main() {
     const listed = pages.includes(`${PRIMARY}${p}`);
     if (status === 200 && !listed && !/noindex/i.test(headOf(body).robots)) {
       fail(p, "neither in the sitemap nor marked noindex");
-    }
-  }
-
-  // The legacy host redirects permanently; "/" lands on the CSR app.
-  for (const [path, want] of [["/", `${PRIMARY}/csr`], ["/about?ref=x", `${PRIMARY}/about?ref=x`]]) {
-    const r = await legacyRequest(path);
-    if (r.status !== 308 || r.location !== want) {
-      fail(`${LEGACY}${path}`, `expected 308 -> ${want}, got ${r.status} -> ${r.location}`);
     }
   }
 

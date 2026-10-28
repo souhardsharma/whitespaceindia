@@ -1,6 +1,7 @@
 # The Node server behind the Cloudflare Pages site (scripts/cloudflare/).
 # Pages serves every prerendered page; this answers only the routes Next
-# renders per request, and only when the request carries BACKEND_KEY.
+# renders per request, and only when the request carries BACKEND_KEY. Any
+# other request is redirected to the public site.
 # After the first deploy, copy BACKEND_KEY into the Pages project's secrets.
 services:
   - type: web
@@ -10,6 +11,12 @@ services:
     region: singapore
     branch: main
     buildCommand: npm ci && npm run build
+    # The nightly sync pushes twice: the data, then the location cross-check
+    # report, which nothing here reads. Builds come out of a monthly allowance.
+    buildFilter:
+      ignoredPaths:
+        - scripts/instruments/crosscheck_report.json
+        - "**/*.md"
     # 512 MB instance; `next start` peaked at 468 MB in testing, so the heap
     # is capped below the instance rather than left to grow into a kill.
     startCommand: node --max-old-space-size=384 scripts/cloudflare/backend.mjs
@@ -27,3 +34,13 @@ services:
         value: "2"
       - key: BACKEND_KEY
         generateValue: true
+      # The CSR forms. Values are entered in the dashboard, never committed:
+      # the brief's Gemini keys (tried in turn) and the newsletter's Kit key.
+      - key: GEMINI_API_KEY_1
+        sync: false
+      - key: GEMINI_API_KEY_2
+        sync: false
+      - key: GEMINI_API_KEY_3
+        sync: false
+      - key: KIT_API_KEY
+        sync: false
