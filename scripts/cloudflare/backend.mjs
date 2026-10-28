@@ -6,7 +6,9 @@
 // the host's health check.
 //
 //   BACKEND_KEY=... PORT=10000 node scripts/cloudflare/backend.mjs
+import fs from "node:fs";
 import http from "node:http";
+import path from "node:path";
 import { timingSafeEqual } from "node:crypto";
 import next from "next";
 
@@ -18,6 +20,30 @@ const SITE = new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://whitespaceindi
 
 if (!KEY && process.env.NODE_ENV === "production") {
   console.warn("BACKEND_KEY is not set: this server answers anyone.");
+}
+
+// This build's deployment id (next.config.mjs), which its own pages send with
+// every RSC request. A client navigation from a page of another build - any
+// page Pages serves, or one of this backend's from before its last deploy -
+// asks without it; that page's scripts cannot read this build's payload, and
+// would fetch chunks Pages does not have. An empty 204 makes Next load the
+// page in full instead.
+const DEPLOYMENT = (() => {
+  try {
+    const file = path.join(process.cwd(), ".next", "required-server-files.json");
+    return JSON.parse(fs.readFileSync(file, "utf8")).config.deploymentId || "";
+  } catch {
+    return "";
+  }
+})();
+
+// next.config.mjs is read again when the server starts; without this a start
+// in an environment other than the build's renders pages naming files under
+// /_next, which Pages serves from its own build.
+if (DEPLOYMENT) process.env.BACKEND_BUILD = DEPLOYMENT;
+
+function fromOtherBuild(req) {
+  return Boolean(DEPLOYMENT && req.headers.rsc && req.headers["x-deployment-id"] !== DEPLOYMENT);
 }
 
 function keyMatches(given) {
@@ -60,6 +86,10 @@ http
     }
     if (!keyMatches(req.headers["x-backend-key"])) {
       res.writeHead(308, { location: publicUrl(req.url), "content-type": "text/plain" }).end();
+      return;
+    }
+    if (fromOtherBuild(req)) {
+      res.writeHead(204, { "cache-control": "no-store" }).end();
       return;
     }
     adoptProxyHeaders(req);

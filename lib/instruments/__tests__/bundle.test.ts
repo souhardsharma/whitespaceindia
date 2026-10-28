@@ -9,9 +9,9 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadProposal, nearbyFrom, type ReadJson } from "../bundle.ts";
+import { loadProposal, nearCells, nearbyFrom, type ReadJson } from "../bundle.ts";
 import type { Project } from "../types.ts";
 import stages from "../../../public/data/instruments/consent/stages.json" with { type: "json" };
 
@@ -65,4 +65,21 @@ test("every sampled proposal is found in the files the build wrote, in the shard
     const placed = view.bundle.project.district;
     assert.deepEqual(view.bundle.district, placed != null ? districts[String(placed)] ?? null : null);
   }
+});
+
+test("every cell a mapped proposal's page asks for was written, so none is a 404", {
+  skip: existsSync(VIEW) ? false : "public/view not built (node scripts/instruments/proposal_pages.mjs)",
+}, () => {
+  const dir = join(VIEW, "near");
+  const written = new Set(readdirSync(dir).map((n) => n.slice(0, -".json".length)));
+  const missing = new Set<string>();
+  let sites = 0;
+  for (const name of written) {
+    for (const [, , , lat, lon] of JSON.parse(readFileSync(join(dir, `${name}.json`), "utf-8")) as [number, string, string, number, number][]) {
+      sites++;
+      for (const c of nearCells(lat, lon)) if (!written.has(c)) missing.add(c);
+    }
+  }
+  assert.ok(sites > 10_000, `only ${sites} mapped sites`);
+  assert.deepEqual([...missing].slice(0, 5), [], `${missing.size} cells asked for and never written`);
 });
