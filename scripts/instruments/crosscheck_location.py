@@ -310,6 +310,8 @@ def main() -> None:
     # A run the budget cut short is reported on what it read, but not when that
     # is so little that it would replace a committed report with a thinner one.
     if unchecked and len(sample) - unchecked < MIN_STOPPED_SAMPLE:
+        if failures:
+            print(f"  download failures: {dict(failures)}", flush=True)
         sys.exit(f"stopped early with {len(sample) - unchecked} letters read "
                  f"(fewer than {MIN_STOPPED_SAMPLE}); the committed report stands")
 

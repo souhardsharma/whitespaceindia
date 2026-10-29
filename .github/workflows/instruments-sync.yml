@@ -348,13 +348,17 @@ jobs:
         # instrument reports matches the regulator's own letter.
         # 12 minutes: through proxies its ~150 requests took over 6 and the
         # step timed out (2026-10-21).
-        # The script stops starting letters at 9 minutes and reports on the
+        # The script stops starting letters at its budget and reports on the
         # ones it read; killed at 12, it wrote nothing, and the report was
         # last committed on 2026-10-20.
+        # 20 minutes, not 9: letters come through free proxies at ~6 a
+        # minute, and on 2026-10-29 nine minutes read 49 of 150, under the
+        # 50 a report needs, so the night's report was thrown away. The job
+        # keeps its margin: setup ~15 + sync 270 + this 24 is under 330.
         continue-on-error: true
-        timeout-minutes: 12
+        timeout-minutes: 24
         run: |
-          python scripts/instruments/crosscheck_location.py --sample 150 --budget-minutes 9
+          python scripts/instruments/crosscheck_location.py --sample 150 --budget-minutes 20
           if [ "$PUBLISH" != "true" ]; then
             echo "not the default branch; the report is not committed"
           elif [ -f scripts/instruments/crosscheck_report.json ]; then
