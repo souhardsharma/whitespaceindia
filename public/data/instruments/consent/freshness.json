@@ -1,11 +1,11 @@
 {
- "checked_at": "2026-10-28T07:35:40.360946+00:00",
- "last_attempt": "2026-10-28T11:29:03.057077+00:00",
+ "checked_at": "2026-10-29T05:29:35.070152+00:00",
+ "last_attempt": "2026-10-29T07:58:32.491039+00:00",
  "complete": true,
  "sectors_unreachable": 0,
  "window": "full sweep",
- "proposals_published": 93000,
- "new_since_last_check": 347,
- "updated_since_last_check": 2145,
- "resolution_rate_pct": 99.7
+ "proposals_published": 93069,
+ "new_since_last_check": 76,
+ "updated_since_last_check": 536,
+ "resolution_rate_pct": 99.69
 }
