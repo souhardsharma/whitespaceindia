@@ -19,6 +19,14 @@ const DROP = [
 // GET answer is kept in this Cloudflare location's cache for an hour, and a
 // crawler or a busy page reads it from there instead of from the backend.
 export const CACHE_SECONDS = 3600;
+// A PAGE older than that is still served, once, while a fresh copy is read
+// behind it, for this long past the hour. A reader then waits on the backend
+// only when a location has had no visit for seven hours. Rendering /latest
+// takes the free backend 3-5 s, so a miss every hour in every location was a
+// pause most readers met. Pages only: the parts of one CSV download are kept
+// separately, and a stale part beside a fresh one would make a file of two
+// nights.
+export const STALE_SECONDS = 6 * 3600;
 
 // The backend's pages load their scripts and styles from its own build, under
 // this prefix (next.config.mjs): /_be/_next/static/x is the backend's
@@ -63,21 +71,27 @@ export function isCacheable(request) {
 // fetch() hands over the body already decoded, so the stored copy must not
 // keep the backend's Content-Encoding: kept, a hit was served as the decoded
 // bytes encoded a second time, which no browser can read.
-function forCache(res, ttl) {
+function isHtml(res) {
+  return (res.headers.get("content-type") || "").startsWith("text/html");
+}
+
+function forCache(res, ttl, keep = ttl) {
   const copy = new Response(res.body, res);
   copy.headers.set("x-origin-cache-control", res.headers.get("cache-control") || "");
-  copy.headers.set("cache-control", `public, max-age=${ttl}`);
+  copy.headers.set("cache-control", `public, max-age=${keep}`);
+  copy.headers.set("x-stored-at", String(Date.now()));
   for (const h of ["vary", "content-encoding", "content-length"]) copy.headers.delete(h);
   return copy;
 }
 
-function fromCache(res) {
+function fromCache(res, state = "hit") {
   const out = new Response(res.body, res);
   const origin = out.headers.get("x-origin-cache-control");
   if (origin) out.headers.set("cache-control", origin);
   else out.headers.delete("cache-control");
   out.headers.delete("x-origin-cache-control");
-  out.headers.set("x-proxy-cache", "hit");
+  out.headers.delete("x-stored-at");
+  out.headers.set("x-proxy-cache", state);
   return out;
 }
 
@@ -98,18 +112,44 @@ function offline() {
   return new Response("This part of the site is offline for now.", { status: 503 });
 }
 
+function keepable(res) {
+  return res.status === 200 && !res.headers.has("set-cookie");
+}
+
+// How long a copy stays in the cache: a page past its hour is still served
+// while it is refreshed (STALE_SECONDS); anything else expires on the hour.
+function keepFor(res, ttl) {
+  return ttl === CACHE_SECONDS && isHtml(res) ? ttl + STALE_SECONDS : ttl;
+}
+
 async function cached(request, env, waitUntil, { strip = "", ttl = CACHE_SECONDS } = {}) {
   const cache = caches.default;
   const key = new Request(request.url, { method: "GET" });
   const hit = await cache.match(key);
-  if (hit) return fromCache(hit);
+  if (hit) {
+    // A copy stored before x-stored-at existed expires on its own hour.
+    const stored = Number(hit.headers.get("x-stored-at"));
+    if (!stored || Date.now() - stored < ttl * 1000) return fromCache(hit);
+    waitUntil(refresh(request, env, key, ttl, strip).catch(() => {}));
+    return fromCache(hit, "stale");
+  }
 
   const res = await fetchBackend(request, env, strip);
-  if (res.status !== 200 || res.headers.has("set-cookie")) return res;
-  waitUntil(cache.put(key, forCache(res.clone(), ttl)));
+  if (!keepable(res)) return res;
+  waitUntil(cache.put(key, forCache(res.clone(), ttl, keepFor(res, ttl))));
   const out = new Response(res.body, res);
   out.headers.set("x-proxy-cache", "miss");
   return out;
+}
+
+// The copy behind a stale page. A failed read keeps the old copy until it
+// expires; a new page's files are read with it, as on a miss.
+async function refresh(request, env, key, ttl, strip) {
+  const res = await fetchBackend(request, env, strip);
+  if (!keepable(res)) return;
+  const html = isHtml(res);
+  await caches.default.put(key, forCache(html ? res.clone() : res, ttl, keepFor(res, ttl)));
+  if (html) await warmAssets(res, request, env);
 }
 
 // A page is kept for an hour, and the backend can deploy inside that hour,
@@ -129,7 +169,7 @@ async function warmAssets(page, request, env) {
       const key = new Request(origin + p, { method: "GET" });
       if (await cache.match(key)) return;
       const res = await fetchBackend(key, env, ASSET_PREFIX);
-      if (res.status === 200 && !res.headers.has("set-cookie")) await cache.put(key, forCache(res, ASSET_CACHE_SECONDS));
+      if (keepable(res)) await cache.put(key, forCache(res, ASSET_CACHE_SECONDS));
     }),
   );
 }
@@ -139,8 +179,7 @@ export async function proxy({ request, env, waitUntil }) {
   if (!isCacheable(request)) return fetchBackend(request, env);
 
   const res = await cached(request, env, waitUntil);
-  const html = (res.headers.get("content-type") || "").startsWith("text/html");
-  if (html && res.headers.get("x-proxy-cache") === "miss") {
+  if (isHtml(res) && res.headers.get("x-proxy-cache") === "miss") {
     waitUntil(warmAssets(res.clone(), request, env).catch(() => {}));
   }
   return res;
