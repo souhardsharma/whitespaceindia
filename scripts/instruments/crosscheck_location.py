@@ -65,6 +65,16 @@ OUTCOMES = ("agree", "disagree", "no-district-in-letter", "no-location-text",
 
 MIN_STOPPED_SAMPLE = 50
 
+# download()'s answer for a request that never reached PARIVESH: the budget
+# ran out before it could be sent, or every route stayed busy. That letter
+# was not checked, which is not a letter that would not download.
+NOT_SENT = "not-sent"
+# The budget clips the last requests' timeouts to its deadline (net.get), so
+# one that failed this close to the deadline was cut off by this run, not
+# refused by the source. On 2026-10-29, 48 letters in flight at the deadline
+# were published as "could not be downloaded": 75 of 148, where 27 had failed.
+CUTOFF_S = 2.0
+
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126 Safari/537.36")
 
@@ -152,6 +162,8 @@ def download(url: str, dest: Path, timeout: int = 90,
              deadline: float | None = None) -> str | None:
     status, data = NET.get(pool(), url, timeout=timeout, attempts=3,
                            deadline=deadline)
+    if status == -1 and data in NET.NOT_SENT:
+        return NOT_SENT
     if status != 200:
         return f"http-{status}" if status > 0 else "transport"
     if not data.startswith(b"%PDF"):
@@ -212,6 +224,9 @@ def main() -> None:
     sample = rnd.sample(candidates, min(args.sample, len(candidates)))
 
     stats = Counter()
+    # What each failed download got back, so a night of failures says whose
+    # they were: an HTTP answer from the portal, or a route that broke.
+    failures = Counter()
     disagreements = []
     agreements_by_method = Counter()
     total_by_method = Counter()
@@ -234,7 +249,7 @@ def main() -> None:
         if not dest.exists():
             err = download(rec["cert"], dest, deadline=deadline)
             if err:
-                if deadline and time.time() >= deadline:
+                if err == NOT_SENT or (deadline and time.time() >= deadline - CUTOFF_S):
                     return None
                 return {**rec, "outcome": "download-failed", "detail": err}
         try:
@@ -276,6 +291,8 @@ def main() -> None:
             if res["outcome"] not in OUTCOMES:
                 raise ValueError(f"unknown cross-check outcome {res['outcome']!r}")
             stats[res["outcome"]] += 1
+            if res["outcome"] == "download-failed":
+                failures[res["detail"]] += 1
             total_by_method[res["method"]] += 1
             if res["outcome"] in ("agree", "disagree"):
                 comparable_by_method[res["method"]] += 1
@@ -314,6 +331,7 @@ def main() -> None:
         "stopped_early": bool(unchecked),
         "seconds": round(time.time() - t0, 1),
         "outcomes": {k: stats[k] for k in OUTCOMES},
+        "download_failures": dict(failures.most_common()),
         "comparable": comparable,
         "agreement_rate_pct": round(rate, 2) if rate is not None else None,
         # Every denominator named, and the rate computed here rather than left
@@ -355,6 +373,8 @@ def main() -> None:
     print("=== CROSS-CHECK AGAINST THE SIGNED CLEARANCE LETTER ===")
     for k, v in stats.most_common():
         print(f"  {k:24} {v:5,}  {100*v/max(1, len(sample) - unchecked):5.1f}%")
+    if failures:
+        print(f"\n  failed downloads: {dict(failures.most_common())}")
     if unchecked:
         print(f"\n  stopped early: {unchecked} of {len(sample)} letters not "
               f"reached within {args.budget_minutes:g} minutes")

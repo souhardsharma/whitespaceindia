@@ -247,7 +247,22 @@ as it arrives (`as_completed`): captured until exit and written in
 submission order, a stalled pass and a working one both looked like a
 silent log for hours. The location
 cross-check runs AFTER the data commit, so ~150 PARIVESH requests can never
-cost a night its publish, and the push rebases first.
+cost a night its publish, and the push rebases first. A letter its budget
+cut off (a request never sent, or one that failed in the deadline's last two
+seconds, `CUTOFF_S`) is NOT CHECKED, never "download failed": on 2026-10-29
+the 48 letters in flight at the deadline were published as failures, 75 of
+148 where 27 had failed. `download_failures` records what each real failure
+got back.
+
+**The Worker starts the night, GitHub's schedule is the fallback.** GitHub
+delivered the 01:30 UTC schedule 4.5-6 hours late every night from
+2026-10-22 to 10-29. The keep-warm Worker (`scripts/cloudflare/keepwarm/`)
+dispatches the sync from 01:30 UTC, once a day (any run of the workflow on
+`main` created that UTC day means it does nothing), when its `GITHUB_TOKEN`
+secret is set. The workflow's `gate` job stands a SCHEDULED run down when
+another run that day finished its `sync` job successfully; a failed run does
+not count, a dispatch is never gated, and a gate that cannot ask GitHub
+fails open.
 
 `rehearse_sync.py` replays the workflow locally from a cold cache; run it
 after any change to the sync.

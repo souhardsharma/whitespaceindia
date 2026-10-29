@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  backendRequest, isCacheable, proxy, proxyAsset, assetPaths, CACHE_SECONDS, ASSET_CACHE_SECONDS,
+  backendRequest, isCacheable, proxy, proxyAsset, assetPaths, CACHE_SECONDS, ASSET_CACHE_SECONDS, STALE_SECONDS,
 } from "../../scripts/cloudflare/proxy.mjs";
 import { clientIp } from "../request-identity.ts";
 
@@ -108,7 +108,7 @@ test("a GET is read from the backend once and then from the edge, with the backe
     assert.equal(await first.text(), "<html>latest</html>");
     await e.settle();
     const stored = e.store.values().next().value!;
-    assert.equal(stored.headers.get("cache-control"), `public, max-age=${CACHE_SECONDS}`);
+    assert.equal(stored.headers.get("cache-control"), `public, max-age=${CACHE_SECONDS + STALE_SECONDS}`);
     // fetch() decodes the body; a stored encoding claim would make a hit unreadable.
     assert.equal(stored.headers.get("content-encoding"), null);
 
@@ -116,6 +116,7 @@ test("a GET is read from the backend once and then from the edge, with the backe
     assert.equal(second.headers.get("x-proxy-cache"), "hit");
     assert.equal(second.headers.get("cache-control"), "private, no-store");
     assert.equal(second.headers.get("x-origin-cache-control"), null);
+    assert.equal(second.headers.get("x-stored-at"), null);
     assert.equal(await second.text(), "<html>latest</html>");
     assert.equal(e.calls(), 1);
   } finally {
@@ -201,4 +202,69 @@ test("only the backend's own files are read along with a page", () => {
     assetPaths('<script src="/_next/static/chunks/x.js"></script><a href="/_be/elsewhere">x</a>'),
     [],
   );
+});
+
+// Ages every stored copy by `seconds`, as the clock would.
+function age(store: Map<string, Response>, seconds: number) {
+  for (const [k, res] of store) {
+    const copy = new Response(res.body, res);
+    copy.headers.set("x-stored-at", String(Number(res.headers.get("x-stored-at")) - seconds * 1000));
+    store.set(k, copy);
+  }
+}
+
+test("a page past its hour is served at once and refreshed behind the reader", async () => {
+  let night = 1;
+  const e = edge(() => new Response(`<html>night ${night}</html>`, { headers: { "content-type": "text/html" } }));
+  try {
+    const page = () => e.run(new Request("https://whitespaceindia.pages.dev/instruments/consent/latest"));
+    await (await page()).text();
+    await e.settle();
+    age(e.store, CACHE_SECONDS + 60);
+    night = 2;
+
+    const stale = await page();
+    assert.equal(stale.headers.get("x-proxy-cache"), "stale");
+    assert.equal(await stale.text(), "<html>night 1</html>");
+    await e.settle();
+    assert.equal(e.calls(), 2);
+
+    const fresh = await page();
+    assert.equal(fresh.headers.get("x-proxy-cache"), "hit");
+    assert.equal(await fresh.text(), "<html>night 2</html>");
+    assert.equal(e.calls(), 2);
+  } finally {
+    e.restore();
+  }
+});
+
+test("a failed refresh keeps the page that was there", async () => {
+  let up = true;
+  const e = edge(() => up
+    ? new Response("<html>kept</html>", { headers: { "content-type": "text/html" } })
+    : new Response("down", { status: 503 }));
+  try {
+    const page = () => e.run(new Request("https://whitespaceindia.pages.dev/instruments/consent/latest"));
+    await (await page()).text();
+    await e.settle();
+    age(e.store, CACHE_SECONDS + 60);
+    up = false;
+    assert.equal(await (await page()).text(), "<html>kept</html>");
+    await e.settle();
+    assert.equal(await (await page()).text(), "<html>kept</html>");
+  } finally {
+    e.restore();
+  }
+});
+
+test("data is never served stale: a CSV part or an API answer expires on its hour", async () => {
+  const e = edge(() => new Response("id,status\n1,granted\n", { headers: { "content-type": "text/csv" } }));
+  try {
+    await (await e.run(incoming({}))).text();
+    await e.settle();
+    const stored = e.store.values().next().value!;
+    assert.equal(stored.headers.get("cache-control"), `public, max-age=${CACHE_SECONDS}`);
+  } finally {
+    e.restore();
+  }
 });

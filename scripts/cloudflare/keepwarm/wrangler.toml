@@ -1,4 +1,7 @@
 # The keep-warm Worker (worker.js). Not part of the Pages build.
+# Its one secret, GITHUB_TOKEN (Actions read and write on this repository
+# only), lets it start the nightly sync; it is entered in the dashboard or with
+# `npx wrangler secret put GITHUB_TOKEN`, never written here.
 name = "whitespaceindia-keepwarm"
 main = "worker.js"
 compatibility_date = "2026-10-29"
