@@ -45,7 +45,11 @@ name: Sync Instrument 01 data
 on:
   schedule:
     # 01:30 UTC daily, which is 07:00 IST - after the register's overnight
-    # updates and before the working day.
+    # updates and before the working day. GitHub delivers it 4.5-6 hours late
+    # here (06:08-07:25 UTC, 2026-10-22 to 10-29), so the Cloudflare Worker in
+    # scripts/cloudflare/keepwarm/ dispatches the run at 01:30 instead, and this
+    # schedule is the fallback: the `gate` job stands it down when a run that
+    # day has already synced.
     - cron: "30 1 * * *"
   workflow_dispatch:
     inputs:
@@ -73,8 +77,49 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  sync:
+  # One sync a day. A scheduled run that arrives after the Worker's dispatch
+  # has already synced would re-read the whole register through the proxy pool
+  # for nothing, so it stands down. Only a schedule is gated: a dispatch is
+  # someone asking. A failed or partial run earlier in the day does not count,
+  # so the fallback still runs after one.
+  gate:
     if: ${{ !inputs.diagnose }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          go=true
+          if [ "$EVENT" = "schedule" ]; then
+            today=$(date -u +%F)
+            ids=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow instruments-sync.yml \
+                    --branch "$GITHUB_REF_NAME" --created ">=$today" --status success \
+                    --json databaseId --jq '.[].databaseId') || ids=""
+            for id in $ids; do
+              [ "$id" = "$GITHUB_RUN_ID" ] && continue
+              # The sync job, not the run: a diagnostic run succeeds too.
+              if gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs" \
+                   --jq '.jobs[] | select(.name == "sync" and .conclusion == "success") | .id' | grep -q .; then
+                echo "::notice::Run $id already synced the register today; this scheduled run stands down."
+                go=false
+                break
+              fi
+            done
+          fi
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+
+  sync:
+    needs: gate
+    # Fails open: a gate that could not ask GitHub leaves `go` empty, and the
+    # night is synced rather than lost.
+    if: ${{ !cancelled() && !inputs.diagnose && needs.gate.outputs.go != 'false' }}
     runs-on: ubuntu-26.04
     timeout-minutes: 330
     permissions:

@@ -3,7 +3,7 @@
 // BACKEND_KEY is a visitor or crawler that found this host, and is sent to
 // the same path on the public site (308), so the backend's own address serves
 // no second copy of anything and spends almost nothing. /healthz is open for
-// the host's health check.
+// the host's health check, and says ready only once the slow pages are warm.
 //
 //   BACKEND_KEY=... PORT=10000 node scripts/cloudflare/backend.mjs
 import fs from "node:fs";
@@ -74,6 +74,50 @@ function adoptProxyHeaders(req) {
   delete h["x-backend-key"];
 }
 
+// The pages readers wait on. The first render after a start loads the page's
+// code and parses the change log (lib/instruments/server.ts keeps it per
+// process): the first /latest after the data deploy of 2026-10-29 took 22.9 s,
+// against 3-5 s on a warm server. Each is asked once, here, before /healthz
+// answers 200. Render moves traffic to a new deploy only when that check
+// passes, so the old instance serves readers meanwhile. Bounded, because a
+// page that will not render must not hold a deploy back or leave the check
+// failing for long.
+const WARM = ["/instruments/consent/latest", "/instruments/consent/feed"];
+const WARM_LIMIT_MS = 40_000;
+let ready = false;
+
+function ask(pathname, timeoutMs) {
+  return new Promise((resolve) => {
+    const req = http.get(
+      {
+        host: "127.0.0.1",
+        port: PORT,
+        path: pathname,
+        headers: { "x-backend-key": KEY, "x-forwarded-host": new URL(SITE).host },
+        timeout: timeoutMs,
+      },
+      (res) => {
+        res.resume();
+        res.on("end", () => resolve(res.statusCode));
+      },
+    );
+    req.on("timeout", () => req.destroy());
+    req.on("error", () => resolve(0));
+  });
+}
+
+async function warm() {
+  const until = Date.now() + WARM_LIMIT_MS;
+  for (const p of WARM) {
+    const left = until - Date.now();
+    if (left <= 0) break;
+    const t0 = Date.now();
+    const status = await ask(p, left);
+    console.log(`warm ${p} ${status || "failed"} in ${Date.now() - t0} ms`);
+  }
+  ready = true;
+}
+
 const app = next({ dev: false, dir: process.cwd() });
 const handle = app.getRequestHandler();
 await app.prepare();
@@ -81,7 +125,8 @@ await app.prepare();
 http
   .createServer((req, res) => {
     if (req.url === "/healthz") {
-      res.writeHead(200, { "content-type": "text/plain" }).end("ok");
+      if (ready) res.writeHead(200, { "content-type": "text/plain" }).end("ok");
+      else res.writeHead(503, { "content-type": "text/plain", "retry-after": "5" }).end("warming");
       return;
     }
     if (!keyMatches(req.headers["x-backend-key"])) {
@@ -95,4 +140,7 @@ http
     adoptProxyHeaders(req);
     handle(req, res);
   })
-  .listen(PORT, "0.0.0.0", () => console.log(`backend on :${PORT}`));
+  .listen(PORT, "0.0.0.0", () => {
+    console.log(`backend on :${PORT}`);
+    warm();
+  });
