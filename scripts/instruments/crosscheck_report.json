@@ -1,133 +1,135 @@
 {
- "generated_at": "2026-10-29T11:51:43.989052+00:00",
+ "generated_at": "2026-10-29T13:18:25.869641+00:00",
  "purpose": "Tests the district the instrument reports against the district named in the regulator's signed clearance letter - a different document, not the applicant's own form. Corroborates or refutes the single source the whole profile depends on.",
- "sampled": 150,
+ "sampled": 142,
  "requested": 150,
- "stopped_early": false,
- "seconds": 1219.2,
+ "stopped_early": true,
+ "seconds": 1205.0,
  "outcomes": {
-  "agree": 104,
-  "disagree": 8,
-  "no-district-in-letter": 19,
-  "no-location-text": 1,
-  "download-failed": 18,
+  "agree": 83,
+  "disagree": 9,
+  "no-district-in-letter": 20,
+  "no-location-text": 0,
+  "download-failed": 30,
   "unreadable": 0,
   "no-text-layer": 0
  },
  "download_failures": {
-  "transport": 18
+  "transport": 30
  },
- "comparable": 112,
- "agreement_rate_pct": 92.86,
+ "comparable": 92,
+ "agreement_rate_pct": 90.22,
  "agreement_by_resolution_method": {
   "v": {
-   "agree": 91,
-   "comparable": 98,
-   "sampled": 128,
-   "rate_pct": 92.86
-  },
-  "s": {
-   "agree": 9,
-   "comparable": 10,
-   "sampled": 17,
+   "agree": 72,
+   "comparable": 80,
+   "sampled": 122,
    "rate_pct": 90.0
   },
-  "d": {
-   "agree": 3,
-   "comparable": 3,
-   "sampled": 4,
+  "s": {
+   "agree": 10,
+   "comparable": 10,
+   "sampled": 16,
    "rate_pct": 100.0
   },
   "c": {
    "agree": 1,
-   "comparable": 1,
-   "sampled": 1,
-   "rate_pct": 100.0
+   "comparable": 2,
+   "sampled": 4,
+   "rate_pct": 50.0
   }
  },
  "disagreements": [
   {
-   "proposalNo": "SIA/GJ/MIN/563529/2025",
-   "state": "GUJARAT",
-   "claimed": 479,
+   "proposalNo": "SIA/RJ/MIN/498527/2024",
+   "state": "RAJASTHAN",
+   "claimed": 103,
    "foundInLetter": [
-    473
+    110
    ],
    "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/RATHOD_JANAKBA_NAVNITSINH/5/1210769763/V_0_SIA_GJ_MIN_563529_2025_1210769768_-signed.pdf"
+   "certificate": "https://parivesh.nic.in/certificates/DIYA_MINERALS/246/106107139/V_0_SIA_RJ_MIN_498527_2024_106107140_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/AS/MIN/537564/2025",
-   "state": "ASSAM",
-   "claimed": 325,
-   "foundInLetter": [
-    300,
-    321
-   ],
-   "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/_GUWAHATI_INTERNATIONAL_AIRPORT_LIMITED/5/126904635/V_0_SIA_AS_MIN_537564_2025_126904636_-signed.pdf"
-  },
-  {
-   "proposalNo": "SIA/AP/MIN/534816/2025",
-   "state": "ANDHRA PRADESH",
-   "claimed": 546,
-   "foundInLetter": [
-    545,
-    547
-   ],
-   "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/MURALI_KRISHNA_METAL_SUPPLIERS/246/125296567/V_0_SIA_AP_MIN_534816_2025_125296568_-signed.pdf"
-  },
-  {
-   "proposalNo": "SIA/GJ/MIN/497698/2024",
-   "state": "GUJARAT",
-   "claimed": 486,
-   "foundInLetter": [
-    473
-   ],
-   "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/SANIYABHAI_RATHVA/246/104622035/V_0_SIA_GJ_MIN_497698_2024_104622036_-signed.pdf"
-  },
-  {
-   "proposalNo": "SIA/TN/INFRA2/513387/2024",
+   "proposalNo": "SIA/TN/MIN/549302/2025",
    "state": "TAMIL NADU",
-   "claimed": 604,
+   "claimed": 605,
    "foundInLetter": [
     603
    ],
    "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/_RADIANCE_REALTY_DEVELOPERS_INDIA_LIMITED/5/113981162/V_0_SIA_TN_INFRA2_513387_2024_113981186_-signed.pdf"
+   "certificate": "https://parivesh.nic.in/certificates/JANARTHANAN_R/2/134726705/V_0_SIA_TN_MIN_549302_2025_134726709_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/RJ/MIN/477168/2024",
+   "proposalNo": "SIA/RJ/MIN/482336/2025",
    "state": "RAJASTHAN",
-   "claimed": 121,
+   "claimed": 118,
+   "foundInLetter": [
+    111,
+    117
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/_DANARAM/246/77415417/V_0_SIA_RJ_MIN_482336_2025_77415418_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/MP/MIN/519025/2025",
+   "state": "MADHYA PRADESH",
+   "claimed": 434,
+   "foundInLetter": [
+    444
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/DINESH_SHARMA/2/117826036/V_0_SIA_MP_MIN_519025_2025_117826064_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/MH/INFRA2/570237/2026",
+   "state": "MAHARASHTRA",
+   "claimed": 518,
+   "foundInLetter": [
+    519
+   ],
+   "method": "c",
+   "certificate": "https://parivesh.nic.in/certificates/EXCOM_INFRA_PRIVATE_LIMITED/229/1220149971/V_null_SIA_MH_INFRA2_570237_2026_1220149975_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/UP/MIN/539638/2025",
+   "state": "UTTAR PRADESH",
+   "claimed": 166,
+   "foundInLetter": [
+    168
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/UTSAV_GUPTA/5/128503250/V_0_SIA_UP_MIN_539638_2025_128503251_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/TN/INFRA2/515398/2024",
+   "state": "TAMIL NADU",
+   "claimed": 605,
+   "foundInLetter": [
+    603
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/Tata_motors_limited/5/115280880/V_0_SIA_TN_INFRA2_515398_2024_115280895_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/RJ/MIN/476866/2024",
+   "state": "RAJASTHAN",
+   "claimed": 120,
    "foundInLetter": [
     119
    ],
    "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/Santosh_kanwar/246/72135108/V_0_SIA_RJ_MIN_477168_2024_72135109_-signed.pdf"
+   "certificate": "https://parivesh.nic.in/certificates/suparshva_cyanite_india_private_limited/246/72005564/V_0_SIA_RJ_MIN_476866_2024_72005565_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/KA/IND1/555118/2025",
-   "state": "KARNATAKA",
-   "claimed": 565,
+   "proposalNo": "SIA/RJ/MIN/478480/2025",
+   "state": "RAJASTHAN",
+   "claimed": 116,
    "foundInLetter": [
-    572
+    123
    ],
    "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/HOTHUR_ISPAT_PRIVATE_LIMITED/5/138050475/V_0_SIA_KA_IND1_555118_2025_138050476_-signed.pdf"
-  },
-  {
-   "proposalNo": "IA/KA/IND1/518088/2025",
-   "state": "KARNATAKA",
-   "claimed": 565,
-   "foundInLetter": [
-    572,
-    582
-   ],
-   "method": "s",
-   "certificate": "https://parivesh.nic.in/certificates/A-ONE_STEELS_INDIA_LIMITED/38/117307870/IA_KA_IND1_518088_2025_117307881_.pdf"
+   "certificate": "https://parivesh.nic.in/certificates/charbhuja_minerals/246/73193916/V_0_SIA_RJ_MIN_478480_2025_73193917_-signed.pdf"
   }
  ],
  "method_notes": [
