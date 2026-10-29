@@ -2,21 +2,14 @@ name: backend-warm
 
 # The Render backend (render.yaml) sleeps after 15 idle minutes and takes about
 # 50 s to wake, and the CSR brief, the subscribe form and /latest wait on it.
-# Asked every 10 minutes from 06:30 to 23:30 IST, it stays awake through the
-# hours people read the site: about 530 of the free plan's 750 instance hours
-# a month, leaving the rest for wakes at night. Never round the clock: past 750
-# hours Render suspends the service until the month ends.
+# A Cloudflare Worker cron keeps it awake now (scripts/cloudflare/keepwarm/):
+# GitHub never delivered this workflow's schedule - neither every 10 minutes
+# nor every two hours ("7 1-17/2", not once on 2026-10-29 by 05:00 UTC).
 #
-# One run does the asking, every 10 minutes, until the window closes or the
-# run's own time is nearly up. A schedule every 10 minutes was never delivered
-# at all: added at 12:41 UTC on 2026-10-28, it had not run once by 17:30, and
-# the backend was asleep (27 s to answer). GitHub delays and drops frequent
-# schedules; any ONE of these two-hourly triggers is now enough. Runs queue in
-# one group, so a trigger that arrives while a run is pinging waits and takes
-# over when it ends, and one that starts after the window pings once and ends.
+# This stays as the manual fallback: one run asks /healthz every 10 minutes
+# until 18:00 UTC (23:30 IST) or the run's own time is nearly up. Never round
+# the clock: past 750 instance hours a month Render suspends the service.
 on:
-  schedule:
-    - cron: "7 1-17/2 * * *"
   workflow_dispatch:
 
 concurrency:
