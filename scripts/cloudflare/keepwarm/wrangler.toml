@@ -1,0 +1,9 @@
+# The keep-warm Worker (worker.js). Not part of the Pages build.
+name = "whitespaceindia-keepwarm"
+main = "worker.js"
+compatibility_date = "2026-10-29"
+
+[triggers]
+# UTC: 01:00-17:59 is 06:30-23:29 IST. Never round the clock: past 750
+# instance hours a month Render suspends the service until the month ends.
+crons = ["*/10 1-17 * * *"]
