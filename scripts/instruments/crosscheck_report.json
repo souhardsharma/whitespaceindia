@@ -1,42 +1,48 @@
 {
- "generated_at": "2026-10-29T16:03:31.700912+00:00",
+ "generated_at": "2026-10-30T03:53:36.122143+00:00",
  "purpose": "Tests the district the instrument reports against the district named in the regulator's signed clearance letter - a different document, not the applicant's own form. Corroborates or refutes the single source the whole profile depends on.",
- "sampled": 134,
+ "sampled": 150,
  "requested": 150,
- "stopped_early": true,
- "seconds": 1205.6,
+ "stopped_early": false,
+ "seconds": 1119.4,
  "outcomes": {
-  "agree": 94,
-  "disagree": 4,
-  "no-district-in-letter": 15,
-  "no-location-text": 0,
-  "download-failed": 21,
+  "agree": 98,
+  "disagree": 13,
+  "no-district-in-letter": 20,
+  "no-location-text": 2,
+  "download-failed": 17,
   "unreadable": 0,
   "no-text-layer": 0
  },
  "download_failures": {
-  "transport": 21
+  "transport": 17
  },
- "comparable": 98,
- "agreement_rate_pct": 95.92,
+ "comparable": 111,
+ "agreement_rate_pct": 88.29,
  "agreement_by_resolution_method": {
   "v": {
-   "agree": 77,
-   "comparable": 81,
-   "sampled": 112,
-   "rate_pct": 95.06
+   "agree": 85,
+   "comparable": 97,
+   "sampled": 124,
+   "rate_pct": 87.63
   },
   "s": {
-   "agree": 15,
-   "comparable": 15,
-   "sampled": 19,
+   "agree": 12,
+   "comparable": 12,
+   "sampled": 20,
+   "rate_pct": 100.0
+  },
+  "d": {
+   "agree": 1,
+   "comparable": 1,
+   "sampled": 3,
    "rate_pct": 100.0
   },
   "c": {
-   "agree": 2,
-   "comparable": 2,
+   "agree": 0,
+   "comparable": 1,
    "sampled": 3,
-   "rate_pct": 100.0
+   "rate_pct": 0.0
   }
  },
  "disagreements": [
@@ -52,34 +58,126 @@
    "certificate": "https://parivesh.nic.in/certificates/MURALI_KRISHNA_METAL_SUPPLIERS/246/125296567/V_0_SIA_AP_MIN_534816_2025_125296568_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/MP/MIN/519025/2025",
-   "state": "MADHYA PRADESH",
-   "claimed": 434,
-   "foundInLetter": [
-    444
-   ],
-   "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/DINESH_SHARMA/2/117826036/V_0_SIA_MP_MIN_519025_2025_117826064_-signed.pdf"
-  },
-  {
-   "proposalNo": "SIA/GJ/MIN/501537/2024",
-   "state": "GUJARAT",
-   "claimed": 476,
-   "foundInLetter": [
-    473
-   ],
-   "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/PARMAR_HAMIR_KATHAD_/246/109821082/SIA_GJ_MIN_501537_2024_109821083_-signed.pdf"
-  },
-  {
-   "proposalNo": "SIA/TN/MIN/465763/2024",
+   "proposalNo": "SIA/TN/INFRA2/486079/2024",
    "state": "TAMIL NADU",
-   "claimed": 625,
+   "claimed": 604,
    "foundInLetter": [
     603
    ],
    "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/_TIRUPATI_BLUE_METALS_AND_MSAND/5/53058304/V_0_SIA_TN_MIN_465763_2024_53058305_-signed.pdf"
+   "certificate": "https://parivesh.nic.in/certificates/_AMBATTUR_PROPERTY_DEVELOPERS_PRIVATE_LIMITED/5/81607047/V_0_SIA_TN_INFRA2_486079_2024_81607048_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/OR/MIN/533394/2025",
+   "state": "ODISHA",
+   "claimed": 411,
+   "foundInLetter": [
+    394
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/JITENDRA_AGRAWAL/37/124530344/SIA_OR_MIN_533394_2025_124530345_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/UP/INFRA2/540816/2025",
+   "state": "UTTAR PRADESH",
+   "claimed": 141,
+   "foundInLetter": [
+    140
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/themecounty_private_limited/2/129588361/V_0_SIA_UP_INFRA2_540816_2025_129588362_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/AS/MIN/537564/2025",
+   "state": "ASSAM",
+   "claimed": 325,
+   "foundInLetter": [
+    300,
+    321
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/_GUWAHATI_INTERNATIONAL_AIRPORT_LIMITED/5/126904635/V_0_SIA_AS_MIN_537564_2025_126904636_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/MH/INFRA2/547310/2025",
+   "state": "MAHARASHTRA",
+   "claimed": 518,
+   "foundInLetter": [
+    517,
+    519
+   ],
+   "method": "c",
+   "certificate": "https://parivesh.nic.in/certificates/_INCLINE_REALTY_PRIVATE_LIMITED/5/133558745/SIA_MH_INFRA2_547310_2025_133558746_-signed.pdf"
+  },
+  {
+   "proposalNo": "IA/KA/IND1/496262/2024",
+   "state": "KARNATAKA",
+   "claimed": 555,
+   "foundInLetter": [
+    572
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/_DALMIA_CEMENT_(BHARAT)_LIMITED/2/101744945/V_1_IA_KA_IND1_496262_2024_101744955_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/GJ/MIN/497577/2024",
+   "state": "GUJARAT",
+   "claimed": 486,
+   "foundInLetter": [
+    473
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/SHIVA_QUARRY_WORKS/246/104594659/SIA_GJ_MIN_497577_2024_104594660_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/MH/MIN/529191/2025",
+   "state": "MAHARASHTRA",
+   "claimed": 520,
+   "foundInLetter": [
+    505
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/lalit_ravindra_patil/246/122303261/V_0_SIA_MH_MIN_529191_2025_122303262_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/MH/MIN/561744/2026",
+   "state": "MAHARASHTRA",
+   "claimed": 500,
+   "foundInLetter": [
+    499
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/PARIKSHIT_NIVRUTTI_THAKARE/38/1006357178/V_0_SIA_MH_MIN_561744_2026_1006357978_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/KA/MIN/551319/2025",
+   "state": "KARNATAKA",
+   "claimed": 555,
+   "foundInLetter": [
+    572
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/SHIVALINGAPPA_S_GUDDAPUR/246/136136836/V_0_SIA_KA_MIN_551319_2025_136136837_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/UP/MIN/551353/2025",
+   "state": "UTTAR PRADESH",
+   "claimed": 175,
+   "foundInLetter": [
+    157
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/Rajeev_Kumar_Chawla_/5/136148022/V_0_SIA_UP_MIN_551353_2025_136148023_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/TN/INFRA2/588805/2026",
+   "state": "TAMIL NADU",
+   "claimed": 604,
+   "foundInLetter": [
+    603
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/LIfestyle_vin_homes_llp/38/1238214694/SIA_TN_INFRA2_588805_2026_1238214699_.pdf"
   }
  ],
  "method_notes": [
