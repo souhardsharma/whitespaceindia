@@ -1,0 +1,20 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "mkdir -p vercel-redirect-only && echo 'Moved to https://whitespaceindia.pages.dev' > vercel-redirect-only/index.html",
+  "outputDirectory": "vercel-redirect-only",
+  "redirects": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "whitespaceindia-csr\\.vercel\\.app|csr\\.whitespaceindia\\.com" }],
+      "destination": "https://whitespaceindia.pages.dev/csr",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://whitespaceindia.pages.dev/:path*",
+      "permanent": true
+    }
+  ]
+}

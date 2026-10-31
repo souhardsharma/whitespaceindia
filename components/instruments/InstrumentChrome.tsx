@@ -88,7 +88,7 @@ export function InstrumentHeader({
         <Link
           // "/" was NOT a list of indexes and instruments on every host this
           // site deployed to: the legacy CSR hosts served "/" as "/csr"
-          // (lib/moved-hosts.mjs now redirects it), so this link dropped a reader who wanted the
+          // (vercel.json now redirects it), so this link dropped a reader who wanted the
           // other indexes into the CSR simulator, which lists neither. The
           // instruments shelf is the same on every host, and the label now
           // says what the destination is.
