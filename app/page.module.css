@@ -71,33 +71,8 @@
 }
 .stickyBrand {
   display: inline-flex;
-  align-items: baseline;
-  gap: 0.36em;
   font-size: clamp(18px, 1.8vw, 24px);
-  line-height: 1;
   text-decoration: none;
-  color: var(--ink);
-}
-.stickyMark {
-  width: 0.82em;
-  height: 0.82em;
-  display: inline-flex;
-  flex-shrink: 0;
-  color: var(--ink);
-  transform: translateY(0.06em);
-}
-.stickyMark svg { width: 100%; height: 100%; display: block; }
-.stickyMark circle { transform-origin: 120px 180px; animation: dotPulse 2.4s ease-in-out infinite; }
-.stickyWord {
-  display: inline-flex;
-  align-items: baseline;
-  font-family: var(--font-newsreader), serif;
-  font-weight: 700;
-  font-size: 1em;
-  line-height: 1;
-  letter-spacing: -0.025em;
-  color: var(--ink);
-  white-space: nowrap;
 }
 .stickyTag {
   font-family: var(--font-space-grotesk), monospace;
@@ -131,53 +106,9 @@
   border-bottom: 1.5px solid var(--ink);
 }
 
-/* Brand slot — bigger, with mark optically aligned to the wordmark's
-   cap-height. The mark size is in em so it scales with the wordmark.
-   The translateY pulls the mark down slightly so its visual centre sits
-   on the wordmark's optical centre (which is above the typographic
-   baseline by ~0.35em for a serif). */
 .brandSlot {
   display: inline-flex;
-  align-items: baseline;
-  gap: 0.36em;
   font-size: clamp(28px, 3vw, 44px);
-  line-height: 1;
-}
-.brandMark {
-  width: 0.82em;
-  height: 0.82em;
-  display: inline-flex;
-  flex-shrink: 0;
-  color: var(--ink);
-  /* The SVG's visual centre is offset within its viewBox; this push lifts
-     the mark so its optical centre meets the wordmark's cap-height middle. */
-  transform: translateY(0.06em);
-}
-.brandMark svg { width: 100%; height: 100%; display: block; }
-.brandMark circle { transform-origin: 120px 180px; animation: dotPulse 2.4s ease-in-out infinite; }
-
-.brandWord {
-  margin: 0;
-  font-family: var(--font-newsreader), serif;
-  font-weight: 700;
-  font-size: 1em;
-  line-height: 1;
-  letter-spacing: -0.025em;
-  display: inline-flex;
-  align-items: baseline;
-  white-space: nowrap;
-  color: var(--ink);
-}
-.bWhite { font-style: normal; }
-.bSpace { font-style: italic; letter-spacing: -0.035em; }
-.bSlash { padding: 0 0.28em; opacity: 0.32; font-weight: 400; font-style: normal; }
-.bIndia {
-  font-family: var(--font-space-grotesk), monospace;
-  font-weight: 700;
-  font-size: 0.52em;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  transform: translateY(-0.22em);
 }
 
 /* LIVE NEWS WIRE — continuously scrolling marquee of real CSR-India
@@ -624,17 +555,13 @@
 }
 
 /* ───────────────────────── KEYFRAMES ───────────────────────── */
-@keyframes dotPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%      { transform: scale(1.22); opacity: 0.85; }
-}
 @keyframes liveDot {
   0%, 100% { box-shadow: 0 0 0 0 rgba(155, 40, 23, 0.55); }
   60%      { box-shadow: 0 0 0 8px rgba(155, 40, 23, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .headline, .liveDot, .brandMark circle, .scrollGlyph {
+  .headline, .liveDot, .scrollGlyph {
     animation: none !important;
     transform: none !important;
     opacity: 1 !important;
@@ -691,8 +618,7 @@
    FAQ — asymmetric grid matching the hero, with cycled riso accents
    ─────────────────────────────────────────────────────────────────────
    Layout language echoes the hero:
-   • Header (eyebrow + heading) lives on the LEFT half (matching the
-     hero's statement column)
+   • Header (eyebrow + heading) runs the full width on one line
    • Each Q&A item uses a 12-col asymmetric grid: number narrow on
      left, question taking ~6 cols starting at col 2, answer slightly
      offset right of the question when expanded (col 3-9), + indicator
@@ -714,9 +640,9 @@
   gap: clamp(28px, 4vh, 56px) clamp(18px, 2.4vw, 36px);
 }
 
-/* HEADER — left half, mirrors the hero's statement column */
+/* HEADER — the full measure, because its one line must never wrap */
 .faqHeader {
-  grid-column: 1;
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   gap: clamp(16px, 2vh, 24px);
@@ -742,9 +668,11 @@
 .faqHeading {
   font-family: var(--font-newsreader), Georgia, serif;
   font-weight: 700;
-  font-size: clamp(36px, 5.4vw, 88px);
+  /* Measured: the line is 11.9em wide, and the gutters leave 91% of a phone. */
+  font-size: clamp(25px, 7.4vw, 88px);
   line-height: 0.92;
   letter-spacing: -0.03em;
+  white-space: nowrap;
   margin: 0;
   color: var(--ink);
 }
@@ -922,7 +850,6 @@
     grid-template-columns: 1fr;
     padding: clamp(56px, 8vh, 96px) 16px 40px;
   }
-  .faqHeader { grid-column: 1; }
   .faqList { grid-column: 1; }
   .faqSummary {
     grid-template-columns: clamp(40px, 10vw, 56px) 1fr clamp(24px, 6vw, 36px);

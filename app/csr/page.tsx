@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback, useTransition } from "react";
 import { motion, useInView } from "framer-motion";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
@@ -22,6 +23,7 @@ const IndiaMap = dynamic(() => import("@/components/IndiaMap"), {
 });
 import RankingList from "@/components/RankingList";
 import BriefModal from "@/components/BriefModal";
+import Ledger, { type LedgerHandle } from "@/components/Ledger";
 import Footer from "@/components/Footer";
 import {
   District,
@@ -30,6 +32,7 @@ import {
   rankDistricts,
 } from "@/lib/csr/score";
 import { csrConfig } from "@/lib/csr/config";
+import { CSR_STATES, stateSlug } from "@/lib/csr/states";
 import { SITE_URL } from "@/lib/site";
 
 function DataInsightCard({
@@ -213,6 +216,7 @@ function BeyondSection() {
 interface HomeMeta {
   pos_range?: { min: number; max: number };
   sector_pos_max?: number;
+  csr_window_fy?: string[];
 }
 
 export default function HomePage() {
@@ -235,6 +239,8 @@ export default function HomePage() {
   const [highlightedState, setHighlightedState] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const ledger = useRef<LedgerHandle>(null);
+  const enterLedger = useCallback((from: DOMRect) => ledger.current?.enter(from), []);
   const simulatorRef = useRef<HTMLDivElement>(null);
   const simulatorInView = useInView(simulatorRef, { once: true, margin: "-100px" });
 
@@ -351,21 +357,24 @@ export default function HomePage() {
   const siteUrl = SITE_URL;
 
   const districtCount = districts.length || 651;
-
-  const websiteSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "CSR Opportunity Index",
-    url: siteUrl,
-    description: `An interactive index that ranks ${districtCount} Indian districts by their poverty (NITI Aayog MPI 2023) against the CSR spending companies report there.`,
-  };
+  const csrWindow = meta?.csr_window_fy;
+  const fiscalWindow = csrWindow
+    ? `FY${csrWindow[0]} to ${csrWindow[csrWindow.length - 1]}`
+    : "";
 
   const datasetSchema = {
     "@context": "https://schema.org",
     "@type": "Dataset",
     name: "Philanthropic Opportunity Score (POS) for Indian districts",
     description: `A composite score for ${districtCount} Indian districts, calculated from NITI Aayog's MPI 2023 poverty data and Ministry of Corporate Affairs CSR spending data (via Dataful.in dataset 1612).`,
-    url: siteUrl,
+    url: `${siteUrl}/csr`,
+    distribution: [
+      {
+        "@type": "DataDownload",
+        encodingFormat: "application/json",
+        contentUrl: `${siteUrl}/data/csr/whitespace_master.json`,
+      },
+    ],
     creator: {
       "@type": "Person",
       name: "Souhard Sharma",
@@ -386,15 +395,11 @@ export default function HomePage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteSchema) }}
-      />
-      <script
-        type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(datasetSchema) }}
       />
       <main id="main-content" className="bg-[#fcf9f4] min-h-screen">
         <Navbar vertical={csrConfig} />
-        <Hero vertical={csrConfig} />
+        <Hero vertical={csrConfig} onEnterLedger={enterLedger} />
         <HowItWorks vertical={csrConfig} />
 
         <section
@@ -496,14 +501,22 @@ export default function HomePage() {
                         )}
                       </p>
                     </div>
-                    {highlightedState && (
+                    <div className="flex flex-wrap justify-end gap-2 shrink-0">
+                      {highlightedState && (
+                        <button
+                          onClick={() => setHighlightedState(null)}
+                          className="font-label text-[10px] uppercase tracking-[0.2em] border border-[#1c1c19] text-[#1c1c19] px-3 py-2 hover:bg-[#1c1c19] hover:text-[#fcf9f4] transition-colors"
+                        >
+                          Clear
+                        </button>
+                      )}
                       <button
-                        onClick={() => setHighlightedState(null)}
-                        className="font-label text-[10px] uppercase tracking-[0.2em] border border-[#1c1c19] text-[#1c1c19] px-3 py-2 hover:bg-[#1c1c19] hover:text-[#fcf9f4] transition-colors"
+                        onClick={(e) => enterLedger(e.currentTarget.getBoundingClientRect())}
+                        className="font-label text-[10px] uppercase tracking-[0.2em] text-white bg-[#BD402C] border border-[#BD402C] px-3 py-2 hover:bg-[#1c1c19] hover:border-[#1c1c19] transition-colors"
                       >
-                        Clear
+                        Open the full ledger
                       </button>
-                    )}
+                    </div>
                   </div>
                   <div
                     className={`p-6 transition-opacity duration-300 ${
@@ -526,9 +539,36 @@ export default function HomePage() {
 
         <InsightSection whitespaceCount={whitespaceCount} />
 
+        <section className="bg-[#fcf9f4] border-t border-[#1c1c19] py-16 px-6 md:px-12 lg:px-16">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="font-headline text-3xl md:text-5xl headline-tight text-[#1c1c19] mb-8">
+              CSR spending <Link href="/csr-spending" className="italic font-light underline underline-offset-8 decoration-1 hover:text-[#BD402C]">by State</Link>
+            </h2>
+            <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-2 font-body text-sm">
+              {CSR_STATES.map((state) => (
+                <li key={state}>
+                  <Link href={`/csr-spending/${stateSlug(state)}`} className="underline underline-offset-4 decoration-[#1c1c19]/25 hover:text-[#BD402C]">
+                    {state}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
         <BeyondSection />
 
         <Footer vertical={csrConfig} />
+
+        <Ledger
+          ref={ledger}
+          rows={rankedDistricts}
+          isLoading={isLoading}
+          sector={sector}
+          weights={csrWeights}
+          fiscalWindow={fiscalWindow}
+          onSelect={handleSelectDistrict}
+        />
 
         <BriefModal
           district={selectedDistrict}

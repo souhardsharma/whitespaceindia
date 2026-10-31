@@ -14,8 +14,8 @@ import { CENSUS_YEAR, nextCensusNote, sourceVintageLabel } from "@/lib/instrumen
 /**
  * The instruments shelf.
  *
- * Container page. It says what an instrument is, how it differs from the four
- * indexes, and lists what is on the shelf. Static — it reads only the
+ * Container page. It says what an instrument is, who it serves, and lists what
+ * is on the shelf. Static — it reads only the
  * instrument's meta.json for headline counts, so the numbers on this page are
  * the ones the pipeline actually produced rather than figures typed into prose.
  */
@@ -62,7 +62,7 @@ const INSTRUMENTS: Shelf[] = [
 export default function InstrumentsShelf() {
   return (
     <div className="min-h-screen bg-[#fcf9f4] text-[#1c1c19] flex flex-col">
-      <StructuredData data={pageLd({ path: "/instruments", name: "Instruments", description: "Whitespace India's instruments take one case at a time from India's public records, such as a single environmental clearance proposal, and report what those records hold about it.", type: "CollectionPage" })} />
+      <StructuredData data={pageLd({ path: "/instruments", name: "Instruments", description: "Free working tools for practitioners, built on the data India's government portals expose. The first makes the environmental clearance register searchable by place.", type: "CollectionPage" })} />
       <InstrumentHeader />
 
       <main id="main-content" className="flex-1">
@@ -76,17 +76,18 @@ export default function InstrumentsShelf() {
               Instruments
             </div>
             <h1 className="font-headline font-bold text-[clamp(34px,6vw,72px)] leading-[0.98] tracking-[-0.03em] max-w-4xl">
-              Instruments examine <em>one case</em> at a time
+              Working tools, built on <em>public data</em>
             </h1>
             <div className="mt-10 grid grid-cols-1 md:grid-cols-12 gap-8">
               <p className="md:col-span-7 font-body text-[clamp(16px,1.5vw,19px)] leading-relaxed opacity-80">
-                The indexes on this site compare districts with one another.
-                Each scores districts on a single question and ranks them, which
-                shows <em>where</em> a problem is most severe. An instrument
-                starts instead from a single case, such as one proposal in the
-                environmental clearance register, and gathers what the public
-                record holds about it. It reports that record as it stands,
-                without scoring, weighting or ranking it.
+                Government portals expose a great deal of useful data through
+                endpoints that are hard to use directly: no search by place, one
+                file at a time, and nothing joined to anything else. An instrument
+                reads such a source, keeps it current, joins it to what a
+                practitioner would otherwise have to look up separately, and puts
+                the answer behind a search box. A lawyer, journalist, organiser,
+                official or compliance team gets what they came for, as the record
+                has it, with no score or opinion added.
               </p>
               <p className="md:col-span-5 font-body text-[15px] leading-relaxed opacity-70 md:border-l md:border-[#1c1c19]/20 md:pl-8">
                 Each figure an instrument shows names the dataset it came from
@@ -196,9 +197,8 @@ export default function InstrumentsShelf() {
             </ol>
 
             <p className="mt-10 font-body text-[14px] leading-relaxed opacity-75 max-w-2xl">
-              Further instruments are planned, each built around another kind
-              of public record and the question that record can answer about a
-              single case.
+              Further instruments are planned, each built on another public
+              source and the job a practitioner needs it to do.
             </p>
           </div>
         </section>

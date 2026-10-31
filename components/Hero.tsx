@@ -87,7 +87,14 @@ const fadeUp = {
   },
 };
 
-export default function Hero({ vertical }: { vertical?: VerticalConfig }) {
+export default function Hero({
+  vertical,
+  onEnterLedger,
+}: {
+  vertical?: VerticalConfig;
+  /** Given by the CSR page only; other verticals keep their jump to the ranking. */
+  onEnterLedger?: (from: DOMRect) => void;
+}) {
   const accent = vertical?.theme.accent ?? DEFAULT_ACCENT;
   const isCsr = !vertical || vertical.slug === "csr";
   const dataPath = vertical?.dataPath ?? "/data/csr";
@@ -155,11 +162,15 @@ export default function Hero({ vertical }: { vertical?: VerticalConfig }) {
               className="mt-10 md:mt-12 flex flex-col sm:flex-row gap-4"
             >
               <button
-                onClick={scrollToSimulator}
+                onClick={(e) =>
+                  onEnterLedger
+                    ? onEnterLedger(e.currentTarget.getBoundingClientRect())
+                    : scrollToSimulator()
+                }
                 className="group text-white font-label uppercase tracking-[0.25em] text-xs py-5 px-8 flex justify-between items-center gap-6 hover:bg-[#1c1c19] transition-colors w-full sm:w-auto sm:min-w-[280px]"
                 style={{ backgroundColor: accent }}
               >
-                District ranking
+                {onEnterLedger ? "Enter the ledger" : "District ranking"}
                 <svg width="18" height="10" viewBox="0 0 24 12" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M0 6h22M16 1l5 5-5 5" />
                 </svg>

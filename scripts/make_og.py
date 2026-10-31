@@ -14,8 +14,9 @@ web clients show the centre ~820 px of a 1.91:1 card, and a card laid out to
 the edges lost the start of every headline there (measured 2026-10-20). The
 full width is still used: the print's own paper continues to the edges.
 
-The wordmark is the site header's: the {?} mark, then "Whitespace India" on
-one baseline in Newsreader, with "space" in italic. scripts/og/logo.png is
+The wordmark is the site header's (components/Wordmark.tsx): the {?} mark,
+"White" and an italic "space" in Newsreader, a faint slash, and INDIA in small
+tracked Space Grotesk. scripts/og/logo.png is
 public/logo.svg rasterised at 240 px by sharp:
   node -e "require('sharp')(require('fs').readFileSync('public/logo.svg'),{density:1200}).resize({height:240}).png().toFile('scripts/og/logo.png')"
 
@@ -86,31 +87,31 @@ CLAY = (189, 64, 44)
 PLUM = (122, 59, 107)  # Instrument 01 only
 GRAPHITE = (61, 58, 52)  # the shelf: its own ink, so no instrument owns it
 CARDS = [
-    Card("whitespace-india-3.jpg", "brand.webp", (140, 140, 1200, 1200), CLAY,
+    Card("whitespace-india-4.jpg", "brand.webp", (140, 140, 1200, 1200), CLAY,
          "OPEN CIVIC DATA · INDIA",
-         "Where India’s\nresources land,", "and where\nthey don’t.",
-         "District indexes · Civic instruments"),
-    Card("csr-index-3.jpg", "csr.webp", (180, -20, 1400, 1200), CLAY,
-         "CSR OPPORTUNITY INDEX",
+         "India’s unattended\nproblems,", "found in\npublic data.",
+         "District indexes · Working tools"),
+    Card("csr-index-4.jpg", "csr.webp", (180, -20, 1400, 1200), CLAY,
+         "CSR & IMPACT FINANCE",
          "Where CSR\nshould go,", "district by\ndistrict.",
-         "651 districts · Government data"),
-    Card("instruments-4.jpg", "instruments.webp", (-100, 20, 1200, 1320), GRAPHITE,
+         "Opportunity Index · 651 districts"),
+    Card("instruments-5.jpg", "instruments.webp", (-100, 20, 1200, 1320), GRAPHITE,
          "INSTRUMENTS",
-         "Bring one case,", "see what the\nrecord holds.",
-         "Built from India’s public records"),
-    Card("consent-3.jpg", "consent.webp", (130, 100, 1230, 1200), PLUM,
+         "Working tools,", "built on\npublic data.",
+         "For practitioners · Free to use"),
+    Card("consent-4.jpg", "consent.webp", (130, 100, 1230, 1200), PLUM,
          "PEOPLE & CONSENT",
          "Who lives where\nit would be built,", "and which consent\nrules apply.",
          "Instrument 01 · Clearance filings"),
-    Card("health-3.jpg", "health.webp", (130, 100, 1230, 1200), (52, 62, 150),
+    Card("health-4.jpg", "health.webp", (130, 100, 1230, 1200), (52, 62, 150),
          "HEALTH INDEX",
          "Where care\nis thin,", "district by\ndistrict.",
          "District index · Coming soon"),
-    Card("energy-3.jpg", "energy.webp", (130, 100, 1230, 1200), (42, 111, 62),
+    Card("energy-4.jpg", "energy.webp", (130, 100, 1230, 1200), (42, 111, 62),
          "ENERGY INDEX",
          "Where power\nfalls short,", "district by\ndistrict.",
          "District index · Coming soon"),
-    Card("education-3.jpg", "education.webp", (130, 100, 1230, 1200), (138, 106, 42),
+    Card("education-4.jpg", "education.webp", (130, 100, 1230, 1200), (138, 106, 42),
          "EDUCATION INDEX",
          "Where schools\nfall behind,", "district by\ndistrict.",
          "District index · Coming soon"),
@@ -156,7 +157,7 @@ def grain(canvas: Image.Image) -> Image.Image:
 
 
 def wordmark(canvas: Image.Image, draw: ImageDraw.ImageDraw, x: int, top: int) -> None:
-    """The {?} mark and 'Whitespace India' on one baseline, as the site header sets it."""
+    """The {?} mark and the word, in the proportions of components/Wordmark.module.css."""
     size = 32
     bold = font("Newsreader.ttf", size, 700)
     ital = font("Newsreader-Italic.ttf", size, 500)
@@ -167,9 +168,19 @@ def wordmark(canvas: Image.Image, draw: ImageDraw.ImageDraw, x: int, top: int) -
     mark = mark.resize((round(mark.width * mark_h / mark.height), mark_h), Image.LANCZOS)
     canvas.paste(mark, (x, baseline - mark_h + 2), mark)
     x += mark.width + 12
-    for text, fnt in (("White", bold), ("space", ital), (" India", bold)):
+    for text, fnt in (("White", bold), ("space", ital)):
         draw.text((x, baseline), text, font=fnt, fill=INK, anchor="ls")
         x += draw.textlength(text, font=fnt)
+    paper = canvas.getpixel((x, top))
+    faint = tuple(round(p + (i - p) * 0.32) for p, i in zip(paper, INK))
+    x += size * 0.28
+    draw.text((x, baseline), "/", font=font("Newsreader.ttf", size, 400), fill=faint, anchor="ls")
+    x += draw.textlength("/", font=font("Newsreader.ttf", size, 400)) + size * 0.25
+    small = font("SpaceGrotesk.ttf", round(size * 0.52), 700)
+    raised = baseline - round(size * 0.52 * 0.22)
+    for ch in "INDIA":
+        draw.text((x, raised), ch, font=small, fill=INK, anchor="ls")
+        x += draw.textlength(ch, font=small) + size * 0.52 * 0.22
 
 
 def headline_size(draw: ImageDraw.ImageDraw, card: Card, room: int) -> int:

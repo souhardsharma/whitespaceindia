@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Wordmark from "@/components/Wordmark";
 import { motion, useInView } from "framer-motion";
 import type { VerticalConfig } from "@/lib/verticals/types";
 
@@ -35,13 +35,10 @@ export default function Footer({ vertical }: { vertical?: VerticalConfig }) {
           className="md:col-span-5"
         >
           <div className="flex items-baseline gap-2 mb-4">
-            <Link href="/" aria-label="Whitespace India home" className="flex items-baseline gap-2 hover:opacity-80 transition-opacity">
-              <Image src="/logo.svg" alt="" aria-hidden="true" width={32} height={32} className="w-[24px] h-[24px] md:w-[26px] md:h-[26px] shrink-0 translate-y-[2px]" />
-              <span className="font-headline font-bold text-[30px] md:text-[34px] leading-none tracking-[-0.02em] text-[#1c1c19]">
-                Whitespace India
-              </span>
+            <Link href="/" aria-label="Whitespace India home" className="text-[24px] md:text-[30px] hover:opacity-80 transition-opacity">
+              <Wordmark />
             </Link>
-            <Link href={`/${verticalSlug}`} aria-label={`${verticalName} home`} className="font-headline italic font-bold text-[22px] md:text-[26px] leading-none tracking-[-0.01em] transition-colors" style={{ color: accent }} onMouseEnter={e => (e.currentTarget.style.color = accentDeep)} onMouseLeave={e => (e.currentTarget.style.color = accent)}>
+            <Link href={`/${verticalSlug}`} aria-label={`${verticalName} home`} className="font-headline italic font-bold text-[19px] md:text-[24px] leading-none tracking-[-0.01em] transition-colors" style={{ color: accent }} onMouseEnter={e => (e.currentTarget.style.color = accentDeep)} onMouseLeave={e => (e.currentTarget.style.color = accent)}>
               {verticalName}
             </Link>
           </div>

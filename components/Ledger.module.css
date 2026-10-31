@@ -1,0 +1,352 @@
+.ledger {
+  --ink: #1c1c19;
+  --paper: #fbf6e9;
+  --feint: rgba(52, 62, 150, 0.2);
+  --red: #bd402c;
+  --red-deep: #9b2817;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  outline: none;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ───────── Head of the page ───────── */
+.band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px clamp(16px, 3vw, 40px);
+  border-bottom: 1.5px solid var(--ink);
+  font-size: clamp(20px, 2vw, 26px);
+}
+.bandBrand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  min-width: 0;
+}
+.bandName {
+  font-family: var(--font-newsreader), serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 0.82em;
+  line-height: 1;
+  color: var(--red);
+  white-space: nowrap;
+}
+.closeButton {
+  flex-shrink: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--ink);
+  font-family: var(--font-space-grotesk), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background-color 150ms, color 150ms;
+}
+.closeButton:hover { background: var(--ink); color: var(--paper); }
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 32px;
+  padding: 14px clamp(16px, 3vw, 40px);
+  border-bottom: 1.5px solid var(--ink);
+}
+.summary {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.summary strong { font-family: var(--font-space-grotesk), monospace; color: var(--red); }
+.filters {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.search input {
+  width: clamp(190px, 22vw, 300px);
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--ink);
+  background: transparent;
+  font-size: 14px;
+  outline-offset: 2px;
+}
+.search input::placeholder { color: rgba(28, 28, 25, 0.55); }
+.stampToggle {
+  height: 38px;
+  padding: 0 12px;
+  border: 1.5px solid var(--red);
+  color: var(--red);
+  font-family: var(--font-space-grotesk), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.stampToggleOn { background: var(--red); color: var(--paper); }
+
+/* ───────── The ruled sheet ───────── */
+.sheet {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-size: 15px;
+}
+.table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 12px;
+  background: var(--paper);
+  border-bottom: 1.5px solid var(--ink);
+  font-family: var(--font-space-grotesk), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.25;
+  text-align: left;
+  text-transform: uppercase;
+  vertical-align: bottom;
+}
+.table th small {
+  display: block;
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+.table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--feint);
+  vertical-align: baseline;
+}
+.table tbody tr { cursor: pointer; }
+.table tbody tr:hover td { background: rgba(189, 64, 44, 0.07); }
+.table tbody tr:hover .nameButton { color: var(--red-deep); }
+
+/* The red double rule every account book has, running down the whole sheet. */
+.table .rankCell {
+  width: clamp(58px, 7vw, 92px);
+  padding-left: clamp(16px, 3vw, 40px);
+  padding-right: 8px;
+  box-sizing: content-box;
+  width: 34px;
+  border-right: 3px double var(--red);
+  font-family: var(--font-space-grotesk), monospace;
+  font-size: 12px;
+  color: rgba(28, 28, 25, 0.62);
+}
+.table th.rankCell { font-size: 10px; color: var(--ink); }
+.table .nameHead { padding-left: 16px; }
+.table .nameCell { padding-left: 16px; }
+.nameButton {
+  font-family: var(--font-newsreader), serif;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-align: left;
+}
+.stamp {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 1px 5px;
+  border: 1.5px solid var(--red);
+  color: var(--red);
+  font-family: var(--font-space-grotesk), monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  transform: rotate(-2.5deg);
+  white-space: nowrap;
+}
+.table .stateCell { width: 22%; }
+.table td.stateCell { font-size: 14px; }
+.stateInline {
+  display: none;
+  margin-top: 2px;
+  font-family: var(--font-space-grotesk), monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(28, 28, 25, 0.66);
+}
+.table .figure {
+  width: 11%;
+  font-family: var(--font-space-grotesk), monospace;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.table td.figure { font-size: 14px; }
+.table th.figure:last-child,
+.table td.figure:last-child { padding-right: clamp(16px, 3vw, 40px); }
+.table .score { font-weight: 700; color: var(--red); }
+
+.empty {
+  margin: 0;
+  padding: 40px clamp(16px, 3vw, 40px);
+  font-style: italic;
+  opacity: 0.75;
+}
+.colophon {
+  padding: 20px clamp(16px, 3vw, 40px) 28px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(28, 28, 25, 0.75);
+}
+.colophon p { margin: 0 0 6px; max-width: 90ch; }
+.textButton {
+  color: var(--red-deep);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ───────── The cover, which is the button grown to fill the screen ───────── */
+.stage {
+  position: absolute;
+  inset: 0;
+  /* Over the page's sticky column heads, which sit at z-index 1. */
+  z-index: 2;
+  perspective: 2200px;
+  perspective-origin: 50% 50%;
+  cursor: pointer;
+}
+.shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(28, 28, 25, 0.5), rgba(28, 28, 25, 0.12) 70%);
+  pointer-events: none;
+}
+.cover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--red);
+  will-change: transform, clip-path;
+}
+.spine {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: clamp(26px, 5vw, 76px);
+  background: var(--red-deep);
+  border-right: 2px dashed rgba(251, 246, 233, 0.35);
+}
+.corner {
+  position: absolute;
+  right: 0;
+  width: clamp(70px, 13vw, 190px);
+  aspect-ratio: 1;
+  background: var(--red-deep);
+}
+.cornerTop { top: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.cornerBottom { bottom: 0; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+.plate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(460px, 76vw);
+  margin-left: clamp(26px, 5vw, 76px);
+  padding: clamp(24px, 4vh, 40px) 20px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  outline: 1px solid var(--paper);
+  outline-offset: 4px;
+  font-size: 20px;
+  text-align: center;
+}
+.plateTitle {
+  margin-top: 8px;
+  font-family: var(--font-newsreader), serif;
+  font-size: clamp(46px, 7vw, 76px);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.plateLine {
+  font-family: var(--font-space-grotesk), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* ───────── The page settling in as the cover clears it ───────── */
+.pageEntering .rowEntering {
+  animation: inkIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--enter-base) + var(--i) * 22ms);
+}
+@keyframes inkIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 760px) {
+  .table { font-size: 14px; }
+  .table .stateCell { display: none; }
+  .stateInline { display: block; }
+  .table th, .table td { padding-left: 6px; padding-right: 6px; }
+  .table .rankCell { width: 26px; padding-left: 12px; padding-right: 5px; font-size: 11px; }
+  .table .nameCell, .table .nameHead { padding-left: 10px; }
+  .nameButton { font-size: 16px; }
+  .stamp { margin-left: 6px; font-size: 8px; }
+  .table .figure { width: 52px; }
+  .table td.figure { font-size: 12px; }
+  .table th { font-size: 9px; letter-spacing: 0.06em; }
+  /* The narrow columns cannot carry the years; the colophon states them. */
+  .table th small { display: none; }
+  .table th.figure:last-child, .table td.figure:last-child { padding-right: 12px; }
+  .bandName { display: none; }
+  .search input { width: 100%; min-width: 0; }
+  .search { flex: 1 1 150px; }
+  .filters { width: 100%; }
+  .summary { font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pageEntering .rowEntering { animation: none; }
+}
