@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Wordmark from "@/components/Wordmark";
 import type { VerticalConfig } from "@/lib/verticals/types";
 
 const DEFAULT_ACCENT = "#BD402C";
@@ -59,25 +59,14 @@ export default function Navbar({ vertical }: { vertical?: VerticalConfig }) {
             <Link
               href="/"
               aria-label="Whitespace India home"
-              className="flex items-baseline gap-2 hover:opacity-80 transition-opacity"
+              className="text-[22px] md:text-[30px] hover:opacity-80 transition-opacity"
             >
-              <Image
-                src="/logo.svg"
-                alt=""
-                aria-hidden="true"
-                width={34}
-                height={34}
-                priority
-                className="w-[22px] h-[22px] md:w-[26px] md:h-[26px] shrink-0 self-baseline translate-y-[2px]"
-              />
-              <span className="font-headline font-bold text-[28px] md:text-[34px] leading-none tracking-[-0.02em]">
-                Whitespace India
-              </span>
+              <Wordmark />
             </Link>
             <Link
               href={`/${verticalSlug}`}
               aria-label={`${verticalName} home`}
-              className="font-headline italic font-bold text-[22px] md:text-[26px] leading-none tracking-[-0.01em] transition-colors"
+              className="font-headline italic font-bold text-[18px] md:text-[24px] leading-none tracking-[-0.01em] transition-colors"
               style={{ color: accent }}
               onMouseEnter={e => (e.currentTarget.style.color = accentDeep)}
               onMouseLeave={e => (e.currentTarget.style.color = accent)}

@@ -35,13 +35,13 @@ test("every share card named in app/ or lib/ exists in public/og", () => {
 
 test("each section previews with its own card", () => {
   const expected: Record<string, string> = {
-    "app/layout.tsx": "/og/whitespace-india-3.jpg",
-    "app/csr/layout.tsx": "/og/csr-index-3.jpg",
-    "app/instruments/layout.tsx": "/og/instruments-4.jpg",
-    "lib/instruments/metadata.ts": "/og/consent-3.jpg",
-    "app/health/layout.tsx": "/og/health-3.jpg",
-    "app/energy/layout.tsx": "/og/energy-3.jpg",
-    "app/education/layout.tsx": "/og/education-3.jpg",
+    "app/layout.tsx": "/og/whitespace-india-4.jpg",
+    "app/csr/layout.tsx": "/og/csr-index-4.jpg",
+    "app/instruments/layout.tsx": "/og/instruments-5.jpg",
+    "lib/instruments/metadata.ts": "/og/consent-4.jpg",
+    "app/health/layout.tsx": "/og/health-4.jpg",
+    "app/energy/layout.tsx": "/og/energy-4.jpg",
+    "app/education/layout.tsx": "/og/education-4.jpg",
   };
   for (const [file, card] of Object.entries(expected)) {
     assert.deepEqual(Array.from(new Set(cardsNamedIn(file))), [card], file);

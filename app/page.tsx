@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
+import Wordmark from "@/components/Wordmark";
 import csrMeta from "@/public/data/csr/meta.json";
 
 
@@ -39,17 +40,9 @@ function StickyHeader() {
       aria-hidden={!active}
     >
       <a href="#main-content" className={styles.stickyBrand} aria-label="Back to top">
-        <span className={styles.stickyMark} aria-hidden="true">
-          <BraceMark dotColor="#9b2817" />
-        </span>
-        <span className={styles.stickyWord}>
-          <span className={styles.bWhite}>White</span>
-          <span className={styles.bSpace}>space</span>
-          <span className={styles.bSlash}>/</span>
-          <span className={styles.bIndia}>India</span>
-        </span>
+        <Wordmark />
       </a>
-      <span className={styles.stickyTag}>Public data on India&apos;s districts</span>
+      <span className={styles.stickyTag}>India&apos;s unattended problems, found in public data</span>
     </header>
   );
 }
@@ -121,16 +114,6 @@ function NewsTicker() {
   );
 }
 
-/* {?} brace mark — used at multiple scales across the page. */
-const BraceMark = ({ dotColor = "#9b2817" }: { dotColor?: string }) => (
-  <svg viewBox="32 28 176 184" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M 78 40 C 58 40 56 58 56 76 C 56 98 56 104 44 116 C 44 120 44 120 44 124 C 56 136 56 142 56 164 C 56 182 58 200 78 200" stroke="currentColor" strokeWidth="22" />
-    <path d="M 162 40 C 182 40 184 58 184 76 C 184 98 184 104 196 116 C 196 120 196 120 196 124 C 184 136 184 142 184 164 C 184 182 182 200 162 200" stroke="currentColor" strokeWidth="22" />
-    <path d="M 98 88 C 98 72 108 62 120 62 C 134 62 144 74 144 88 C 144 104 134 110 126 118 C 120 124 120 130 120 138 L 120 146" stroke="currentColor" strokeWidth="32" />
-    <circle cx="120" cy="180" r="18" fill={dotColor} />
-  </svg>
-);
-
 /* Odometer — count up from 0 to target when first visible.
    Uses RAF + eased curve; respects prefers-reduced-motion. */
 function Odometer({ to, duration = 1400 }: { to: number; duration?: number }) {
@@ -181,6 +164,7 @@ type Vert = {
   active: boolean;
   accent: "terra" | "cobalt" | "forest" | "ochre" | "graphite";
   aria: string;
+  live?: boolean;
 };
 
 const VERTS: Vert[] = [
@@ -188,13 +172,13 @@ const VERTS: Vert[] = [
     href: "/csr",
     vert: "csr",
     num: "01",
-    title: "CSR",
-    meta: "Opportunity Index · Live",
+    title: "CSR & Impact Finance",
+    meta: "Opportunity Index",
     img: "/landing/csr-horizon-2.webp",
     alt: "A long horizon of pale, dry village plots; a watering can pours on only a few of them",
     active: true,
     accent: "terra",
-    aria: `Open the CSR Opportunity Index, which ranks ${csrMeta.total_districts} Indian districts`,
+    aria: `Open CSR and impact finance: the Opportunity Index ranks ${csrMeta.total_districts} Indian districts`,
   },
   {
     href: "/health",
@@ -214,7 +198,7 @@ const VERTS: Vert[] = [
     vert: "energy",
     num: "03",
     title: "Energy",
-    meta: "Power supply and access · Coming soon",
+    meta: "Power and access · Coming soon",
     img: "/landing/energy-line-2.webp",
     alt: "Power poles cross the hills and stop short of a village; one house is lit by a solar panel",
     pos: "50% 70%",
@@ -240,13 +224,14 @@ const VERTS: Vert[] = [
     vert: "instruments",
     num: "05",
     title: "Instruments",
-    meta: "One project at a time · Live",
+    meta: "Practitioner tools, public data",
     img: "/landing/instruments-lens-2.webp",
     alt: "A magnifying glass held over one house among farms, a mine, a well and a factory",
     pos: "50% 50%",
     active: true,
     accent: "graphite",
-    aria: "Open the instruments, which profile one project at a time",
+    aria: "Open the instruments: practitioner tools built on India's public data",
+    live: true,
   },
 ];
 
@@ -263,15 +248,7 @@ export default function Landing() {
             featured insight right (a real fact from the CSR Index). */}
         <header className={styles.topbar}>
           <div className={styles.brandSlot}>
-            <span className={styles.brandMark} aria-hidden="true">
-              <BraceMark dotColor="#9b2817" />
-            </span>
-            <h1 className={styles.brandWord}>
-              <span className={styles.bWhite}>White</span>
-              <span className={styles.bSpace}>space</span>
-              <span className={styles.bSlash}>/</span>
-              <span className={styles.bIndia}>India</span>
-            </h1>
+            <Wordmark as="h1" />
           </div>
 
           <NewsTicker />
@@ -324,7 +301,8 @@ export default function Landing() {
                 </div>
                 <div className={styles.csrHeading}>
                   <div>
-                    <h3 className={styles.tileTitle}>CSR Opportunity Index</h3>
+                    <h3 className={styles.tileTitle}>{VERTS[0].title}</h3>
+                    <span className={styles.tileMeta}>{VERTS[0].meta}</span>
                     <div className={styles.tileStats}>
                       <span className={styles.statBig}>
                         <Odometer to={csrMeta.total_districts} />
@@ -363,6 +341,12 @@ export default function Landing() {
                 <div className={styles.tileFrame}>
                   <div className={styles.tileTopRow}>
                     <span className={styles.tileNum}>{v.num}</span>
+                    {v.live ? (
+                      <span className={styles.liveTag}>
+                        <span className={styles.liveDot} />
+                        Live
+                      </span>
+                    ) : null}
                   </div>
                   {/* Meta sits under the title, not opposite the number. At four
                       columns the top row has zero slack — measured: 33 px badge
@@ -427,6 +411,9 @@ export default function Landing() {
         <div className={styles.faqFooter}>
           <span className={styles.faqFooterText}>© {new Date().getFullYear()} Whitespace India</span>
           <div className={styles.faqFooterLinks}>
+            <Link href="/csr-spending" className={styles.faqFooterLink}>CSR spending by State</Link>
+            <Link href="/csr-spending/whitespace-districts" className={styles.faqFooterLink}>Whitespace districts</Link>
+            <Link href="/instruments/consent" className={styles.faqFooterLink}>Environmental clearance proposals</Link>
             <a href="https://github.com/souhardsharma/whitespaceindia" target="_blank" rel="noopener noreferrer" className={styles.faqFooterLink}>Source on GitHub</a>
             <a href="https://www.linkedin.com/in/souhardsharma/" target="_blank" rel="noopener noreferrer" className={styles.faqFooterLink}>Get in touch</a>
           </div>
@@ -441,9 +428,9 @@ export default function Landing() {
   );
 }
 
-/* What a first-time visitor needs to decide whether to trust and use the site.
-   Every claim here is checkable against the site itself: what is live, what is
-   placeholder, where each number comes from and what it may be reused for.
+/* Opens on what the project is for, finding unattended problems in public data,
+   before any one piece of work; the CSR index is an example of that search and
+   does not stand for the whole. Every claim is checkable against the site itself.
    The structured data below is built from this array, so the two cannot drift. */
 type Faq = { q: string; a: string; more?: { href: string; label: string } };
 
@@ -452,23 +439,28 @@ const PAN_INDIA_SHARE = Math.round(csrMeta.csr_totals.pan_india_pct);
 const FAQS: Faq[] = [
   {
     q: "What is Whitespace India?",
-    a: "Whitespace India reads India's public records against one another to find problems that no single record shows. The Census counts who lives in each district, NITI Aayog measures how many of them are poor, companies report where they spend their CSR money, and the environment ministry logs every project that applies for environmental clearance. Each of these records is usually read on its own. Set side by side, they point to places where need is high and the money or attention reaching it is thin, and we call those gaps white spaces. We publish the evidence for each one together with the data and the method, so that researchers, journalists, funders, officials and the people who live there can check our reading and take the work further.",
+    a: "A project that goes looking for India's unattended problems in the country's own public records. Governments, regulators and companies publish a great deal about where people live, how they are doing, where money goes and what is being built around them, and each of those files is usually read alone. Read together, they show where something is wrong and little is being done about it. We call such a gap a whitespace, and we publish each one with its evidence so that someone in a position to act has a place to start.",
   },
   {
-    q: "What counts as a white space?",
-    a: `A white space is a place where the evidence of need is strong and the recorded response to it is weak. In the CSR index, a district meets that test when it falls in the poorest quarter of districts on NITI Aayog's poverty measure and in the bottom quarter on CSR spending per person. Being on that list is a reason to look closer, and the explanation can turn out to be ordinary. Money may arrive through channels the filings do not record, or conditions may have changed since the data was collected. Finding out which is the work we hope others will pick up.`,
-    more: { href: "/csr", label: "See the districts" },
+    q: "What is a whitespace?",
+    a: `A place on the map where a problem is visible in the record and the response to it is not. The first search was for money: of the ${csrMeta.total_districts} districts we scored, ${csrMeta.whitespace_count} are among the poorest quarter in India and also among the bottom quarter for the CSR spending companies report per person. Finding one is a reason to look closer, and it is not a verdict. Money may arrive through channels the filings do not record, or conditions may have changed since the data was collected.`,
+    more: { href: "/csr-spending/whitespace-districts", label: "See those districts" },
   },
   {
-    q: "Who is it for?",
-    a: "It is meant for anyone who needs to know where a problem lies before deciding what to do about it. A researcher can use the index to choose districts for fieldwork, and a company or foundation can see where its CSR money has not gone. When a mine or a dam is proposed, a journalist or a member of the village assembly can look up the project and see who lives where it would be built. Everything on the site can also be downloaded for work we have not thought of.",
+    q: "How can public data reveal a problem nobody is working on?",
+    a: "Each record answers a narrow question. The Census counts who lives in a district, NITI Aayog measures how many of them are poor, company filings say where CSR money went, and the environment ministry logs each project that applies for clearance. No single file can say that the poorest district in a state receives almost nothing, or that a mine is proposed where the law gives a tribal village assembly a say. That appears only when the files are joined on the same place, which is the work this project does, in the open, with its method published.",
   },
   {
-    q: "What is the difference between an index and an instrument?",
-    a: "They work at different scales. An index scores every district on one question and ranks them, and you can change the weights behind the score to see how the ranking moves. The CSR Opportunity Index is the first of these. An instrument starts from a single case and builds its profile with no score or ranking attached, and People & Consent, which profiles one proposed project at a time, is the first of those. The index helps when you are deciding where to look, and the instrument helps once a particular project is in front of you.",
+    q: "Who can act on what you find?",
+    a: "Anyone deciding where effort should go next. A foundation or a company's CSR team can see where its money has not reached, and an official can see which districts a programme is missing. A researcher can choose where fieldwork will count, a journalist can find the story and check it, and a village assembly can see what is proposed on its land. We do not run programmes ourselves. We try to shorten the distance between a problem on paper and the person who can do something about it.",
   },
   {
-    q: "How does the CSR index rank a district?",
+    q: "What is live today?",
+    a: "Two pieces of work. The CSR Opportunity Index ranks every district on poverty and on the CSR money reaching it, for anyone deciding where to direct funds. The Instruments are working tools built on government data that is public but hard to use: the first, People & Consent, makes the national environmental clearance register searchable by place and sets beside each proposal the people who live there and the laws that apply.",
+    more: { href: "/instruments", label: "See the instruments" },
+  },
+  {
+    q: "How does the CSR Opportunity Index rank a district?",
     a: `A district's score combines three measures. Poverty is the share of people NITI Aayog counted as multidimensionally poor in its 2023 index. The funding gap takes the CSR spending recorded in a district over the financial years 2021-22 to 2023-24, divides it by the district's population, and compares the result with the median for districts of similar population, so that a small district is judged against small districts. Persistence is the share of a district's 2015-16 poverty that was still there in 2019-21. Poverty and the gap each carry 40% of the score and persistence 20%, and you can change these weights yourself. About ${PAN_INDIA_SHARE}% of all CSR money in the filings is reported as "Pan India" or names no district, so it cannot be placed, and every district total in the index should be read as a floor.`,
     more: { href: "/methodology", label: "Read the method" },
   },
@@ -491,8 +483,8 @@ const FAQS: Faq[] = [
     more: { href: "/instruments/consent/data", label: "Every file and its licence" },
   },
   {
-    q: "What about Health, Energy and Education?",
-    a: "These are planned indexes. Their pages show how each will work, but the numbers on them are placeholders that describe no actual district, and for that reason the pages are kept out of search results. Each will go live once its data and method are ready, and no order or date has been set.",
+    q: "Which problems come next?",
+    a: "Health care access, power supply and schooling are planned, each asking the same question of its own records: where is the need plain and the response thin? Their pages show how each will work, but the numbers on them are placeholders that describe no actual district, and for that reason the pages are kept out of search results. Each will go live once its data and method are ready, and no order or date has been set.",
   },
   {
     q: "Who runs it?",

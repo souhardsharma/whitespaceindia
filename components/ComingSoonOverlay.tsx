@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, type ReactNode } from "react";
+import Wordmark from "@/components/Wordmark";
 import styles from "./ComingSoonOverlay.module.css";
 
 interface ComingSoonOverlayProps {
@@ -71,7 +72,7 @@ export default function ComingSoonOverlay({
         <div className={styles.overlayInner}>
           <span className={styles.badge}>Preview</span>
           <h1 className={styles.title}>
-            Whitespace India{" "}
+            <Wordmark />{" "}
             <span className={styles.titleAccent} style={{ color: accentColor }}>
               {verticalName}
             </span>

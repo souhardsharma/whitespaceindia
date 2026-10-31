@@ -4,11 +4,11 @@ import { SITE_URL } from "@/lib/site";
 const siteUrl = SITE_URL;
 
 const PAGE_URL = `${siteUrl}/instruments`;
-const TITLE = "Instruments | Whitespace India";
+const TITLE = "Instruments: free tools on India's public data | Whitespace India";
 const DESCRIPTION =
-  "Whitespace India's instruments take one case at a time from India's public records and report what those records hold about it. The first, People & Consent, profiles the place where an environmental clearance proposal would be built.";
+  "Free working tools for practitioners, built on the data India's government portals expose. The first, People & Consent, makes the environmental clearance register searchable by place and shows who lives where each project would be built.";
 const CARD_ALT =
-  "Share card for Whitespace India Instruments with the line “Bring one case, see what the record holds”, beside a print of a magnifying glass held over a row of objects";
+  "Share card for Whitespace India Instruments with the line “Working tools, built on public data”, beside a print of a magnifying glass held over a row of objects";
 
 export const metadata: Metadata = {
   // `absolute`, so the root layout's "| Whitespace India" template does not
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     locale: "en_IN",
     images: [
       {
-        url: "/og/instruments-4.jpg",
+        url: "/og/instruments-5.jpg",
         width: 1200,
         height: 630,
         alt: CARD_ALT,
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: [{ url: "/og/instruments-4.jpg", alt: CARD_ALT }],
+    images: [{ url: "/og/instruments-5.jpg", alt: CARD_ALT }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {

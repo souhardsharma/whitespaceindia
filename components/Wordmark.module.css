@@ -1,0 +1,53 @@
+.wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.36em;
+  line-height: 1;
+  white-space: nowrap;
+  color: #1c1c19;
+}
+
+.mark {
+  width: 0.82em;
+  height: 0.82em;
+  display: inline-flex;
+  flex-shrink: 0;
+  /* Meets the optical centre of the word, which sits above the baseline. */
+  transform: translateY(0.06em);
+}
+.mark svg { width: 100%; height: 100%; display: block; }
+.mark circle { transform-origin: 120px 180px; animation: dotPulse 2.4s ease-in-out infinite; }
+
+.word {
+  margin: 0;
+  /* Inline, not flex: flex items are blocks, so a crawler reading the text gets
+     "White", "space" and "India" as three lines rather than one name. */
+  display: inline-block;
+  font-family: var(--font-newsreader), serif;
+  font-weight: 700;
+  font-size: 1em;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+.space { font-style: italic; letter-spacing: -0.035em; }
+/* The real space inside this span supplies the gap after the slash. */
+.slash { padding-left: 0.28em; opacity: 0.32; font-weight: 400; }
+.slash::before { content: "/"; }
+.india {
+  font-family: var(--font-space-grotesk), monospace;
+  font-weight: 700;
+  font-size: 0.52em;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  display: inline-block;
+  transform: translateY(-0.22em);
+}
+
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.22); opacity: 0.85; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mark circle { animation: none; }
+}
