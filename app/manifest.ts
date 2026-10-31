@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Whitespace India",
     short_name: "Whitespace",
     description:
-      "Free tools from India's public records that find districts where need is high and money or scrutiny is thin.",
+      "India's unattended problems, found in public data: free tools that read the country's public records together.",
     start_url: "/",
     display: "browser",
     background_color: "#fcf9f4",

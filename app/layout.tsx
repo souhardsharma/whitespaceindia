@@ -59,9 +59,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Whitespace India",
     description:
-      "Whitespace India builds free tools from India's public records. The CSR Opportunity Index ranks 651 districts by poverty against corporate social responsibility spending, and People & Consent profiles any proposal in the national environmental clearance register.",
+      "Whitespace India reads India's public records together to find unattended problems. The CSR Opportunity Index ranks 651 districts by poverty against corporate social responsibility spending, and People & Consent profiles any proposal in the national environmental clearance register.",
     url: siteUrl,
-    images: [{ url: "/og/whitespace-india-4.jpg", width: 1200, height: 630, alt: "Whitespace India: \u201cWhere India\u2019s resources land, and where they don\u2019t\u201d, beside a risograph print of coloured blocks and a seedling" }],
+    images: [{ url: "/og/whitespace-india-4.jpg", width: 1200, height: 630, alt: "Whitespace India: \u201cIndia\u2019s unattended problems, found in public data\u201d, beside a risograph print of coloured blocks and a seedling" }],
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
@@ -70,8 +70,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Whitespace India",
     description:
-      "Whitespace India builds free tools from India's public records, among them a CSR index of 651 districts and a profile of each environmental clearance proposal.",
-    images: [{ url: "/og/whitespace-india-4.jpg", alt: "Whitespace India: \u201cWhere India\u2019s resources land, and where they don\u2019t\u201d, beside a risograph print of coloured blocks and a seedling" }],
+      "Whitespace India reads India's public records together to find unattended problems. Its free tools include a CSR index of 651 districts and a profile of each environmental clearance proposal.",
+    images: [{ url: "/og/whitespace-india-4.jpg", alt: "Whitespace India: \u201cIndia\u2019s unattended problems, found in public data\u201d, beside a risograph print of coloured blocks and a seedling" }],
   },
   alternates: { canonical: siteUrl },
   robots: {
@@ -108,7 +108,7 @@ const SITE_LD = {
       url: `${siteUrl}/`,
       logo: `${siteUrl}/logo.svg`,
       description:
-        "An independent project that reads India's public records against one another to find places where need is high and money or scrutiny is thin, and publishes its method, data and code.",
+        "An independent project that reads India's public records together to find unattended problems, and publishes its method, data and code.",
       sameAs: ["https://www.linkedin.com/in/souhardsharma/", "https://github.com/souhardsharma/whitespaceindia"],
       founder: { "@type": "Person", name: "Souhard Sharma" },
       foundingLocation: { "@type": "Country", name: "India" },

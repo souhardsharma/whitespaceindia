@@ -1,17 +1,18 @@
 # Whitespace India
 
-**Free tools that read India's public records to find districts where need is high and money or scrutiny is thin.**
+**India's unattended problems, found in public data.**
 
-Whitespace India builds public tools on government records, free for anyone to use. It has two kinds of tool:
+Whitespace India reads India's public records together to find places where a problem is visible in the record and the response to it is not. Everything it publishes is free to use, with the method, data and code open.
 
-- **Indexes** rank every district on a single question.
-- **Instruments** take one case, such as a single clearance proposal, and set out what the public records say about it.
+- **CSR & Impact Finance** asks where company money for social causes goes, and where the need is greatest against it.
+- **Instruments** are working tools for practitioners, built on the same public records.
 
 **Live site:** [whitespaceindia.pages.dev](https://whitespaceindia.pages.dev)
 
 | Tool | What it does | Status |
 |-----|--------------|--------|
 | [CSR Opportunity Index](https://whitespaceindia.pages.dev/csr) | Ranks 651 districts by the gap between multidimensional poverty and corporate social responsibility (CSR) spending | Live |
+| [CSR spending by State](https://whitespaceindia.pages.dev/csr-spending) | Reported CSR spending against poverty, district by district, for each of 36 States and Union Territories, and the [list of whitespace districts](https://whitespaceindia.pages.dev/csr-spending/whitespace-districts) | Live |
 | [Instrument 01: People & Consent](https://whitespaceindia.pages.dev/instruments/consent) | Takes an environmental clearance proposal and shows who lives where it would be built, what they live on, and which consent obligations attach | Live, refreshed nightly |
 | Health, Education, Energy indexes | District indexes built on the same framework as CSR | In preview: placeholder data, not indexed |
 
@@ -26,6 +27,8 @@ The POS has three dimensions:
 - **U, persistence:** the share of 2015-16 poverty still present in 2019-21 (default 20%).
 
 Only the funding gap compares a district with others in its population tier; each dimension is then rescaled across all districts. Every weight can be changed on the index page, and any district can be downloaded as a research brief. The full write-up is at [/methodology](https://whitespaceindia.pages.dev/methodology).
+
+The same figures can be read two other ways: "Enter the ledger" on the [landing page](https://whitespaceindia.pages.dev/#ledger) opens every district in one table, and [/csr-spending](https://whitespaceindia.pages.dev/csr-spending) gives each State its own page.
 
 | Source | Coverage | Link |
 |--------|----------|------|
@@ -57,7 +60,7 @@ Its files and endpoints are documented at [/instruments/consent/data](https://wh
 
 ## Tech stack
 
-- **Framework:** Next.js 14 (App Router), TypeScript, Tailwind CSS
+- **Framework:** Next.js 15 (App Router), TypeScript, Tailwind CSS
 - **Charts and maps:** Recharts, react-simple-maps, D3
 - **PDF briefs:** @react-pdf/renderer, with text from the Google Gemini API
 - **Data pipelines:** Python 3.12
@@ -88,6 +91,7 @@ app/
   page.tsx                 landing page: one tile per arm
   csr/ about/ methodology/ reports/ simulator/
                            the CSR index and its pages
+  csr-spending/            CSR spending by State, and the whitespace districts
   instruments/             the instruments shelf and Instrument 01
   health/ education/ energy/
                            indexes in preview
