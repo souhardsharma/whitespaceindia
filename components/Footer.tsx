@@ -43,7 +43,7 @@ export default function Footer({ vertical }: { vertical?: VerticalConfig }) {
             </Link>
           </div>
           <p className="text-sm text-[#1c1c19]/70 leading-relaxed max-w-sm font-body">
-            Whitespace India reads India&apos;s public records against one another to find districts where need is high and money or scrutiny is thin.
+            Whitespace India reads India&apos;s public records together to find unattended problems: places where the need is plain in the record and the response is not.
           </p>
           <a
             href="https://www.linkedin.com/in/souhardsharma/"
