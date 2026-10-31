@@ -5,9 +5,9 @@ const siteUrl = SITE_URL;
 
 const PAGE_URL = `${siteUrl}/csr`;
 
-const TITLE = "CSR Opportunity Index for 651 Districts | Whitespace India";
+const TITLE = "CSR Investment in India: Opportunity Index for 651 Districts";
 const DESCRIPTION =
-  "The CSR Opportunity Index ranks 651 Indian districts by their poverty (NITI Aayog MPI 2023) against the CSR spending companies reported there in ten years of Ministry of Corporate Affairs filings. You can change the weights or score a single sector.";
+  "Where CSR investment in India falls short: the CSR Opportunity Index ranks 651 districts by poverty (NITI Aayog MPI 2023) against ten years of company CSR spending in Ministry of Corporate Affairs filings. Change the weights or score a single sector.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

@@ -6,12 +6,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { PRIMARY_ORIGIN, LEGACY_CSR_HOSTS, MOVED_HOSTS, resolveSiteUrl } from "../site.ts";
-import { PRIMARY, LEGACY_CSR_HOST_PATTERN, movedRedirects } from "../moved-hosts.mjs";
+import { readFileSync } from "node:fs";
 
-// Next's redirect matching, as far as these two rules use it: a `has` host
+const vercel = JSON.parse(readFileSync(new URL("../../vercel.json", import.meta.url), "utf8"));
+
+// Vercel's redirect matching, as far as these two rules use it: a `has` host
 // regex over the whole host, then "/" exactly or "/:path*" for any path.
 function redirectFor(host: string, path: string): string | null {
-  for (const rule of movedRedirects()) {
+  for (const rule of vercel.redirects) {
     const cond = rule.has?.[0];
     if (cond && !new RegExp(`^(?:${cond.value})$`).test(host)) continue;
     if (rule.source === "/" && path !== "/") continue;
@@ -21,14 +23,16 @@ function redirectFor(host: string, path: string): string | null {
   return null;
 }
 
-test("Vercel redirects to the same origin the site names as canonical", () => {
-  assert.equal(PRIMARY, PRIMARY_ORIGIN);
+test("Vercel builds nothing that can run: no framework, no install, no functions", () => {
+  assert.equal(vercel.framework, null, "a framework build brings back the functions that paused the team");
+  assert.equal(vercel.installCommand, "");
+  for (const key of ["functions", "rewrites", "crons", "routes"]) {
+    assert.equal(vercel[key], undefined, `${key} would give Vercel something to run`);
+  }
 });
 
 test("the legacy CSR hosts send / to the CSR app and the rest path for path", () => {
-  const pattern = new RegExp(`^(?:${LEGACY_CSR_HOST_PATTERN})$`);
   for (const h of LEGACY_CSR_HOSTS) {
-    assert.ok(pattern.test(h), `${h} is matched`);
     assert.equal(redirectFor(h, "/"), `${PRIMARY_ORIGIN}/csr`);
     assert.equal(redirectFor(h, "/methodology"), `${PRIMARY_ORIGIN}/methodology`);
   }
