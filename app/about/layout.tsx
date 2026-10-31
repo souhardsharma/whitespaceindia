@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     description:
       "The index sets the CSR spending companies report in each of 651 districts against NITI Aayog's poverty measure, to show where need is high and recorded spending is low.",
     url: PAGE_URL,
-    images: [{ url: "/og/csr-index-3.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
+    images: [{ url: "/og/csr-index-4.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     title: "About the CSR Opportunity Index",
     description:
       "How the index sets reported CSR spending against poverty in 651 Indian districts.",
-    images: [{ url: "/og/csr-index-3.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
+    images: [{ url: "/og/csr-index-4.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {
@@ -68,7 +68,7 @@ const PAGE_LD = {
       description: DESCRIPTION,
       isPartOf: { "@id": `${siteUrl}/#site` },
       about: { "@id": `${siteUrl}/#org` },
-      primaryImageOfPage: { "@type": "ImageObject", url: `${siteUrl}/og/csr-index-3.jpg` },
+      primaryImageOfPage: { "@type": "ImageObject", url: `${siteUrl}/og/csr-index-4.jpg` },
       inLanguage: "en-IN",
     },
     {

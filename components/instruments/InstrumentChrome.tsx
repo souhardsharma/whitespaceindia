@@ -16,7 +16,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
+import Wordmark from "@/components/Wordmark";
 import RegisterCurrency from "@/components/instruments/RegisterCurrency";
 
 // Instrument 01's colour. The shelf is not an instrument and must not wear
@@ -43,19 +43,9 @@ export function InstrumentHeader({
           <Link
             href="/"
             aria-label="Whitespace India home"
-            className="flex items-baseline gap-2 hover:opacity-80 transition-opacity shrink-0"
+            className="text-[20px] sm:text-[22px] md:text-[26px] hover:opacity-80 transition-opacity shrink-0"
           >
-            <Image
-              src="/logo.svg"
-              alt=""
-              aria-hidden="true"
-              width={28}
-              height={28}
-              className="w-[22px] h-[22px] shrink-0 translate-y-[2px]"
-            />
-            <span className="font-headline font-bold text-[20px] sm:text-[22px] md:text-[26px] leading-none tracking-[-0.02em] text-[#1c1c19]">
-              Whitespace India
-            </span>
+            <Wordmark />
           </Link>
           <Link
             href="/instruments"
@@ -116,18 +106,8 @@ export function InstrumentFooter() {
     <footer className="bg-[#fcf9f4] border-t border-[#1c1c19] px-6 md:px-12 py-12">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-8">
         <div>
-          <div className="flex items-baseline gap-2 mb-3">
-            <Image
-              src="/logo.svg"
-              alt=""
-              aria-hidden="true"
-              width={26}
-              height={26}
-              className="w-[20px] h-[20px] shrink-0 translate-y-[2px]"
-            />
-            <span className="font-headline font-bold text-[26px] leading-none tracking-[-0.02em] text-[#1c1c19]">
-              Whitespace India
-            </span>
+          <div className="text-[26px] mb-3">
+            <Wordmark />
           </div>
           <p className="font-body text-[14px] leading-relaxed text-[#1c1c19] opacity-70 max-w-md">
             Instruments are built from India&rsquo;s public records. Each figure

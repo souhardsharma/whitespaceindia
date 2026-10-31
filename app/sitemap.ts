@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { MetadataRoute } from "next";
 import registerDistricts from "@/public/data/instruments/consent/register/districts.json";
 import freshness from "@/public/data/instruments/consent/freshness.json";
@@ -5,6 +6,7 @@ import { SITE_URL } from "@/lib/site";
 import { healthConfig } from "@/lib/health/config";
 import { energyConfig } from "@/lib/energy/config";
 import { educationConfig } from "@/lib/education/config";
+import { CSR_STATES, stateSlug } from "@/lib/csr/states";
 
 const BASE_URL = SITE_URL;
 
@@ -22,6 +24,18 @@ const LAST_MODIFIED = (() => {
   if (raw) {
     const d = new Date(raw);
     if (!Number.isNaN(d.getTime())) return d.toISOString();
+  }
+  // Cloudflare Pages names no commit date in its environment; ask git for the
+  // last commit that touched what these pages show.
+  try {
+    const committed = execSync("git log -1 --format=%cI -- app components lib/csr public/data/csr", {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    const d = new Date(committed);
+    if (!Number.isNaN(d.getTime())) return d.toISOString();
+  } catch {
+    // No git in this build: fall through to the build time.
   }
   return new Date().toISOString();
 })();
@@ -64,6 +78,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.95,
     },
+    {
+      url: `${BASE_URL}/csr-spending`,
+      lastModified: LAST_MODIFIED,
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/csr-spending/whitespace-districts`,
+      lastModified: LAST_MODIFIED,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    ...CSR_STATES.map((state) => ({
+      url: `${BASE_URL}/csr-spending/${stateSlug(state)}`,
+      lastModified: LAST_MODIFIED,
+      changeFrequency: "monthly" as const,
+      priority: 0.75,
+    })),
     {
       url: `${BASE_URL}/instruments`,
       lastModified: LAST_MODIFIED,

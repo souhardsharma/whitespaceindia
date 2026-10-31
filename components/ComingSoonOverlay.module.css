@@ -51,6 +51,9 @@
   font-weight: 400;
 }
 
+/* The wordmark sets its own line above the section name; at the title's full size it fills a phone. */
+.title > :first-child { font-size: 0.72em; }
+
 .titleAccent {
   font-style: italic;
   font-weight: 300;

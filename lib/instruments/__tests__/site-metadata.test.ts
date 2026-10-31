@@ -4,9 +4,10 @@
  * The landing page gained a fifth tile, Instruments. The root metadata that
  * search engines and link previews read from went on saying "Four research
  * initiatives across CSR, Health, Education, and Energy", so the live
- * instrument was absent from the site's own title and description. These
- * tests tie the two together: every landing tile must be named in the root
- * title, and the description may not state a count of sections.
+ * instrument was absent from the site's own description. These tests tie the
+ * two together: every landing tile must be named in the root description, which
+ * may not state a count of sections. The title carries the project's theme, and
+ * five section names would not fit in what a results page shows.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -28,11 +29,12 @@ test("the landing page still has its tiles", () => {
   assert.ok(tileTitles().length >= 5, `found ${tileTitles().length} tiles`);
 });
 
-test("every landing tile is named in the site's default title", () => {
-  const m = layout.match(/default:\s*"([^"]+)"/);
-  assert.ok(m, "no default title in app/layout.tsx");
-  const missing = tileTitles().filter((t) => !m[1].includes(t));
-  assert.deepEqual(missing, [], `default title "${m[1]}" omits a tile`);
+test("every landing tile is named in the site's description", () => {
+  const m = layout.match(/description:\s*"([^"]+)"/);
+  assert.ok(m, "no description in app/layout.tsx");
+  const description = m[1].replace(/\s+and\s+/g, ", ");
+  const missing = tileTitles().filter((t) => !m[1].includes(t) && !description.includes(t));
+  assert.deepEqual(missing, [], `description "${m[1]}" omits a tile`);
 });
 
 test("the site description does not count its sections", () => {

@@ -32,11 +32,11 @@ const siteUrl = SITE_URL;
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Whitespace India | CSR index and Instruments, with Health, Energy and Education in preview",
+    default: "Whitespace India: India's unattended problems, found in public data",
     template: "%s | Whitespace India",
   },
   description:
-    "Whitespace India reads India's public records against one another to find districts where need is high and money or scrutiny is thin. It publishes a CSR index of 651 districts and a profile of each environmental clearance proposal.",
+    "Whitespace India reads India's public records together to find unattended problems. CSR & Impact Finance and Instruments are live, covering 651 districts and the environmental clearance register; Health, Energy and Education are in preview.",
   applicationName: "Whitespace India",
   keywords: [
     "Whitespace India",
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     description:
       "Whitespace India builds free tools from India's public records. The CSR Opportunity Index ranks 651 districts by poverty against corporate social responsibility spending, and People & Consent profiles any proposal in the national environmental clearance register.",
     url: siteUrl,
-    images: [{ url: "/og/whitespace-india-3.jpg", width: 1200, height: 630, alt: "Whitespace India: \u201cWhere India\u2019s resources land, and where they don\u2019t\u201d, beside a risograph print of coloured blocks and a seedling" }],
+    images: [{ url: "/og/whitespace-india-4.jpg", width: 1200, height: 630, alt: "Whitespace India: \u201cWhere India\u2019s resources land, and where they don\u2019t\u201d, beside a risograph print of coloured blocks and a seedling" }],
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     title: "Whitespace India",
     description:
       "Whitespace India builds free tools from India's public records, among them a CSR index of 651 districts and a profile of each environmental clearance proposal.",
-    images: [{ url: "/og/whitespace-india-3.jpg", alt: "Whitespace India: \u201cWhere India\u2019s resources land, and where they don\u2019t\u201d, beside a risograph print of coloured blocks and a seedling" }],
+    images: [{ url: "/og/whitespace-india-4.jpg", alt: "Whitespace India: \u201cWhere India\u2019s resources land, and where they don\u2019t\u201d, beside a risograph print of coloured blocks and a seedling" }],
   },
   alternates: { canonical: siteUrl },
   robots: {
@@ -109,7 +109,7 @@ const SITE_LD = {
       logo: `${siteUrl}/logo.svg`,
       description:
         "An independent project that reads India's public records against one another to find places where need is high and money or scrutiny is thin, and publishes its method, data and code.",
-      sameAs: ["https://www.linkedin.com/in/souhardsharma/"],
+      sameAs: ["https://www.linkedin.com/in/souhardsharma/", "https://github.com/souhardsharma/whitespaceindia"],
       founder: { "@type": "Person", name: "Souhard Sharma" },
       foundingLocation: { "@type": "Country", name: "India" },
     },
