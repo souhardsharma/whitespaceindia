@@ -27,9 +27,9 @@ import type { InstrumentIndex, InstrumentMeta } from "@/lib/instruments/types";
 
 export const metadata = pageMeta({
   path: "/instruments/consent",
-  title: "People & Consent: environmental clearance proposals by place",
+  title: "People & Consent: India's environmental clearance proposals by place",
   description:
-    "People & Consent profiles each proposal in India's environmental clearance register, reporting who lives where it would be built and which duties of consultation and consent apply there.",
+    "People & Consent profiles each proposal in India's environmental clearance register (PARIVESH), reporting who lives where it would be built and which duties of consultation and consent, including Scheduled Area status, apply there.",
 });
 
 const nf = new Intl.NumberFormat("en-IN");

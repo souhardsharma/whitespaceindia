@@ -1,5 +1,4 @@
 import { withBotId } from "botid/next/config";
-import { movedRedirects } from "./lib/moved-hosts.mjs";
 import { ASSET_PREFIX } from "./scripts/cloudflare/proxy.mjs";
 
 /** @type {import('next').NextConfig} */
@@ -121,11 +120,6 @@ const nextConfig = {
   poweredByHeader: false,
   ...(BUILD_CPUS ? { experimental: { cpus: BUILD_CPUS } } : {}),
   ...(BACKEND_BUILD ? { assetPrefix: ASSET_PREFIX, deploymentId: BACKEND_BUILD } : {}),
-  // Vercel production redirects every request to the Cloudflare Pages origin
-  // (lib/moved-hosts.mjs). Previews still serve the app.
-  async redirects() {
-    return process.env.VERCEL_ENV === "production" ? movedRedirects() : [];
-  },
   // The images are WebPs already sized for the page. Off Vercel there is no
   // optimiser worth paying for: on Pages each /_next/image request would run
   // a function against the daily allowance, so the files are linked directly.
