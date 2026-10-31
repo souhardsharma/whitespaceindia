@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 const WAYS = [
   { href: "/", label: "Whitespace India", note: "every index and instrument" },
   { href: "/csr", label: "CSR Opportunity Index", note: "districts ranked by need against CSR spending" },
+  { href: "/csr-spending", label: "CSR spending by State", note: "what companies reported, State by State" },
   { href: "/instruments/consent", label: "People & Consent", note: "search the environmental clearance register" },
 ];
 
