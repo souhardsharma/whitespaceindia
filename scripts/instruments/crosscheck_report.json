@@ -1,14 +1,14 @@
 {
- "generated_at": "2026-10-31T03:32:18.583404+00:00",
+ "generated_at": "2026-11-01T05:51:10.032736+00:00",
  "purpose": "Tests the district the instrument reports against the district named in the regulator's signed clearance letter - a different document, not the applicant's own form. Corroborates or refutes the single source the whole profile depends on.",
- "sampled": 150,
+ "sampled": 142,
  "requested": 150,
- "stopped_early": false,
- "seconds": 1347.1,
+ "stopped_early": true,
+ "seconds": 1264.5,
  "outcomes": {
-  "agree": 98,
-  "disagree": 4,
-  "no-district-in-letter": 26,
+  "agree": 89,
+  "disagree": 12,
+  "no-district-in-letter": 19,
   "no-location-text": 1,
   "download-failed": 21,
   "unreadable": 0,
@@ -17,20 +17,14 @@
  "download_failures": {
   "transport": 21
  },
- "comparable": 102,
- "agreement_rate_pct": 96.08,
+ "comparable": 101,
+ "agreement_rate_pct": 88.12,
  "agreement_by_resolution_method": {
   "v": {
-   "agree": 82,
-   "comparable": 85,
-   "sampled": 125,
-   "rate_pct": 96.47
-  },
-  "s": {
-   "agree": 12,
-   "comparable": 13,
-   "sampled": 21,
-   "rate_pct": 92.31
+   "agree": 74,
+   "comparable": 84,
+   "sampled": 121,
+   "rate_pct": 88.1
   },
   "d": {
    "agree": 1,
@@ -38,14 +32,45 @@
    "sampled": 1,
    "rate_pct": 100.0
   },
-  "c": {
-   "agree": 3,
-   "comparable": 3,
-   "sampled": 3,
-   "rate_pct": 100.0
+  "s": {
+   "agree": 14,
+   "comparable": 16,
+   "sampled": 20,
+   "rate_pct": 87.5
   }
  },
  "disagreements": [
+  {
+   "proposalNo": "SIA/KA/MIN/560312/2025",
+   "state": "KARNATAKA",
+   "claimed": 555,
+   "foundInLetter": [
+    561
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/JAHEED_MANIYAR/38/775850178/V_0_SIA_KA_MIN_560312_2025_775851178_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/TN/MIN/490772/2024",
+   "state": "TAMIL NADU",
+   "claimed": 628,
+   "foundInLetter": [
+    603,
+    608
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/MURUGESAN/246/89510545/V_0_SIA_TN_MIN_490772_2024_89510546_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/KA/MIN/502865/2024",
+   "state": "KARNATAKA",
+   "claimed": 555,
+   "foundInLetter": [
+    572
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/S_M_INDUSTRIES/246/110232332/V_0_SIA_KA_MIN_502865_2024_110232333_-signed.pdf"
+  },
   {
    "proposalNo": "SIA/AP/MIN/542256/2025",
    "state": "ANDHRA PRADESH",
@@ -57,36 +82,85 @@
    "certificate": "https://parivesh.nic.in/certificates/SHAIK_KHADAR_VALI_SHAIK_NOOR_AHMED/2/130462231/V_0_SIA_AP_MIN_542256_2025_130462235_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/KA/MIN/551153/2025",
-   "state": "KARNATAKA",
-   "claimed": 568,
+   "proposalNo": "SIA/TN/MIN/520106/2025",
+   "state": "TAMIL NADU",
+   "claimed": 604,
    "foundInLetter": [
-    569,
+    603
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/global_mines/5/118399070/V_0_SIA_TN_MIN_520106_2025_118399076_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/MH/MIN/507765/2024",
+   "state": "MAHARASHTRA",
+   "claimed": 511,
+   "foundInLetter": [
+    510
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/DMO_YAVATMAL/246/112298444/V_0_SIA_MH_MIN_507765_2024_112298445_-signed.pdf"
+  },
+  {
+   "proposalNo": "IA/MP/RIV/588965/2026",
+   "state": "MADHYA PRADESH",
+   "claimed": 419,
+   "foundInLetter": [
+    418,
+    423
+   ],
+   "method": "s",
+   "certificate": "https://parivesh.nic.in/certificates/PROJECT_MANAGER_(Executive_Engineer)/5/1238336811/V_1_IA_MP_RIV_588965_2026_1238336812_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/KA/MIN/506015/2025",
+   "state": "KARNATAKA",
+   "claimed": 570,
+   "foundInLetter": [
     572
    ],
    "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/G_D_THIMMAPPA_SHEREGAR/246/136069101/V_0_SIA_KA_MIN_551153_2025_136069102_-signed.pdf"
+   "certificate": "https://parivesh.nic.in/certificates/PONNASAMUDRA_SHANKARAPPA/246/111601144/V_0_SIA_KA_MIN_506015_2025_111601145_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/TN/MIN/466751/2024",
-   "state": "TAMIL NADU",
-   "claimed": 628,
-   "foundInLetter": [
-    603,
-    608
-   ],
-   "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/MOHAMED_ISMAIL/246/54774630/V_0_SIA_TN_MIN_466751_2024_54774631_-signed.pdf"
-  },
-  {
-   "proposalNo": "SIA/RJ/MIN/510671/2025",
+   "proposalNo": "SIA/RJ/MIN/461038/2024",
    "state": "RAJASTHAN",
-   "claimed": 103,
+   "claimed": 126,
    "foundInLetter": [
-    111
+    123
    ],
    "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/MAHENDER_SINGH/246/113345816/V_0_SIA_RJ_MIN_510671_2025_113345817_-signed.pdf"
+   "certificate": "https://parivesh.nic.in/certificates/_MAHADEVEN_MINECHEM/38/44223241/V_0_SIA_RJ_MIN_461038_2024_44223248_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/KA/INFRA2/554588/2025",
+   "state": "KARNATAKA",
+   "claimed": 577,
+   "foundInLetter": [
+    572
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/_BRIGADE_ENTERPRISES_LIMITED/5/137768113/V_0_SIA_KA_INFRA2_554588_2025_137768114_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/HP/MIN/465111/2024",
+   "state": "HIMACHAL PRADESH",
+   "claimed": 29,
+   "foundInLetter": [
+    33
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/SANDAN_SHARMA/5/51616785/V_0_SIA_HP_MIN_465111_2024_51616786_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/MH/IND3/582410/2026",
+   "state": "MAHARASHTRA",
+   "claimed": 521,
+   "foundInLetter": [
+    519
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/_ETERNIS_FINE_CHEMICALS_LIMITED/38/1232425619/SIA_MH_IND3_582410_2026_1232425623_.pdf"
   }
  ],
  "method_notes": [
