@@ -1,0 +1,36 @@
+# Throwaway: do the geo-blocked education sources answer a GitHub runner
+# THROUGH the education proxy pool? Serves nothing, writes nothing.
+# The branch is deleted after the run.
+name: edu-pool
+on:
+  push:
+    branches: [probe-edu-reach]
+permissions:
+  contents: read
+jobs:
+  pool:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu-cache
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - run: pip install pysocks
+      - name: Build pools
+        run: |
+          timeout 600 python -I -X utf8 scripts/education/refresh_pool.py india --max-minutes 7 || true
+          timeout 300 python -I -X utf8 scripts/education/refresh_pool.py open --max-minutes 3 --limit 20000 || true
+          wc -l "$EDUCATION_CACHE_DIR"/pools/*.txt
+      - name: Fetch through the pool
+        run: |
+          printf '| target | url | result |\n|---|---|---|\n' > out.md
+          while read -r target url; do
+            [ -z "$url" ] && continue
+            line=$(timeout 240 python -I -X utf8 scripts/education/get.py "$target" "$url" 2>&1 | head -1 | tr -d '|')
+            printf '| %s | %s | %s |\n' "$target" "$url" "$line" >> out.md
+          done < urls_pool.txt
+          cat out.md >> "$GITHUB_STEP_SUMMARY"
+          cat out.md

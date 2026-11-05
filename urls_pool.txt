@@ -1,0 +1,10 @@
+india https://spgi.udiseplus.gov.in/performance/reports/5
+india https://dpgi.udiseplus.gov.in/apis/backend/yearMaster
+india https://prabandh.education.gov.in/
+india https://pmposhan.education.gov.in/
+india https://eparlib.sansad.in/
+india https://geoportal.nic.in/nicgis/rest/services/SCHOOLGIS/Schooldata/MapServer/0?f=json
+india https://nas.gov.in/
+india https://rajshaladarpan.rajasthan.gov.in/
+open https://kys.udiseplus.gov.in/web-app/api/school/track?schoolId=1600889
+open https://sansad.in/
