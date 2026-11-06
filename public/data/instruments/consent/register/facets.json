@@ -1,19 +1,19 @@
 {
- "generated_at": "2026-11-05T02:46:35.346341+00:00",
+ "generated_at": "2026-11-06T03:28:51.492451+00:00",
  "totals": {
-  "proposals": 93469,
-  "with_district": 93188,
+  "proposals": 93563,
+  "with_district": 93285,
   "districts_total": 640,
   "districts_with_proposals": 621,
-  "proposals_in_scheduled_districts": 26651,
+  "proposals_in_scheduled_districts": 26671,
   "districts_scheduled_wholly": 39,
   "districts_scheduled_partly": 67,
-  "proposals_declaring_land": 92340,
-  "declared_displaced_families": 670467,
-  "declared_affected_families": 1436682,
-  "proposals_links_read": 93188,
-  "proposals_declaring_forest": 1332,
-  "forest_ha_sought_primary": 48189.95
+  "proposals_declaring_land": 92436,
+  "declared_displaced_families": 671017,
+  "declared_affected_families": 1437786,
+  "proposals_links_read": 93285,
+  "proposals_declaring_forest": 1336,
+  "forest_ha_sought_primary": 48384.09
  },
  "note": "Counts are of proposals this instrument could place in a district. A project naming sites in several districts is counted in each, because it affects each. Declared land and family figures are the proponents' own filings summed, not an independent assessment, and are attributed only to a project's primary district so they are not double-counted.",
  "landUnitCaveat": "No total land area is published. The Common Application Form records a land figure but no unit for it - the form carries units for air and water quality and none for area. Mining leases are conventionally filed in hectares and township projects in square metres, and nothing in the record distinguishes them, so the figures cannot be added together. Each proposal's declared figure is shown as filed, without a unit."
