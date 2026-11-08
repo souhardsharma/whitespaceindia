@@ -1,102 +1,141 @@
 {
- "generated_at": "2026-11-06T03:50:28.571013+00:00",
+ "generated_at": "2026-11-08T03:26:53.291452+00:00",
  "purpose": "Tests the district the instrument reports against the district named in the regulator's signed clearance letter - a different document, not the applicant's own form. Corroborates or refutes the single source the whole profile depends on.",
- "sampled": 142,
+ "sampled": 150,
  "requested": 150,
- "stopped_early": true,
- "seconds": 1229.1,
+ "stopped_early": false,
+ "seconds": 1260.2,
  "outcomes": {
-  "agree": 94,
-  "disagree": 5,
-  "no-district-in-letter": 17,
+  "agree": 98,
+  "disagree": 9,
+  "no-district-in-letter": 31,
   "no-location-text": 1,
-  "download-failed": 25,
+  "download-failed": 11,
   "unreadable": 0,
   "no-text-layer": 0
  },
  "download_failures": {
-  "transport": 25
+  "transport": 11
  },
- "comparable": 99,
- "agreement_rate_pct": 94.95,
+ "comparable": 107,
+ "agreement_rate_pct": 91.59,
  "agreement_by_resolution_method": {
-  "v": {
-   "agree": 76,
-   "comparable": 79,
-   "sampled": 113,
-   "rate_pct": 96.2
-  },
   "s": {
    "agree": 16,
-   "comparable": 17,
-   "sampled": 25,
-   "rate_pct": 94.12
+   "comparable": 16,
+   "sampled": 22,
+   "rate_pct": 100.0
   },
-  "c": {
-   "agree": 1,
-   "comparable": 2,
-   "sampled": 2,
-   "rate_pct": 50.0
+  "v": {
+   "agree": 80,
+   "comparable": 89,
+   "sampled": 125,
+   "rate_pct": 89.89
   },
   "d": {
-   "agree": 1,
-   "comparable": 1,
+   "agree": 2,
+   "comparable": 2,
    "sampled": 2,
    "rate_pct": 100.0
+  },
+  "c": {
+   "agree": 0,
+   "comparable": 0,
+   "sampled": 1,
+   "rate_pct": null
   }
  },
  "disagreements": [
   {
-   "proposalNo": "SIA/MH/INFRA2/583815/2026",
-   "state": "MAHARASHTRA",
-   "claimed": 518,
+   "proposalNo": "SIA/UP/MIN/570228/2026",
+   "state": "UTTAR PRADESH",
+   "claimed": 175,
    "foundInLetter": [
-    519
+    157
    ],
-   "method": "c",
-   "certificate": "https://parivesh.nic.in/certificates/Shraddha_life_spaces_private_limited/5/1233793384/V_0_SIA_MH_INFRA2_583815_2026_1233793385_-signed.pdf"
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/RAJESH_KUMAR_SINGH/5/1220144633/V_0_SIA_UP_MIN_570228_2026_1220144634_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/MP/RIV/555107/2025",
-   "state": "MADHYA PRADESH",
-   "claimed": 452,
+   "proposalNo": "SIA/CG/MIN/571107/2026",
+   "state": "CHHATTISGARH",
+   "claimed": 401,
    "foundInLetter": [
-    456
+    410
    ],
-   "method": "s",
-   "certificate": "https://parivesh.nic.in/certificates/SANKALP_SHRIVASTAVA/5/138045594/V_0_SIA_MP_RIV_555107_2025_138045595_-signed.pdf"
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/yogesh_tandan/246/1220693606/V_0_SIA_CG_MIN_571107_2026_1220693607_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/RJ/MIN/495549/2025",
+   "proposalNo": "SIA/TN/MIN/529643/2025",
+   "state": "TAMIL NADU",
+   "claimed": 625,
+   "foundInLetter": [
+    603
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/S_Ramesh__/246/122474839/V_0_SIA_TN_MIN_529643_2025_122474840_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/JH/MIN/472125/2024",
+   "state": "JHARKHAND",
+   "claimed": 367,
+   "foundInLetter": [
+    365
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/DHARMENDRA_MEHTA/5/66544226/V_0_SIA_JH_MIN_472125_2024_66544229_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/GJ/MIN/498196/2024",
+   "state": "GUJARAT",
+   "claimed": 477,
+   "foundInLetter": [
+    473
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/vikrambhai_n_kandoria/246/105500729/SIA_GJ_MIN_498196_2024_105500730_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/GJ/MIN/505868/2024",
+   "state": "GUJARAT",
+   "claimed": 486,
+   "foundInLetter": [
+    482
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/RATAHVA__RUPSINGBHAI_KALIYABHAI/5/111545069/V_0_SIA_GJ_MIN_505868_2024_111545076_-signed.pdf"
+  },
+  {
+   "proposalNo": "IA/WB/IND3/463838/2024",
+   "state": "WEST BENGAL",
+   "claimed": 344,
+   "foundInLetter": [
+    342
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/_TEESTA_AGRO_INDUSTRIES_LIMITED/2/49323545/V_1_IA_WB_IND3_463838_2024_49323551_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/RJ/MIN/504839/2024",
+   "state": "RAJASTHAN",
+   "claimed": 123,
+   "foundInLetter": [
+    102
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/hari_infracontracts_private_limited_/246/111036502/V_0_SIA_RJ_MIN_504839_2024_111036503_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/RJ/MIN/489697/2024",
    "state": "RAJASTHAN",
    "claimed": 118,
    "foundInLetter": [
-    113
+    110,
+    119
    ],
    "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/babu_lal/246/100055904/V_0_SIA_RJ_MIN_495549_2025_100055905_-signed.pdf"
-  },
-  {
-   "proposalNo": "SIA/OR/MIN/575919/2026",
-   "state": "ODISHA",
-   "claimed": 391,
-   "foundInLetter": [
-    382,
-    386
-   ],
-   "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/SRI_SATYANARAYAN_PRADHAN/65/1224491906/SIA_OR_MIN_575919_2026_1224491909_-signed.pdf"
-  },
-  {
-   "proposalNo": "SIA/GJ/MIN/566674/2026",
-   "state": "GUJARAT",
-   "claimed": 484,
-   "foundInLetter": [
-    482,
-    485
-   ],
-   "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/vasava_pritalkumar_amarsinh/5/1217512434/V_0_SIA_GJ_MIN_566674_2026_1217512435_-signed.pdf"
+   "certificate": "https://parivesh.nic.in/certificates/swastik_quartz/38/87469183/V_0_SIA_RJ_MIN_489697_2024_87469201_-signed.pdf"
   }
  ],
  "method_notes": [
