@@ -54,3 +54,22 @@ test("share cards stay under WhatsApp's 300 KB preview limit", () => {
     assert.ok(kb < 300, `${name} is ${kb.toFixed(0)} KB`);
   }
 });
+
+test("a retired card name redirects to the card that replaced it", async () => {
+  const { retiredCardRedirects } = await import("../../scripts/cloudflare/retired-cards.mjs");
+  const cards = readdirSync("public/og");
+  const lines: string[] = retiredCardRedirects(cards);
+  const target = new Map(lines.map((line) => line.split(" ")).map(([from, to, code]) => {
+    assert.equal(code, "301", from);
+    return [from, to];
+  }));
+  // Googlebot asked for these a week after they were replaced (crawl stats, 2026-11).
+  assert.equal(target.get("/og/consent-3.jpg"), "/og/consent-4.jpg");
+  assert.equal(target.get("/og/csr-index-3.jpg"), "/og/csr-index-4.jpg");
+  assert.equal(target.get("/og/instruments-4.jpg"), "/og/instruments-5.jpg");
+  assert.equal(target.get("/og/brand.png"), "/og/whitespace-india-4.jpg");
+  for (const [from, to] of target) {
+    assert.ok(!existsSync(join("public", from)), `${from} is a served card and must not be redirected`);
+    assert.ok(existsSync(join("public", to)), `${from} redirects to missing ${to}`);
+  }
+});
