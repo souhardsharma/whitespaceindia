@@ -10,7 +10,7 @@ permissions:
 jobs:
   pool:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 110
     env:
       EDUCATION_CACHE_DIR: /home/runner/edu-cache
     steps:
@@ -29,8 +29,8 @@ jobs:
           printf '| target | url | result |\n|---|---|---|\n' > out.md
           while read -r target url; do
             [ -z "$url" ] && continue
-            line=$(timeout 240 python -I -X utf8 scripts/education/get.py "$target" "$url" 2>&1 | head -1 | tr -d '|')
+            line=$(timeout 200 python -I -X utf8 scripts/education/get.py "$target" "$url" 2>&1 | head -1 | tr -d '|')
             printf '| %s | %s | %s |\n' "$target" "$url" "$line" >> out.md
-          done < urls_pool.txt
+          done < urls_pool.txt || true
           cat out.md >> "$GITHUB_STEP_SUMMARY"
           cat out.md

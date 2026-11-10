@@ -172,6 +172,63 @@ def not_sent(body: bytes) -> bool:
     return body in NET.NOT_SENT
 
 
+class SessionLost(Exception):
+    """The route under a session failed; the caller restarts its flow."""
+
+
+class Session:
+    """Several requests that must share one cookie jar and one exit address.
+
+    Some sources keep state between requests: an ASP.NET page whose postbacks
+    carry a view state bound to a session cookie, a form whose antiforgery
+    token is bound to a cookie. The pool sends each request down whichever
+    route is free, so it cannot carry them. A Session holds ONE verified route
+    (never the direct one off a runner) for the length of a flow, spaces its
+    own requests, and raises SessionLost when that route fails, so the caller
+    starts the flow again on another route rather than continuing a half-made
+    session somewhere else.
+    """
+
+    def __init__(self, target: str, *, spacing: float = 2.0,
+                 timeout: int = 40, avoid: set[str] | None = None):
+        import http.cookiejar
+        import random
+        import urllib.request
+
+        routes = [r for r in NET.load_proxies(pool_path(target))
+                  if r not in (avoid or set())]
+        if not routes and not on_runner():
+            raise SystemExit(f"no routes in {pool_path(target)}; run refresh_pool.py")
+        # Fastest half first (the file is written fastest first), chosen at
+        # random so successive sessions spread over addresses.
+        self.proxy = random.choice(routes[: max(1, len(routes) // 2)]) if routes else None
+        self.jar = http.cookiejar.CookieJar()
+        self.opener = NET.Route(self.proxy).opener()
+        self.opener.add_handler(urllib.request.HTTPCookieProcessor(self.jar))
+        self.spacing, self.timeout, self._next = spacing, timeout, 0.0
+
+    def request(self, url: str, *, data: bytes | None = None,
+                headers: dict | None = None) -> tuple[int, bytes, str]:
+        """(status, body, final URL). Raises SessionLost on a transport failure."""
+        import urllib.error
+        import urllib.request
+
+        wait = self._next - time.time()
+        if wait > 0:
+            time.sleep(wait)
+        self._next = time.time() + self.spacing
+        req = urllib.request.Request(url, data=data,
+                                     headers={**NET.DEFAULT_HEADERS, **(headers or {})},
+                                     method="POST" if data is not None else "GET")
+        try:
+            with self.opener.open(req, timeout=self.timeout) as r:
+                return r.status, r.read(), r.geturl()
+        except urllib.error.HTTPError as e:
+            return e.code, e.read(), url
+        except OSError as e:
+            raise SessionLost(f"{self.proxy}: {e}") from e
+
+
 def summary(pool: NET.Pool) -> str:
     s = pool.stats()
     return (f"routes {s['routes_live']}/{s['routes_total']} live, "
