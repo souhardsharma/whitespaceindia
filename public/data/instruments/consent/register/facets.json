@@ -1,18 +1,18 @@
 {
- "generated_at": "2026-11-10T03:54:14.837408+00:00",
+ "generated_at": "2026-11-11T04:55:56.754407+00:00",
  "totals": {
   "proposals": 93603,
   "with_district": 93324,
   "districts_total": 640,
   "districts_with_proposals": 621,
-  "proposals_in_scheduled_districts": 26699,
+  "proposals_in_scheduled_districts": 26695,
   "districts_scheduled_wholly": 39,
   "districts_scheduled_partly": 67,
-  "proposals_declaring_land": 92476,
+  "proposals_declaring_land": 92475,
   "declared_displaced_families": 670878,
   "declared_affected_families": 1432692,
   "proposals_links_read": 93324,
-  "proposals_declaring_forest": 1331,
+  "proposals_declaring_forest": 1332,
   "forest_ha_sought_primary": 48183.08
  },
  "note": "Counts are of proposals this instrument could place in a district. A project naming sites in several districts is counted in each, because it affects each. Declared land and family figures are the proponents' own filings summed, not an independent assessment, and are attributed only to a project's primary district so they are not double-counted.",
