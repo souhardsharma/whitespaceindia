@@ -375,6 +375,20 @@
   text-transform: uppercase;
   opacity: 0.85;
 }
+/* A count-up is drawn from data-n over the real figure, which stays the
+   element's text (and is what a reader without the animation, a screen
+   reader and a search engine get). The attribute goes when the count ends. */
+.odometer[data-n]::before {
+  content: attr(data-n);
+  content: attr(data-n) / "";
+}
+.odometer[data-n] .odometerValue {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .statDivider {
   display: inline-block;
   width: 1px;
