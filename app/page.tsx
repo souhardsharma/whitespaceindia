@@ -115,15 +115,21 @@ function NewsTicker() {
 }
 
 /* Odometer — count up from 0 to target when first visible.
-   Uses RAF + eased curve; respects prefers-reduced-motion. */
+   Uses RAF + eased curve; respects prefers-reduced-motion.
+
+   The number in the page's text is always the real one. The count is drawn
+   over it from `data-n` (page.module.css) and the attribute is dropped when
+   the count ends. With the count as the text itself, the served page read
+   "0 districts ranked ₹0 crore a year", and that is the copy a search engine
+   kept. */
 function Odometer({ to, duration = 1400 }: { to: number; duration?: number }) {
-  const [n, setN] = useState(0);
+  const [shown, setShown] = useState<number | null>(0);
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) { setN(to); return; }
+    if (reduce) { setShown(null); return; }
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver((entries) => {
@@ -134,8 +140,12 @@ function Odometer({ to, duration = 1400 }: { to: number; duration?: number }) {
           const p = Math.min(1, (t - start) / duration);
           /* cubic-bezier ease-out feel */
           const eased = 1 - Math.pow(1 - p, 3);
-          setN(Math.round(to * eased));
-          if (p < 1) requestAnimationFrame(tick);
+          if (p < 1) {
+            setShown(Math.round(to * eased));
+            requestAnimationFrame(tick);
+          } else {
+            setShown(null);
+          }
         };
         requestAnimationFrame(tick);
         io.disconnect();
@@ -145,7 +155,15 @@ function Odometer({ to, duration = 1400 }: { to: number; duration?: number }) {
     return () => io.disconnect();
   }, [to, duration]);
 
-  return <span ref={ref}>{n.toLocaleString("en-IN")}</span>;
+  return (
+    <span
+      ref={ref}
+      className={styles.odometer}
+      data-n={shown === null ? undefined : shown.toLocaleString("en-IN")}
+    >
+      <span className={styles.odometerValue}>{to.toLocaleString("en-IN")}</span>
+    </span>
+  );
 }
 
 
