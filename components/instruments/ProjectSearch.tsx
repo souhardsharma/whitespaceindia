@@ -20,6 +20,7 @@ import type {
   StateSummary,
 } from "@/lib/instruments/types";
 import { stageLabel } from "@/lib/instruments/projects";
+import { BackendAsleep, wakeLink, wakeOrigin } from "@/lib/instruments/wake";
 import { PLUM } from "./InstrumentChrome";
 
 const PAGE = 25;
@@ -52,6 +53,13 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
   const [total, setTotal] = useState(0);
   const [stages, setStages] = useState<Record<string, number>>({});
   const [status, setStatus] = useState<LoadState>("loading");
+  // Set when a search failed because the backend is asleep: the address that
+  // wakes it and returns the reader to this page (lib/instruments/wake.ts).
+  const [wake, setWake] = useState<string | null>(null);
+  const failed = useCallback((e: unknown) => {
+    setWake(e instanceof BackendAsleep ? wakeLink(e.origin, window.location) : null);
+    setStatus("error");
+  }, []);
 
   const states = useMemo(
     () =>
@@ -92,7 +100,10 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
       u.set("offset", String(offset));
       u.set("limit", String(PAGE));
       const res = await fetch(`/api/instruments/consent/search?${u.toString()}`);
-      if (!res.ok) throw new Error(String(res.status));
+      if (!res.ok) {
+        const origin = wakeOrigin(res);
+        throw origin ? new BackendAsleep(origin) : new Error(String(res.status));
+      }
       return (await res.json()) as {
         total: number; stages: Record<string, number>; items: SearchItem[];
       };
@@ -120,11 +131,11 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
         setStages(d.stages);
         setStatus("ready");
       })
-      .catch(() => live && setStatus("error"));
+      .catch((e) => live && failed(e));
     return () => {
       live = false;
     };
-  }, [load]);
+  }, [load, failed]);
 
   const more = async () => {
     // Not while a new filter's first page is loading: `generation` has already
@@ -141,8 +152,8 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
         const have = new Set(prev.map((p) => p.id));
         return [...prev, ...d.items.filter((p) => !have.has(p.id))];
       });
-    } catch {
-      if (gen === generation.current) setStatus("error");
+    } catch (e) {
+      if (gen === generation.current) failed(e);
     } finally {
       busy.current = false;
       setMoreLoading(false);
@@ -284,7 +295,22 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
           : ""}
       </p>
 
-      {status === "error" ? (
+      {status === "error" && wake ? (
+        <div className="py-14 text-center border border-dashed border-[#1c1c19]/25">
+          <p className="font-headline text-[20px] tracking-[-0.01em]">The search is asleep</p>
+          <p className="font-body text-[14px] leading-relaxed opacity-65 mt-2 max-w-xl mx-auto px-6">
+            It sleeps when nobody has used it for a while, and takes about a minute to wake.
+            The link wakes it and brings you back to this page.
+          </p>
+          <a
+            href={wake}
+            className="inline-block mt-5 font-label text-[12px] uppercase tracking-[0.08em] underline underline-offset-4"
+            style={{ color: PLUM }}
+          >
+            Wake the search
+          </a>
+        </div>
+      ) : status === "error" ? (
         <EmptyState
           title="The search could not be completed"
           body="The search failed to load, although the register does hold these proposals. Reloading the page usually fixes this."
