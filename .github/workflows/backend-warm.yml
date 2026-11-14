@@ -6,7 +6,11 @@ name: backend-warm
 # GitHub never delivered this workflow's schedule - neither every 10 minutes
 # nor every two hours ("7 1-17/2", not once on 2026-10-29 by 05:00 UTC).
 #
-# This stays as the manual fallback: one run asks /healthz every 10 minutes
+# The Worker can only HOLD the service awake: Render refuses a wake asked for
+# from Cloudflare, and accepts one from a runner (see the `wake` job in
+# instruments-sync.yml, which wakes it every morning).
+#
+# This stays as the manual fallback, and it does wake a sleeping service: one run asks /healthz every 10 minutes
 # until 18:00 UTC (23:30 IST) or the run's own time is nearly up. Never round
 # the clock: past 750 instance hours a month Render suspends the service.
 on:

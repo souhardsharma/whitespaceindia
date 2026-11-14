@@ -95,17 +95,108 @@ function fromCache(res, state = "hit") {
   return out;
 }
 
-async function fetchBackend(request, env, strip = "") {
+// The free backend sleeps after 15 idle minutes, and NOTHING AT CLOUDFLARE CAN
+// WAKE IT. Render's router answers a request for a sleeping service that comes
+// from a Worker (this proxy, the keep-warm Worker) with 429 and
+// `x-render-routing: hibernate-rate-limited`, and does not start the service.
+// Measured 2026-11-14: four requests through this proxy, 100 s apart, were all
+// refused that way, and a fifth from a GitHub runner woke the service in 52 s;
+// the keep-warm Worker's own log shows its pings refused every morning (130 in
+// seven days) until the night's data commit redeployed the service. For about
+// a minute after such a refusal Render's edge also answers the host with
+// Cloudflare's challenge page (cf-mitigated: challenge), to everyone.
+//
+// So the nightly workflow wakes it (the `wake` job in instruments-sync.yml),
+// and what a refusal looks like here is settled once: it is never the
+// backend's answer. The backend's own answers, its own rate-limit 429s among
+// them, carry x-render-origin-server.
+export function edgeRefusal(res, env) {
+  if (res.headers.has("cf-mitigated")) return true;
+  if (res.status !== 429 || res.headers.has("x-render-origin-server")) return false;
   try {
-    return await fetch(backendRequest(request, env, strip));
+    return new URL(env.BACKEND_ORIGIN).hostname.endsWith(".onrender.com");
   } catch {
-    // The free backend sleeps when idle and can be restarting; say so rather
-    // than hand the browser Cloudflare's generic error page.
-    return new Response("This part of the site is waking up. Try again in a minute.", {
+    return false;
+  }
+}
+
+// Seconds a reader is asked to wait: a wake takes about a minute.
+export const WAKE_SECONDS = 120;
+// Seconds the waking page waits before it sends the reader to the backend.
+// Long enough to read the line; the reader's browser passes the edge's
+// challenge where a script could not.
+export const WAKE_AFTER_SECONDS = 4;
+
+const attr = (text) => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+function wantsPage(request) {
+  if (request.method !== "GET") return false;
+  if (request.headers.has("rsc") || request.headers.has("next-router-prefetch")) return false;
+  const path = new URL(request.url).pathname;
+  if (path.startsWith("/api/") || path.startsWith(ASSET_PREFIX + "/")) return false;
+  return (request.headers.get("accept") || "").includes("text/html");
+}
+
+// What a reader gets while the backend sleeps or restarts. A reader's own
+// browser CAN wake it: a visit to the backend's address starts the service,
+// and the backend answers every visit without the key by sending it back to
+// the same path here (backend.mjs). So a page is answered with a page that
+// makes that round trip by itself, and anything else is told where to send a
+// reader (x-backend-wake) - a script cannot follow, connect-src is 'self'.
+function asleep(request, env) {
+  const headers = { "Retry-After": String(WAKE_SECONDS), "cache-control": "no-store" };
+  let wake = "";
+  try {
+    const here = new URL(request.url);
+    const origin = new URL(env.BACKEND_ORIGIN).origin;
+    headers["x-backend-wake"] = origin;
+    wake = origin + here.pathname + here.search;
+  } catch {
+    // No usable backend address: the plain answer below.
+  }
+  if (!wake || !wantsPage(request)) {
+    return new Response("This part of the site is asleep. It takes about a minute to wake; try again then.", {
       status: 503,
-      headers: { "Retry-After": "60" },
+      headers: { ...headers, "content-type": "text/plain; charset=utf-8" },
     });
   }
+  const page = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="${WAKE_AFTER_SECONDS};url=${attr(wake)}">
+<title>Waking up | Whitespace India</title>
+<style>
+body{margin:0;background:#fcf9f4;color:#1c1c19;font:16px/1.6 "Public Sans",system-ui,sans-serif}
+main{max-width:34rem;margin:0 auto;padding:22vh 1.5rem 3rem}
+h1{font:400 2rem/1.15 Newsreader,Georgia,serif;letter-spacing:-.01em;margin:0 0 1rem}
+p{margin:0 0 1rem}
+a{color:inherit}
+</style>
+</head>
+<body>
+<main>
+<h1>This page is waking up</h1>
+<p>The part of the site that reads the register on request sleeps when nobody has used it for a while. Waking it takes about a minute.</p>
+<p>You are being taken there now and will be brought back to this page. Nothing needs doing.</p>
+<p><a href="${attr(wake)}">Go now</a></p>
+</main>
+</body>
+</html>
+`;
+  return new Response(page, { status: 503, headers: { ...headers, "content-type": "text/html; charset=utf-8" } });
+}
+
+async function fetchBackend(request, env, strip = "") {
+  let res;
+  try {
+    res = await fetch(backendRequest(request, env, strip));
+  } catch {
+    return asleep(request, env);
+  }
+  return edgeRefusal(res, env) ? asleep(request, env) : res;
 }
 
 function offline() {

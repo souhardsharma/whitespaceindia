@@ -77,6 +77,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The backend (render.yaml) sleeps after 15 idle minutes, and nothing at
+  # Cloudflare can wake it: Render's router refuses a wake asked for by a
+  # Worker (429, `x-render-routing: hibernate-rate-limited`) and does not
+  # start the service. The keep-warm Worker can only keep an awake service
+  # awake. Its pings were refused every morning from 01:00 UTC until the
+  # night's data commit redeployed the service, 2.5 to 5 hours later (130
+  # refusals in the seven days to 2026-11-14), and the search, /latest and the
+  # CSR forms were down with it. A GitHub runner is not refused: asked once on
+  # 2026-11-14 (backend-warm run 43645119674) it had the service up in 52 s.
+  # So every run wakes it first, and the Worker holds it awake from there.
+  #
+  # The attempts are spaced because for about a minute after a refused request
+  # Render's edge challenges every caller, the Worker pings at each tenth
+  # minute, and this run is dispatched by one of those ticks.
+  # It never fails the run: the sync does not depend on the backend.
+  wake:
+    if: ${{ !inputs.diagnose }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 12
+    permissions: {}
+    continue-on-error: true
+    steps:
+      - run: |
+          for attempt in 1 2 3 4 5 6; do
+            code=$(curl -sS -o /dev/null --max-time 150 -w "%{http_code}" \
+                     https://whitespaceindia-backend.onrender.com/healthz) || code=000
+            echo "$(date -u +%H:%M:%S) /healthz $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 75
+          done
+          echo "::warning::The backend did not wake: /healthz last answered $code. The search, /latest and the forms stay down until it is deployed or visited directly."
+
   # One sync a day. A scheduled run that arrives after the Worker's dispatch
   # has already synced would re-read the whole register through the proxy pool
   # for nothing, so it stands down. Only a schedule is gated: a dispatch is
