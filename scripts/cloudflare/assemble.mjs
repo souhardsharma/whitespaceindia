@@ -7,6 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { retiredCardRedirects } from "./retired-cards.mjs";
 
 const [root, out] = process.argv.slice(2).map((p) => path.resolve(p));
 if (!root || !out) throw new Error("usage: node scripts/cloudflare/assemble.mjs <project root> <out dir>");
@@ -62,6 +63,7 @@ const consent = fs
 const redirects = [
   ...consent.map((n) => `/instruments/consent/${n} /instruments/consent/${n} 200`),
   ..."0123456789".split("").map((d) => `/instruments/consent/${d}* /instruments/consent/view 200`),
+  ...retiredCardRedirects(fs.readdirSync(path.join(root, "public/og"))),
 ];
 fs.writeFileSync(path.join(out, "_redirects"), redirects.join("\n") + "\n");
 
