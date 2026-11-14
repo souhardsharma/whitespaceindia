@@ -10,7 +10,9 @@
  * - a sitemap listing pages the site marks noindex, or URLs that redirect;
  * - one page served at two URLs on two hosts, and pages naming a host the
  *   site has moved away from;
- * - placeholder verticals indexed on synthetic data.
+ * - placeholder verticals indexed on synthetic data;
+ * - the landing's count-up served as its starting zero, so the copy Google
+ *   kept read "0 districts ranked ₹0 crore a year".
  * Each is silent in the browser, so each is asserted here.
  *
  * Proposal pages are one static file shared by every proposal, which sets its
@@ -23,6 +25,8 @@
  * origin is swapped for the server under test when fetching and compared
  * as published.
  */
+import { readFileSync } from "node:fs";
+
 const SERVER = (process.argv[2] || "http://localhost:3000").replace(/\/+$/, "");
 const PRIMARY = "https://whitespaceindia.pages.dev";
 // Hosts the site has moved away from (lib/site.ts MOVED_HOSTS). Each now
@@ -126,7 +130,16 @@ async function main() {
       await checkProposal(u);
     }
   }
-  // Only digits are proposals; anything else under the instrument is a 404.
+  // The landing's figures are in its text as served, not counted up to.
+  const landing = (await get(`${PRIMARY}/`)).body
+    .replace(/<script[\s\S]*?<\/script>/g, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+  const ranked = JSON.parse(readFileSync("public/data/csr/meta.json", "utf-8")).total_districts;
+  for (const figure of [`${ranked.toLocaleString("en-IN")} districts ranked`, "₹ 26,000 crore a year"]) {
+    if (!landing.includes(figure)) fail("/", `its text does not say "${figure}"`);
+  }
+
   const stray = await get(`${PRIMARY}/instruments/consent/not-a-proposal`);
   if (stray.status !== 404) fail("/instruments/consent/not-a-proposal", `answered ${stray.status}, not 404`);
 
