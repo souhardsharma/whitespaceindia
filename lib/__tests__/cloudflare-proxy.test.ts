@@ -9,6 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   backendRequest, isCacheable, proxy, proxyAsset, assetPaths, CACHE_SECONDS, ASSET_CACHE_SECONDS, STALE_SECONDS,
+  edgeRefusal, WAKE_SECONDS, WAKE_AFTER_SECONDS,
 } from "../../scripts/cloudflare/proxy.mjs";
 import { clientIp } from "../request-identity.ts";
 
@@ -267,4 +268,125 @@ test("data is never served stale: a CSV part or an API answer expires on its hou
   } finally {
     e.restore();
   }
+});
+
+// Render's edge answering in the backend's place while the service sleeps
+// (measured 2026-11-14): its router's plain 429, then Cloudflare's challenge
+// page under the same status. Neither starts the service.
+const RENDER = "https://whitespaceindia-backend.onrender.com";
+const onRender = { BACKEND_ORIGIN: RENDER, BACKEND_KEY: "k3y" };
+const challenge = () => new Response("<html><title>Just a moment...</title></html>", {
+  status: 429, headers: { "content-type": "text/html; charset=UTF-8", "cf-mitigated": "challenge" },
+});
+const routerRefusal = () => new Response("Too Many Requests\n", {
+  status: 429,
+  headers: { "content-type": "text/plain; charset=utf-8", "x-render-routing": "hibernate-rate-limited" },
+});
+const fromBackend = (body: string, status = 200) => new Response(body, {
+  status, headers: { "content-type": "application/json", "x-render-origin-server": "Render" },
+});
+const SITE = "https://whitespaceindia.pages.dev";
+const api = () => new Request(`${SITE}/api/instruments/consent/search?q=coal&state=goa`);
+const page = (path = "/instruments/consent/latest?kind=decided&state=goa") =>
+  new Request(SITE + path, { headers: { accept: "text/html,application/xhtml+xml" } });
+
+async function throughRender(answer: () => Response, request: Request, run: "page" | "asset" = "page") {
+  const e = edge(answer);
+  try {
+    const ctx = { request, env: onRender, waitUntil: () => {} };
+    const res = await (run === "asset" ? proxyAsset(ctx) : proxy(ctx));
+    return { res, body: await res.text(), calls: e.calls(), stored: e.store.size };
+  } finally {
+    e.restore();
+  }
+}
+
+test("a sleeping backend's refusal is never handed on as the backend's answer", async () => {
+  for (const refusal of [challenge, routerRefusal]) {
+    const { res, body, calls, stored } = await throughRender(refusal, api());
+    assert.equal(res.status, 503);
+    assert.equal(res.headers.get("retry-after"), String(WAKE_SECONDS));
+    assert.equal(res.headers.get("cache-control"), "no-store");
+    assert.match(res.headers.get("content-type")!, /^text\/plain/);
+    assert.match(body, /asleep/);
+    assert.doesNotMatch(body, /Just a moment|Too Many Requests/);
+    // Asked once: a request through Cloudflare cannot wake the service, and
+    // each one renews the minute in which the edge challenges everyone.
+    assert.equal(calls, 1);
+    assert.equal(stored, 0);
+  }
+});
+
+test("a refused answer names the address a reader's browser can wake", async () => {
+  const { res } = await throughRender(routerRefusal, api());
+  assert.equal(res.headers.get("x-backend-wake"), RENDER);
+});
+
+test("a page asked of a sleeping backend takes the reader there and back", async () => {
+  const { res, body, stored } = await throughRender(routerRefusal, page());
+  assert.equal(res.status, 503);
+  assert.match(res.headers.get("content-type")!, /^text\/html/);
+  assert.equal(res.headers.get("retry-after"), String(WAKE_SECONDS));
+  // The same path and query on the backend, which answers a visit without
+  // the key by sending it back to that path here.
+  const there = `${RENDER}/instruments/consent/latest?kind=decided&amp;state=goa`;
+  assert.ok(body.includes(`<meta http-equiv="refresh" content="${WAKE_AFTER_SECONDS};url=${there}">`), body);
+  assert.ok(body.includes(`<a href="${there}">`));
+  assert.match(body, /<meta name="robots" content="noindex">/);
+  assert.equal((body.match(/<h1/g) || []).length, 1);
+  assert.equal(stored, 0);
+});
+
+test("a waking page cannot be made to carry markup from the address", async () => {
+  const { body } = await throughRender(routerRefusal, page('/instruments/consent/latest?q="><script>alert(1)</script>&x=\'y'));
+  assert.doesNotMatch(body, /<script/);
+  assert.doesNotMatch(body, /q="/);
+});
+
+test("only a page gets the waking page: an API call, a page payload and a file get the plain answer", async () => {
+  const html = { accept: "text/html" };
+  const cases: [Request, "page" | "asset"][] = [
+    [new Request(`${SITE}/api/instruments/consent/status?id=1`, { headers: html }), "page"],
+    [new Request(`${SITE}/instruments/consent/latest`, { headers: { ...html, rsc: "1" } }), "page"],
+    [new Request(`${SITE}/instruments/consent/latest`), "page"],
+    [new Request(`${SITE}/instruments/consent/feed`, { headers: { accept: "application/atom+xml" } }), "page"],
+    [new Request(`${SITE}/_be/_next/static/chunks/a.js`, { headers: html }), "asset"],
+  ];
+  for (const [request, run] of cases) {
+    const { res, body } = await throughRender(routerRefusal, request, run);
+    assert.equal(res.status, 503, request.url);
+    assert.match(res.headers.get("content-type")!, /^text\/plain/, request.url);
+    assert.doesNotMatch(body, /<html/);
+  }
+});
+
+test("the backend's own rate limit is the backend's answer, passed on as it is", async () => {
+  const { res, body, calls } = await throughRender(() => fromBackend('{"error":"Too many requests"}', 429), api());
+  assert.equal(res.status, 429);
+  assert.equal(body, '{"error":"Too many requests"}');
+  assert.equal(calls, 1);
+});
+
+test("a form post to a sleeping backend is told so, in plain text", async () => {
+  // No body here: Node, unlike the Workers runtime, will not build a request
+  // around another request's body stream without `duplex`.
+  const post = new Request(`${SITE}/api/subscribe`, { method: "POST", headers: { accept: "text/html" } });
+  const { res, calls } = await throughRender(challenge, post);
+  assert.equal(res.status, 503);
+  assert.match(res.headers.get("content-type")!, /^text\/plain/);
+  assert.equal(calls, 1);
+});
+
+test("a backend that cannot be reached at all is answered the same way", async () => {
+  const { res, body } = await throughRender(() => { throw new Error("connect failed"); }, page());
+  assert.equal(res.status, 503);
+  assert.match(body, /waking up/);
+});
+
+test("off Render a 429 is the backend's own: there is no edge to have sent it", () => {
+  assert.equal(edgeRefusal(routerRefusal(), env), false);
+  assert.equal(edgeRefusal(routerRefusal(), onRender), true);
+  assert.equal(edgeRefusal(challenge(), env), true);
+  assert.equal(edgeRefusal(fromBackend("{}", 429), onRender), false);
+  assert.equal(edgeRefusal(new Response("down", { status: 502 }), onRender), false);
 });
