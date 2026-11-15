@@ -1,0 +1,21 @@
+[
+ {"name": "ams-reported-view", "url": "https://pmposhan-ams.education.gov.in/School_Reported_view.aspx"},
+ {"name": "ams-status", "url": "https://pmposhan-ams.education.gov.in/Reported_ams_School.aspx"},
+ {"name": "ams-nomeal", "url": "https://pmposhan-ams.education.gov.in/School_Reported_today_no_meal.aspx"},
+ {"name": "mdmhp-mp-district", "url": "https://mdmhp.nic.in/Home/GetDisttWiseSummaryHome?stateCode=23&dateYesterday=14/11/2026"},
+ {"name": "punjab-mdm", "url": "https://epunjabschool.gov.in/Home/CommonGraph.aspx?MDM=Yes&Date=13-Nov-2026&SchoolType=Meal%20Served"},
+ {"name": "gem-advance-search", "url": "https://bidplus.gem.gov.in/advance-search"},
+ {"name": "gem-all-bids", "url": "https://bidplus.gem.gov.in/all-bids"},
+ {"name": "gem-contracts-page", "url": "https://gem.gov.in/view_contracts/bid_detail?bid_no=GEM/2026/B/8237415"},
+ {"name": "cppp-orgs", "url": "https://eprocure.gov.in/eprocure/app?page=FrontEndTendersByOrganisation&service=page"},
+ {"name": "kerala-go-740", "url": "https://eoffice.kerala.gov.in/EofficePortal/godetails", "method": "POST",
+  "headers": {"Content-Type": "application/x-www-form-urlencoded"},
+  "body": "token=KL0567QW111A0SA1011W0&departmentId=740&fromdate=09/11/2026&todate=16/11/2026"},
+ {"name": "delhi-circulars", "url": "https://www.edudel.nic.in/mis/misadmin/frmCircular.aspx"},
+ {"name": "haryana-orders", "url": "https://schooleducationharyana.gov.in/daily-orders/"},
+ {"name": "imd-api-district", "url": "https://api.imd.gov.in/api/v1/districtwarning"},
+ {"name": "imd-legacy-district", "url": "https://mausam.imd.gov.in/api/warnings_district_api.php"},
+ {"name": "imd-district-page", "url": "https://mausam.imd.gov.in/imd_latest/contents/districtwisewarnings.php"},
+ {"name": "cpcb-bulletin", "url": "https://cpcb.nic.in/upload/Downloads/AQI_Bulletin_20261115.pdf"},
+ {"name": "cpcb-home", "url": "https://cpcb.nic.in/"}
+]
