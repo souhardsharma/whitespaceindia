@@ -239,6 +239,11 @@ export default function ProjectProfile({
                 ? STAGE_LABELS[project.appraisal.currentStage] ?? null
                 : null
             }
+            decisionLabel={
+              project?.appraisal?.decisionStage
+                ? STAGE_LABELS[project.appraisal.decisionStage] ?? null
+                : null
+            }
           />
 
           {bundle.appraisalContext ? (
