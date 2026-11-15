@@ -28,6 +28,23 @@
   overflow: visible;
 }
 
+/* A count-up (Hero's CountUp) is drawn from data-n over the real figure,
+   which stays the element's text: what a reader without the animation, a
+   screen reader and a search engine get. The attribute goes when the count
+   ends. The landing's Odometer does the same in page.module.css. */
+.count-up[data-n]::before {
+  content: attr(data-n);
+  content: attr(data-n) / "";
+}
+.count-up[data-n] .count-up-value {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;

@@ -32,6 +32,12 @@ import {
   rankDistricts,
 } from "@/lib/csr/score";
 import { csrConfig } from "@/lib/csr/config";
+// The index's own summary, built into the page so that the page as served
+// (what a search engine keeps, and what a reader sees before the district
+// file arrives) states the data's figures. Without it the served page read
+// "0 districts", "0 whitespace districts" and a score range from 0 to 81.2
+// that the data does not hold. 3.5 KB; the full files still load as before.
+import csrMeta from "@/public/data/csr/meta.json";
 import { CSR_STATES, stateSlug } from "@/lib/csr/states";
 import { SITE_URL } from "@/lib/site";
 
@@ -224,7 +230,7 @@ export default function HomePage() {
   const [sectorScores, setSectorScores] = useState<
     Record<string, Record<string, number>>
   >({});
-  const [meta, setMeta] = useState<HomeMeta | null>(null);
+  const [meta, setMeta] = useState<HomeMeta | null>(csrMeta as HomeMeta);
   const [weights, setWeights] = useState<Record<string, number>>({
     w_N: DEFAULT_WEIGHTS.w_N,
     w_G: DEFAULT_WEIGHTS.w_G,
@@ -303,8 +309,12 @@ export default function HomePage() {
     return result;
   }, [rankedDistricts]);
 
+  // Until the district file arrives, the counts are the summary's, which is
+  // built from the same file.
   const whitespaceCount = useMemo(
-    () => districts.filter((d) => d.is_whitespace).length,
+    () => districts.length > 0
+      ? districts.filter((d) => d.is_whitespace).length
+      : csrMeta.whitespace_count,
     [districts]
   );
 
@@ -399,7 +409,7 @@ export default function HomePage() {
       />
       <main id="main-content" className="bg-[#fcf9f4] min-h-screen">
         <Navbar vertical={csrConfig} />
-        <Hero vertical={csrConfig} onEnterLedger={enterLedger} />
+        <Hero vertical={csrConfig} onEnterLedger={enterLedger} initialMeta={csrMeta} />
         <HowItWorks vertical={csrConfig} />
 
         <section
@@ -492,7 +502,7 @@ export default function HomePage() {
                         District ranking
                       </h3>
                       <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/60 mt-2">
-                        {displayDistricts.length} districts
+                        {districts.length > 0 ? displayDistricts.length : csrMeta.total_districts} districts
                         {highlightedState && (
                           <>
                             {" "}in{" "}
