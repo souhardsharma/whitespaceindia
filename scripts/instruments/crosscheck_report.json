@@ -1,39 +1,78 @@
 {
- "generated_at": "2026-11-14T06:19:13.564881+00:00",
+ "generated_at": "2026-11-15T04:14:42.956164+00:00",
  "purpose": "Tests the district the instrument reports against the district named in the regulator's signed clearance letter - a different document, not the applicant's own form. Corroborates or refutes the single source the whole profile depends on.",
- "sampled": 81,
+ "sampled": 146,
  "requested": 150,
  "stopped_early": true,
- "seconds": 1200.0,
+ "seconds": 1358.2,
  "outcomes": {
-  "agree": 29,
-  "disagree": 4,
-  "no-district-in-letter": 9,
-  "no-location-text": 1,
-  "download-failed": 38,
+  "agree": 101,
+  "disagree": 6,
+  "no-district-in-letter": 19,
+  "no-location-text": 0,
+  "download-failed": 20,
   "unreadable": 0,
   "no-text-layer": 0
  },
  "download_failures": {
-  "transport": 38
+  "transport": 20
  },
- "comparable": 33,
- "agreement_rate_pct": 87.88,
+ "comparable": 107,
+ "agreement_rate_pct": 94.39,
  "agreement_by_resolution_method": {
   "v": {
-   "agree": 24,
-   "comparable": 28,
-   "sampled": 70,
-   "rate_pct": 85.71
+   "agree": 82,
+   "comparable": 88,
+   "sampled": 119,
+   "rate_pct": 93.18
   },
   "s": {
-   "agree": 5,
-   "comparable": 5,
-   "sampled": 11,
+   "agree": 15,
+   "comparable": 15,
+   "sampled": 23,
+   "rate_pct": 100.0
+  },
+  "c": {
+   "agree": 2,
+   "comparable": 2,
+   "sampled": 2,
+   "rate_pct": 100.0
+  },
+  "d": {
+   "agree": 1,
+   "comparable": 1,
+   "sampled": 1,
+   "rate_pct": 100.0
+  },
+  "a": {
+   "agree": 1,
+   "comparable": 1,
+   "sampled": 1,
    "rate_pct": 100.0
   }
  },
  "disagreements": [
+  {
+   "proposalNo": "SIA/RJ/MIN/477706/2024",
+   "state": "RAJASTHAN",
+   "claimed": 126,
+   "foundInLetter": [
+    123
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/NITESH_MALANI/246/72331337/V_0_SIA_RJ_MIN_477706_2024_72331338_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/AS/MIN/546206/2025",
+   "state": "ASSAM",
+   "claimed": 325,
+   "foundInLetter": [
+    300,
+    321
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/_GUWAHATI_INTERNATIONAL_AIRPORT_LIMITED/229/132902565/V_null_SIA_AS_MIN_546206_2025_132902569_-signed.pdf"
+  },
   {
    "proposalNo": "SIA/GJ/MIN/567509/2026",
    "state": "GUJARAT",
@@ -45,26 +84,6 @@
    "certificate": "https://parivesh.nic.in/certificates/RAFIK_KATARIYA/5/1218071124/V_0_SIA_GJ_MIN_567509_2026_1218071125_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/TN/INFRA2/535934/2025",
-   "state": "TAMIL NADU",
-   "claimed": 572,
-   "foundInLetter": [
-    631
-   ],
-   "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/EXIDE_INDUSTRIES_LIMITED/5/125913431/V_0_SIA_TN_INFRA2_535934_2025_125913432_-signed.pdf"
-  },
-  {
-   "proposalNo": "SIA/OR/MIN/515362/2024",
-   "state": "ODISHA",
-   "claimed": 381,
-   "foundInLetter": [
-    380
-   ],
-   "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/UTTAM_ROUT/37/115256227/SIA_OR_MIN_515362_2024_115256234_-signed.pdf"
-  },
-  {
    "proposalNo": "SIA/AS/MIN/481657/2024",
    "state": "ASSAM",
    "claimed": 316,
@@ -73,6 +92,26 @@
    ],
    "method": "v",
    "certificate": "https://parivesh.nic.in/certificates/dima_hasao_forest_division(west)/5/76729601/V_0_SIA_AS_MIN_481657_2024_76729609_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/KA/INFRA2/514469/2024",
+   "state": "KARNATAKA",
+   "claimed": 583,
+   "foundInLetter": [
+    572
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/SUDHIR_REDDY_G/5/114691863/V_0_SIA_KA_INFRA2_514469_2024_114691881_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/KA/IND1/566970/2026",
+   "state": "KARNATAKA",
+   "claimed": 565,
+   "foundInLetter": [
+    572
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/KALHALLI_MINERALS_LLP/5/1217685973/V_0_SIA_KA_IND1_566970_2026_1217685974_-signed.pdf"
   }
  ],
  "method_notes": [
