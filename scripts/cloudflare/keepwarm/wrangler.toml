@@ -7,6 +7,14 @@ main = "worker.js"
 compatibility_date = "2026-10-29"
 
 [triggers]
-# UTC: 01:00-17:59 is 06:30-23:29 IST. Never round the clock: past 750
-# instance hours a month Render suspends the service until the month ends.
-crons = ["*/10 1-17 * * *"]
+# Every 10 minutes, all day (decided 2026-11-15: the backend never
+# sleeps). This schedule, set under the Worker's Settings > Trigger events,
+# governs; worker.js's header still names the old 06:30-23:30 IST hours and is
+# left byte for byte as deployed. Render counts 750 free instance hours a
+# month for the whole workspace and suspends every free service past them
+# until the month ends. One service awake all day is at most 744 h (31 days),
+# so: never a second free service in the workspace, and the daily check
+# (render_usage.json) watches the hourly rate for deploy overlaps counted
+# twice. Any gap in these pings means sleeping until a visitor or a GitHub
+# runner wakes it, because Render refuses a wake that comes from Cloudflare.
+crons = ["*/10 * * * *"]

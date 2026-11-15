@@ -11,8 +11,9 @@ name: backend-warm
 # instruments-sync.yml, which wakes it every morning).
 #
 # This stays as the manual fallback, and it does wake a sleeping service: one run asks /healthz every 10 minutes
-# until 18:00 UTC (23:30 IST) or the run's own time is nearly up. Never round
-# the clock: past 750 instance hours a month Render suspends the service.
+# until 18:00 UTC (23:30 IST) or the run's own time is nearly up. Since
+# 2026-11-15 the Worker pings all day, so after this run's first answer the
+# Worker holds the service awake; the run's own hours stay capped as before.
 on:
   workflow_dispatch:
 
