@@ -19,6 +19,8 @@
 import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { PLUM } from "./InstrumentChrome";
+import WakeNote from "./WakeNote";
+import { BackendAsleep, wakeLink, wakeOrigin } from "@/lib/instruments/wake";
 
 const nf = new Intl.NumberFormat("en-IN");
 const PAGE = 100;
@@ -67,6 +69,8 @@ export default function DistrictProposals({
   const [shown, setShown] = useState(initial.length);
   const [loadingAll, setLoadingAll] = useState(false);
   const [error, setError] = useState("");
+  // The link that wakes the backend, when the rest failed because it sleeps.
+  const [wake, setWake] = useState<string | null>(null);
   const haveAll = rows.length >= total;
   // Rows read from the search endpoint so far, in ITS order. The first click
   // replaces the server-rendered page with these (the two could order
@@ -97,7 +101,10 @@ export default function DistrictProposals({
           `/api/instruments/consent/search?district=${districtCode}` +
             `&offset=${got.length}&limit=200`,
         );
-        if (!res.ok) throw new Error(`search returned ${res.status}`);
+        if (!res.ok) {
+          const origin = wakeOrigin(res);
+          throw origin ? new BackendAsleep(origin) : new Error(`search returned ${res.status}`);
+        }
         const page = (await res.json()) as {
           items: {
             id: string; no: string; name: string; agency: string; sector: string;
@@ -126,6 +133,7 @@ export default function DistrictProposals({
       setRows([...got]);
       setShown(Math.min(got.length, target));
     } catch (e) {
+      setWake(e instanceof BackendAsleep ? wakeLink(e.origin, window.location) : null);
       setError(e instanceof Error ? e.message : "could not load the rest");
     } finally {
       setLoadingAll(false);
@@ -214,7 +222,9 @@ export default function DistrictProposals({
         </p>
       </div>
 
-      {error ? (
+      {error && wake ? (
+        <WakeNote href={wake} what="The rest of these proposals could not be loaded" className="mt-2" />
+      ) : error ? (
         <p className="mt-2 font-body text-[13px] opacity-70">
           These proposals could not be loaded, although the register does
           hold them. Reloading the page usually fixes this.

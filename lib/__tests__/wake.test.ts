@@ -34,6 +34,24 @@ test("the link is the same page on the backend, which sends the reader back to i
   assert.equal(new BackendAsleep(RENDER).origin, RENDER);
 });
 
+test("every part of a page that asks the backend offers the link when it sleeps", () => {
+  for (const name of ["Watchlist", "DistrictProposals", "ExportButton"]) {
+    const src = readFileSync(new URL(`../../components/instruments/${name}.tsx`, import.meta.url), "utf8");
+    assert.match(src, /wakeOrigin\(\w+\)/, name);
+    assert.match(src, /wakeLink\(/, name);
+    assert.match(src, /<WakeNote /, name);
+    assert.doesNotMatch(src, /onrender\.com/, name);
+  }
+});
+
+test("a district whose news could not be read is never reported as having nothing new", () => {
+  const src = readFileSync(new URL("../../components/instruments/Watchlist.tsx", import.meta.url), "utf8");
+  // The old code turned every failure into a count of 0, which renders "nothing new".
+  assert.doesNotMatch(src, /\{ total: 0 \}/);
+  assert.doesNotMatch(src, /\[c, 0\] as const/);
+  assert.match(src, /n === null \?/);
+});
+
 test("the search offers the link, and types no backend address of its own", () => {
   const src = readFileSync(new URL("../../components/instruments/ProjectSearch.tsx", import.meta.url), "utf8");
   assert.match(src, /wakeOrigin\(res\)/);
