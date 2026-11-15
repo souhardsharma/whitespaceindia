@@ -123,7 +123,7 @@ export function namesForestProposal(p: Pick<Project, "links">): boolean {
 
 /** Whether a proposal has an EC decision time to compare. */
 function isEcDecision(p: Project, stages: StagesFile): boolean {
-  const sk = p.appraisal?.statusKey;
+  const sk = p.appraisal?.decisionStage ?? p.appraisal?.statusKey;
   return p.appraisal?.daysToDecision != null && !!sk && stages.statuses?.[sk]?.decision === "ec";
 }
 

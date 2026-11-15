@@ -250,6 +250,13 @@ export interface Project {
     currentStage: string | null;
     /** Canonical status key. Filter and count through this, never the raw text. */
     statusKey: string | null;
+    /**
+     * The stage `decidedOn` dates when it is not `statusKey`: the register can
+     * show a position held AFTER a decision (a Terms of Reference grant, then
+     * "forwarded to the pollution control board"), and the decision is then
+     * named here. Null on every other proposal.
+     */
+    decisionStage: string | null;
   };
   /**
    * Where the site is, from the filed KML corners. `lat`/`lon` are the mapped

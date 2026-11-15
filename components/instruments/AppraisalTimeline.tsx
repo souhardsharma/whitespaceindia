@@ -50,6 +50,13 @@ interface Props {
   currentStage: string | null;
   /** Human label for that step, from the stage registry. */
   currentStageLabel?: string | null;
+  /**
+   * Label of the decision `decidedOn` dates, given only when the register now
+   * shows a later position (a grant, then "forwarded to the pollution control
+   * board"). Without it "Decided" would stand beside a status that names no
+   * decision.
+   */
+  decisionLabel?: string | null;
 }
 
 const fmtDate = (iso: string | null) =>
@@ -71,6 +78,7 @@ export default function AppraisalTimeline({
   queryRounds,
   currentStage,
   currentStageLabel,
+  decisionLabel,
 }: Props) {
   const suspended = daysSuspended ?? 0;
   const active = daysToDecision ?? daysPending ?? null;
@@ -105,13 +113,16 @@ export default function AppraisalTimeline({
   const activePct = sameDay ? 0 : (active / total) * 100;
   const suspendedPct = sameDay ? 0 : 100 - activePct;
   const decided = decidedOn !== null;
+  const decidedText = decisionLabel
+    ? `${decisionLabel} on ${fmtDate(decidedOn)}`
+    : `Decided ${fmtDate(decidedOn)}`;
 
   const label =
     `Filed ${fmtDate(filedOn)}. ` +
     (sameDay && decided
       ? `Decided the same day, after 0 days with the appraising authority`
       : decided
-      ? `Decided ${fmtDate(decidedOn)}, after ${active} days with the appraising authority`
+      ? `${decidedText}, after ${active} days with the appraising authority`
       : `Open for ${active} days so far`) +
     (suspended > 0 ? `, plus ${suspended} days when the portal had delisted it` : "") +
     (queryRounds
@@ -196,7 +207,7 @@ export default function AppraisalTimeline({
         </span>
         <span className="font-body text-[12px] opacity-70">
           {decided
-            ? `Decided ${fmtDate(decidedOn)}`
+            ? decidedText
             : currentStageLabel || currentStage
             ? `Now at ${currentStageLabel ?? currentStage}`
             : "Not yet decided"}

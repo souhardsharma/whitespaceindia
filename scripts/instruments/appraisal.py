@@ -68,6 +68,11 @@ decided_on      The date of the latest step whose canonical status equals the
                 not computed. There is no fallback to "the last step of any
                 kind": that would publish a number under a definition it did
                 not meet, which is the one thing this layer exists to prevent.
+                One exception, named in the stage registry: at a position the
+                register shows AFTER a decision that still stands
+                (stages.AFTER_DECISION) the status cannot name the decision,
+                so it is the latest decision step in the history, and
+                `decided_stage` says which stage that is.
 
 days_to_decision   decided_on - filed_on in whole calendar days, LESS any interval
                 during which the portal had delisted the proposal. Elapsed
@@ -288,6 +293,15 @@ def _merged_days(intervals: list[tuple[datetime, datetime]]) -> int:
     return total
 
 
+def _standing_decision(dated: list[tuple[datetime, dict]]
+                       ) -> tuple[datetime, str] | None:
+    """The latest step that records a decision, with its canonical stage."""
+    decisions = [(d, k) for d, k in
+                 ((d, stages.canonical(s.get("s"))) for d, s in dated)
+                 if stages.STATUSES.get(k, {}).get("decision")]
+    return max(decisions) if decisions else None
+
+
 def summarise(steps: list[dict], register_status: object,
               as_of: datetime | None = None) -> dict | None:
     """Timing for one proposal. None when the history holds nothing usable."""
@@ -312,13 +326,24 @@ def summarise(steps: list[dict], register_status: object,
     # history holds no such step the duration is not computed and the proposal
     # is counted as unmatched, rather than timed to whatever step came last.
     decided_on = None
+    decided_stage = None
     decision_unmatched = False
     if outcome in ("granted", "rejected"):
         matching = [d for d, s in dated if stages.canonical(s.get("s")) == key]
         if matching:
-            decided_on = max(matching)
+            decided_on, decided_stage = max(matching), key
         else:
             decision_unmatched = True
+    elif key in stages.AFTER_DECISION:
+        # The register shows a position held after a decision that stands, so
+        # the decision is in the history and not in the status. Read only for
+        # the positions the registry names: anywhere else an earlier grant in
+        # the history is not this proposal's decision.
+        standing = _standing_decision(dated)
+        if standing:
+            decided_on, decided_stage = standing
+            outcome = stages.STATUSES[decided_stage]["outcome"]
+            decision_kind = stages.STATUSES[decided_stage]["decision"]
 
     # Time the portal had the proposal delisted. Merged, so overlapping
     # delisting records are not double-counted.
@@ -387,6 +412,9 @@ def summarise(steps: list[dict], register_status: object,
     return {
         "filed_on": _local_date(filed_on).isoformat(),
         "decided_on": _local_date(decided_on).isoformat() if decided_on else None,
+        # The stage `decided_on` dates. The register status's own stage, except
+        # at a position held after a decision (stages.AFTER_DECISION).
+        "decided_stage": decided_stage,
         "as_of": _local_date(as_of).isoformat(),
         "days_to_decision": days_to_decision,
         "days_suspended": days_suspended,

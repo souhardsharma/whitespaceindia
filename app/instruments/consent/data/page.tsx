@@ -90,6 +90,7 @@ const FIELDS: [string, string][] = [
   ["upd", "The register's own last-modified date (IST)."],
   ["lk", "The other clearances and the land, as the form declares them. The value is null when the form has not yet been read for these questions, and 0 when the form answers every question and declares none of them. Otherwise it is an object holding only the parts declared. f is forest clearance [proposal no, status, ha applied, ha diverted, approved on]; w, the wildlife board [protected area, status, proposal no]; a, forest land additionally sought, as filed and without a unit; e, an eco-sensitive zone; p, a protected area; c, a coastal regulation zone [1, class]; and t, the land [[type, owner, acquisition status]]. u lists by letter (f, w, e, p, c) the questions the form left blank, which are counted as unknown."],
   ["cf", "Whether the application form was read. ok means it was read and placed the proposal; nogeo, it was read and names no place; none, the portal answered and serves no form; pend, the form has not yet been read."],
+  ["dsk", "The stage the decision date belongs to, when that is not the row's own sk. The register can show a step that follows a decision, such as a proposal forwarded to the pollution control board after Terms of Reference were granted, and the decision is then named here. It is null on every other row."],
 ];
 
 const ENDPOINTS: [string, string][] = [

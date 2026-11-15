@@ -264,6 +264,12 @@ SHARD_FIELDS = [
                # Without this, a proposal we have not got to yet and one the
                # government holds no file for are the same row, and the
                # instrument cannot say which of its silences are its own.
+    "dsk",     # the stage `don` dates, when it is not the row's own `sk`: a
+               # proposal the register shows at a position held AFTER a
+               # decision (stages.AFTER_DECISION) carries that decision here.
+               # Null on every other row, where `don` dates `sk` itself or
+               # there is no decision. Last in the list: a column added
+               # anywhere else moves every reader's positions.
 ]
 # Contact details are removed from free-text fields before publication; the
 # line that draws and why is in privacy.py.
@@ -986,6 +992,12 @@ def describe_violation(v) -> str:
     if isinstance(v, dict):
         return f"{v.get('invariant')}: {str(v.get('detail'))[:150]}"
     return str(v)[:200]
+
+
+def decision_stage_apart(appraisal_row: dict | None, status_key: str) -> str | None:
+    """The stage a row's decision date belongs to, when it is not its own `sk`."""
+    decided = (appraisal_row or {}).get("decided_stage")
+    return decided if decided and decided != status_key else None
 
 
 def published_vocabulary_problem() -> str | None:
@@ -1747,6 +1759,7 @@ def main() -> None:
             "upd": (rec.get("app_updated_on") or "")[:10] or None,
             "lk": compact_links(caf),
             "cf": caf_cov,
+            "dsk": decision_stage_apart(appraisal_row, status_key),
         })
         lookup[str(rec.get("proposal_id"))] = state_slug
 
@@ -2019,7 +2032,7 @@ def main() -> None:
              r["sk"], r["lat"], r["lon"], r["ext"], r["gk"], r["gd"],
              r["dtd"], r["dpd"], r["qr"], r["cst"],
              r["fon"], r["don"], r["dsu"], r["nblk"], r["sq"], r["dd"], r["upd"],
-             r["lk"], r["cf"]]
+             r["lk"], r["cf"], r["dsk"]]
             for r in rows
         ]
         sizes[f"projects/{slug}.json"] = dump(WRITE_DIR / "projects" / f"{slug}.json", {

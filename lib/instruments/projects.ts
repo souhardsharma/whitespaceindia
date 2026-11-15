@@ -55,7 +55,7 @@ function fieldIndex(shard: RawShard) {
     gk: ix("gk"), gd: ix("gd"), nblk: ix("nblk"), sq: ix("sq"),
     dtd: ix("dtd"), dpd: ix("dpd"), qr: ix("qr"), cst: ix("cst"),
     fon: ix("fon"), don: ix("don"), dsu: ix("dsu"),
-    dd: ix("dd"), upd: ix("upd"), lk: ix("lk"),
+    dd: ix("dd"), upd: ix("upd"), lk: ix("lk"), dsk: ix("dsk"),
   };
 }
 
@@ -121,6 +121,7 @@ function buildDetail(r: unknown[], I: FieldIndex, shard: RawShard): Project {
       queryRounds: (r[I.qr] as number) ?? null,
       currentStage: (r[I.cst] as string) ?? null,
       statusKey: (r[I.sk] as string) ?? null,
+      decisionStage: I.dsk >= 0 ? ((r[I.dsk] as string) ?? null) : null,
     },
     site: {
       lat: (r[I.lat] as number) ?? null,
