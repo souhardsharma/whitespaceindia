@@ -276,13 +276,13 @@ SHARD_FIELDS = [
 # A build publishing less than this share of what is already published is
 # treated as a failed read rather than a real change. The register grows; it
 # does not halve overnight.
-# The reader version fetch_caf.py writes. Imported rather than retyped: a
-# literal here silently stops meaning "current" the moment that file is bumped,
-# and the flag it drives would then mark every row as up to date.
+# The oldest fetch_caf.py version whose site counts are complete. Imported
+# rather than retyped: a literal here silently stops meaning what that file
+# means, and the flag it drives would then mark every row as up to date.
 try:
-    from fetch_caf import EXTRACT_VERSION as CAF_EXTRACT_VERSION
+    from fetch_caf import SITE_COUNTS_SINCE as CAF_SITE_COUNTS_SINCE
 except Exception:  # noqa: BLE001
-    CAF_EXTRACT_VERSION = 3
+    CAF_SITE_COUNTS_SINCE = 3
 
 REGISTER_FLOOR = 0.80
 # The largest share of published proposals whose application form may still
@@ -1559,7 +1559,7 @@ def main() -> None:
             # exactly (`none`) and that they were never recorded (`old`). Both
             # cannot be true, and the `old` half also inflated the published
             # vintage figure with rows whose counts are precisely known.
-            if int((caf or {}).get("v") or 1) < CAF_EXTRACT_VERSION:
+            if int((caf or {}).get("v") or 1) < CAF_SITE_COUNTS_SINCE:
                 flags.append("old")
                 stale_site_extracts.add(rec.get("id"))
         site_quality = " ".join(flags) or None

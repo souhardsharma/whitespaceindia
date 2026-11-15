@@ -905,6 +905,68 @@ def test_the_ledger_settles_only_what_was_answered() -> None:
           str(CAF.SETTLED_STATUSES))
 
 
+def test_a_draft_is_not_the_form_a_proposal_stands_on() -> None:
+    """Answering a query opens a DRAFT revision beside the submitted form.
+
+    It has the higher id, and read as operative it emptied a located proposal:
+    1232987607 lost 19 plots and its site overnight, 90962723 its one block.
+    And a record already cached from such a read has to be read again, which
+    resume decides from the LATEST line an id has.
+    """
+    print()
+    print("a draft is not the form a proposal stands on")
+    import json as _json
+    import tempfile
+    from pathlib import Path as _Path
+    import fetch_caf as CAF
+
+    submitted = {"id": 10, "caf_status": "SUBMITTED", "cafKML": [{"type": "PRIMARY"}]}
+    draft = {"id": 20, "caf_status": "DRAFT", "cafKML": []}
+    check("the submitted revision is read past a later draft",
+          CAF._operative([submitted, draft]) is submitted)
+    check("in whichever order they arrive",
+          CAF._operative([draft, submitted]) is submitted)
+    check("however the status is spelled",
+          CAF._operative([submitted, {"id": 30, "caf_status": " draft "}]) is submitted)
+    later = {"id": 40, "caf_status": "EDS_RAISED"}
+    check("of two submitted revisions the later still stands",
+          CAF._operative([submitted, later, draft]) is later)
+    check("a revision with no status is not taken for a draft",
+          CAF._operative([submitted, {"id": 50}])["id"] == 50)
+    check("a proposal with only a draft is read from it",
+          CAF._operative([draft, {"id": 5, "caf_status": "DRAFT"}]) is draft)
+    check("no revision, no form", CAF._operative([]) is None)
+
+    v = CAF.EXTRACT_VERSION
+    check("a record at this version is current",
+          CAF.is_current({"v": v, "caf_revisions": 4}))
+    check("a version 4 record that saw one revision is current",
+          CAF.is_current({"v": 4, "caf_revisions": 1}))
+    check("a version 4 record that saw several is not",
+          not CAF.is_current({"v": 4, "caf_revisions": 2}))
+    check("a version 4 record that does not say is not",
+          not CAF.is_current({"v": 4}))
+    check("an older record is not",
+          not CAF.is_current({"v": 3, "caf_revisions": 1}))
+
+    p = _Path(tempfile.mkdtemp()) / "caf_extract.jsonl"
+    rows = [
+        {"id": 1, "v": 4, "caf_revisions": 1},     # read before the draft existed
+        {"id": 2, "v": 4, "caf_revisions": 1},
+        {"id": 3, "v": 4, "caf_revisions": 2},
+        {"id": 4, "v": 3, "caf_revisions": 1},
+        {"id": 1, "v": 4, "caf_revisions": 4},     # read again, the draft on top
+        {"id": 3, "v": v, "caf_revisions": 2},     # read again by this reader
+    ]
+    p.write_text("".join(_json.dumps(r) + chr(10) for r in rows),
+                 encoding="utf-8")
+    done = CAF.load_done(p, current_only=True)
+    check("resume goes by the latest record of each form",
+          sorted(done) == [2, 3], str(sorted(done)))
+    check("without the test every cached form counts",
+          sorted(CAF.load_done(p)) == [1, 2, 3, 4])
+
+
 def test_one_place_defines_the_headers() -> None:
     """The file that looks like it sets the headers must be the one that does.
 
@@ -1763,6 +1825,7 @@ def main() -> int:
                test_somewhere_else_to_go_means_a_live_route,
                test_the_opening_probe_classifies_its_failure,
                test_the_ledger_settles_only_what_was_answered,
+               test_a_draft_is_not_the_form_a_proposal_stands_on,
                test_one_place_defines_the_headers,
                test_a_deadline_bounds_the_whole_call,
                test_proxies_are_the_default_egress,
