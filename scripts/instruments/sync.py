@@ -859,6 +859,43 @@ def settled_absent(cache: Path, name: str = "caf") -> list:
                 except (json.JSONDecodeError, TypeError, ValueError):
                     continue
     return sorted(ids)
+
+
+def stale_empty_forms(cache: Path) -> list:
+    """Cached forms an older reader read as empty: owed a re-read tonight.
+
+    Version 4 took the highest revision even when it was an unsubmitted DRAFT,
+    and a draft opened to answer a query is empty: of 85 located forms that
+    lost their site on 2026-11-15, 82 had a draft on top and all 82 regained
+    it past the draft. The bulk pass re-reads every stale form, but forms read
+    at ~0.4/s through proxies, so the ~7,000 stale ones take several nights
+    and an emptied page would wait its turn behind forms that lost nothing.
+    Named here, they join the changed pass, which runs first with its own
+    share. Once read by this reader a form is current and drops out, empty or
+    not, so this never re-asks the same form night after night.
+    """
+    try:
+        from fetch_caf import is_current
+    except Exception:  # noqa: BLE001
+        return []
+    folder = cache / "caf"
+    latest: dict[int, dict] = {}
+    for path in [cache / LEDGERS["caf"][1],
+                 *sorted(folder.glob("caf_extract.shard*.jsonl"))]:
+        if not path.exists():
+            continue
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                try:
+                    rec = json.loads(line)
+                    latest[int(rec["id"])] = rec
+                except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+                    continue
+    return sorted(rid for rid, rec in latest.items()
+                  if not is_current(rec)
+                  and not rec.get("site") and not rec.get("plots"))
+
+
 # Threads per fetcher. An upper bound, not a rate: net.py's ceiling follows the
 # proxy pool and MAX_RPS bounds what the service sees (tuned 2026-09-25; see
 # net.py). 20 and 16 capped a night at a fraction of what the pool can carry.
@@ -1177,6 +1214,11 @@ def main() -> None:
             pending = {}
         moved = set(merge_stats.get("changed_ids") or [])
         pending = queue_rereads(pending, moved)
+        emptied = stale_empty_forms(cache)
+        if emptied:
+            pending = queue_rereads(pending, emptied, fetchers=("caf",))
+            log(f"{len(emptied):,} cached forms were read empty by an older "
+                "reader; they join tonight's changed pass")
         pending_path.write_text(json.dumps(pending), encoding="utf-8")
         log(f"{len(moved):,} register rows moved this run; "
             f"{len(pending['caf']):,} caf / {len(pending['history']):,} "
