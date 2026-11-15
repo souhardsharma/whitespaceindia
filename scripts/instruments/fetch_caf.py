@@ -225,7 +225,27 @@ SETTLE_CONFIRMATIONS = 2
 #   forest-clearance and wildlife-board proposals, its eco-sensitive-zone,
 #   protected-area and CRZ declarations, and the tenure of its land. Records at
 #   3 are re-read; until they are, they publish no linked clearance.
-EXTRACT_VERSION = 4
+# 5 (2026-11-15): the operative revision is never an unsubmitted DRAFT while
+#   a submitted one exists (see _operative). Only a record that saw several
+#   revisions can read differently, so a record at 4 with one revision is
+#   current as it stands (is_current): of 118,475 cached at 4, 7,070 had
+#   more than one, and only those are read again.
+EXTRACT_VERSION = 5
+
+# The oldest version that counts a site's discarded, single-corner and
+# untyped blocks as this one does. build_data marks a site read by anything
+# older `old`. Version 5 changed which revision is read, not how one is
+# counted, so a record at 4 awaiting its re-read is not `old`.
+SITE_COUNTS_SINCE = 4
+
+
+def is_current(record: dict) -> bool:
+    """Whether a cached record is what this reader would write for that form."""
+    version = int(record.get("v") or 1)
+    return version == EXTRACT_VERSION or (
+        version == 4 and record.get("caf_revisions") == 1)
+
+
 def settle_decision(status: int, settled_seen: int, attempt: int,
                     max_attempts: int = 3) -> str:
     """What to do with one answer: "return", "retry", "confirm" or "owed".
@@ -382,11 +402,23 @@ def _operative(cfds: list) -> dict | None:
     assigned when the revision is created, so the highest is the latest. That
     is both deterministic and the right answer - a proposal is judged on the
     form it now stands on, not on a superseded draft.
+
+    Nor on an unsubmitted one. Answering a query opens a new revision as a
+    DRAFT beside the submitted form: on 90962723 the submitted revision (one
+    mapped block, 0.9274 ha) stood beside a draft opened two minutes earlier
+    with no block and no land, and the draft had the higher id. Read as
+    operative, it published a located proposal as naming no place. A draft is
+    read only when the proposal has nothing else.
     """
     usable = [c for c in (cfds or []) if isinstance(c, dict)]
-    if not usable:
+    candidates = [c for c in usable if not _is_draft(c)] or usable
+    if not candidates:
         return None
-    return max(usable, key=lambda c: (c.get("id") or 0))
+    return max(candidates, key=lambda c: (c.get("id") or 0))
+
+
+def _is_draft(revision: dict) -> bool:
+    return str(revision.get("caf_status") or "").strip().upper() == "DRAFT"
 
 
 def _flag(v) -> bool | None:
@@ -596,7 +628,7 @@ def _direct_why(st: dict) -> str:
             f"score {d.get('score')} vs best proxy {d.get('best_proxy_score')}")
 
 
-def load_done(path: Path, require_version: int | None = None,
+def load_done(path: Path, current_only: bool = False,
               answered_only: bool = False) -> set[int]:
     """Ids already recorded, optionally only those at the current reader version.
 
@@ -606,7 +638,9 @@ def load_done(path: Path, require_version: int | None = None,
     old reader is skipped for ever, so the new fields never appear for them and
     no amount of re-running repairs it. The extract itself is the only record
     of what produced it, so it carries a version, and a run for a newer reader
-    treats older records as absent.
+    treats older records as absent (`current_only`, judged by is_current).
+    The LATEST line speaks for an id: a form read again after a draft appeared
+    is not done because an earlier read of it was.
 
     `answered_only` is for the error ledger. A status in SETTLED_STATUSES is a
     definitive answer ABOUT THE PROPOSAL and may retire it, as is a 200 whose
@@ -627,7 +661,8 @@ def load_done(path: Path, require_version: int | None = None,
                 rec = json.loads(line)
             except Exception:  # noqa: BLE001
                 continue
-            if require_version is not None and rec.get("v", 1) != require_version:
+            if current_only and not is_current(rec):
+                done.discard(rec.get("id"))
                 continue
             if answered_only:
                 # Only a settled status is a definitive answer. An
@@ -703,13 +738,15 @@ def main() -> None:
         os.environ["INSTRUMENTS_ROUTE_SHARD"] = args.shard
 
     if args.rewrite_stale and out_path.exists():
+        current = load_done(out_path, current_only=True)
         kept = 0
         tmp = out_path.with_suffix(".jsonl.tmp")
         with open(out_path, encoding="utf-8") as fin, \
                 open(tmp, "w", encoding="utf-8") as fkeep:
             for line in fin:
                 try:
-                    if int(json.loads(line).get("v", 1)) == EXTRACT_VERSION:
+                    rec = json.loads(line)
+                    if rec.get("id") in current and is_current(rec):
                         fkeep.write(line)
                         kept += 1
                 except Exception:  # noqa: BLE001
@@ -724,19 +761,18 @@ def main() -> None:
     # from a register older than the sweep that had just run, not know
     # about the proposals it added, and report a clean run.
     records = register_cache.load_records(cache, log)
-    versions = extract_versions(out_path)
-    stale = {v: n for v, n in versions.items() if v != EXTRACT_VERSION}
+    done = load_done(out_path, current_only=True)
+    stale = len(load_done(out_path) - done)
     if stale:
-        log(f"cache holds {sum(stale.values()):,} records from an earlier "
-            f"reader {stale}; they will be re-fetched at version "
-            f"{EXTRACT_VERSION}")
-    done = load_done(out_path, require_version=EXTRACT_VERSION)
+        log(f"cache holds {stale:,} forms an earlier reader may have read "
+            f"differently (lines by version: {extract_versions(out_path)}); "
+            f"they will be re-fetched at version {EXTRACT_VERSION}")
     if not args.retry_errors:
         done |= load_done(err_path, answered_only=True)
     if shard_n:
         # Resume sees every shard's unmerged work too.
         for f in sorted((cache / "caf").glob("caf_extract.shard*.jsonl")):
-            done |= load_done(f, require_version=EXTRACT_VERSION)
+            done |= load_done(f, current_only=True)
         if not args.retry_errors:
             for f in sorted((cache / "caf").glob("caf_errors.shard*.jsonl")):
                 done |= load_done(f, answered_only=True)

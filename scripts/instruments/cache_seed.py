@@ -80,8 +80,12 @@ from register_cache import merge_forest_states  # noqa: E402
 
 try:
     from fetch_caf import EXTRACT_VERSION as CAF_VERSION  # noqa: E402
+    from fetch_caf import is_current as caf_is_current  # noqa: E402
 except Exception:  # noqa: BLE001
     CAF_VERSION = 3
+
+    def caf_is_current(record: dict) -> bool:
+        return int(record.get("v") or 1) == CAF_VERSION
 
 SEED_FORMAT = 1
 
@@ -246,7 +250,7 @@ def source_payload(cache: Path) -> dict[str, bytes]:
 def pack(out: Path) -> dict:
     cache = cache_dir()
     caf, _ = latest_by_id(cache / "caf" / "caf_extract.jsonl", "v", None)
-    caf_old = sum(1 for r in caf.values() if int(r.get("v") or 1) != CAF_VERSION)
+    caf_old = sum(1 for r in caf.values() if not caf_is_current(r))
     hist, _ = latest_by_id(cache / "history" / "history.jsonl", "v", None)
     payload = {
         "caf/caf_extract.jsonl": _jsonl(clean_caf(r) for _, r in sorted(caf.items())),
