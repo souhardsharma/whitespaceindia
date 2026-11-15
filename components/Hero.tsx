@@ -29,11 +29,20 @@ function CountUp({
   decimals?: number;
   duration?: number;
 }) {
-  const [count, setCount] = useState(0);
+  // The number in the element's text is always the real one. The count is
+  // drawn over it from `data-n` (globals.css, .count-up) and the attribute is
+  // dropped when the count ends, as the landing's Odometer does. With the
+  // count as the text itself the page as served read "₹0 Cr", "0 Districts"
+  // and "0.00%", and that is what a search engine keeps.
+  const [count, setCount] = useState<number | null>(0);
   const ref = useRef<HTMLSpanElement>(null);
   const [inView, setInView] = useState(false);
 
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setCount(null);
+      return;
+    }
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(
@@ -48,27 +57,37 @@ function CountUp({
 
   useEffect(() => {
     if (!inView) return;
+    let frame = 0;
     const start = performance.now();
     const animate = (now: number) => {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(eased * end);
-      if (progress < 1) requestAnimationFrame(animate);
+      if (progress < 1) {
+        setCount(eased * end);
+        frame = requestAnimationFrame(animate);
+      } else {
+        setCount(null);
+      }
     };
-    requestAnimationFrame(animate);
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
   }, [inView, end, duration]);
 
-  const formatted =
-    decimals > 0
-      ? count.toFixed(decimals)
-      : Math.round(count).toLocaleString("en-IN");
+  const format = (n: number) =>
+    decimals > 0 ? n.toFixed(decimals) : Math.round(n).toLocaleString("en-IN");
 
   return (
-    <span ref={ref}>
-      {prefix}
-      {formatted}
-      {suffix}
+    <span
+      ref={ref}
+      className="count-up"
+      data-n={count === null ? undefined : `${prefix}${format(count)}${suffix}`}
+    >
+      <span className="count-up-value">
+        {prefix}
+        {format(end)}
+        {suffix}
+      </span>
     </span>
   );
 }
@@ -90,16 +109,20 @@ const fadeUp = {
 export default function Hero({
   vertical,
   onEnterLedger,
+  initialMeta,
 }: {
   vertical?: VerticalConfig;
   /** Given by the CSR page only; other verticals keep their jump to the ranking. */
   onEnterLedger?: (from: DOMRect) => void;
+  /** The vertical's meta.json as built into the page, so the page as served
+   *  states its figures; the file is still read afterwards. */
+  initialMeta?: HeroMeta;
 }) {
   const accent = vertical?.theme.accent ?? DEFAULT_ACCENT;
   const isCsr = !vertical || vertical.slug === "csr";
   const dataPath = vertical?.dataPath ?? "/data/csr";
   const verticalSlug = vertical?.slug ?? "csr";
-  const [meta, setMeta] = useState<HeroMeta | null>(null);
+  const [meta, setMeta] = useState<HeroMeta | null>(initialMeta ?? null);
 
   useEffect(() => {
     fetch(`${dataPath}/meta.json`)

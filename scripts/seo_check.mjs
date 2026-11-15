@@ -140,6 +140,34 @@ async function main() {
     if (!landing.includes(figure)) fail("/", `its text does not say "${figure}"`);
   }
 
+  // So are the CSR index's and its methodology's. They were the count-up's
+  // zero and the pages' fallbacks: "₹0 Cr", "0 Districts", "0 whitespace
+  // districts", "scores run from 0 to 81.2", "Score range 0-100".
+  const csrMeta = JSON.parse(readFileSync("public/data/csr/meta.json", "utf-8"));
+  const served = async (path) => (await get(`${PRIMARY}${path}`)).body
+    .replace(/<script[\s\S]*?<\/script>/g, "")
+    .replace(/<!-- -->/g, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+  const { min, max } = csrMeta.pos_range;
+  const expected = {
+    "/csr": [
+      `₹${Math.round(csrMeta.csr_totals.total_fy23_24_crore).toLocaleString("en-IN")} Cr`,
+      `${csrMeta.total_districts} Districts`,
+      `${csrMeta.national_hr_official_pct.toFixed(2)}%`,
+      `scores run from ${min} to ${max}`,
+      `${csrMeta.total_districts} districts`,
+      `${csrMeta.whitespace_count} Whitespace districts`,
+    ],
+    "/methodology": [`Score range ${min}–${max}`, `scores run from ${min} to ${max}`],
+  };
+  for (const [path, figures] of Object.entries(expected)) {
+    const text = await served(path);
+    for (const figure of figures) {
+      if (!text.includes(figure)) fail(path, `its text does not say "${figure}"`);
+    }
+  }
+
   const stray = await get(`${PRIMARY}/instruments/consent/not-a-proposal`);
   if (stray.status !== 404) fail("/instruments/consent/not-a-proposal", `answered ${stray.status}, not 404`);
 

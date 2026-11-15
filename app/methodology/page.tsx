@@ -14,6 +14,11 @@ import {
 } from "recharts";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+// The index's summary, built into the page so the page as served states the
+// data's figures. Until it was, the served page gave the fallbacks below
+// ("Score range 0-100", 44 whitespace districts, a 25th percentile of 13),
+// none of which the data holds. The file is still read afterwards.
+import csrMeta from "@/public/data/csr/meta.json";
 
 function FadeIn({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -491,7 +496,7 @@ function SectionHeader({ num, tag, title, lead }: { num: string; tag: string; ti
 
 export default function MethodologyPage() {
   const [posDistribution, setPosDistribution] = useState<{ range: string; count: number }[]>([]);
-  const [meta, setMeta] = useState<MetaData | null>(null);
+  const [meta, setMeta] = useState<MetaData | null>(csrMeta as unknown as MetaData);
 
   useEffect(() => {
     Promise.all([
