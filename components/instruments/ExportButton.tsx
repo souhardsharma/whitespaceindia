@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { PLUM } from "./InstrumentChrome";
+import WakeNote from "./WakeNote";
+import { wakeLink, wakeOrigin } from "@/lib/instruments/wake";
 
 /**
  * Downloads the profile as a PDF.
@@ -20,11 +22,14 @@ export default function ExportButton({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // The link that wakes the backend, when the PDF failed because it sleeps.
+  const [wake, setWake] = useState<string | null>(null);
 
   async function download() {
     if (!stateSlug) return;
     setBusy(true);
     setError("");
+    setWake(null);
     try {
       const res = await fetch("/api/instruments/consent/export", {
         method: "POST",
@@ -32,6 +37,11 @@ export default function ExportButton({
         body: JSON.stringify({ proposalId, state: stateSlug }),
       });
       if (!res.ok) {
+        const origin = wakeOrigin(res);
+        if (origin) {
+          setWake(wakeLink(origin, window.location));
+          return;
+        }
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error || `The PDF could not be prepared (error ${res.status}).`);
       }
@@ -72,7 +82,9 @@ export default function ExportButton({
       >
         {busy ? "Preparing…" : "Download this profile"}
       </button>
-      {error ? (
+      {wake ? (
+        <WakeNote href={wake} what="The PDF could not be prepared" className="max-w-sm" />
+      ) : error ? (
         <span className="font-body text-[11.5px] opacity-70">{error}</span>
       ) : (
         <span className="font-body text-[11px] opacity-70">
