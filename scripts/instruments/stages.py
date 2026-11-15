@@ -422,7 +422,17 @@ STATUSES: dict[str, dict] = {
         "Forwarded to the pollution control board", "administrative",
         "The member secretary has sent the proposal to the State Pollution "
         "Control Board or Pollution Control Committee for its comments and "
-        "fee demand.",
+        "fee demand. The register shows this step after Terms of Reference "
+        "have been granted as well as before, and a grant already made "
+        "still stands.",
+        outcome=None),
+    # History only so far (52 cached steps, 2026-10): the board handing the
+    # proposal back. It follows "Payment Approved" (22), "Comments Not
+    # Furnished On Time" (18) and "Demand Note Not Raised On Time" (5).
+    "returned_by_spcb": _s(
+        "Sent back by the pollution control board", "administrative",
+        "The State Pollution Control Board or Pollution Control Committee has "
+        "sent the proposal back to the member secretary.",
         outcome=None),
     "comments_furnished": _s(
         "Pollution control board comments furnished", "administrative",
@@ -553,6 +563,16 @@ STATUSES: dict[str, dict] = {
 # Left side is the register's `proposalStatus` verbatim. Comparison is made on
 # the trimmed, case-folded, whitespace-collapsed form, so only genuinely
 # different wording needs an entry.
+# Open positions a proposal can hold AFTER a decision that still stands. The
+# register shows only the current position, so a proposal granted Terms of
+# Reference and then sent to the board reads "Forwarded to MS SPCB/PCC by MS",
+# not "ToR Granted", and goes back to "ToR Granted" later with the grant's
+# original date. Of 1,944 proposals at this step in the 2026-10 cache, 1,522
+# held a grant earlier in their history. For these keys appraisal.summarise()
+# takes the decision from the history; for every other open position a
+# decision step in the history is NOT read as the proposal's decision.
+AFTER_DECISION: frozenset[str] = frozenset({"forwarded_to_spcb"})
+
 RAW_TO_KEY: dict[str, str] = {
     "ec granted": "ec_granted",
     "ec rejected": "ec_rejected",
@@ -621,6 +641,7 @@ RAW_TO_KEY: dict[str, str] = {
     "processed by ms seiaa": "processed_by_ms_seiaa",
     "processed by ms seac": "processed_by_ms_seac",
     "forwarded to ms spcb/pcc by ms": "forwarded_to_spcb",
+    "forwarded to ms by ms spcb/pcc": "returned_by_spcb",
     "comments furnished by ms spcb/pcc": "comments_furnished",
     "comments not furnished on time": "comments_late",
     "demand note raised by ms spcb/pcc to pp": "demand_note_raised",
@@ -636,6 +657,7 @@ RAW_TO_KEY: dict[str, str] = {
     "proposal parked by authority": "parked",
     "recalled proposal": "recalled",
     "requested for reopen": "reopen_requested",
+    "requested for re open": "reopen_requested",
     "proposal reopened for reconsideration": "reopened",
     "delisted_by_system": "delisted_by_system",
     "withdraw request accepted": "withdrawal_request_accepted",
@@ -697,6 +719,7 @@ def registry() -> dict:
     return {
         "phases": PHASES,
         "decisionKinds": decision_kinds(),
+        "afterDecision": sorted(AFTER_DECISION),
         "statuses": {
             k: {**v, "raw": sorted(raws.get(k, []))}
             for k, v in STATUSES.items()
@@ -710,6 +733,10 @@ def self_check() -> list[str]:
     for raw, key in RAW_TO_KEY.items():
         if key not in STATUSES:
             problems.append(f"RAW_TO_KEY[{raw!r}] -> unknown status {key!r}")
+    for key in AFTER_DECISION:
+        meta = STATUSES.get(key)
+        if meta is None or meta["outcome"] or meta["terminal"]:
+            problems.append(f"AFTER_DECISION[{key!r}] must be an open status")
     for key, meta in STATUSES.items():
         if meta["phase"] not in PHASES:
             problems.append(f"STATUSES[{key!r}] -> unknown phase {meta['phase']!r}")

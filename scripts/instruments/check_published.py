@@ -42,6 +42,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 # tells you what you have already shipped.
 DATA = Path(os.environ.get("INSTRUMENTS_DATA_DIR")
             or ROOT / "public" / "data" / "instruments" / "consent")
+CANDIDATE_BUILD = bool(os.environ.get("INSTRUMENTS_DATA_DIR"))
 
 # The small-group floor the contract requires of published distributions.
 # Kept HERE rather than read from appraisal.json, which this suite checks.
@@ -148,17 +149,41 @@ def py_fields_written() -> list[str]:
     return re.findall(r'"(\w+)"', body)
 
 
+def header_agrees(published: list[str], declared: list[str],
+                  fresh_build: bool) -> bool:
+    """Whether a shard's header is the one build_data declares.
+
+    A build just made must match exactly. The committed copy may also lack
+    the NEWEST columns, the ones at the end of the list: a column added in
+    code reaches the data only at the next sync, and until then every reader
+    finds its fields by name. A column missing from anywhere else, or one out
+    of order, is still a mismatch.
+    """
+    if published == declared:
+        return True
+    return (not fresh_build and bool(published)
+            and published == declared[:len(published)])
+
+
+def decision_stage(row: list, F: dict) -> str:
+    """The stage a row's decision date belongs to: `dsk` where set, else `sk`."""
+    return (row[F["dsk"]] if "dsk" in F else None) or row[F["sk"]]
+
+
 def test_field_contract(shards: list[dict]) -> None:
     print("\nshard field header")
     declared = py_fields_written()
     check("build_data declares fields", bool(declared), "SHARD_FIELDS empty")
 
     for s in shards:
-        if s["fields"] != declared:
+        if not header_agrees(s["fields"], declared, CANDIDATE_BUILD):
             check(f"{s['slug']} header matches SHARD_FIELDS", False,
                   f"{s['fields']} != {declared}")
             return
     check("every shard header matches SHARD_FIELDS exactly", True)
+    awaited = declared[len(shards[0]["fields"]):]
+    if awaited:
+        print(f"        note: declared, and published from the next build: {awaited}")
 
     read_by_ts = ts_fields_read()
     missing = sorted(read_by_ts - set(declared))
@@ -636,7 +661,7 @@ def test_appraisal(shards: list[dict]) -> None:
         if "dtd" not in F or "sk" not in F:
             continue
         for r in sh["rows"]:
-            if r[F["dtd"]] is not None and r[F["sk"]] in EC_STAGES:
+            if r[F["dtd"]] is not None and decision_stage(r, F) in EC_STAGES:
                 ec_days.append(r[F["dtd"]])
     ec_days.sort()
 
@@ -696,7 +721,7 @@ def test_appraisal(shards: list[dict]) -> None:
         sectors = sh.get("sectors") or []
         authorities = sh.get("authorities") or []
         for r in sh["rows"]:
-            if r[F["dtd"]] is None or r[F["sk"]] not in EC_STAGES:
+            if r[F["dtd"]] is None or decision_stage(r, F) not in EC_STAGES:
                 continue
             v = r[F["dtd"]]
             si = r[F["sector"]] if "sector" in F else None
@@ -707,7 +732,7 @@ def test_appraisal(shards: list[dict]) -> None:
             if isinstance(ai, int) and 0 <= ai < len(authorities):
                 add("byAuthority", authorities[ai], v)
             add("byCategory", r[F["cat"]] if "cat" in F else None, v)
-            add("byOutcome", OUTCOME_OF.get(r[F["sk"]]), v)
+            add("byOutcome", OUTCOME_OF.get(decision_stage(r, F)), v)
 
     wrong_n, wrong_median, unknown_group = [], [], []
     checked_groups = 0
@@ -757,7 +782,7 @@ def test_appraisal(shards: list[dict]) -> None:
             continue
         for r in sh["rows"]:
             if r[F["dtd"]] is not None:
-                key = stage_decision.get(r[F["sk"]]) or "unspecified"
+                key = stage_decision.get(decision_stage(r, F)) or "unspecified"
                 by_decision.setdefault(key, []).append(r[F["dtd"]])
             elif "dpd" in F and r[F["dpd"]] is not None:
                 pending.append(r[F["dpd"]])
@@ -773,6 +798,31 @@ def test_appraisal(shards: list[dict]) -> None:
                              f"med={spec.get('median')}, shards n={len(vals)}")
     check("every by-decision group recomputes from the shards",
           not wrong_dec, f"{wrong_dec[:3]}")
+
+    # A decision date has to say which decision it dates. On most rows that is
+    # the status itself; at a position the register shows AFTER a decision the
+    # status names no decision, and `dsk` carries it. Without the first check a
+    # ToR grant behind "Forwarded to MS SPCB/PCC by MS" could be dated and
+    # belong to no instrument; without the second, `dsk` could re-label any row.
+    after = set(stage_registry.get("afterDecision") or [])
+    undated = apart = misplaced = 0
+    for sh in shards:
+        F = {n: i for i, n in enumerate(sh["fields"])}
+        if not {"don", "sk"} <= set(F):
+            continue
+        for r in sh["rows"]:
+            if r[F["don"]] and not stage_decision.get(decision_stage(r, F)):
+                undated += 1
+            dsk = r[F["dsk"]] if "dsk" in F else None
+            if dsk is None:
+                continue
+            apart += 1
+            if r[F["sk"]] not in after or dsk == r[F["sk"]] or not r[F["don"]]:
+                misplaced += 1
+    check("every decision date names the decision it dates",
+          undated == 0, f"{undated:,} rows have a date and no decision stage")
+    check("a decision apart from the status is carried only at a position "
+          "held after one", misplaced == 0, f"{misplaced:,} of {apart:,}")
 
     pend_spec = (ap.get("national") or {}).get("pending") or {}
     pending.sort()

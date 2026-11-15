@@ -54,6 +54,14 @@ jobs:
           PYTHONIOENCODING: utf-8
         run: python scripts/instruments/test_sync.py
 
+      - name: Appraisal timing and stage vocabulary
+        # A proposal's decision is read from its history when the register
+        # shows a position held after one, and only then. Read from the status
+        # alone, a granted proposal was published as open. Needs no network.
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python scripts/instruments/test_appraisal.py
+
       - name: Register diagnostic
         # The one tool that asks PARIVESH questions on purpose. Pins that it
         # refuses to run off GitHub's runner and that its summary says what the
