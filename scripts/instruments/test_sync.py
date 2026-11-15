@@ -814,6 +814,38 @@ def test_no_form_is_rechecked(tmp: Path) -> None:
           "rolling" in SY.REVISIT_PASSES)
 
 
+def test_a_form_read_empty_by_an_older_reader_is_owed(tmp: Path) -> None:
+    print("\na form an older reader read as empty is re-read in the changed pass")
+    import json
+    from fetch_caf import EXTRACT_VERSION as V
+    (tmp / "caf").mkdir(parents=True)
+    rows = [
+        {"id": 1, "v": 4, "caf_revisions": 3, "site": {"lat": 1}, "plots": [1]},
+        {"id": 1, "v": 4, "caf_revisions": 4},                  # a draft on top
+        {"id": 2, "v": 4, "caf_revisions": 2, "plots": [1]},    # stale, not empty
+        {"id": 3, "v": 4, "caf_revisions": 1},                  # current, names no place
+        {"id": 4, "v": 4, "caf_revisions": 2},
+        {"id": 4, "v": V, "caf_revisions": 2},                  # already re-read
+        {"id": 5, "v": 3, "caf_revisions": 1},                  # older reader, empty
+    ]
+    (tmp / "caf" / "caf_extract.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    (tmp / "caf" / "caf_extract.shard1.jsonl").write_text(
+        json.dumps({"id": 6, "v": 4, "caf_revisions": 2}) + "\n", encoding="utf-8")
+    got = SY.stale_empty_forms(tmp)
+    check("stale and empty forms are owed, judged by their latest read",
+          got == [1, 5, 6], str(got))
+    check("a form this reader already read is not asked again", 4 not in got)
+    check("a current form that names no place is not asked again", 3 not in got)
+    check("no cache, nothing owed", SY.stale_empty_forms(tmp / "none") == [])
+    pending = SY.queue_rereads({"caf": [9], "history": [9]}, got, fetchers=("caf",))
+    check("they join the form debt only", pending == {"caf": [1, 5, 6, 9], "history": [9]},
+          str(pending))
+    names = [(n, p) for n, p, _ in SY.PASS_PLAN]
+    check("and the changed form pass runs first",
+          names[0] == ("caf", "changed"))
+
+
 SPRING_404 = (b'{"timestamp":"2026-10-27T07:00:52.678+00:00","status":404,'
               b'"error":"Not Found","path":"/p/search"}')
 
@@ -948,6 +980,8 @@ def main() -> int:
         test_a_pass_out_of_time_pays_what_it_read(Path(d))
     with tempfile.TemporaryDirectory() as d:
         test_no_form_is_rechecked(Path(d))
+    with tempfile.TemporaryDirectory() as d:
+        test_a_form_read_empty_by_an_older_reader_is_owed(Path(d))
     with tempfile.TemporaryDirectory() as d:
         test_parallel_merge_and_exit(Path(d))
     with tempfile.TemporaryDirectory() as d:
