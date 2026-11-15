@@ -15,6 +15,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PLUM } from "./InstrumentChrome";
+import WakeNote from "./WakeNote";
+import { wakeLink, wakeOrigin } from "@/lib/instruments/wake";
 
 export const WATCH_KEY = "ws-instruments-watch-v1";
 
@@ -58,7 +60,12 @@ interface Status {
 export default function Watchlist() {
   const [watch, setWatch] = useState<WatchState | null>(null);
   const [status, setStatus] = useState<Record<string, Status>>({});
-  const [districtCounts, setDistrictCounts] = useState<Record<string, number>>({});
+  // null: that district's news could not be read. Read as 0, a sleeping
+  // backend told the reader "nothing new" about every district they follow.
+  const [districtCounts, setDistrictCounts] = useState<Record<string, number | null>>({});
+  // Set when a check failed: `wake` is the link that wakes the backend when
+  // the failure was the backend asleep (lib/instruments/wake.ts), else null.
+  const [unchecked, setUnchecked] = useState<{ wake: string | null } | null>(null);
 
   useEffect(() => {
     const load = () => setWatch(readWatch());
@@ -69,26 +76,49 @@ export default function Watchlist() {
 
   useEffect(() => {
     if (!watch) return;
+    let live = true;
+    setUnchecked(null);
+    const fail = (res: Response | null) => {
+      if (!live) return;
+      const origin = res ? wakeOrigin(res) : null;
+      const wake = origin ? wakeLink(origin, window.location) : null;
+      setUnchecked((prev) => ({ wake: wake ?? prev?.wake ?? null }));
+    };
     const ids = Object.keys(watch.proposals);
     if (ids.length) {
       fetch(`/api/instruments/consent/status?ids=${ids.slice(0, 100).join(",")}`)
-        .then((r) => (r.ok ? r.json() : {}))
-        .then((d) => setStatus(d as Record<string, Status>))
-        .catch(() => undefined);
+        .then(async (r) => {
+          if (!r.ok) return fail(r);
+          const d = (await r.json()) as Record<string, Status>;
+          if (live) setStatus(d);
+        })
+        .catch(() => fail(null));
     }
     const codes = Object.keys(watch.districts);
     Promise.all(
       codes.map((c) =>
         fetch(newsUrl(c, watch.districts[c]))
-          .then((r) => (r.ok ? r.json() : { total: 0 }))
-          .then((d: { total?: number }) => {
+          .then(async (r) => {
+            if (!r.ok) {
+              fail(r);
+              return [c, null] as const;
+            }
+            const d = (await r.json()) as { total?: number };
             const w = watch.districts[c];
             const n = w.seenStamp ? d.total ?? 0 : Math.max(0, (d.total ?? 0) - (w.seenCount ?? 0));
             return [c, n] as const;
           })
-          .catch(() => [c, 0] as const),
+          .catch(() => {
+            fail(null);
+            return [c, null] as const;
+          }),
       ),
-    ).then((pairs) => setDistrictCounts(Object.fromEntries(pairs)));
+    ).then((pairs) => {
+      if (live) setDistrictCounts(Object.fromEntries(pairs));
+    });
+    return () => {
+      live = false;
+    };
   }, [watch]);
 
   if (!watch) return null;
@@ -132,13 +162,26 @@ export default function Watchlist() {
     <section className="mb-12 border border-[#1c1c19] p-5" aria-labelledby="watch-heading">
       <div className="flex flex-wrap items-baseline justify-between gap-3 mb-3">
         <h2 id="watch-heading" className="font-label text-[11px] uppercase tracking-[0.18em]">
-          Following, {moved.length + Object.values(districtCounts).filter((n) => n > 0).length} with changes
+          {unchecked
+            ? "Following, changes not checked"
+            : `Following, ${moved.length + Object.values(districtCounts).filter((n) => (n ?? 0) > 0).length} with changes`}
         </h2>
-        <button type="button" onClick={markSeen}
-                className="tap-target font-label text-[10px] uppercase tracking-[0.16em] underline underline-offset-2">
-          Mark all as seen
-        </button>
+        {/* Marking as seen records where each item stands now; with the check
+            failed there is nothing to record, so the button is withheld. */}
+        {unchecked ? null : (
+          <button type="button" onClick={markSeen}
+                  className="tap-target font-label text-[10px] uppercase tracking-[0.16em] underline underline-offset-2">
+            Mark all as seen
+          </button>
+        )}
       </div>
+      {unchecked?.wake ? (
+        <WakeNote href={unchecked.wake} what="Changes could not be checked" className="mb-4" />
+      ) : unchecked ? (
+        <p className="mb-4 font-body text-[13px] opacity-80" role="status">
+          Changes could not be checked just now. Reloading the page usually fixes this.
+        </p>
+      ) : null}
       <ul className="space-y-2 font-body text-[13.5px]">
         {pIds.map((id) => {
           const w = watch.proposals[id];
@@ -149,7 +192,7 @@ export default function Watchlist() {
               <Link prefetch={false} href={`/instruments/consent/${id}`} className="underline underline-offset-2">
                 {w.name.length > 110 ? w.name.slice(0, 107) + "…" : w.name}
               </Link>
-              <span className="opacity-75">{s ? s.stage : "…"}</span>
+              <span className="opacity-75">{s ? s.stage : unchecked ? "not checked" : "…"}</span>
               {changed ? (
                 <strong className="font-label text-[10px] uppercase tracking-[0.14em]" style={{ color: PLUM }}>
                   changed since you last looked
@@ -160,14 +203,18 @@ export default function Watchlist() {
         })}
         {dIds.map((c) => {
           const w = watch.districts[c];
-          const n = districtCounts[c] ?? 0;
+          const n = districtCounts[c];
           return (
             <li key={`d${c}`} className="flex flex-wrap gap-x-3">
               <Link prefetch={false} href={`/instruments/consent/district/${c}`} className="underline underline-offset-2">
                 {w.name}
               </Link>
               <span className="opacity-75">district</span>
-              {n > 0 ? (
+              {n === undefined ? (
+                <span className="font-label text-[10px] uppercase tracking-[0.14em] opacity-80">…</span>
+              ) : n === null ? (
+                <span className="font-label text-[10px] uppercase tracking-[0.14em] opacity-80">not checked</span>
+              ) : n > 0 ? (
                 <Link href={`/instruments/consent/latest?days=60&district=${c}`}
                       className="font-label text-[10px] uppercase tracking-[0.14em]" style={{ color: PLUM }}>
                   {n} {n === 1 ? "event" : "events"} since you last looked
