@@ -137,9 +137,31 @@ def build_postback(saved: dict, pb: dict):
             continue
         sel = [o for o in opts if o["selected"]] or opts[:1]
         fields[name] = sel[0]["value"] if sel[0]["value"] is not None else sel[0]["text"]
+    import re as _re
+    chosen = None
+    for ch in pb.get("choose", []):
+        for name, opts in f["selects"].items():
+            if not name or (ch.get("select") and not _re.search(ch["select"], name, _re.I)):
+                continue
+            hit = next((o for o in opts if _re.search(ch["option"], f"{o['value']} {o['text']}", _re.I)), None)
+            if hit:
+                fields[name] = hit["value"] if hit["value"] is not None else hit["text"]
+                chosen = name
+                break
     for k in pb.get("drop", []):
         fields.pop(k, None)
     fields |= pb.get("set", {})
+    if pb.get("event") == "auto" and chosen:
+        fields["__EVENTTARGET"] = chosen
+    elif pb.get("event"):
+        fields["__EVENTTARGET"] = pb["event"]
+    if pb.get("button_regex"):
+        btn = next((i for i in f["inputs"] if i["name"] and i["type"] in ("submit", "button", "image")
+                    and _re.search(pb["button_regex"], i["name"], _re.I)), None)
+        if btn and btn["type"] == "image":
+            fields[btn["name"] + ".x"], fields[btn["name"] + ".y"] = "10", "10"
+        elif btn:
+            fields[btn["name"]] = btn["value"]
     if pb.get("button"):
         btn = next((i for i in f["inputs"] if i["name"] == pb["button"]), None)
         fields[pb["button"]] = (btn or {}).get("value", "") or pb.get("button_value", "")
