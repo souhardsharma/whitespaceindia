@@ -1,0 +1,36 @@
+# Throwaway: reads candidate education sources from GitHub's runner. Serves nothing; deleted afterwards.
+name: edu-probe
+on:
+  push:
+    branches: [fix-edu-reserve2]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Runner address
+        run: curl -s --max-time 10 https://ipinfo.io/json | grep -E '"(ip|country|org)"' || true
+      - name: Indian pool (only when a probe needs it)
+        if: hashFiles('need_india') != ''
+        env:
+          EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
+        run: |
+          pip install -q pysocks==1.7.1
+          python -I -X utf8 scripts/education/refresh_pool.py india --max-minutes 10 || true
+          wc -l "$EDUCATION_CACHE_DIR/pools/india.txt" || true
+      - name: Probe
+        env:
+          EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
+        run: python -I -X utf8 r2.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: probe-out
+          path: out/
+          retention-days: 5

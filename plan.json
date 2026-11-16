@@ -1,0 +1,70 @@
+[
+ {
+  "name": "kv-home",
+  "url": "https://koshvani.up.nic.in/"
+ },
+ {
+  "name": "kv-dash",
+  "url": "https://koshvani.up.nic.in/KoshDashboard.aspx"
+ },
+ {
+  "name": "kv-DailyTrx",
+  "url": "https://koshvani.up.nic.in/KoshReports/DailyTrx.aspx"
+ },
+ {
+  "name": "kv-ExpGrant",
+  "url": "https://koshvani.up.nic.in/KoshReports/ExpGrant.aspx"
+ },
+ {
+  "name": "kv-GrntBud",
+  "url": "https://koshvani.up.nic.in/KoshReports/GrntBud.aspx"
+ },
+ {
+  "name": "kv-DDOExp",
+  "url": "https://koshvani.up.nic.in/KoshReports/DDOExp.aspx"
+ },
+ {
+  "name": "kv-PFMSCentralSchemeWise",
+  "url": "https://koshvani.up.nic.in/KoshReports/PFMSCentralSchemeWise.aspx"
+ },
+ {
+  "name": "kv-BudSchUC",
+  "url": "https://koshvani.up.nic.in/KoshReports/BudSchUC.aspx"
+ },
+ {
+  "name": "kv-BudProvision",
+  "url": "https://koshvani.up.nic.in/KoshReports/BudProvision.aspx"
+ },
+ {
+  "name": "kv-NonPlanExp",
+  "url": "https://koshvani.up.nic.in/KoshReports/NonPlanExp.aspx"
+ },
+ {
+  "name": "kv-CCLExp",
+  "url": "https://koshvani.up.nic.in/KoshReports/CCLExp.aspx"
+ },
+ {
+  "name": "kv-DataStat",
+  "url": "https://koshvani.up.nic.in/KoshReports/DataStat.aspx"
+ },
+ {
+  "name": "kv-AllotmentStatus",
+  "url": "https://koshvani.up.nic.in/KoshReports/AllotmentStatus.aspx"
+ },
+ {
+  "name": "kv-BM4Detail",
+  "url": "https://koshvani.up.nic.in/KoshReports/BM4Detail.aspx"
+ },
+ {
+  "name": "kv-DivExp",
+  "url": "https://koshvani.up.nic.in/KoshReports/DivExp.aspx"
+ },
+ {
+  "name": "kv-ExcMore",
+  "url": "https://koshvani.up.nic.in/KoshReports/ExcMore.aspx"
+ },
+ {
+  "name": "upsch-index",
+  "url": "https://scholarship.up.gov.in/index.aspx"
+ }
+]
