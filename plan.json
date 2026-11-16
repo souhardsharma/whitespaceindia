@@ -1,12 +1,12 @@
 [
  {
-  "name": "kv-home",
+  "name": "kv-home-27",
   "url": "https://koshvani.up.nic.in/"
  },
  {
-  "name": "kv-fy",
+  "name": "kv-fy-27",
   "postback": {
-   "from": "kv-home",
+   "from": "kv-home-27",
    "set": {
     "ddlFinYear": "2026-2027"
    },
@@ -22,263 +22,175 @@
   }
  },
  {
-  "name": "kv-ExpGrant",
-  "url": "https://koshvani.up.nic.in/KoshReports/ExpGrant.aspx",
-  "timeout": 90
- },
- {
-  "name": "kv-ExpGrant-g71",
-  "postback": {
-   "from": "kv-ExpGrant",
-   "choose": [
-    {
-     "option": "(^|\\D)0?71(\\D|$)|\u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915"
-    }
-   ],
-   "event": "auto"
-  },
-  "timeout": 90
- },
- {
-  "name": "kv-ExpGrant-show",
-  "postback": {
-   "from": "kv-ExpGrant-g71",
-   "button_regex": "show|submit|go|view|search|btn(?!back|home|export|gray|blue|olive|xsmall|small|large)"
-  },
-  "timeout": 90
- },
- {
-  "name": "kv-GrntBud",
-  "url": "https://koshvani.up.nic.in/KoshReports/GrntBud.aspx",
-  "timeout": 90
- },
- {
-  "name": "kv-GrntBud-g71",
-  "postback": {
-   "from": "kv-GrntBud",
-   "choose": [
-    {
-     "option": "(^|\\D)0?71(\\D|$)|\u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915"
-    }
-   ],
-   "event": "auto"
-  },
-  "timeout": 90
- },
- {
-  "name": "kv-GrntBud-show",
-  "postback": {
-   "from": "kv-GrntBud-g71",
-   "button_regex": "show|submit|go|view|search|btn(?!back|home|export|gray|blue|olive|xsmall|small|large)"
-  },
-  "timeout": 90
- },
- {
-  "name": "kv-DDOExp",
-  "url": "https://koshvani.up.nic.in/KoshReports/DDOExp.aspx",
-  "timeout": 90
- },
- {
-  "name": "kv-DDOExp-g71",
-  "postback": {
-   "from": "kv-DDOExp",
-   "choose": [
-    {
-     "option": "(^|\\D)0?71(\\D|$)|\u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915"
-    }
-   ],
-   "event": "auto"
-  },
-  "timeout": 90
- },
- {
-  "name": "kv-DDOExp-show",
-  "postback": {
-   "from": "kv-DDOExp-g71",
-   "button_regex": "show|submit|go|view|search|btn(?!back|home|export|gray|blue|olive|xsmall|small|large)"
-  },
-  "timeout": 90
- },
- {
-  "name": "kv-PFMSCentralSchemeWise",
+  "name": "kv-pfms-b",
   "url": "https://koshvani.up.nic.in/KoshReports/PFMSCentralSchemeWise.aspx",
-  "timeout": 90
+  "timeout": 180
  },
  {
-  "name": "kv-PFMSCentralSchemeWise-g71",
+  "name": "kv-pfms-b-export",
   "postback": {
-   "from": "kv-PFMSCentralSchemeWise",
-   "choose": [
-    {
-     "option": "(^|\\D)0?71(\\D|$)|\u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915"
-    }
-   ],
-   "event": "auto"
+   "from": "kv-pfms-b",
+   "button_regex": "btnExport"
   },
-  "timeout": 90
+  "timeout": 180
  },
  {
-  "name": "kv-PFMSCentralSchemeWise-show",
-  "postback": {
-   "from": "kv-PFMSCentralSchemeWise-g71",
-   "button_regex": "show|submit|go|view|search|btn(?!back|home|export|gray|blue|olive|xsmall|small|large)"
-  },
-  "timeout": 90
+  "name": "kv-expgrant-b",
+  "url": "https://koshvani.up.nic.in/KoshReports/ExpGrant.aspx",
+  "timeout": 180
  },
  {
-  "name": "kv-DailyTrx",
-  "url": "https://koshvani.up.nic.in/KoshReports/DailyTrx.aspx",
-  "timeout": 120
- },
- {
-  "name": "kv-DailyTrx-g71",
-  "postback": {
-   "from": "kv-DailyTrx",
-   "choose": [
-    {
-     "option": "(^|\\D)0?71(\\D|$)|\u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915"
-    }
-   ],
-   "event": "auto"
-  },
-  "timeout": 120
- },
- {
-  "name": "kv-DailyTrx-show",
-  "postback": {
-   "from": "kv-DailyTrx-g71",
-   "button_regex": "show|submit|go|view|search|btn(?!back|home|export|gray|blue|olive|xsmall|small|large)"
-  },
-  "timeout": 120
- },
- {
-  "name": "kv-BudProvision",
-  "url": "https://koshvani.up.nic.in/KoshReports/BudProvision.aspx",
-  "timeout": 90
- },
- {
-  "name": "kv-BudProvision-g71",
-  "postback": {
-   "from": "kv-BudProvision",
-   "choose": [
-    {
-     "option": "(^|\\D)0?71(\\D|$)|\u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915"
-    }
-   ],
-   "event": "auto"
-  },
-  "timeout": 90
- },
- {
-  "name": "kv-BudProvision-show",
-  "postback": {
-   "from": "kv-BudProvision-g71",
-   "button_regex": "show|submit|go|view|search|btn(?!back|home|export|gray|blue|olive|xsmall|small|large)"
-  },
-  "timeout": 90
- },
- {
-  "name": "kv-ExcNoExp",
+  "name": "kv-excnoexp-b",
   "url": "https://koshvani.up.nic.in/KoshReports/ExcNoExp.aspx",
-  "timeout": 120
+  "timeout": 240
  },
  {
-  "name": "kv-ExcNoExp-g71",
+  "name": "kv-excnoexp-b-71",
   "postback": {
-   "from": "kv-ExcNoExp",
+   "from": "kv-excnoexp-b",
    "choose": [
     {
-     "option": "(^|\\D)0?71(\\D|$)|\u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915"
+     "select": "DropDownList1",
+     "option": "^071"
     }
    ],
-   "event": "auto"
+   "button_regex": "Button1"
   },
-  "timeout": 120
+  "timeout": 240
  },
  {
-  "name": "kv-ExcNoExp-show",
-  "postback": {
-   "from": "kv-ExcNoExp-g71",
-   "button_regex": "show|submit|go|view|search|btn(?!back|home|export|gray|blue|olive|xsmall|small|large)"
-  },
-  "timeout": 120
- },
- {
-  "name": "kv-BM4Detail",
-  "url": "https://koshvani.up.nic.in/KoshReports/BM4Detail.aspx",
-  "timeout": 90
- },
- {
-  "name": "kv-BM4Detail-g71",
-  "postback": {
-   "from": "kv-BM4Detail",
-   "choose": [
-    {
-     "option": "(^|\\D)0?71(\\D|$)|\u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915"
-    }
-   ],
-   "event": "auto"
-  },
-  "timeout": 90
- },
- {
-  "name": "kv-BM4Detail-show",
-  "postback": {
-   "from": "kv-BM4Detail-g71",
-   "button_regex": "show|submit|go|view|search|btn(?!back|home|export|gray|blue|olive|xsmall|small|large)"
-  },
-  "timeout": 90
- },
- {
-  "name": "kv-AllotmentStatus",
+  "name": "kv-allot",
   "url": "https://koshvani.up.nic.in/KoshReports/AllotmentStatus.aspx",
-  "timeout": 90
+  "timeout": 240
  },
  {
-  "name": "kv-AllotmentStatus-g71",
+  "name": "kv-allot-71",
   "postback": {
-   "from": "kv-AllotmentStatus",
+   "from": "kv-allot",
    "choose": [
     {
-     "option": "(^|\\D)0?71(\\D|$)|\u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915"
+     "select": "ddlGrant",
+     "option": "^0?71"
     }
    ],
+   "set": {
+    "RadioButtonList1": "A"
+   },
    "event": "auto"
   },
-  "timeout": 90
+  "timeout": 240
  },
  {
-  "name": "kv-AllotmentStatus-show",
+  "name": "kv-datastat",
+  "url": "https://koshvani.up.nic.in/KoshReports/DataStat.aspx",
+  "timeout": 240
+ },
+ {
+  "name": "kv-bm4",
+  "url": "https://koshvani.up.nic.in/KoshReports/BM4Detail.aspx",
+  "timeout": 180
+ },
+ {
+  "name": "kv-bm4-g",
   "postback": {
-   "from": "kv-AllotmentStatus-g71",
-   "button_regex": "show|submit|go|view|search|btn(?!back|home|export|gray|blue|olive|xsmall|small|large)"
+   "from": "kv-bm4",
+   "set": {
+    "ddlGrant": "071"
+   },
+   "event": "ddlGrant"
   },
-  "timeout": 90
+  "timeout": 180
  },
  {
-  "name": "kv-NonPlanExp",
-  "url": "https://koshvani.up.nic.in/KoshReports/NonPlanExp.aspx",
-  "timeout": 200
- },
- {
-  "name": "kv-NonPlanExp-g71",
+  "name": "kv-bm4-show",
   "postback": {
-   "from": "kv-NonPlanExp",
+   "from": "kv-bm4-g",
+   "set": {
+    "ddlMonth": "10",
+    "ddlGrant": "071",
+    "ddlPNP": "N",
+    "ddlHead": "2202011023104"
+   },
+   "button_regex": "btnShow"
+  },
+  "timeout": 240
+ },
+ {
+  "name": "kv-home-26",
+  "url": "https://koshvani.up.nic.in/"
+ },
+ {
+  "name": "kv-fy-26",
+  "postback": {
+   "from": "kv-home-26",
+   "set": {
+    "ddlFinYear": "2025-2026"
+   },
+   "event": "ddlFinYear",
+   "drop": [
+    "btnGray",
+    "btnBlue",
+    "btnOlive",
+    "btnXSmall",
+    "btnSmall",
+    "btnLarge"
+   ]
+  }
+ },
+ {
+  "name": "kv-pfms-fy26",
+  "url": "https://koshvani.up.nic.in/KoshReports/PFMSCentralSchemeWise.aspx",
+  "timeout": 180
+ },
+ {
+  "name": "kv-expgrant-fy26",
+  "url": "https://koshvani.up.nic.in/KoshReports/ExpGrant.aspx",
+  "timeout": 180
+ },
+ {
+  "name": "kv-excnoexp-fy26",
+  "url": "https://koshvani.up.nic.in/KoshReports/ExcNoExp.aspx",
+  "timeout": 240
+ },
+ {
+  "name": "kv-excnoexp-fy26-71",
+  "postback": {
+   "from": "kv-excnoexp-fy26",
    "choose": [
     {
-     "option": "(^|\\D)0?71(\\D|$)|\u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915"
+     "select": "DropDownList1",
+     "option": "^071"
     }
    ],
-   "event": "auto"
+   "button_regex": "Button1"
   },
-  "timeout": 200
+  "timeout": 240
  },
  {
-  "name": "kv-NonPlanExp-show",
+  "name": "kv-home-23",
+  "url": "https://koshvani.up.nic.in/"
+ },
+ {
+  "name": "kv-fy-23",
   "postback": {
-   "from": "kv-NonPlanExp-g71",
-   "button_regex": "show|submit|go|view|search|btn(?!back|home|export|gray|blue|olive|xsmall|small|large)"
-  },
-  "timeout": 200
+   "from": "kv-home-23",
+   "set": {
+    "ddlFinYear": "2022-2023"
+   },
+   "event": "ddlFinYear",
+   "drop": [
+    "btnGray",
+    "btnBlue",
+    "btnOlive",
+    "btnXSmall",
+    "btnSmall",
+    "btnLarge"
+   ]
+  }
+ },
+ {
+  "name": "kv-pfms-fy23",
+  "url": "https://koshvani.up.nic.in/KoshReports/PFMSCentralSchemeWise.aspx",
+  "timeout": 180
  }
 ]
