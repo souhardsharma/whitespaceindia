@@ -1,0 +1,8 @@
+[
+ {"name": "mp-rte-district", "url": "https://rteportal.mp.gov.in/FeeReimbursement/Public/DistrictSummary.aspx"},
+ {"name": "mp-rte-home", "url": "https://rteportal.mp.gov.in/SRMS/Default.aspx"},
+ {"name": "prabandh-rte", "url": "https://www.samagrashiksha.in/PMS/dist_rte_review.aspx"},
+ {"name": "mp-hesch", "url": "https://hescholarship.mp.gov.in/Reports/Awas_Distribution_District_Scheme_AY_Wise.aspx"},
+ {"name": "ts-epass", "url": "https://telanganaepass.cgg.gov.in/"},
+ {"name": "ncte-old-rc", "url": "https://ncte.gov.in/website/RegionalCommittees.aspx"}
+]
