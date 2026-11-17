@@ -101,23 +101,33 @@ def read_register(pool, today: date) -> tuple[dict, dict]:
     jobs = [(sid, s, e) for sid in SECTORS for s, e in windows(today)]
     rows_by_pid: dict = {}
     dupes_differ = 0
-    failed = defaultdict(list)
-    with cf.ThreadPoolExecutor(12) as ex:
-        futs = {ex.submit(read_window, pool, *j): j for j in jobs}
-        for n, f in enumerate(cf.as_completed(futs), 1):
-            sid, s, e = futs[f]
-            try:
-                for r in f.result():
-                    pid = str(r.get("proposal_id"))
-                    if pid in rows_by_pid and rows_by_pid[pid] != r:
-                        dupes_differ += 1
-                    rows_by_pid[pid] = r
-            except Exception as exc:  # noqa: BLE001
-                failed[sid].append(f"{s}..{e}: {exc}")
-            if n % 50 == 0:
-                log(f"register windows {n}/{len(jobs)}, {len(rows_by_pid)} proposals")
-    return rows_by_pid, {"failed_windows": {SECTORS[k]: v for k, v in failed.items()},
-                         "edge_rows_differing": dupes_differ, "windows": len(jobs)}
+    # Up to three rounds: a window that fails is usually a dead proxy, and is
+    # asked again after the rest, with fewer requests in flight.
+    for rnd, workers in ((1, 12), (2, 6), (3, 4)):
+        failed = []
+        with cf.ThreadPoolExecutor(workers) as ex:
+            futs = {ex.submit(read_window, pool, *j): j for j in jobs}
+            for n, f in enumerate(cf.as_completed(futs), 1):
+                try:
+                    for r in f.result():
+                        pid = str(r.get("proposal_id"))
+                        if pid in rows_by_pid and rows_by_pid[pid] != r:
+                            dupes_differ += 1
+                        rows_by_pid[pid] = r
+                except Exception as exc:  # noqa: BLE001
+                    failed.append((futs[f], str(exc)[:160]))
+                if n % 50 == 0:
+                    log(f"round {rnd}: windows {n}/{len(jobs)}, {len(rows_by_pid)} proposals")
+        log(f"round {rnd}: {len(failed)} window(s) failed")
+        jobs = [j for j, _ in failed]
+        if not jobs:
+            break
+    by_sector = defaultdict(list)
+    for (sid, s, e), err in failed:
+        by_sector[SECTORS[sid]].append(f"{s}..{e}: {err}")
+    return rows_by_pid, {"failed_windows": dict(by_sector),
+                         "edge_rows_differing": dupes_differ,
+                         "windows": len(SECTORS) * len(windows(today))}
 
 
 def load_published() -> tuple[dict, dict]:
@@ -377,9 +387,11 @@ def part_b(pool, pub: dict, reg_live: dict, n: int, seed: int) -> dict:
                 "changed_since_read": bool(reg) and (reg.get("proposalStatus") or "").strip() != p["_status"],
                 "issues": hi + fi, "facts": facts}
 
-    with cf.ThreadPoolExecutor(16) as ex:
+    with cf.ThreadPoolExecutor(24) as ex:
         for i, res in enumerate(ex.map(work, picks), 1):
             results.append(res)
+            if res["issues"]:
+                log(f"  {res['id']} ({res['stratum']}): {'; '.join(res['issues'])[:300]}")
             if i % 25 == 0:
                 log(f"deep sample {i}/{len(picks)}")
     unreachable = [r for r in results if any(x.startswith(("history: HTTP", "history: no usable")) for x in r["issues"])
@@ -409,6 +421,12 @@ def main() -> None:
     reg, sweep = read_register(pool, datetime.now(IST).date())
     log(f"register: {len(reg)} proposals; failed windows: {sum(len(v) for v in sweep['failed_windows'].values())}")
     a_res = part_a(reg, sweep, pub, fresh)
+    # Saved now: the per-proposal part is slow through free proxies, and a
+    # run that ends early must still leave the register comparison behind.
+    (out / "part_a.json").write_text(json.dumps(a_res, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
+    log("part A: " + json.dumps({k: a_res[k] for k in ("register_rows", "published_rows", "missing_from_published",
+                                                       "missing_submitted_after_read", "published_not_in_register",
+                                                       "field_mismatch_real", "field_mismatch_after_read")}))
     reg_live = {p: r for p, r in reg.items() if (r.get("proposalStatus") or "").strip() != "DELISTED_BY_SYSTEM"}
     b_res = part_b(pool, pub, reg_live, a.sample, a.seed)
     report = {"checked_at": datetime.now(timezone.utc).isoformat(), "part_a": a_res, "part_b": b_res,
