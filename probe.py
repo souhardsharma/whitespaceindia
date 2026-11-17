@@ -33,10 +33,19 @@ import egress  # noqa: E402
 CTX = egress.NET.TLS
 
 
-def opener_for() -> urllib.request.OpenerDirector:
+def legacy_ctx():
+    # Certificate chain and hostname are still verified; this only lets the client talk to a
+    # server that has not adopted RFC 5746 renegotiation (koshvani.up.nic.in).
+    import ssl
+    c = ssl.create_default_context()
+    c.options |= getattr(ssl, "OP_LEGACY_SERVER_CONNECT", 0x4)
+    return c
+
+
+def opener_for(legacy: bool = False) -> urllib.request.OpenerDirector:
     jar = http.cookiejar.CookieJar()
     return urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar),
-                                       urllib.request.HTTPSHandler(context=CTX))
+                                       urllib.request.HTTPSHandler(context=legacy_ctx() if legacy else CTX))
 
 
 def send(op, url, data=None, headers=None, method=None, timeout=60):
@@ -76,7 +85,7 @@ def option_value(page: str, select: str, text: str) -> str | None:
 
 
 def run_probe(p: dict) -> tuple[int, bytes, dict]:
-    op = opener_for()
+    op = opener_for(bool(p.get("legacy")))
     kind = p.get("kind", "get")
     t = p.get("timeout", 60)
     if kind == "json":
