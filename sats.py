@@ -26,7 +26,58 @@ UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chr
 CAP = 950
 DEADLINE = time.time() + 34 * 60
 LOG: list[dict] = []
-OP = urllib.request.build_opener(urllib.request.HTTPSHandler(context=CTX))
+import http.cookiejar  # noqa: E402
+
+JAR = http.cookiejar.CookieJar()
+OP = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(JAR),
+                                 urllib.request.HTTPSHandler(context=CTX))
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *a, **k):  # noqa: D401 - record, do not follow
+        return None
+
+
+def diagnose() -> dict:
+    """One request each way, redirects NOT followed, to record where the host sends a runner."""
+    out = {}
+    op = urllib.request.build_opener(NoRedirect, urllib.request.HTTPSHandler(context=CTX))
+    for name, path in [("page", "/front/loadNewSchoolDashboard.htm"),
+                       ("api", "/commonweb/getCommonWebDataSDB.htm?serviceType=other&serviceName="
+                               "districtWiseNewSchoolDashboard&reqData=%7B%22appl_type%22%3A%22RR%22%2C"
+                               "%22aca_year%22%3A%222026-2027%22%7D")]:
+        r = urllib.request.Request(BASE + path, headers={"User-Agent": UA})
+        try:
+            with op.open(r, timeout=40) as resp:
+                out[name] = {"status": resp.status, "headers": dict(resp.headers)}
+        except urllib.error.HTTPError as e:
+            out[name] = {"status": e.code, "headers": dict(e.headers or {}),
+                         "body": e.read()[:500].decode("utf-8", "replace")}
+        except Exception as e:  # noqa: BLE001
+            out[name] = {"status": -1, "error": str(e)}
+        time.sleep(1.5)
+    return out
+
+
+def via_pool(n: int = 6) -> list:
+    """A few of the same calls through the Indian pool built on this runner."""
+    res = []
+    try:
+        pool = egress.open_pool("india", reload_every=0)
+    except Exception as e:  # noqa: BLE001
+        return [{"error": f"pool: {e}"}]
+    for t in ["RR", "FR", "NS", "NOC", "PP", "RR"][:n]:
+        url = (BASE + "/commonweb/getCommonWebDataSDB.htm?serviceType=other&serviceName="
+               "districtWiseNewSchoolDashboard&reqData="
+               + urllib.parse.quote(json.dumps({"appl_type": t, "aca_year": "2026-2027"}, separators=(",", ":"))))
+        t0 = time.time()
+        try:
+            st, raw = egress.fetch(pool, url)
+        except Exception as e:  # noqa: BLE001
+            st, raw = -1, str(e).encode()
+        res.append({"t": t, "status": st, "bytes": len(raw), "s": round(time.time() - t0, 1),
+                    "head": raw[:160].decode("utf-8", "replace")})
+    return res
 _last = [0.0]
 
 
@@ -81,6 +132,8 @@ def save(name: str, obj) -> None:
 
 def main() -> None:
     stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    save("diagnose", diagnose())
+    req("/front/loadNewSchoolDashboard.htm")  # the page itself first, so any session cookie is set
     years = ["2026-2027", "2025-2026", "2024-2025"]
     types = ["RR", "FR", "NS", "NOC", "PP"]
     dash, auto = {}, {}
@@ -144,7 +197,9 @@ def main() -> None:
                 break
             (sdir / f"block_{bid}.html").write_bytes(raw)
 
-    meta = {"stamp_start": stamp, "stamp_end": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    if Path(HERE / "need_india").exists():
+        save("via_pool", via_pool())
+    meta = {"cookies": [c.name for c in JAR], "stamp_start": stamp, "stamp_end": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "requests": len(LOG), "by_status": {}}
     for x in LOG:
         meta["by_status"][str(x["status"])] = meta["by_status"].get(str(x["status"]), 0) + 1
