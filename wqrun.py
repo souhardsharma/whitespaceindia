@@ -56,7 +56,7 @@ class Sess:
                                               urllib.request.HTTPSHandler(context=CTX))
         self.entered = None
 
-    def send(self, url, data=None, headers=None, timeout=90):
+    def send(self, url, data=None, headers=None, timeout=240):
         wait = LAST[0] + PAUSE - time.time()
         if wait > 0:
             time.sleep(wait)
@@ -90,16 +90,20 @@ class Sess:
         if st == 200:
             self.entered = entry
 
-    def post(self, endpoint, params, raw, start, length, entry):
+    def post(self, endpoint, params, raw, start, length, entry, col="DistrictName"):
+        # The server answers its home page unless the DataTables column and search fields are present.
         f = {"draw": "1", "start": str(start), "length": str(length),
-             "order[0][column]": "1", "order[0][dir]": "asc"}
+             "order[0][column]": "1", "order[0][dir]": "asc",
+             "columns[0][data]": "", "columns[0][name]": "",
+             "columns[1][data]": col, "columns[1][name]": col,
+             "search[value]": "", "search[regex]": "false"}
         f.update({k: enc(v) for k, v in params.items()})
         f.update(raw or {})
         h = {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
              "X-Requested-With": "XMLHttpRequest",
              "Accept": "application/json, text/javascript, */*; q=0.01",
              "Referer": BASE + entry, "Origin": "https://ejalshakti.gov.in"}
-        for attempt in range(3):
+        for attempt in range(2):
             self.enter(entry)
             st, body, dt = self.send(BASE + endpoint, data=urllib.parse.urlencode(f).encode(), headers=h)
             if st == 200 and body[:1] in (b"{", b"["):
@@ -134,6 +138,36 @@ def shape(body):
     return {"json": True, "list": len(j), "row_keys": list(j[0])[:60] if j and isinstance(j[0], dict) else None}
 
 
+def keep(body, st, name):
+    """Save an answer: whole, or only the named fields of each row, gzipped."""
+    slim = st.get("slim")
+    if not slim:
+        (OUT / f"{name}.json").write_bytes(body)
+        return
+    try:
+        j = json.loads(body)
+        rows = j.get("data") or []
+        j["data"] = [{k: r.get(k) for k in slim} for r in rows]
+        j["_raw_bytes"] = len(body)
+        j["_row0_all"] = rows[0] if rows else None
+        body = json.dumps(j, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    except Exception:  # noqa: BLE001 - not JSON: keep what came
+        pass
+    (OUT / f"{name}.json.gz").write_bytes(gzip.compress(body, 6))
+
+
+def load_rows(name):
+    rows = []
+    files = sorted(OUT.glob(f"{name}.json")) + sorted(OUT.glob(f"{name}.json.gz")) +         sorted(OUT.glob(f"{name}.p*.json")) + sorted(OUT.glob(f"{name}.p*.json.gz"))
+    for f in files:
+        b = f.read_bytes()
+        if f.suffix == ".gz":
+            b = gzip.decompress(b)
+        j = json.loads(b)
+        rows += (j.get("data") or []) if isinstance(j, dict) else j
+    return rows
+
+
 def fill(obj, row):
     """Replace {Field} in every string of a stage with the row's value (field names matched without case)."""
     low = {k.lower(): v for k, v in row.items()}
@@ -155,11 +189,22 @@ def expand(plan):
     for st in plan:
         if st.get("kind") == "foreach":
             try:
-                j = json.loads((OUT / f"{st['from']}.json").read_bytes())
-                rows = j["data"] if isinstance(j, dict) else j
+                rows = []
+                for src in ([st["from"]] if isinstance(st["from"], str) else st["from"]):
+                    rows += load_rows(src)
             except Exception as e:  # noqa: BLE001
                 log({"name": "_foreach_failed", "from": st["from"], "why": str(e)[:200]})
                 continue
+            uniq = st.get("unique")
+            if uniq:
+                seen, kept = set(), []
+                for r in rows:
+                    k = tuple(str(r.get(f)) for f in uniq)
+                    if k not in seen:
+                        seen.add(k)
+                        kept.append(r)
+                rows = kept
+            log({"name": "_foreach", "from": st["from"], "rows": len(rows), "take": st.get("take", 1)})
             where = st.get("where")
             if where:
                 rows = [r for r in rows if all(str(r.get(k)) not in ("0", "None", "") for k in where)]
@@ -175,9 +220,10 @@ def main():
     plan = json.loads(plan)
     s = Sess()
     cap = int(os.environ.get("CAP", "600"))
+    t_end = time.time() + 60 * float(os.environ.get("MINUTES", "48"))
     for st in expand(plan):
-        if COUNT["requests"] >= cap:
-            log({"name": "_cap", "requests": COUNT["requests"]})
+        if COUNT["requests"] >= cap or time.time() > t_end:
+            log({"name": "_cap", "requests": COUNT["requests"], "out_of_time": time.time() > t_end})
             break
         kind, name = st.get("kind", "call"), st["name"]
         entry = st.get("entry", "Report/Report_L")
@@ -187,16 +233,17 @@ def main():
             log({"name": name, "status": code, "bytes": len(body), "s": round(dt, 2)})
         elif kind == "call":
             code, body, dt = s.post(st["endpoint"], st.get("params", {}), st.get("raw"),
-                                    st.get("start", 0), st.get("length", 50), entry)
-            (OUT / f"{name}.json").write_bytes(body)
+                                    st.get("start", 0), st.get("length", 50), entry, st.get("col", "DistrictName"))
+            keep(body, st, name)
             log({"name": name, "status": code, "bytes": len(body), "s": round(dt, 2)} | shape(body))
         elif kind == "pages":
             length, start, total, got = st.get("length", 500), st.get("start", 0), None, 0
             for page in range(st.get("max_pages", 10)):
-                if COUNT["requests"] >= cap:
+                if COUNT["requests"] >= cap or time.time() > t_end:
                     break
-                code, body, dt = s.post(st["endpoint"], st.get("params", {}), st.get("raw"), start, length, entry)
-                (OUT / f"{name}.p{page:04d}.json").write_bytes(body)
+                code, body, dt = s.post(st["endpoint"], st.get("params", {}), st.get("raw"), start, length, entry,
+                                        st.get("col", "DistrictName"))
+                keep(body, st, f"{name}.p{page:04d}")
                 sh = shape(body)
                 log({"name": f"{name}.p{page:04d}", "status": code, "bytes": len(body), "s": round(dt, 2),
                      "start": start} | sh)
@@ -204,7 +251,7 @@ def main():
                 total = sh.get("recordsTotal") if sh.get("recordsTotal") is not None else total
                 got += rows
                 start += length
-                if code != 200 or rows == 0 or (total is not None and start >= int(total)):
+                if code != 200 or rows < length:
                     break
             log({"name": name, "pages_done": page + 1, "rows": got, "recordsTotal": total})
     log({"name": "_done"} | COUNT)
