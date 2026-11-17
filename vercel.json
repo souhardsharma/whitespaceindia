@@ -4,6 +4,12 @@
   "installCommand": "",
   "buildCommand": "mkdir -p vercel-redirect-only && echo 'Moved to https://whitespaceindia.pages.dev' > vercel-redirect-only/index.html",
   "outputDirectory": "vercel-redirect-only",
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "**": false
+    }
+  },
   "redirects": [
     {
       "source": "/",
