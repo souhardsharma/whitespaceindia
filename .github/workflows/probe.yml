@@ -29,6 +29,10 @@ jobs:
         env:
           EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
         run: python -I -X utf8 probe.py
+      - name: Crawl
+        env:
+          EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
+        run: python -X utf8 crawl.py
       - uses: actions/upload-artifact@v4
         with:
           name: probe-out
