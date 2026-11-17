@@ -1,24 +1,1101 @@
 [
- {"name": "raj-staffdash", "url": "https://rajshaladarpan.rajasthan.gov.in/SD4/Home/Public2/CitizenCorner/Staff_Report_Dashbord.aspx"},
- {"name": "raj-studdash", "url": "https://rajshaladarpan.rajasthan.gov.in/SD4/Home/Public2/CitizenCorner/Student_Report_Dashbord.aspx"},
- {"name": "raj-flg8", "kind": "json", "url": "https://rajshaladarpan.rajasthan.gov.in/SD4/Home/Public2/CitizenCorner/Student_Report_Dashbord.aspx/Getdata", "body": {"flg": "8"}},
- {"name": "raj-flg9", "kind": "json", "url": "https://rajshaladarpan.rajasthan.gov.in/SD4/Home/Public2/CitizenCorner/Student_Report_Dashbord.aspx/Getdata", "body": {"flg": "9"}},
- {"name": "raj-flg11", "kind": "json", "url": "https://rajshaladarpan.rajasthan.gov.in/SD4/Home/Public2/CitizenCorner/Student_Report_Dashbord.aspx/Getdata", "body": {"flg": "11"}},
- {"name": "raj-search", "url": "https://rajshaladarpan.rajasthan.gov.in/SD4/Home/Public2/CitizenCorner/SchoolSearch_Dashboard.aspx"},
- {"name": "raj-staffreport", "url": "https://rajshaladarpan.rajasthan.gov.in/SD4/Home/Public2/CitizenCorner/Staff_Report.aspx"},
- {"name": "raj-profilepage", "url": "https://rajshaladarpan.rajasthan.gov.in/SD4/Home/Public2/CitizenCorner/schoolprofile.aspx"},
- {"name": "del-vacstmt", "url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx"},
- {"name": "del-vacstmtnew", "url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePagenew.aspx"},
- {"name": "del-vacstmt-tgtmath", "kind": "postback", "url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx", "steps": [{"select_text": {"ddlDistrict": "All", "ddlPost": "TGT MATH"}, "fields": {"chkGender$0": "on", "chkGender$1": "on", "BtnNext": "Next"}}]},
- {"name": "del-vacstmtnew-tgtmath", "kind": "postback", "url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePagenew.aspx", "steps": [{"select_text": {"ddlDistrict": "All", "ddlPost": "TGT MATH"}, "fields": {"chkGender$0": "on", "chkGender$1": "on", "BtnNext": "Next"}}]},
- {"name": "del-vacstmtreport", "url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStmtReport.aspx"},
- {"name": "del-mis-home", "url": "https://www.edudel.nic.in/mis/"},
- {"name": "mp-gfms-home", "url": "https://gfms.educationportal3.in/"},
- {"name": "mp-gfms-vacancy", "url": "https://gfms.educationportal3.in/TrnPublicVacancyInfo"},
- {"name": "pb-graph", "url": "https://epunjabschool.gov.in/Home/Graph_Reports.aspx"},
- {"name": "hr-mis", "url": "https://hryedumis.gov.in/"},
- {"name": "wb-vacstmtreport-2017", "url": "https://web.archive.org/web/20170414030138id_/http://www.edudel.nic.in/mis/eis/Others/frmVacancyStmtReport.aspx"},
- {"name": "wb-vacstmtnew-2025", "url": "https://web.archive.org/web/20250330211033id_/https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePagenew.aspx"},
- {"name": "wb-cdx-raj-staff", "url": "https://web.archive.org/cdx/search/cdx?url=rajshaladarpan.rajasthan.gov.in/&matchType=prefix&collapse=urlkey&fl=original,timestamp&filter=original:.*[Ss]taff.*&limit=300"},
- {"name": "wb-cdx-edudel-mis", "url": "https://web.archive.org/cdx/search/cdx?url=edudel.nic.in/mis/&matchType=prefix&collapse=urlkey&fl=original,timestamp&filter=original:.*([Vv]acan|[Ss]anction|[Pp]ost[Ww]ise|[Ss]trength).*&limit=500", "timeout": 120}
+{
+"name": "del-all-48",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "ASSISTANT TEACHER (NURSERY)"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-42",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "ASSISTANT TEACHER (PRIMARY)"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-54",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "CRAFT TEACHER"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-119",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "DOMESTIC SCIENCE TEACHER"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-44",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "DRAWING TEACHER"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-52",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "EVGC"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-53",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LAB ASSISTANT"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-22",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER AGRICULTURE"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-196",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER BENGALI"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-13",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER BIOLOGY"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-106",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER BUSINESS STUDY"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-11",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER CHEMISTRY"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-5",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER COMMERCE"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-86",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER COMPUTER SCIENCE"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-111",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER CRAFT"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-6",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER ECONOMICS"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-18",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER ENGG. DRAWING"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-1",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER ENGLISH"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-109",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER FINEART(PAINTING)"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-8",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER GEOGRAPHY"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-183",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER GRAPHICS"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-3",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER HINDI"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-9",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER HISTORY"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-16",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER HOME SCIENCE"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-186",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER HORTICULTURE"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-2",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER MATH"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-15",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER MUSIC"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-116",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER PERSIAN"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-19",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER PHYSICAL EDUCATION"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-12",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER PHYSICS"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-7",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER POLITICAL SCIENCE"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-182",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER PSYCHOLOGY"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-21",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER PUNJABI"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-10",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER SANSKRIT"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-104",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER SOCIOLOGY"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-24",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER URDU"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-107",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTURER VOCATIONAL"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-20",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LECTUREREVGC"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-51",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "LIBRARIAN"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-49",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "MUSIC TEACHER"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-43",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "PET"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-23",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "PGT SPECIAL EDUCATION TEACHER"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-113",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "TGT COMPUTER SCIENCE"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-26",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "TGT ENGLISH"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-37",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "TGT HINDI"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-27",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "TGT MATH"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-102",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "TGT NATURAL SCIENCE"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-40",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "TGT PUNJABI"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-38",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "TGT SANSKRIT"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-29",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "TGT SOCIAL SCIENCE"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-159",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "TGT SPECIAL EDUCATION TEACHER"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-39",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "TGT URDU"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-47",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "WORK EXPERIENCE TEACHER"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-all-46",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "YOGA TEACHER"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-tgtmath-male",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "TGT MATH"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on"
+}
+}
+]
+},
+{
+"name": "del-tgtmath-female",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "All",
+"ddlPost": "TGT MATH"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "del-tgtmath-east",
+"kind": "postback",
+"url": "https://www.edudel.nic.in/mis/eis/others/frmVacancyStatementForHomePage.aspx",
+"pause": 1.5,
+"steps": [
+{
+"select_text": {
+"ddlDistrict": "East",
+"ddlPost": "TGT MATH"
+},
+"fields": {
+"BtnNext": "Next",
+"chkGender$0": "on",
+"chkGender$1": "on"
+}
+}
+]
+},
+{
+"name": "rte-act-indiacode",
+"url": "https://www.indiacode.nic.in/bitstream/123456789/2086/1/A2009-35.pdf",
+"timeout": 90
+},
+{
+"name": "raj-india-profilejson",
+"family": "india",
+"url": "https://rajshaladarpan.rajasthan.gov.in/SD4/Home/Public2/CitizenCorner/Student_Report_Dashbord.aspx/Getdatabyschool",
+"body": {
+"schoolcode": "214236"
+}
+},
+{
+"name": "raj-india-dash",
+"family": "india",
+"url": "https://rajshaladarpan.rajasthan.gov.in/SD4/Home/Public2/CitizenCorner/School_Report_Dashbord.aspx"
+}
 ]
