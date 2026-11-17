@@ -1,56 +1,12 @@
 [
 {
-"name": "tg-mis",
-"kind": "postback",
-"url": "https://fire.telangana.gov.in/Fire/MIS.aspx",
-"steps": [
-{
-"fields": {
-"__EVENTTARGET": "ctl00$ContentPlaceHolder$lnkInsp",
-"__EVENTARGUMENT": ""
-}
-}
-]
-},
-{
-"name": "tg-mis-renewal",
-"kind": "postback",
-"url": "https://fire.telangana.gov.in/Fire/MIS.aspx",
-"steps": [
-{
-"fields": {
-"__EVENTTARGET": "ctl00$ContentPlaceHolder$LinkButton1",
-"__EVENTARGUMENT": ""
-}
-}
-]
-},
-{
-"name": "dfs-shortcomings",
-"url": "https://dfs.delhi.gov.in/dfs/know-shortcomings-applied-fsc"
-},
-{
-"name": "up-fire-home",
-"url": "https://upfireservice.gov.in/upfire/"
-},
-{
-"name": "kerala-noc-home",
-"url": "https://noc.fire.kerala.gov.in/"
-},
-{
-"name": "rte-gujarat",
-"url": "https://rte.orpgujarat.com/"
-},
-{
-"name": "mh-fire",
-"url": "https://mahafireservice.gov.in/e-fire.php"
-},
-{
-"name": "hr-fire",
-"url": "https://fire.haryana.gov.in/"
+"name": "rte-gujarat-list",
+"kind": "get",
+"url": "https://rte.orpgujarat.com/Common/SchoolList?page=1"
 },
 {
 "name": "guj-fscop-home",
+"kind": "get",
 "url": "https://gujfiresafetycop.in/Index.aspx"
 }
 ]

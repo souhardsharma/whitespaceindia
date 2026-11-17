@@ -122,7 +122,9 @@ def saras_detail(lines: list[str]) -> dict:
             "state": after("State"), "district": after("District"),
             "address": after("Postal Address"), "pin": after("Pin Code"),
             "status": after("Status of The School"), "type": after("School Type"),
-            "from": after("From :"), "to": after("To :")}
+            "from": after("From :"), "to": after("To :"),
+            # labels only (short lines ending in a colon or known headings), never their values, to fix the parser
+            "labels": [x for x in lines if len(x) < 60 and (x.endswith(":") or x.istitle())][:120]}
 
 
 def saras() -> None:
@@ -144,6 +146,7 @@ def saras() -> None:
     status, raw, _, _ = send(op, url, urllib.parse.urlencode(fields).encode(),
                              FORM | {"Referer": SARAS + "ListOfSchdirReportNew"}, "POST", 120)
     answer = raw.decode("utf-8", "replace")
+    (OUT / "saras_list_raw.html.gz").write_bytes(gzip.compress(raw))
     rows = []
     for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", answer, flags=re.S):
         cells = [html.unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", c))).strip()
@@ -152,12 +155,20 @@ def saras() -> None:
             rows.append(cells[:8])
     note("saras-state-list", status, len(raw), time.time() - t0, rows=len(rows))
     (OUT / "saras_state_list.json").write_text(json.dumps(rows), encoding="utf-8")
-    wanted = [r for r in rows if r[3].upper() in PLAN["saras_districts"]][: PLAN["saras_detail_cap"]]
+    rows = [r for r in rows if r[1].strip().isdigit()]
+    if PLAN["saras_districts"]:
+        rows_w = [r for r in rows if r[3].upper() in PLAN["saras_districts"]]
+    else:  # an even sample across the whole State: every k-th row
+        k = max(1, len(rows) // PLAN["saras_detail_cap"])
+        rows_w = rows[::k]
+    wanted = rows_w[: PLAN["saras_detail_cap"]]
     details = []
     for r in wanted:
         t0 = time.time()
         status, raw, _, _ = send(op, SARAS + "AfflicationDetails/" + r[1].strip(), timeout=60)
         d = saras_detail(text_lines(raw.decode("utf-8", "replace"))) if status == 200 else {}
+        if len(details) > 0:
+            d.pop("labels", None)
         d["list_status"] = r[6]
         d["reg"] = r[1]
         details.append(d)
