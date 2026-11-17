@@ -212,6 +212,58 @@ def main():
                 print(vt, d, st, len(cells(page)), flush=True)
                 time.sleep(pause)
 
+    # breakdown tables that need a district / zone / type chosen in ddlType
+    for vt, spec in plan.get("typed_tables", {}).items():
+        v = views.get(vt)
+        if not v or not v.ok:
+            continue
+        types = [o[0] for o in v.selects.get("ddlType", []) if o[0] != "Select"] if spec["types"] == "all" \
+            else spec["types"]
+        for x in spec["dates"]:
+            d = dt.date.fromisoformat(x)
+            for ty in types:
+                st, page = v.post(d, extra={"ddlType": ty}, tag=f"{vt} {ty} {d}")
+                S["tables"].setdefault(vt, {}).setdefault(x, {})[ty] = {
+                    "status": st, "rows": cells(page)[:1500], "msg": headline(page).get("msg", "")}
+                if spec.get("save", True):
+                    (OUT / f"{vt}_{ty}_{d:%Y%m%d}.html").write_text(page, encoding="utf-8")
+                time.sleep(pause)
+            print(vt, d, len(types), flush=True)
+
+    # today, read at the start and at the end of the run (does a day's figure move while it is marked?)
+    for x in plan.get("today", []):
+        st, page = allv.post(dt.date.fromisoformat(x), tag=f"TODAY {x}")
+        S.setdefault("today", []).append({"utc": dt.datetime.utcnow().isoformat() + "Z", "date": x} | headline(page))
+        time.sleep(pause)
+
+    # school grain, several runs
+    for sp in plan.get("school_runs", []):
+        v = views.get("DesiredSchool")
+        if not v or not v.ok:
+            break
+        opts = [o for o in v.selects.get("ddlType", []) if o[0] != "Select"]
+        (OUT / "school_list.json").write_text(json.dumps(opts, ensure_ascii=False), encoding="utf-8")
+        d = dt.date.fromisoformat(sp["date"])
+        pick = opts if sp.get("all") else opts[: sp.get("n", 5)]
+        t0 = time.time()
+        res = {}
+
+        def one2(o, d=d, v=v):
+            st, page = v.post(d, extra={"ddlType": o[0]}, tag=f"SCH {d}")
+            return o, st, page
+        with cf.ThreadPoolExecutor(sp.get("conc", 1)) as ex:
+            for o, st, page in ex.map(one2, pick):
+                res[o[0]] = {"name": o[1], "status": st, "rows": cells(page)}
+                if len(res) <= sp.get("save_n", 8):
+                    (OUT / f"school_{o[0]}_{d:%Y%m%d}.html").write_text(page, encoding="utf-8")
+        S.setdefault("school_runs", {})[sp["date"]] = {"seconds": round(time.time() - t0, 1), "n": len(res),
+                                                       "conc": sp.get("conc", 1), "res": res}
+        print("SCHOOL RUN", d, len(res), round(time.time() - t0, 1), flush=True)
+
+    for x in plan.get("today", [])[:1]:
+        st, page = allv.post(dt.date.fromisoformat(x), tag=f"TODAY {x}")
+        S.setdefault("today", []).append({"utc": dt.datetime.utcnow().isoformat() + "Z", "date": x} | headline(page))
+
     # school grain
     sp = plan.get("schools")
     if sp and "DesiredSchool" in views and views["DesiredSchool"].ok:
