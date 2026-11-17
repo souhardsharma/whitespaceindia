@@ -1,0 +1,59 @@
+[
+ {"kind": "get", "name": "jjm_school_india", "url": "https://ejalshakti.gov.in/jjmreport/School/JJMSchool_India.aspx"},
+ {"kind": "get", "name": "jjm_citizen_village", "url": "https://ejalshakti.gov.in/jjm/citizen_corner/villageinformation.aspx"},
+ {"kind": "get", "name": "imis_j2", "url": "https://ejalshakti.gov.in/IMISReports/Reports/Physical/rpt_JJM_SchooltapConnection_S.aspx?RP=Y&Rep=0"},
+
+ {"kind": "call", "name": "dp_school_india_2026-27", "endpoint": "Report/get_deliverypoints",
+  "params": {"fy": "2026-2027", "stid": "0", "dtid": "0", "blid": "0", "gpid": "0", "schemetype": "1", "delivery_point_check": "2", "type_quarter": "0", "type_hgjv": "0"}},
+ {"kind": "call", "name": "dp_school_india_2025-26", "endpoint": "Report/get_deliverypoints",
+  "params": {"fy": "2025-2026", "stid": "0", "dtid": "0", "blid": "0", "gpid": "0", "schemetype": "1", "delivery_point_check": "2", "type_quarter": "0", "type_hgjv": "0"}},
+ {"kind": "call", "name": "dp_school_india_2024-25", "endpoint": "Report/get_deliverypoints",
+  "params": {"fy": "2024-2025", "stid": "0", "dtid": "0", "blid": "0", "gpid": "0", "schemetype": "1", "delivery_point_check": "2", "type_quarter": "0", "type_hgjv": "0"}},
+ {"kind": "call", "name": "dp_school_india_2023-24", "endpoint": "Report/get_deliverypoints",
+  "params": {"fy": "2023-2024", "stid": "0", "dtid": "0", "blid": "0", "gpid": "0", "schemetype": "1", "delivery_point_check": "2", "type_quarter": "0", "type_hgjv": "0"}},
+ {"kind": "call", "name": "dp_awc_india_2026-27", "endpoint": "Report/get_deliverypoints",
+  "params": {"fy": "2026-2027", "stid": "0", "dtid": "0", "blid": "0", "gpid": "0", "schemetype": "1", "delivery_point_check": "3", "type_quarter": "0", "type_hgjv": "0"}},
+
+ {"kind": "call", "name": "rem_school_india_2026-27", "endpoint": "Report/get_both_structure_delivery_remedial", "entry": "Report/Report_remedial",
+  "params": {"fy": "2026-2027", "stid": "0", "dtid": "0", "blid": "0", "gpid": "0", "schemetype": "1", "typeid": "2", "delivery_point_check": "2"}},
+ {"kind": "call", "name": "rem_school_india_2025-26", "endpoint": "Report/get_both_structure_delivery_remedial", "entry": "Report/Report_remedial",
+  "params": {"fy": "2025-2026", "stid": "0", "dtid": "0", "blid": "0", "gpid": "0", "schemetype": "1", "typeid": "2", "delivery_point_check": "2"}},
+ {"kind": "call", "name": "rem_awc_india_2026-27", "endpoint": "Report/get_both_structure_delivery_remedial", "entry": "Report/Report_remedial",
+  "params": {"fy": "2026-2027", "stid": "0", "dtid": "0", "blid": "0", "gpid": "0", "schemetype": "1", "typeid": "2", "delivery_point_check": "3"}},
+ {"kind": "call", "name": "rem_school_tripura_2026-27", "endpoint": "Report/get_both_structure_delivery_remedial", "entry": "Report/Report_remedial",
+  "params": {"fy": "2026-2027", "stid": "30", "dtid": "0", "blid": "0", "gpid": "0", "schemetype": "1", "typeid": "2", "delivery_point_check": "2"}},
+
+ {"kind": "call", "name": "remlist_contam_tripura", "endpoint": "Report/get_both_structure_delivery_remedial_list_detail", "entry": "Report/Report_remedial", "length": 2000,
+  "params": {"p_type": "11", "finY": "2026-2027", "stid": "30", "dtid": "0", "blid": "0", "gpid": "0", "villid": "0", "schemetype": "1", "typeid": "2", "dp": "2"}},
+ {"kind": "call", "name": "remlist_remedied_tripura", "endpoint": "Report/get_both_structure_delivery_remedial_list_detail", "entry": "Report/Report_remedial", "length": 2000,
+  "params": {"p_type": "12", "finY": "2026-2027", "stid": "30", "dtid": "0", "blid": "0", "gpid": "0", "villid": "0", "schemetype": "1", "typeid": "2", "dp": "2"}},
+ {"kind": "call", "name": "remlist_tested_tripura", "endpoint": "Report/get_both_structure_delivery_remedial_list_detail", "entry": "Report/Report_remedial", "length": 6000,
+  "params": {"p_type": "10", "finY": "2026-2027", "stid": "30", "dtid": "0", "blid": "0", "gpid": "0", "villid": "0", "schemetype": "1", "typeid": "2", "dp": "2"}},
+ {"kind": "call", "name": "remlist_all_tripura", "endpoint": "Report/get_both_structure_delivery_remedial_list_detail", "entry": "Report/Report_remedial", "length": 6000,
+  "params": {"p_type": "9", "finY": "2026-2027", "stid": "30", "dtid": "0", "blid": "0", "gpid": "0", "villid": "0", "schemetype": "1", "typeid": "2", "dp": "2"}},
+ {"kind": "call", "name": "remlist_contam_india", "endpoint": "Report/get_both_structure_delivery_remedial_list_detail", "entry": "Report/Report_remedial", "length": 1000,
+  "params": {"p_type": "11", "finY": "2026-2027", "stid": "0", "dtid": "0", "blid": "0", "gpid": "0", "villid": "0", "schemetype": "1", "typeid": "2", "dp": "2"}},
+ {"kind": "call", "name": "remsample_contam_tripura", "endpoint": "Report/get_both_structure_delivery_list_sample", "entry": "Report/Report_remedial", "length": 2000,
+  "params": {"p_type": "11", "finY": "2026-2027", "stid": "30", "dtid": "0", "blid": "0", "gpid": "0", "villid": "0", "schemetype": "1", "typeid": "2", "dp": "2", "SourceId": "0"}},
+ {"kind": "foreach", "from": "remlist_contam_tripura", "take": 3, "stages": [
+   {"kind": "call", "name": "remsample_contam_tripura_v{VillageId}_s{SourceId}", "endpoint": "Report/get_both_structure_delivery_list_sample", "entry": "Report/Report_remedial", "length": 200,
+    "params": {"p_type": "11", "finY": "2026-2027", "stid": "{StateId}", "dtid": "{DistrictId}", "blid": "{BlockId}", "gpid": "{GramPanchayatId}", "villid": "{VillageId}", "schemetype": "1", "typeid": "2", "dp": "2", "SourceId": "{SourceId}"}}
+ ]},
+
+ {"kind": "call", "name": "dp_school_tripura_2026-27", "endpoint": "Report/get_deliverypoints",
+  "params": {"fy": "2026-2027", "stid": "30", "dtid": "0", "blid": "0", "gpid": "0", "schemetype": "1", "delivery_point_check": "2", "type_quarter": "0", "type_hgjv": "0"}},
+ {"kind": "call", "name": "dplist_all_tripura", "endpoint": "Report/get_deliverypoints_list_detail", "length": 6000,
+  "params": {"p_type": "1", "finY": "2026-2027", "stid": "30", "dtid": "0", "blid": "0", "gpid": "0", "villageid": "0", "schemetype": "1", "dp": "2", "type_quarter": "0", "type_hgjv": "0"}},
+ {"kind": "call", "name": "dplist_achieved_tripura", "endpoint": "Report/get_deliverypoints_list_detail", "length": 6000,
+  "params": {"p_type": "3", "finY": "2026-2027", "stid": "30", "dtid": "0", "blid": "0", "gpid": "0", "villageid": "0", "schemetype": "1", "dp": "2", "type_quarter": "0", "type_hgjv": "0"}},
+ {"kind": "call", "name": "dpsample_tripura_p3", "endpoint": "Report/get_deliverypoints_list_sample", "length": 2000,
+  "params": {"p_type": "3", "finY": "2026-2027", "stid": "30", "dtid": "0", "blid": "0", "gpid": "0", "villid": "0", "schemetype": "1", "dp": "2", "type_quarter": "0"}},
+ {"kind": "foreach", "from": "dp_school_tripura_2026-27", "take": 2, "stages": [
+   {"kind": "call", "name": "dp_school_tripura_d{DistrictId}", "endpoint": "Report/get_deliverypoints",
+    "params": {"fy": "2026-2027", "stid": "30", "dtid": "{DistrictId}", "blid": "0", "gpid": "0", "schemetype": "1", "delivery_point_check": "2", "type_quarter": "0", "type_hgjv": "0"}},
+   {"kind": "call", "name": "dplist_all_tripura_d{DistrictId}", "endpoint": "Report/get_deliverypoints_list_detail", "length": 3000,
+    "params": {"p_type": "1", "finY": "2026-2027", "stid": "30", "dtid": "{DistrictId}", "blid": "0", "gpid": "0", "villageid": "0", "schemetype": "1", "dp": "2", "type_quarter": "0", "type_hgjv": "0"}},
+   {"kind": "call", "name": "dpsample_tripura_d{DistrictId}", "endpoint": "Report/get_deliverypoints_list_sample", "length": 3000,
+    "params": {"p_type": "3", "finY": "2026-2027", "stid": "30", "dtid": "{DistrictId}", "blid": "0", "gpid": "0", "villid": "0", "schemetype": "1", "dp": "2", "type_quarter": "0"}}
+ ]}
+]
