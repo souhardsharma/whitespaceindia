@@ -38,6 +38,7 @@ import { csrConfig } from "@/lib/csr/config";
 // "0 districts", "0 whitespace districts" and a score range from 0 to 81.2
 // that the data does not hold. 3.5 KB; the full files still load as before.
 import csrMeta from "@/public/data/csr/meta.json";
+import { BIHAR_VS_MAHARASHTRA } from "@/lib/csr/findings";
 import { CSR_STATES, stateSlug } from "@/lib/csr/states";
 import { SITE_URL } from "@/lib/site";
 
@@ -131,7 +132,7 @@ function InsightSection({ whitespaceCount }: { whitespaceCount: number }) {
               number="02"
               value="33.76%"
               label="Bihar's poverty headcount"
-              sub="The share of Bihar’s people in multidimensional poverty in 2019-21, from NITI Aayog’s MPI 2023. Bihar receives ₹66 of CSR spending per person, against ₹1,436 in Maharashtra."
+              sub={`The share of Bihar’s people in multidimensional poverty in 2019-21, from NITI Aayog’s MPI 2023. ${BIHAR_VS_MAHARASHTRA}`}
               delay={0.12}
             />
           </div>
