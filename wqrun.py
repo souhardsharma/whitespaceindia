@@ -208,6 +208,10 @@ def expand(plan):
             where = st.get("where")
             if where:
                 rows = [r for r in rows if all(str(r.get(k)) not in ("0", "None", "") for k in where)]
+            match = st.get("match")  # {field: [allowed values]}, compared trimmed and lower-cased
+            if match:
+                rows = [r for r in rows if all(str(r.get(k) or "").strip().lower() in set(v) for k, v in match.items())]
+                log({"name": "_foreach_match", "from": st["from"], "rows": len(rows)})
             for row in rows[st.get("skip", 0): st.get("skip", 0) + st.get("take", 1)]:
                 yield from expand(fill(st["stages"], row))
         else:
