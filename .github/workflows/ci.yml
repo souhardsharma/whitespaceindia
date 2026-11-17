@@ -115,6 +115,14 @@ jobs:
         # type error. No test dependency - Node strips the types itself.
         run: npm test
       - run: npm run build
+      - name: Cloudflare Pages limits
+        # The same assembly Pages runs for production, on every branch and
+        # pull request. Branch previews on Pages are opt-in (`preview-*`), so
+        # this is the check that a change still fits one deployment: 20,000
+        # files, 25 MiB a file, redirect, header and route rule counts. Past
+        # one, Pages refuses main's deployment and every tool's update stops;
+        # past 80% it warns on the checks page.
+        run: node scripts/cloudflare/assemble.mjs . dist
       - name: What a search engine reads
         # Canonicals, og:url, robots and titles on every sitemap page, the
         # sitemap index, the noindex on placeholder verticals and the legacy
