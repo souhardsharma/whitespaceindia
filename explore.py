@@ -87,6 +87,31 @@ def explore(t: dict, log: list) -> None:
             action = f"select {target[0]}={target[1]}"
         else:
             btn = next(((bn, bv) for bn, bv in submits(page) if any(p in bv.upper() for p in press)), None)
+            links = re.findall(r"__doPostBack\('([^']+)','((?:Select|Page)\$[^']*)'\)", page)
+            follow = t.get("follow", [])  # e.g. ["Select$9", "Select$0", ...] one per drill level
+            if (not btn or t.get("_pressed")) and links and t.get("_level", 0) < len(follow):
+                want = follow[t.get("_level", 0)]
+                # deepest grid first: the last grid named on the page is the newest drill level
+                grids = []
+                for g, a in links:
+                    if g not in grids:
+                        grids.append(g)
+                grid = grids[-1]
+                t["_level"] = t.get("_level", 0) + 1
+                fields["__EVENTTARGET"], fields["__EVENTARGUMENT"] = grid, want
+                action = f"follow {grid} {want}"
+                time.sleep(pause)
+                s, raw, h, url = probe.send(op, url, urllib.parse.urlencode(fields).encode(),
+                                            {"Content-Type": "application/x-www-form-urlencoded", "Referer": url},
+                                            "POST", t.get("timeout", 60))
+                n += 1
+                (OUT / f"{name}-{n - 1:02d}.html").write_bytes(raw)
+                log.append({"target": name, "step": n - 1, "status": s, "bytes": len(raw), "action": action})
+                print(s, len(raw), name, action, flush=True)
+                if s != 200:
+                    break
+                page = raw.decode("utf-8", "replace")
+                continue
             if not btn or t.get("_pressed"):
                 break
             t["_pressed"] = True

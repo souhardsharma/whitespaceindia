@@ -1,10 +1,9 @@
 [
- {"name": "k-dash", "url": "https://lsgkerala.gov.in/plandashboard/", "pause": 1.5},
- {"name": "k-dash-annual", "url": "https://lsgkerala.gov.in/plandashboard/Plan/Annualplandetails.php", "pause": 1.5},
- {"name": "k-dash-ptype", "url": "https://lsgkerala.gov.in/plandashboard/Plan/ExpenditureProjectTypewise.php", "pause": 1.5},
- {"name": "k-plan-home", "url": "https://plan.lsgkerala.gov.in/", "pause": 1.5},
- {"name": "k-plan-public", "url": "https://plan.lsgkerala.gov.in/formulation/Public.aspx", "pause": 1.5},
- {"name": "k-sulekha", "url": "https://sulekha.lsgkerala.gov.in/", "pause": 1.5},
- {"name": "k-plan-public-india", "url": "https://plan.lsgkerala.gov.in/formulation/Public.aspx", "family": "india", "pause": 1.5},
- {"name": "k-dash-india", "url": "https://lsgkerala.gov.in/plandashboard/", "family": "india", "pause": 1.5}
+ {"name": "kd-daily", "url": "https://lsgkerala.gov.in/plandashboard/plan/daily-plan-progress/", "pause": 1.5},
+ {"name": "kd-apve", "url": "https://lsgkerala.gov.in/plandashboard/plan/approved-plan-vs-expenditure/", "pause": 1.5},
+ {"name": "kd-lbtype", "url": "https://lsgkerala.gov.in/plandashboard/plan/expenditure-by-lb-type/", "pause": 1.5},
+ {"name": "kd-toppers", "url": "https://lsgkerala.gov.in/plandashboard/plan/toppers-and-tail-enders/", "pause": 1.5},
+ {"name": "kd-tbill", "url": "https://lsgkerala.gov.in/plandashboard/plan/treasury-bill-status/", "pause": 1.5},
+ {"name": "kd-engg", "url": "https://lsgkerala.gov.in/plandashboard/plan/EngineeringStatus.php", "pause": 1.5},
+ {"name": "kd-district", "url": "https://lsgkerala.gov.in/plandashboard/plan/expenditure-district-wise/", "pause": 1.5}
 ]

@@ -33,6 +33,10 @@ jobs:
         env:
           EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
         run: python -I -X utf8 explore.py || true
+      - name: Assets
+        env:
+          EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
+        run: python -I -X utf8 assets.py || true
       - uses: actions/upload-artifact@v4
         with:
           name: probe-out

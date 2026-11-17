@@ -1,0 +1,5 @@
+[
+ {"name": "bbmp-pv", "url": "https://account.bbmpgov.in/PublicView/?l=1", "max_scripts": 6, "pause": 1.5},
+ {"name": "bbmp-ifms", "url": "https://account.bbmpgov.in/vsswb/", "max_scripts": 3, "pause": 1.5},
+ {"name": "kd-home", "url": "https://lsgkerala.gov.in/plandashboard/plan/dashboard/", "max_scripts": 3, "pause": 1.5}
+]
