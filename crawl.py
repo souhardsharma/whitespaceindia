@@ -51,6 +51,7 @@ def total_items(page: str) -> int | None:
     return int(m.group(1).replace(".", "")) if m else None
 
 
+UFS = "AC AL AM AP BA CE DF ES GO MA MG MS MT PA PB PE PI PR RJ RN RO RR RS SC SE SP TO".split()
 SUSP = BASE + "/pddeinfo/relatoriosuspensao/relatoriosuspensao/relatoriosuspensao"
 
 
@@ -226,9 +227,112 @@ def census() -> None:
         return
 
 
+def span(page: str):
+    m = re.search(r"(\d[\d.]*)\s*-\s*(\d[\d.]*)\s+de\s+([\d.]+)\s+itens", page)
+    return tuple(int(x.replace(".", "")) for x in m.groups()) if m else None
+
+
+def paged(prefix: str, name: str, budget: int) -> dict:
+    """Read a PDDE Info report to its end at 100 a page; tally every dd/mm/yyyy date printed."""
+    dates = collections.Counter()
+    n = 1
+    tot = None
+    used = 0
+    while used < budget:
+        s, raw = get(f"{prefix}/limit/100/page/{n}", f"{name}_p{n}")
+        used += 1
+        if s != 200:
+            break
+        t = text(raw)
+        t = t[t.find("</form>"):]
+        dates.update(re.findall(r"\b\d{2}/\d{2}/20\d{2}\b", t))
+        sp = span(t)
+        if not sp:
+            break
+        tot = sp[2]
+        if sp[1] >= sp[2]:
+            break
+        n += 1
+    return {"pages": n, "total": tot, "requests": used, "dates": dict(dates)}
+
+
+def reread_suspension() -> None:
+    res = {}
+    for uf in UFS:
+        s, raw = get(susp_url(2026, uf), f"susp3_tot_{uf}_2026", save=False)
+        res[uf] = total_items(text(raw)) if s == 200 else f"HTTP {s}"
+    (OUT / "susp_totals_read2.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
+    for uf in ("AC", "RR"):
+        for p in range(1, 6):
+            s, raw = get(susp_url(2026, uf, limit=100, page=p), f"susp3_{uf}_2026_p{p}")
+            sp = span(text(raw)) if s == 200 else None
+            if not sp or sp[1] >= sp[2]:
+                break
+
+
+def atendimento() -> None:
+    rep = "situacaoatendimentoentidade"
+    res = {}
+    def pre(uf):
+        return (f"{BASE}/pddeinfo/{rep}/{rep}/{rep}/ano/2026/destinacao//programa/02/co_esfera_adm/1/co_esfera_adm/2/"
+                f"co_esfera_adm/3/stPg/1/stPg/2/siglaUf/{uf}/sg_uf/{uf}/co_municipio_fnde//cnpj//co_escola//"
+                f"consultar/Consultar")
+    left = 330
+    for uf in ("RR", "AP", "AC", "DF", "TO", "SE", "RO", "MS"):
+        if left <= 5:
+            break
+        r = paged(pre(uf), f"atend_{uf}_2026", min(left, 120))
+        left -= r["requests"]
+        res[uf] = r
+        (OUT / "atend_dates.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
+
+
+def cadastro() -> None:
+    rep = "situacaocadastroentidade"
+    res = {}
+    for uf in ("AC", "RR"):
+        pre = (f"{BASE}/pddeinfo/{rep}/{rep}/{rep}/ano/2026/co_esfera_adm/1/co_esfera_adm/2/co_esfera_adm/3/"
+               f"siglaUf/{uf}/sg_uf/{uf}/co_municipio_fnde//cnpj//co_escola//consultar/Consultar")
+        res[uf] = paged(pre, f"cad_{uf}_2026", 40)
+        (OUT / "cad_dates.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
+
+
+def daily_docs2() -> None:
+    import datetime as dt
+    res = {}
+    d0 = dt.date(2026, 11, 17)
+    for k in range(0, 36):
+        d = (d0 - dt.timedelta(days=k)).strftime("%Y%m%d")
+        s, raw = get(f"{CGU}/despesas/{d}_Despesas.zip", f"desp_{d}", timeout=300, save=False)
+        if s != 200:
+            res[d] = f"HTTP {s}"
+        else:
+            z = zipfile.ZipFile(io.BytesIO(raw))
+            info = {"zip_bytes": len(raw), "members": {}}
+            for m in z.infolist():
+                n = kept = pdde = pnae = 0
+                keep_rows = []
+                with z.open(m) as f:
+                    head = f.readline()
+                    for line in f:
+                        n += 1
+                        if b"153173" in line:
+                            kept += 1
+                            u = line.upper()
+                            pdde += (b"PDDE" in u or b"DINHEIRO DIRETO" in u)
+                            pnae += (b"PNAE" in u or b"ALIMENTA" in u)
+                            if "Pagamento.csv" in m.filename and len(keep_rows) < 1500:
+                                keep_rows.append(line)
+                info["members"][m.filename] = {"rows": n, "fnde": kept, "pdde": pdde, "pnae": pnae}
+                if keep_rows:
+                    (OUT / f"desp_{d}_pagamento_fnde.csv.gz").write_bytes(gzip.compress(head + b"".join(keep_rows)))
+            res[d] = info
+        (OUT / "daily_docs2.json").write_text(json.dumps(res, indent=1, ensure_ascii=False), encoding="utf-8")
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    steps = [crawl_suspension, crawl_other_reports, crawl_schools, transfers, daily_docs, census]
+    steps = [reread_suspension, cadastro, atendimento, daily_docs2]
     for step in steps:
         try:
             step()
