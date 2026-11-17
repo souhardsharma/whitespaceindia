@@ -330,9 +330,62 @@ def daily_docs2() -> None:
         (OUT / "daily_docs2.json").write_text(json.dumps(res, indent=1, ensure_ascii=False), encoding="utf-8")
 
 
+def national_suspension() -> None:
+    """Read 3: every school on the 2026 PDDE-basic suspension report, all States, 100 a page."""
+    res = {}
+    left = 220
+    for uf in UFS:
+        s, raw = get(susp_url(2026, uf), f"susp4_tot_{uf}_2026", save=False)
+        n = total_items(text(raw)) if s == 200 else None
+        res[uf] = {"total": n if n is not None else f"HTTP {s}", "pages_read": 0}
+        pages = (n + 99) // 100 if isinstance(n, int) else 0
+        for p in range(1, pages + 1):
+            if left <= 0:
+                break
+            s, raw = get(susp_url(2026, uf, limit=100, page=p), f"susp4_{uf}_2026_p{p}")
+            left -= 1
+            res[uf]["pages_read"] += s == 200
+        (OUT / "susp4_totals.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
+    # the one-page print view, as the fastest route, once
+    get(f"{BASE}/pddeinfo/relatoriosuspensao/relatoriosuspensao/imprimirall/ano/2026/siglaUf/RR/sg_uf/RR/"
+        "co_municipio_fnde//programa/02/destinacao//cnpj//co_escola//co_esfera_adm/1/co_esfera_adm/2/co_esfera_adm/3/"
+        "tp_suspensao/0/consultar/Consultar/limit/100/page/1?an_exercicio=2026&sg_uf=RR&co_municipio_fnde=&programa=02"
+        "&destinacao=&cnpj=&co_escola=&esferaAdm=%271%27%2C%272%27%2C%273%27&tpsuspensao=%270%27&localizacao=",
+        "susp4_print_RR_2026")
+
+
+def case_pages() -> None:
+    esc = BASE + "/pddeinfo/pddeinfo/escola/consultar"
+    for code in ("12026891", "14000318", "14001519", "12006718", "14324946", "12018546"):
+        get(f"{esc}?ano=2026&co_escola={code}&cnpj=&co_esfera_adm=&sg_uf=&co_municipio_fnde=&consultar=Consultar",
+            f"case_{code}_2026")
+
+
+def census_national() -> None:
+    s, raw = get("https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2024.zip", "censo_2024",
+                 timeout=600, save=False)
+    if s != 200:
+        return
+    z = zipfile.ZipFile(io.BytesIO(raw))
+    for m in z.infolist():
+        if re.search(r"microdados_ed_basica_\d+\.csv$", m.filename, flags=re.I):
+            with z.open(m) as f:
+                rd = csv.reader(io.TextIOWrapper(f, encoding="latin-1"), delimiter=";")
+                head = next(rd)
+                ix = {h: i for i, h in enumerate(head)}
+                cols = ["SG_UF", "CO_MUNICIPIO", "CO_ENTIDADE", "TP_DEPENDENCIA", "TP_LOCALIZACAO",
+                        "TP_SITUACAO_FUNCIONAMENTO", "QT_MAT_BAS"]
+                w = csv.writer(gzip.open(OUT / "censo_2024_slim.csv.gz", "wt", encoding="utf-8", newline=""))
+                w.writerow(cols)
+                for row in rd:
+                    if row[ix["TP_DEPENDENCIA"]] in ("1", "2", "3"):
+                        w.writerow([row[ix[c]] for c in cols])
+            return
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    steps = [reread_suspension, cadastro, atendimento, daily_docs2]
+    steps = [national_suspension, case_pages, census_national]
     for step in steps:
         try:
             step()
