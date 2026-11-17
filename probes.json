@@ -1,0 +1,130 @@
+[
+ {
+  "name": "pt-api-states",
+  "url": "https://api.poshantracker.in/api/states",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "pt-bsr-states",
+  "url": "https://bsr.poshantracker.in/api/states",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "pt-monthly-opstatus",
+  "url": "https://cdn.poshantracker.in/pt_dashboard/monthly/2026/10/publicdash_awc_operational_status_v2.json",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "pt-monthly-ecce",
+  "url": "https://cdn.poshantracker.in/pt_dashboard/monthly/2026/10/publicdash_ecce_v2.json",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "pt-monthly-snp",
+  "url": "https://cdn.poshantracker.in/pt_dashboard/monthly/2026/10/publicdash_snp_v2.json",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "pt-page",
+  "url": "https://www.poshantracker.in/awcindiaMap",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "tg-nhts-index",
+  "url": "https://nhts.telangana.gov.in/index.html",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "tg-nhts-reports",
+  "url": "https://nhts.telangana.gov.in/DWO/NHTSMobileAppReports.aspx",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "tg-esadhana",
+  "url": "https://wdcw.tg.nic.in/e-sadhanatg/index",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "tg-awc",
+  "url": "https://awc.tgwdcw.in/",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "tg-epos",
+  "url": "https://epos.telangana.gov.in/",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "ap-epos-icds-issued",
+  "url": "https://epos.ap.gov.in/ePos/IcdsIssued.jsp",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "ap-epos-icds-status",
+  "url": "https://epos.ap.gov.in/ePos/ICDS_Status.jsp",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "ap-scm-icds-notavailed",
+  "url": "https://scm.ap.gov.in/SCM_REPORT/ICDS_not_availed.jsp",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "mp-wcdmis",
+  "url": "https://mpwcdmis.gov.in/",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "tn-icds",
+  "url": "https://icds.tn.gov.in/icdstn/",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "rj-rajposhan",
+  "url": "https://rajposhan.rajasthan.gov.in/",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "br-icdsonline",
+  "url": "https://icdsonline.bih.nic.in/",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "up-balvikas",
+  "url": "https://balvikasup.gov.in/",
+  "timeout": 40,
+  "pause": 1.0
+ },
+ {
+  "name": "tg-nhts-index-in",
+  "url": "https://nhts.telangana.gov.in/index.html",
+  "timeout": 40,
+  "pause": 1.0,
+  "family": "india"
+ },
+ {
+  "name": "ap-epos-icds-issued-in",
+  "url": "https://epos.ap.gov.in/ePos/IcdsIssued.jsp",
+  "timeout": 40,
+  "pause": 1.0,
+  "family": "india"
+ }
+]
