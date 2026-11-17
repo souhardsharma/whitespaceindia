@@ -1,0 +1,75 @@
+name: Watchdog
+
+# The site's daily check, run by GitHub with its own token: no person, no
+# assistant and no secret. After every nightly sync and once a day at 12:00 IST
+# it checks the published data, every kind of public page and download, that
+# the backend is awake (and wakes it if not), main's Cloudflare and Render
+# deployments, both free plans' monthly budgets, Vercel's state, and that main
+# still fits one Cloudflare Pages deployment. Anything wrong opens or updates
+# one issue, "Watchdog: the site needs attention", which GitHub mails to the
+# owner; the next all-clear closes it. See scripts/watchdog.mjs.
+on:
+  workflow_run:
+    workflows: ["Sync Instrument 01 data"]
+    types: [completed]
+  schedule:
+    - cron: "30 6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: watchdog
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  limits:
+    name: Assemble main as Pages does
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      summary: ${{ steps.assemble.outputs.summary }}
+      warnings: ${{ steps.assemble.outputs.warnings }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: main
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - id: assemble
+        run: |
+          node scripts/cloudflare/assemble.mjs . dist | tee assemble.log
+          echo "summary=$(grep -m1 'Cloudflare limits:' assemble.log | sed 's/^Cloudflare limits: //')" >> "$GITHUB_OUTPUT"
+          echo "warnings=$(grep -c '::warning::' assemble.log || true)" >> "$GITHUB_OUTPUT"
+
+  watch:
+    name: Check the live site
+    needs: limits
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+      checks: read
+      deployments: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: main
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          LIMITS_RESULT: ${{ needs.limits.result }}
+          LIMITS_SUMMARY: ${{ needs.limits.outputs.summary }}
+          LIMITS_WARNINGS: ${{ needs.limits.outputs.warnings }}
+        run: node scripts/watchdog.mjs

@@ -64,7 +64,7 @@ Its files and endpoints are documented at [/instruments/consent/data](https://wh
 - **Charts and maps:** Recharts, react-simple-maps, D3
 - **PDF briefs:** @react-pdf/renderer, with text from the Google Gemini API
 - **Data pipelines:** Python 3.12
-- **Hosting and scheduled jobs:** Cloudflare Pages (the site), Render (the routes rendered per request) and GitHub Actions
+- **Hosting and scheduled jobs:** Cloudflare Pages (the site), Render (the routes rendered per request) and GitHub Actions, all on free plans. Every tool shares their limits: read [docs/shared-limits.md](docs/shared-limits.md) before adding one. The Watchdog workflow checks the live site and the budgets daily.
 
 ## Local development
 
@@ -80,6 +80,7 @@ Checks that run in CI:
 npx tsc --noEmit
 npm test
 npm run build
+node scripts/cloudflare/assemble.mjs . dist   # fits one Cloudflare Pages deployment
 pip install -r requirements.txt
 python scripts/instruments/check_published.py
 ```
