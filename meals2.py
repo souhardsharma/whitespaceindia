@@ -265,10 +265,41 @@ def p_blocks():
             blocks(s, dc, "2026-11-16")
 
 
+CAL_IDS = ["AR", "AS", "CH", "DH", "GA", "HR", "HP", "JK", "LA", "LD", "MP", "MN", "MZ", "NL", "TR", "UA"]
+
+
+def p_cal():
+    """Each State's public holiday master: GET the calendar page (sets the State in the session), then the JSON."""
+    out = RES.setdefault("calendar", {})
+    for sid in CAL_IDS:
+        st, t, s = req(f"calpage {sid}", f"/Home/MDMCalendar/{sid}")
+        st2, t2, s2 = req(f"caljson {sid}", "/Home/GetHolidaysListJSON")
+        try:
+            j = json.loads(t2)
+            out[sid] = {"status": st2, "s": s2, "rows": [[x.get("HolidayDate"), x.get("SubReason"), x.get("DistrictCode"),
+                                                         x.get("BlockCode")] for x in j]}
+        except Exception as e:  # noqa: BLE001
+            out[sid] = {"status": st2, "s": s2, "error": repr(e)[:100], "head": t2[:100]}
+
+
+def p_sb():
+    """Assam, dense weekdays 3-28 Jun 2024: a trailing norm before the Karimganj (Sribhumi) closure."""
+    for iso in days("2024-06-03", "2024-06-22"):
+        dist("18", iso)
+
+
+def p_live():
+    """Today (17 Nov) during the school day, and yesterday again: same-day filling."""
+    for s in STATES:
+        dist(s, "2026-11-17")
+
+
 def main():
     RES["t_start_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    for name, fn in [("night", p_night), ("closures", p_closures), ("events", p_events), ("home", p_home),
-                     ("blocks", p_blocks)]:
+    table = {"night": p_night, "closures": p_closures, "events": p_events, "home": p_home, "blocks": p_blocks,
+             "cal": p_cal, "sb": p_sb, "live": p_live}
+    for name in os.environ.get("PHASES", "cal,sb,live").split(","):
+        fn = table[name]
         phase(name, fn)
     RES["t_end_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     RES["requests"] = len(LOG)
