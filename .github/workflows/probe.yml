@@ -21,6 +21,8 @@ on:
         default: ""
       india:
         default: "no"
+      org_pages:
+        default: ""
 permissions:
   contents: read
 jobs:
@@ -57,6 +59,8 @@ jobs:
           SKIP: ${{ inputs.skip }}
           PAUSE: ${{ inputs.pause }}
           EXTRA: ${{ inputs.extra }}
+          INDIA: ${{ inputs.india }}
+          ORG_PAGES: ${{ inputs.org_pages }}
         run: python -I -X utf8 sweep.py
       - uses: actions/upload-artifact@v4
         if: always()

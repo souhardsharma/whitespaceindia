@@ -31,7 +31,31 @@ CENTRAL = os.environ.get("CENTRAL") or "https://central.nmcindia.ac.in"
 STATS = {"requests": 0, "ok": 0, "fail": 0, "statuses": {}}
 
 
+INDIA = (os.environ.get("INDIA") or "").strip().lower() in ("1", "yes", "true")
+_POOL = None
+
+
+def pool_send(url: str, timeout: int):
+    """One request through the Indian pool built on this runner (the platform answers only Indian addresses)."""
+    global _POOL
+    if _POOL is None:
+        _POOL = probe.egress.open_pool("india", reload_every=0)
+    return probe.egress.fetch(_POOL, url, timeout=min(timeout, 40), deadline=time.time() + 150)
+
+
 def get(url: str, timeout: int = 45, tries: int = 2):
+    if INDIA:
+        for attempt in range(tries):
+            t0 = time.time()
+            s, raw = pool_send(url, timeout)
+            STATS["requests"] += 1
+            STATS["statuses"][str(s)] = STATS["statuses"].get(str(s), 0) + 1
+            if s == 200:
+                STATS["ok"] += 1
+                return s, raw, round(time.time() - t0, 2)
+            STATS["fail"] += 1
+            time.sleep(PAUSE)
+        return s, raw, round(time.time() - t0, 2)
     op = probe.opener_for()
     for attempt in range(tries):
         t0 = time.time()
