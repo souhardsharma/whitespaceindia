@@ -176,7 +176,7 @@ def phase(name, fn):
 
 
 def p_night():
-    for iso in ["2026-11-16", "2026-11-15"]:
+    for iso in os.environ.get("NIGHT_DATES", "2026-11-16,2026-11-17").split(","):
         for s in STATES:
             dist(s, iso)
 
@@ -298,7 +298,7 @@ def main():
     RES["t_start_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     table = {"night": p_night, "closures": p_closures, "events": p_events, "home": p_home, "blocks": p_blocks,
              "cal": p_cal, "sb": p_sb, "live": p_live}
-    for name in os.environ.get("PHASES", "cal,sb,live").split(","):
+    for name in os.environ.get("PHASES", "night").split(","):
         fn = table[name]
         phase(name, fn)
     RES["t_end_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
