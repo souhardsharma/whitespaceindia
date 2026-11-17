@@ -329,6 +329,9 @@ async function main() {
       record(check.name.replace(/^check/, "").toLowerCase(), false, `the check itself failed: ${e.message}`);
     }
   }
+  // A drill (dispatch with drill: true) adds one deliberate failure, to prove
+  // that a failure really opens the issue; the next ordinary run closes it.
+  if (process.env.WATCHDOG_DRILL === "true") record("drill", false, "a deliberate failure, to prove the alert path");
   const failed = await report();
   process.exitCode = failed ? 1 : 0;
 }
