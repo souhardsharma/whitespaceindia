@@ -38,6 +38,7 @@ jobs:
         if: github.event_name == 'push' || inputs.probes == 'yes'
         run: python -I -X utf8 probe.py
       - name: NCTE register
+        if: github.event_name == 'workflow_dispatch'
         env:
           EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
           SKIP: ${{ inputs.skip || '0' }}

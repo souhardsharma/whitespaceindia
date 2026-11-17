@@ -1,8 +1,48 @@
 [
- {"name": "mp-rte-district", "url": "https://rteportal.mp.gov.in/FeeReimbursement/Public/DistrictSummary.aspx"},
- {"name": "mp-rte-home", "url": "https://rteportal.mp.gov.in/SRMS/Default.aspx"},
- {"name": "prabandh-rte", "url": "https://www.samagrashiksha.in/PMS/dist_rte_review.aspx"},
- {"name": "mp-hesch", "url": "https://hescholarship.mp.gov.in/Reports/Awas_Distribution_District_Scheme_AY_Wise.aspx"},
- {"name": "ts-epass", "url": "https://telanganaepass.cgg.gov.in/"},
- {"name": "ncte-old-rc", "url": "https://ncte.gov.in/website/RegionalCommittees.aspx"}
+{
+"name": "ncte-home-hdr",
+"url": "https://web.ncte.gov.in/",
+"headers": {
+"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+"Accept-Language": "en-IN,en;q=0.9",
+"Upgrade-Insecure-Requests": "1",
+"Sec-Fetch-Mode": "navigate",
+"Sec-Fetch-Site": "none",
+"Sec-Fetch-Dest": "document"
+}
+},
+{
+"name": "ncte-list-hdr",
+"url": "https://web.ncte.gov.in/page-regional-committee-institution-lists/16/jharkhand?page=2",
+"headers": {
+"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+"Accept-Language": "en-IN,en;q=0.9",
+"Referer": "https://web.ncte.gov.in/page-regional-committee/erc"
+}
+},
+{
+"name": "ncte-notif-hdr",
+"url": "https://web.ncte.gov.in/notifications/view-html/35230",
+"headers": {
+"Accept": "text/html,*/*",
+"Accept-Language": "en-IN,en;q=0.9"
+}
+},
+{
+"name": "ncte-cdn-pdf",
+"url": "https://d3swgpghzvje7l.cloudfront.net/WebAdmin/pdf/ERC/jharkhand_bed_ercapp3202_ord_02_05_2016.pdf.pdf",
+"save": false
+},
+{
+"name": "ncte-list-india",
+"family": "india",
+"url": "https://web.ncte.gov.in/page-regional-committee-institution-lists/16/jharkhand?page=2",
+"times": 3
+},
+{
+"name": "ncte-notif-india",
+"family": "india",
+"url": "https://web.ncte.gov.in/notifications/view-html/35230",
+"times": 2
+}
 ]
