@@ -24,7 +24,7 @@ OUT = Path(__file__).resolve().parent / "out"
 OUT.mkdir(exist_ok=True)
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 CTX = ssl.create_default_context()
-MAX_SCHOOLS = 280
+MAX_SCHOOLS = 200
 LOG = []
 
 REACH = {
@@ -74,6 +74,110 @@ def table(page: str):
     return rows
 
 
+import http.cookiejar
+import urllib.parse
+
+MB = "https://medhasoft.bihar.gov.in/Medhasoft/Medha/"
+DATE_RX = re.compile(r"\b(\d{2}[-/]\d{2}[-/]\d{4}|\d{4}-\d{2}-\d{2}|\d{2}-[A-Za-z]{3}-\d{4})\b")
+
+
+def shape(page: str) -> dict:
+    """Structure only: headers, row count, per-column distinct-count, date-like values, short status values.
+    Never names: free-text cells are not kept, only counted."""
+    rows = table(page)
+    out = {"rows": len(rows), "headers": rows[0] if rows else [], "dates": [], "small_values": {}}
+    out["dates"] = sorted(set(DATE_RX.findall(text(page))))[:60]
+    if len(rows) > 1:
+        for j, h in enumerate(rows[0][:30]):
+            vals = [r[j] for r in rows[1:] if len(r) > j]
+            distinct = sorted(set(vals))
+            # keep values only for low-cardinality, non-name-like columns (statuses, counts)
+            if len(distinct) <= 12 and all(len(v) <= 40 for v in distinct):
+                out["small_values"][h] = {v: vals.count(v) for v in distinct}
+            else:
+                out["small_values"][h] = f"{len(distinct)} distinct (not kept)"
+    out["selects"] = re.findall(r'<select[^>]*name="([^"]+)"', page)
+    return out
+
+
+def medha() -> None:
+    jar = http.cookiejar.CookieJar()
+    op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar),
+                                     urllib.request.HTTPSHandler(context=CTX))
+
+    def send(url, data=None):
+        req = urllib.request.Request(url, data=data, headers={"User-Agent": UA,
+                                     "Content-Type": "application/x-www-form-urlencoded"})
+        t0 = time.time()
+        try:
+            with op.open(req, timeout=90) as r:
+                b, s = r.read().decode("utf-8", "replace"), r.status
+        except urllib.error.HTTPError as e:
+            b, s = e.read().decode("utf-8", "replace"), e.code
+        except Exception as e:  # noqa: BLE001
+            b, s = f"{type(e).__name__}: {e}", -1
+        LOG.append({"url": url, "status": s, "bytes": len(b), "s": round(time.time() - t0, 2),
+                    "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "post": data is not None})
+        time.sleep(1.5)
+        return s, b
+
+    def hidden(p):
+        o = {}
+        for tag in re.findall(r"<input[^>]*type=\"hidden\"[^>]*>", p, flags=re.I):
+            n = re.search(r'name="([^"]+)"', tag)
+            v = re.search(r'value="([^"]*)"', tag)
+            if n:
+                o[n.group(1)] = html.unescape(v.group(1)) if v else ""
+        return o
+
+    def options(p, sel):
+        m = re.search(r'<select[^>]*name="%s"[^>]*>(.*?)</select>' % re.escape(sel), p, flags=re.S)
+        return [(v, text(t)) for v, t in re.findall(r'<option[^>]*value="([^"]*)"[^>]*>(.*?)</option>', m.group(1), flags=re.S)] if m else []
+
+    res = {}
+    for name in ("DistrictWiseStudentCount.aspx", "LowEntryRecords.aspx", "PaymentStatus2526.aspx",
+                 "BenRejectListTotal.aspx"):
+        s, p = send(MB + name)
+        res[name] = {"status": s, "bytes": len(p), "shape": shape(p) if s == 200 else p[:200]}
+        if name == "DistrictWiseStudentCount.aspx" and s == 200:
+            (OUT / "medha_district_count.html").write_text(p, encoding="utf-8")  # district totals, no names
+    # School Current Status Report: district -> block -> school postbacks
+    url = MB + "PFMSBenCheckList.aspx"
+    s, p = send(url)
+    chain = {"get": s}
+    pre = "ctl00$ContentPlaceHolder1$"
+    try:
+        dist = [o for o in options(p, pre + "drp_dist") if o[0] not in ("", "0", "-1")]
+        chain["districts"] = len(dist)
+        f = hidden(p) | {pre + "drp_dist": dist[0][0], "__EVENTTARGET": pre + "drp_dist"}
+        s, p = send(url, urllib.parse.urlencode(f).encode())
+        blk = [o for o in options(p, pre + "drp_blk") if o[0] not in ("", "0", "-1")]
+        chain["blocks"] = len(blk)
+        f = hidden(p) | {pre + "drp_dist": dist[0][0], pre + "drp_blk": blk[0][0], "__EVENTTARGET": pre + "drp_blk"}
+        s, p = send(url, urllib.parse.urlencode(f).encode())
+        sch = [o for o in options(p, pre + "drp_school") if o[0] not in ("", "0", "-1")]
+        chain["schools_in_block"] = len(sch)
+        chain["school_code_sample"] = [o[0] for o in sch[:3]]
+        btn = re.search(r'<input[^>]*type="submit"[^>]*name="([^"]+)"[^>]*value="([^"]*)"', p)
+        for k in range(min(2, len(sch))):
+            f = hidden(p) | {pre + "drp_dist": dist[0][0], pre + "drp_blk": blk[0][0], pre + "drp_school": sch[k][0],
+                             "__EVENTTARGET": ""}
+            if btn:
+                f[btn.group(1)] = btn.group(2)
+            s2, p2 = send(url, urllib.parse.urlencode(f).encode())
+            chain[f"school_{k}"] = {"status": s2, "bytes": len(p2), "shape": shape(p2)}
+        # block-level (no school chosen)
+        f = hidden(p) | {pre + "drp_dist": dist[0][0], pre + "drp_blk": blk[0][0], "__EVENTTARGET": ""}
+        if btn:
+            f[btn.group(1)] = btn.group(2)
+        s3, p3 = send(url, urllib.parse.urlencode(f).encode())
+        chain["block_all"] = {"status": s3, "bytes": len(p3), "shape": shape(p3)}
+    except Exception as e:  # noqa: BLE001
+        chain["error"] = f"{type(e).__name__}: {e}"
+    res["PFMSBenCheckList"] = chain
+    (OUT / "medha.json").write_text(json.dumps(res, indent=1, ensure_ascii=False), encoding="utf-8")
+
+
 def main() -> None:
     reach = {}
     for k, u in REACH.items():
@@ -82,8 +186,15 @@ def main() -> None:
         (OUT / f"reach_{k}.html").write_text(body[:200000], encoding="utf-8")
         time.sleep(1)
 
+    medha()
     st, d = get("https://emmis.sikkim.gov.in/schools", timeout=120)
     (OUT / "sk_directory.html").write_text(d, encoding="utf-8")
+    tot = re.search(r'name="totalRecords"[^>]*value="(\d+)"', d)
+    pages = (int(tot.group(1)) + 9) // 10 if tot else 1
+    for n in range(2, min(pages, 130) + 1):
+        _, dn = get(f"https://emmis.sikkim.gov.in/schools?pageno={n}", timeout=60)
+        d += dn
+        time.sleep(1)
     # cards: each card holds a management line, a name, "UDISE Code: <11 digits>" and maybe /web/<slug>
     cards = re.split(r"(?=UDISE Code:)", d)
     schools = []
