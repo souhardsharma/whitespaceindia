@@ -1,12 +1,1 @@
-[
-{
-"name": "rte-gujarat-list",
-"kind": "get",
-"url": "https://rte.orpgujarat.com/Common/SchoolList?page=1"
-},
-{
-"name": "guj-fscop-home",
-"kind": "get",
-"url": "https://gujfiresafetycop.in/Index.aspx"
-}
-]
+[]

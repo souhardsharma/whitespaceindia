@@ -95,6 +95,19 @@ def gujarat() -> None:
         secs = time.time() - t0
         answer = raw.decode("utf-8", "replace")
         records = guj_records(text_lines(answer)) if status == 200 else []
+        if PLAN.get("save_text") and status == 200:
+            # the page as text, with every owner block (Owner line up to the Region line) removed
+            kept, skipping = [], False
+            for line in text_lines(answer):
+                if line.startswith("Owner"):
+                    skipping = True
+                if skipping and line.startswith("Region"):
+                    skipping = False
+                if not skipping:
+                    kept.append(line)
+            start = next((i for i, x in enumerate(kept) if x.startswith("20") and "/" in x), 0)
+            (OUT / f"page_{region}_{keyword.replace(' ', '_')}.txt").write_text("\n".join(kept[max(0, start - 5):]),
+                                                                              encoding="utf-8")
         for r in records:
             r["q"] = f"{region}|{apptype}|{keyword}"
             everything.setdefault(r["no"] + "|" + r["type"], r)
@@ -178,7 +191,7 @@ def saras() -> None:
 
 def main() -> None:
     OUT.mkdir(exist_ok=True)
-    for part in (gujarat, saras):
+    for part in ((gujarat,) if PLAN.get("skip_saras") else (gujarat, saras)):
         try:
             part()
         except Exception as e:  # noqa: BLE001 - one source failing must not lose the other's output
