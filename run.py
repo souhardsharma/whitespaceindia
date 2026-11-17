@@ -6,10 +6,12 @@ request counts, failures and timings.
 from __future__ import annotations
 
 import json
+import sys
 import time
 from pathlib import Path
 
-import hms
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import hms  # noqa: E402
 
 OUT = Path(__file__).resolve().parent / "out"
 JOBS = [
