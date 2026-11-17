@@ -1,365 +1,280 @@
-"""Throwaway probe for a second P1 idea (meals not served). Serves nothing; the branch is deleted afterwards.
+"""Throwaway probe (round 2) of the NIC-HP meal host for two ideas: meals that stopped (P1) and Closed Days (P2).
+Serves nothing; the branch is a throwaway.
 
-Runs on GitHub's runner. Direct from the runner first (TLS verified; a missing intermediate is completed the way
-egress.py completes it, never by turning verification off). A host that refuses the runner is tried once through
-the education India pool built on the runner. One request at a time per host, spaced, with a hard cap per host.
+Runs on GitHub's runner, direct to mdmhp.nic.in (verified TLS, one request at a time, 1.2 s apart, hard cap).
+Keeps parsed counts only; never raw HTML (page footers carry an officer's e-mail). No school tables are read.
 
-Keeps parsed counts only. No raw HTML is kept. Text cells pass through phone and e-mail masks. Never requested:
-UP Darpan Type_Id=4 (teacher view, carries mobiles), any login, PARIVESH.
-
-Phases
-  pb      Punjab ePunjabSchool MDM: district XML per date (19 Oct-15 Nov; Sept 2026; samples May-Aug; history
-          edge), Ludhiana and all-district block tables, school lists of reporting schools (SR map), benchmarks
-  nic     NIC-HP: Rajasthan district tables across 2024-2026 (when its reporting collapsed)
-  up      UP CM Darpan: district / block / school meal tables by date, and a 28-day district series if it answers
-  reach   other State meal portals: one GET each (runner reachability)
+Phases (in order of importance, so a budget stop costs the least important):
+  night     tonight's nightly read: district tables of all 17 States for yesterday (16 Nov) and 15 Nov
+  closures  district tables around documented closure orders (P2 validation), block tables for named districts
+  events    district / block / cluster tables around documented meal disruptions (P1 validation)
+  home      the public home page: which report links are public
+  blocks    block tables of every district for 16 Nov (cost of a block / cluster grain night; block grain data)
 """
 from __future__ import annotations
 
 import datetime as dt
-import gzip
 import html
 import http.cookiejar
 import json
 import os
 import re
-import shutil
 import ssl
-import sys
 import time
+import traceback
 import urllib.error
-import urllib.parse
 import urllib.request
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "scripts" / "education"))
-CACHE = Path(os.environ.get("EDUCATION_CACHE_DIR", HERE / "cache"))
-(CACHE / "intermediates").mkdir(parents=True, exist_ok=True)
-for f in (HERE / "intermediates").glob("*.der"):
-    shutil.copy(f, CACHE / "intermediates" / f.name)
-os.environ["EDUCATION_CACHE_DIR"] = str(CACHE)
-import egress  # noqa: E402
-
-egress.load_intermediates()
-TLS = egress.NET.TLS
-
-OUT = HERE / "out"
-OUT.mkdir(exist_ok=True)
+NIC = "https://mdmhp.nic.in"
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-DEADLINE = time.time() + 60 * float(os.environ.get("PROBE_MINUTES", "95"))
-PHONE = re.compile(r"(?<!\d)(?:\+?91[\s-]?)?[6-9]\d{9}(?!\d)")
-EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
-DENY = re.compile(r"Login|login|Teacher|Type_Id=4|GetSchoolDetailsPV|USERSummary|Principal|Grievanc|parivesh", re.I)
-RES: dict = {}
+CAP = int(os.environ.get("NIC_CAP", "560"))
+DEADLINE = time.time() + 60 * float(os.environ.get("PROBE_MINUTES", "90"))
+OUT = Path("out")
+OUT.mkdir(exist_ok=True)
+DENY = re.compile(r"GetSchoolDetailsPV|USERSummary|SchoolWise|Principal|Grievanc|Login", re.I)
 LOG: list = []
+CJ = http.cookiejar.CookieJar()
+OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(CJ),
+                                     urllib.request.HTTPSHandler(context=ssl.create_default_context()))
+NEXT = [0.0]
+RES: dict = {"phases": {}}
+STATES = ["12", "18", "04", "38", "30", "06", "02", "01", "37", "31", "23", "14", "15", "13", "08", "16", "05"]
 
 
-def save():
-    (OUT / "result.json").write_text(json.dumps(RES, ensure_ascii=False, indent=1), encoding="utf-8")
+def jdump():
+    (OUT / "result.json").write_text(json.dumps(RES, ensure_ascii=False, indent=0), encoding="utf-8")
     (OUT / "log.json").write_text(json.dumps(LOG, ensure_ascii=False, indent=0), encoding="utf-8")
 
 
-def strip(s: str) -> str:
+def strip(s):
     return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", s))).strip()
 
 
-def mask(s: str) -> str:
-    return EMAIL.sub("[email]", PHONE.sub("[phone]", s))
-
-
-def rows_of(t: str) -> list[list[str]]:
+def rows_of(t):
     out = []
-    for r in re.findall(r"<tr[^>]*>(.*?)</tr>", t, flags=re.S | re.I):
-        cells = [mask(strip(c)) for c in re.findall(r"<t[hd][^>]*>(.*?)</t[hd]>", r, flags=re.S | re.I)]
-        if cells:
-            out.append(cells)
+    for r in re.findall(r"<tr[^>]*>(.*?)</tr>", t, flags=re.S):
+        cells = [strip(c) for c in re.findall(r"<t[hd][^>]*>(.*?)</t[hd]>", r, flags=re.S)]
+        if len(cells) >= 9 and cells[0].isdigit():
+            out.append(cells[:9])
     return out
 
 
-class Host:
-    def __init__(self, name: str, base: str, cap: int, spacing: float = 2.0):
-        self.name, self.base, self.cap, self.spacing = name, base, cap, spacing
-        self.n, self.next = 0, 0.0
-        self.jar = http.cookiejar.CookieJar()
-        self.op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.jar),
-                                              urllib.request.HTTPSHandler(context=TLS))
-        self.chain = None
-
-    def req(self, label, path, data=None, json_body=None, gz=False, timeout=90, headers=None):
-        url = path if path.startswith("http") else self.base + path
-        if DENY.search(url) or (data and DENY.search(json.dumps(data))):
-            raise SystemExit("refused " + url)
-        if self.n >= self.cap or time.time() > DEADLINE:
-            raise RuntimeError(f"budget {self.name}")
-        if self.chain is None:
-            self.chain = egress.ensure_chain(url, [None])
-        w = self.next - time.time()
-        if w > 0:
-            time.sleep(w)
-        self.n += 1
-        h = {"User-Agent": UA, "Accept": "*/*", "Accept-Encoding": "gzip" if gz else "identity"} | (headers or {})
-        body = None
-        if json_body is not None:
-            body = json_body.encode()
-            h["Content-Type"] = "application/json; charset=utf-8"
-        elif data is not None:
-            body = urllib.parse.urlencode(data).encode()
-            h["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
-        t0 = time.time()
-        st, raw = -1, b""
+def req(label, path):
+    if DENY.search(path):
+        raise SystemExit("refused " + path)
+    if len(LOG) >= CAP or time.time() > DEADLINE:
+        raise RuntimeError("budget")
+    w = NEXT[0] - time.time()
+    if w > 0:
+        time.sleep(w)
+    h = {"User-Agent": UA, "Accept": "text/html, */*; q=0.01", "X-Requested-With": "XMLHttpRequest",
+         "Accept-Encoding": "identity", "Referer": NIC + "/Home/StateWiseSummary/HP"}
+    t0 = time.time()
+    st, raw = -1, b""
+    for attempt in range(3):
         try:
-            with self.op.open(urllib.request.Request(url, data=body, headers=h), timeout=timeout) as r:
+            with OPENER.open(urllib.request.Request(NIC + path, headers=h), timeout=90) as r:
                 st, raw = r.status, r.read()
         except urllib.error.HTTPError as e:
             st, raw = e.code, e.read()
         except Exception as e:  # noqa: BLE001
             st, raw = -1, f"{type(e).__name__}: {e}".encode()
-        secs = round(time.time() - t0, 2)
-        self.next = time.time() + self.spacing
-        wire = len(raw)
-        if raw[:2] == b"\x1f\x8b":
-            raw = gzip.decompress(raw)
-        LOG.append({"host": self.name, "label": label, "path": url.split("?")[0].replace(self.base, ""),
-                    "post": body is not None, "status": st, "bytes": len(raw), "wire": wire, "s": secs,
-                    "t_utc": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(t0)),
-                    "err": raw[:200].decode("utf-8", "replace") if st == -1 else ""})
-        return st, raw.decode("utf-8", "replace"), secs
+        if st == 200 or (st != -1 and st < 500 and st != 429):
+            break
+        time.sleep(10 * (attempt + 1))
+    secs = round(time.time() - t0, 2)
+    NEXT[0] = time.time() + 1.2
+    LOG.append({"label": label, "path": path.split("?")[0], "status": st, "bytes": len(raw), "s": secs,
+                "t_utc": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(t0))})
+    return st, raw.decode("utf-8", "replace"), secs
 
 
-def dates(a: str, b: str):
+def d2(iso):
+    x = dt.date.fromisoformat(iso)
+    return f"{x.day:02d}/{x.month:02d}/{x.year}"
+
+
+def days(a, b, sat=True):
     x, y = dt.date.fromisoformat(a), dt.date.fromisoformat(b)
+    out = []
     while x <= y:
-        yield x
+        if x.weekday() < (6 if sat else 5):
+            out.append(x.isoformat())
         x += dt.timedelta(1)
-
-
-def pbd(d: dt.date) -> str:
-    return d.strftime("%d-%b-%Y")
-
-
-# ---------------------------------------------------------------- Punjab
-PB = Host("pb", "https://epunjabschool.gov.in", cap=int(os.environ.get("PB_CAP", "150")), spacing=2.0)
-PB_DIST = {"AMRITSAR": "2", "BARNALA": "3", "BATHINDA": "4", "FARIDKOT": "5", "FATEHGARH SAHIB": "6",
-           "FAZILKA": "34911", "FEROZEPUR": "7", "GURDASPUR": "8", "HOSHIARPUR": "9", "JALANDHAR": "10",
-           "KAPURTHALA": "11", "LUDHIANA": "12", "MALERKOTLA": "34913", "MANSA": "13", "MOGA": "14",
-           "MUKTSAR": "16", "PATHANKOT": "34912", "PATIALA": "18", "ROOPNAGAR": "19", "S.B.S. NAGAR": "17",
-           "SANGRUR": "20", "SAS NAGAR": "15", "TARN TARAN": "21"}
-
-
-def pb_dist(d: dt.date, gz=False):
-    body = '{_objBAL_MDMUser: ' + json.dumps({"pCreated_On": pbd(d)}) + '}'
-    st, t, s = PB.req(f"pb dist {d}", "/Home/MDM_Graph_Reports.aspx/GetMDMDistrictWise", json_body=body, gz=gz,
-                      headers={"X-Requested-With": "XMLHttpRequest",
-                               "Referer": "https://epunjabschool.gov.in/Home/MDM_Graph_Reports.aspx"})
-    if st != 200:
-        return {"error": st, "s": s, "head": t[:120]}
-    try:
-        x = json.loads(t)["d"]
-    except Exception:  # noqa: BLE001
-        return {"error": "notjson", "s": s, "head": t[:120]}
-    rows = []
-    for c in re.findall(r"<Customers>(.*?)</Customers>", x, flags=re.S):
-        rows.append({k: mask(v.strip()) for k, v in re.findall(r"<(\w+)>([^<]*)</\1>", c)})
-    return {"rows": rows, "s": s, "bytes": len(t), "read_utc": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())}
-
-
-def pb_blocks(code: str, d: dt.date):
-    body = '{_objBAL_MDMUser: ' + json.dumps({"pCreated_On": pbd(d), "pDistrict_Code": code}) + '}'
-    st, t, s = PB.req(f"pb blk {code} {d}", "/Home/MDM_Graph_Reports.aspx/GetMDMDistrictEduWise", json_body=body,
-                      headers={"X-Requested-With": "XMLHttpRequest",
-                               "Referer": "https://epunjabschool.gov.in/Home/MDM_Graph_Reports.aspx"})
-    if st != 200:
-        return {"error": st, "s": s}
-    try:
-        x = json.loads(t)["d"]
-    except Exception:  # noqa: BLE001
-        return {"error": "notjson", "s": s}
-    return {"rows": rows_of(x), "s": s, "bytes": len(t)}
-
-
-def pb_map(kind: str, code: str, d: dt.date):
-    st, t, s = PB.req(f"pb map {kind} {code} {d}",
-                      f"/GIS/MDMGIS.aspx?ReportType={kind}&DistrictCode={code}&Date={pbd(d)}", timeout=120)
-    if st != 200:
-        return {"error": st, "s": s}
-    codes = re.findall(r"\"schoolCode\":\s*'([^']*)'", t)
-    types = re.findall(r"\"schooltype\":\s*'([^']*)'", t)
-    return {"codes": codes, "types": sorted(set(types)), "s": s, "bytes": len(t)}
-
-
-def phase_pb():
-    r = RES.setdefault("pb", {})
-    st, t, s = PB.req("pb page", "/Home/MDM_Graph_Reports.aspx")
-    r["page"] = {"status": st, "s": s, "bytes": len(t), "chain": PB.chain}
-    save()
-    if st != 200:
-        return
-    series = r.setdefault("dist", {})
-    for d in dates("2026-10-19", "2026-11-15"):
-        series[str(d)] = pb_dist(d)
-    save()
-    # the strike week in Ludhiana (8 Sep; warned again for 12 Sep), and the month around it
-    for d in dates("2026-09-01", "2026-09-30"):
-        series[str(d)] = pb_dist(d)
-    save()
-    for x in ["2026-05-05", "2026-05-12", "2026-07-07", "2026-07-14", "2026-08-04", "2026-08-18"]:
-        series[x] = pb_dist(dt.date.fromisoformat(x))
-    save()
-    # history edge: 13th of each month back to Nov 2024, plus two edges
-    for x in ["2025-10-13", "2025-09-12", "2025-08-13", "2025-07-14", "2025-05-13", "2025-04-15", "2025-03-13",
-              "2025-02-13", "2025-01-13", "2024-12-13", "2024-11-26", "2024-11-14"]:
-        series[x] = pb_dist(dt.date.fromisoformat(x))
-    save()
-    blk = r.setdefault("blocks", {})
-    for x in ["2026-09-07", "2026-09-08", "2026-09-09", "2026-09-12"]:
-        blk[f"12|{x}"] = pb_blocks("12", dt.date.fromisoformat(x))
-    for name, code in PB_DIST.items():
-        blk[f"{code}|2026-11-13"] = pb_blocks(code, dt.date(2026, 11, 13))
-    save()
-    mp = r.setdefault("maps", {})
-    for x in ["2026-11-09", "2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13", "2026-09-08"]:
-        mp[f"SR|12|{x}"] = pb_map("SR", "12", dt.date.fromisoformat(x))
-        save()
-    mp["NS|19|2026-11-13"] = pb_map("NS", "19", dt.date(2026, 11, 13))
-    # benchmarks: gzip on the XML call; the Google-Charts GET; the same date re-read (revision within days)
-    b = r.setdefault("bench", {})
-    b["dist_gzip"] = {k: v for k, v in pb_dist(dt.date(2026, 11, 13), gz=True).items() if k != "rows"}
-    st, t, s = PB.req("pb commongraph", "/Home/CommonGraph.aspx?MDM=Yes&Date=13-Nov-2026&SchoolType=Not%20Served")
-    b["commongraph_notserved"] = {"status": st, "s": s, "bytes": len(t),
-                                  "rows": re.findall(r"addRows\(\[(.*?)\]\)", t, flags=re.S)[:1]}
-    r["reread_1113"] = pb_dist(dt.date(2026, 11, 13))
-    r["reread_1116"] = pb_dist(dt.date(2026, 11, 16))
-    save()
-
-
-# ---------------------------------------------------------------- NIC-HP (Rajasthan)
-NIC = Host("nic", "https://mdmhp.nic.in", cap=int(os.environ.get("NIC_CAP", "16")), spacing=1.5)
-
-
-def phase_nic():
-    r = RES.setdefault("nic_raj", {})
-    for x in ["13/12/2024", "13/02/2025", "15/04/2025", "15/07/2025", "15/09/2025", "13/11/2025", "13/01/2026",
-              "13/03/2026", "14/05/2026", "14/07/2026", "15/09/2026", "15/10/2026", "13/11/2026"]:
-        st, t, s = NIC.req(f"nic raj {x}", f"/Home/GetDisttWiseSummaryHome?stateCode=08&dateYesterday={x}",
-                           headers={"X-Requested-With": "XMLHttpRequest"})
-        rows = [c for c in rows_of(t) if len(c) >= 9 and c[0].isdigit()] if st == 200 else []
-        r[x] = {"status": st, "s": s, "rows": rows}
-        save()
-
-
-# ---------------------------------------------------------------- UP CM Darpan
-UP = Host("up", "https://darpan.prernaup.in", cap=int(os.environ.get("UP_CAP", "45")), spacing=2.0)
-
-
-def up_post(type_id: str, a: str, b: str, timeout=120):
-    assert type_id in ("1", "2", "3")
-    st, t, s = UP.req(f"up {type_id} {a}-{b}", "/CMPrerna/MealServedDataForSearchType_Darpan",
-                      data={"Type_Id": type_id, "Name": "", "FromDate": a, "ToDate": b}, timeout=timeout,
-                      headers={"X-Requested-With": "XMLHttpRequest",
-                               "Referer": "https://darpan.prernaup.in/CMPrerna/districtwisemonthlymealserved_darpan"})
-    out = {"status": st, "s": s, "bytes": len(t), "phone_like": len(PHONE.findall(t)), "head": mask(t[:200])}
-    if st == 200 and t.strip():
-        try:
-            data = json.loads(t)
-        except Exception:  # noqa: BLE001
-            data = None
-        if isinstance(data, str):
-            try:
-                data = json.loads(data)
-            except Exception:  # noqa: BLE001
-                pass
-        if isinstance(data, list):
-            out["n"] = len(data)
-            out["rows"] = [[mask(str(c)) for c in row] if isinstance(row, list) else row for row in
-                           (data if type_id in ("1", "2") else data[:40])]
     return out
 
 
-def phase_up():
-    r = RES.setdefault("up", {})
-    st, t, s = UP.req("up page", "/CMPrerna/districtwisemonthlymealserved_darpan")
-    r["page"] = {"status": st, "s": s, "bytes": len(t)}
+DIST = {}  # (state, iso) -> parsed
+CODES = {}  # state -> {DISTRICT NAME: code}
+
+
+def dist(code, iso):
+    k = f"{code}|{iso}"
+    if k in DIST:
+        return DIST[k]
+    st, t, s = req(f"dist {code} {iso}", f"/Home/GetDisttWiseSummaryHome?stateCode={code}&dateYesterday={d2(iso)}")
     if st != 200:
-        save()
-        return
-    r["t1_1311"] = up_post("1", "13/11/2026", "13/11/2026")
-    save()
-    if not r["t1_1311"].get("n"):
-        r["t1_1311_b"] = up_post("1", "2026-11-13", "2026-11-13")
-        save()
-        return
-    r["t1_range"] = up_post("1", "09/11/2026", "13/11/2026")
-    r["t2_1311"] = up_post("2", "13/11/2026", "13/11/2026")
-    r["t3_1311"] = up_post("3", "13/11/2026", "13/11/2026", timeout=240)
-    save()
-    ser = r.setdefault("t1_series", {})
-    for d in dates("2026-10-19", "2026-11-15"):
-        x = d.strftime("%d/%m/%Y")
-        if x == "13/11/2026":
-            continue
-        ser[x] = up_post("1", x, x)
-        save()
-    for x in ["13/11/2025", "13/11/2024", "08/09/2026"]:
-        ser[x] = up_post("1", x, x)
-    save()
+        DIST[k] = {"error": st, "s": s}
+        return DIST[k]
+    rows = rows_of(t)
+    codes = [c[1] for c in re.findall(r"GetBlockwiseSummaryDetail\(\s*'(\d+)'\s*,\s*'(\d+)'", t, flags=re.I)]
+    if len(codes) == len(rows):
+        CODES.setdefault(code, {}).update({r[1].upper(): c for r, c in zip(rows, codes)})
+    DIST[k] = {"rows": rows, "s": s, "read_utc": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())}
+    return DIST[k]
 
 
-# ---------------------------------------------------------------- reachability of other State meal portals
-REACH = [
-    ("bihar_mdms", "https://www.mdmsbihar.org/"),
-    ("bihar_eshikshakosh", "https://eshikshakosh.bihar.gov.in/"),
-    ("odisha_pmposhan", "https://pmposhan.odisha.gov.in/"),
-    ("kerala_mdms", "https://www.mdms.kerala.gov.in/"),
-    ("tn_middaymeal", "https://tnmiddaymeal.tn.gov.in/"),
-    ("karnataka_sats", "https://sts.karnataka.gov.in/SATS/"),
-    ("rajasthan_shaladarpan", "https://rajshaladarpan.nic.in/"),
-    ("gujarat_mdm_guess", "https://mdm.gujarat.gov.in/"),
+BLK = {}
+
+
+def blocks(code, dc, iso):
+    k = f"{code}|{dc}|{iso}"
+    if k in BLK:
+        return BLK[k]
+    st, t, s = req(f"blk {code}/{dc} {iso}",
+                   f"/Home/GetBlockWiseSummaryHome?stateCode={code}&districtCode={dc}&dateYesterday={d2(iso)}")
+    if st != 200:
+        BLK[k] = {"error": st, "s": s}
+        return BLK[k]
+    rows = rows_of(t)
+    codes = [c[2] for c in re.findall(r"GetClusterwiseSummaryDetail\(\s*'(\d+)'\s*,\s*'(\d+)'\s*,\s*'(\d+)'", t, flags=re.I)]
+    BLK[k] = {"rows": rows, "codes": codes if len(codes) == len(rows) else [], "s": s}
+    return BLK[k]
+
+
+CLU = {}
+
+
+def clusters(code, dc, bc, iso):
+    k = f"{code}|{dc}|{bc}|{iso}"
+    st, t, s = req(f"clu {code}/{dc}/{bc} {iso}",
+                   f"/Home/GetClusterWiseSummaryHome?stateCode={code}&districtCode={dc}&blockCode={bc}&dateYesterday={d2(iso)}")
+    CLU[k] = {"rows": rows_of(t), "s": s} if st == 200 else {"error": st, "s": s}
+    return CLU[k]
+
+
+def dcode(code, name, probe_iso):
+    if name not in CODES.get(code, {}):
+        dist(code, probe_iso)
+    return CODES.get(code, {}).get(name)
+
+
+def phase(name, fn):
+    t0, n0 = time.time(), len(LOG)
+    try:
+        fn()
+        RES["phases"][name] = {"result": "ok"}
+    except Exception as e:  # noqa: BLE001
+        RES["phases"][name] = {"result": f"stopped {e!r}"[:200]}
+        traceback.print_exc()
+    RES["phases"][name].update({"wall_s": round(time.time() - t0), "requests": len(LOG) - n0,
+                                "ok": sum(1 for r in LOG[n0:] if r["status"] == 200)})
+    RES["dist"], RES["blk"], RES["clu"], RES["codes"] = DIST, BLK, CLU, CODES
+    jdump()
+    print(name, RES["phases"][name], flush=True)
+
+
+def p_night():
+    for iso in ["2026-11-16", "2026-11-15"]:
+        for s in STATES:
+            dist(s, iso)
+
+
+# P2: documented closures. (state, [dates]) for district tables; (state, district, [dates]) for block tables.
+CLOSURE_DIST = [
+    ("05", ["2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11"]),  # UK rain 9 Jul 26
+    ("18", ["2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-20", "2026-04-21", "2026-04-22",
+            "2026-04-23"]),  # Kamrup Metro / Guwahati flash floods, closed Mon 20 Apr 2026
+    ("18", ["2024-06-12", "2024-06-24", "2024-06-25", "2024-06-26", "2024-06-27", "2024-06-28"]),  # Karimganj 270
+    ("02", days("2025-08-04", "2025-08-08")),  # Shimla six subdivisions, Wed 6 Aug 2025
+    ("02", days("2025-08-18", "2025-08-29")),  # parts of Una/Kullu/Mandi 20 Aug; 5 districts 25 Aug; Kullu/Mandi 26
+    ("06", ["2024-11-13", "2024-11-14", "2024-11-15", "2024-11-16"] + days("2024-11-18", "2024-11-26")),  # GGN/FBD
+    ("01", ["2024-09-16", "2024-09-17", "2024-09-18", "2024-09-19", "2024-09-20", "2024-09-23", "2024-09-24",
+            "2024-09-25", "2024-09-26", "2024-09-27", "2024-09-30", "2024-10-01", "2024-10-03"]),  # J&K poll days
+    ("05", days("2025-07-21", "2025-07-29")),  # UK panchayat polls 24 and 28 Jul 2025 (12 districts, not Haridwar)
+    ("16", days("2024-08-19", "2024-08-28")),  # Tripura floods: all schools shut 21-26 Aug 2024
 ]
+CLOSURE_BLK = [("02", "SHIMLA", ["2025-08-05", "2025-08-06"]), ("02", "KULLU", ["2025-08-21", "2025-08-26"]),
+               ("18", "KARIMGANJ", ["2024-06-12", "2024-06-25"])]
 
 
-def phase_reach():
-    r = RES.setdefault("reach", {})
-    for name, url in REACH:
-        h = Host(name, "", cap=1)
-        st, t, s = h.req(name, url, timeout=40)
-        title = re.search(r"<title[^>]*>(.*?)</title>", t, flags=re.S | re.I)
-        r[name] = {"url": url, "direct": {"status": st, "s": s, "bytes": len(t), "chain": h.chain,
-                                          "title": mask(strip(title.group(1)))[:120] if title else "",
-                                          "err": t[:160] if st == -1 else "",
-                                          "login_form": bool(re.search(r"type=.password", t, flags=re.I)),
-                                          "links": sorted(set(re.findall(r"href=\"([^\"#]{3,80})\"", t)))[:40]}}
-        if st != 200 and egress.pool_path("india").exists():
-            try:
-                sess = egress.Session("india", timeout=40)
-                t0 = time.time()
-                st2, raw, _ = sess.request(url)
-                r[name]["pool"] = {"status": st2, "s": round(time.time() - t0, 2), "bytes": len(raw)}
-            except Exception as e:  # noqa: BLE001
-                r[name]["pool"] = {"status": -1, "err": f"{type(e).__name__}: {e}"[:160]}
-            LOG.append({"host": name, "label": "pool", **{k: v for k, v in r[name]["pool"].items() if k != "err"}})
-        save()
+def p_closures():
+    for s, ds in CLOSURE_DIST:
+        for iso in ds:
+            dist(s, iso)
+    for s, name, ds in CLOSURE_BLK:
+        dc = dcode(s, name, ds[0])
+        if not dc:
+            for alt in ("SRIBHUMI",):
+                dc = dc or dcode(s, alt, ds[0])
+        if dc:
+            for iso in ds:
+                blocks(s, dc, iso)
+        else:
+            RES.setdefault("missing", []).append([s, name])
+
+
+# P1: documented meal disruptions
+EVENT_DIST = [
+    ("02", days("2026-06-15", "2026-06-27")),  # HP statewide MDM workers' strike, Mon 22 Jun 2026
+    ("05", days("2026-01-27", "2026-02-06")),  # Nainital bhojan mata strike, Mon 2 Feb 2026
+    ("01", days("2026-03-30", "2026-04-17")),  # Kashmir LPG shortage, meals stopped ~9-10 Apr 2026
+    ("15", days("2024-10-14", "2024-10-25", sat=False) + ["2024-11-04", "2024-11-11"]),  # Mizoram from 18 Oct 24
+    ("15", days("2025-04-08", "2025-04-11", sat=False) + days("2025-04-14", "2025-04-18", sat=False)
+     + ["2025-04-21", "2025-04-22"]),  # Mizoram CSS workers' strike 15-17 Apr 2025
+    ("23", ["2025-09-10", "2025-10-15", "2025-11-12", "2025-12-10", "2025-12-17", "2026-01-14"]),  # Dhar unpaid
+    ("16", ["2025-01-15", "2025-02-12", "2025-03-04"]),  # Khowai: funds stalled since Nov 2024, teachers paid
+    ("01", ["2025-07-15", "2025-07-23"]),  # Bandipora: cooks unpaid, dues > Rs 3 crore (24 Jul 2025)
+    ("23", ["2023-07-26", "2023-08-02", "2023-08-09", "2023-09-08"]),  # MP SHG strike from 1 Aug 2023; Indore 8 Sep
+]
+EVENT_BLK = [("05", "NAINITAL", ["2026-01-30", "2026-02-02", "2026-02-03"], True),
+             ("01", "KUPWARA", ["2026-04-02", "2026-04-09", "2026-04-10"], False),
+             ("02", "SHIMLA", ["2026-06-19", "2026-06-22"], False),
+             ("23", "DHAR", ["2025-09-10", "2025-12-17"], False),
+             ("01", "BANDIPORA", ["2025-07-15", "2025-07-23"], False)]
+
+
+def p_events():
+    for s, ds in EVENT_DIST:
+        for iso in ds:
+            dist(s, iso)
+    for s, name, ds, deep in EVENT_BLK:
+        dc = dcode(s, name, ds[0])
+        if not dc:
+            RES.setdefault("missing", []).append([s, name])
+            continue
+        for iso in ds:
+            b = blocks(s, dc, iso)
+            if deep and iso in ("2026-01-30", "2026-02-02"):
+                for bc in b.get("codes", []):
+                    clusters(s, dc, bc, iso)
+
+
+def p_home():
+    st, t, s = req("home hp", "/home/Index/hp")
+    links = sorted(set(re.findall(r"href=\"(/[^\"#]{2,100})\"", t)))
+    RES["home"] = {"status": st, "s": s, "links": [x for x in links if not re.search(r"\.(css|js|png|jpg)", x)][:120],
+                   "report_words": sorted(set(re.findall(r"(?i)(not served[^<]{0,60}|exception[^<]{0,60}|reason[^<]{0,60})", t)))[:40]}
+
+
+def p_blocks():
+    """Block tables of every district for 16 Nov: the cost of a block-grain night and the block counts."""
+    for s in STATES:
+        for name, dc in sorted(CODES.get(s, {}).items()):
+            blocks(s, dc, "2026-11-16")
 
 
 def main():
-    for ph in os.environ.get("PHASES", "pb,nic,up,reach").split(","):
-        t0 = time.time()
-        try:
-            {"pb": phase_pb, "nic": phase_nic, "up": phase_up, "reach": phase_reach}[ph]()
-        except Exception as e:  # noqa: BLE001
-            RES.setdefault("errors", {})[ph] = f"{type(e).__name__}: {e}"[:300]
-        RES.setdefault("phase_s", {})[ph] = round(time.time() - t0, 1)
-        save()
-    per = {}
-    for x in LOG:
-        k = x["host"]
-        per.setdefault(k, {"n": 0, "ok": 0})
-        per[k]["n"] += 1
-        per[k]["ok"] += x.get("status") == 200
-    RES["per_host"] = per
-    save()
-    print(json.dumps(per, indent=1))
-    print(json.dumps(RES.get("errors", {}), indent=1))
+    RES["t_start_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    for name, fn in [("night", p_night), ("closures", p_closures), ("events", p_events), ("home", p_home),
+                     ("blocks", p_blocks)]:
+        phase(name, fn)
+    RES["t_end_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    RES["requests"] = len(LOG)
+    RES["ok"] = sum(1 for r in LOG if r["status"] == 200)
+    jdump()
+    print("done", RES["requests"], RES["ok"])
 
 
 if __name__ == "__main__":
