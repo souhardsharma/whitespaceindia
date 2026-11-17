@@ -325,8 +325,105 @@ def join_sample():
          "&select=id,doi,publication_date", save="aea/openalex_ft_all.json")
 
 
+def biggest_list(o, best=None):
+    """The longest list of dicts anywhere in a JSON answer: the result rows."""
+    best = best if best is not None else []
+    if isinstance(o, list):
+        if o and all(isinstance(x, dict) for x in o) and len(o) > len(best):
+            best = o
+        for x in o:
+            best = biggest_list(x, best)
+    elif isinstance(o, dict):
+        for v in o.values():
+            best = biggest_list(v, best)
+    return best
+
+
+def ies_eric():
+    """IES awards (the Department's own search API) and every IES-funded ERIC record."""
+    api = "https://api.ies.ed.gov/web/search/v1/execute"
+    body = {"apiVersion": "1.0", "searchTerms": "", "singleSelectFilters": [],
+            "multiSelectFilters": [{"mcontenttype": ["Grant", "Contract", "Cooperative agreement"],
+                                    "recommended_display_name": "Result Type"}],
+            "andedMultiSelectFilters": [], "rangeFilters": [], "geoDistanceFilter": {}, "bestBetSize": 5,
+            "context": "https://ies.ed.gov", "userEID": "123", "typeAheadSelected": False, "raw": False,
+            "pageNum": 0, "applyAutoFilter": True, "enableAutocorrect": True, "pageSize": 15,
+            "maxFacetCount": 10, "sort": [], "urlsForDeductiveFilters": [], "preFilters": {},
+            "relatedResultsClues": []}
+    hdr = {"Content-Type": "application/json", "Accept": "application/json", "Origin": "https://ies.ed.gov",
+           "Referer": "https://ies.ed.gov/"}
+
+    def page(n, size, save):
+        b = dict(body, pageNum=n, pageSize=size)
+        return jget(f"ies_awards_p{n}_s{size}", api, data=json.dumps(b).encode(), headers=hdr, save=save)
+
+    s, first, _ = page(0, 15, "ies/awards_s15_000.json")
+    size = 15
+    s2, big, _ = page(0, 200, "ies/awards_s200_000.json")
+    if big is not None and len(biggest_list(big)) > 15:
+        size = len(biggest_list(big)) if len(biggest_list(big)) < 200 else 200
+    rows_seen, n = 0, 0
+    slugs = []
+    while n < 260:
+        s, d, _ = page(n, size, f"ies/awards_{n:03d}.json")
+        rows = biggest_list(d) if d is not None else []
+        if s != 200 or not rows:
+            break
+        rows_seen += len(rows)
+        slugs += re.findall(r"/use-work/awards/[a-z0-9\-]+", json.dumps(rows))
+        n += 1
+        if rows_seen >= 3600:
+            break
+    (OUT / "ies" / "awards_read.json").write_text(json.dumps({"page_size": size, "pages": n, "rows": rows_seen,
+                                                               "slugs": len(set(slugs))}))
+    # ERIC: every IES-funded record, year by year (rows capped at 200 an answer)
+    eric = "https://api.ies.ed.gov/eric/"
+    fields = ("id,title,publicationdateyear,e_yearadded,e_datemodified,iesgrantcontractnum,iesfunded,"
+              "peerreviewed,publicationtype,source,e_fulltextauth,iescited,ieswwcreviewed")
+    ids, per_year = [], {}
+    gz = gzip.open(OUT / "eric_iesfunded.jsonl.gz", "wt", encoding="utf-8")
+    for label, q in [("pre2000", "publicationdateyear:[1900 TO 1999]")] + [(str(y), f"publicationdateyear:{y}")
+                                                                           for y in range(2000, 2028)]:
+        start, found = 0, None
+        while True:
+            u = eric + "?" + urllib.parse.urlencode({"search": f"iesfunded:Y AND {q}", "format": "json",
+                                                     "rows": 200, "start": start, "fields": fields})
+            s, d, _ = jget(f"eric_{label}_{start}", u, gap=1.0)
+            docs = ((d or {}).get("response") or {}).get("docs") or []
+            found = ((d or {}).get("response") or {}).get("numFound", found)
+            for doc in docs:
+                ids.append(doc.get("id"))
+                gz.write(json.dumps(doc) + "\n")
+            start += 200
+            if s != 200 or not docs or (found is not None and start >= found) or start > 20000:
+                break
+        per_year[label] = found
+    gz.close()
+    counts = {}
+    for label, q in (("iesfunded_all", "iesfunded:Y"), ("iesfunded_added_2026", "iesfunded:Y AND e_yearadded:2026"),
+                     ("iesfunded_added_2025", "iesfunded:Y AND e_yearadded:2025"),
+                     ("all_added_2026", "e_yearadded:2026"), ("all", "*:*")):
+        u = eric + "?" + urllib.parse.urlencode({"search": q, "format": "json", "rows": 1, "fields": "id"})
+        s, d, _ = jget("eric_count_" + label, u)
+        counts[label] = ((d or {}).get("response") or {}).get("numFound")
+    (OUT / "eric_read.json").write_text(json.dumps({"utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                                    "records": len(ids), "distinct": len(set(ids)),
+                                                    "per_year": per_year, "counts": counts}, indent=1))
+    (OUT / "eric_ids.txt").write_text("\n".join(sorted(x for x in set(ids) if x)))
+    # award pages: five named ones and up to sixty more, for cases (number, period, amount)
+    known = ["project-citizen-research-program",
+             "longitudinal-study-latino-students-grade-3-academic-achievement-role-early-childhood-family-and",
+             "getting-effective-leaders-high-needs-schools-cross-site-mixed-methods-examination-principal",
+             "follow-replicating-cgi-experiment-diverse-environments-study",
+             "child-instruction-interactions-reading-examining-causal-effects-individualized-instruction-second"]
+    uniq = sorted(set(slugs))
+    step = max(1, len(uniq) // 60)
+    for i, slug in enumerate(["/use-work/awards/" + k for k in known] + uniq[::step][:60]):
+        fetch(f"ies_award_page_{i}", "https://ies.ed.gov" + slug, save=f"ies/pages/{i:03d}.html")
+
+
 STAGES = {"aea_raw": aea_raw, "dataverse": dataverse, "ctgov": ctgov, "nih_reporter": nih_reporter,
-          "small_hosts": small_hosts, "join_sample": join_sample}
+          "small_hosts": small_hosts, "join_sample": join_sample, "ies_eric": ies_eric}
 
 if __name__ == "__main__":
     wanted = (HERE / "stage.txt").read_text().split()
