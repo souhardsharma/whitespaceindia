@@ -44,6 +44,8 @@ CAP = int(os.environ.get("CAP", "590"))
 STAGES = [s for s in os.environ.get("STAGES", "lists,beeo,hod,hist").split(",") if s]
 YEARS = [y for y in os.environ.get("YEARS", "2026,2025").split(",") if y]
 SCHEME_EVERY = int(os.environ.get("SCHEME_EVERY", "3"))
+LATER_YEARS_OFFICERS = int(os.environ.get("LATER_YEARS_OFFICERS", "9999"))
+HODDAYS = int(os.environ.get("HODDAYS", "35"))
 ONLY = [t for t in os.environ.get("ONLY_TREASURIES", "").split(",") if t]
 TODAY = dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30))).date()
 BEEO = re.compile(r"B\.?\s?E\.?\s?E\.?\s?O|BLOCK\s+(ELE|PRI)|B\.?P\.?E\.?O|ELE.*EDU|ELEMENTARY", re.I)
@@ -275,6 +277,19 @@ def main():
                         P + "txtFromDate": "03/11/2026", P + "txtToDate": "03/11/2026", P + "txtHOD": "220",
                         P + "ddlQuery": res["hod_queries"][0][0], P + "rbtUnit": "0", P + "txtMajor": "2202",
                         P + "txtSubmajor": "01", P + "txtMinor": "112", P + "btnGetdata": "View Data"})
+        if "hodday" in STAGES:
+            hod = Form(HODFORM)
+            if hod.open("hodday"):
+                qv = options(hod.page, P + "ddlQuery")[0][0]
+                for back in range(HODDAYS, 0, -1):
+                    day = (TODAY - dt.timedelta(days=back)).strftime("%d/%m/%Y")
+                    iso = (TODAY - dt.timedelta(days=back)).isoformat()
+                    for minor in ("112", "789", "796"):
+                        hod.post("hodday", f"hd_{iso}_{minor}", {
+                            P + "txtFromDate": day, P + "txtToDate": day, P + "txtHOD": "220",
+                            P + "ddlQuery": qv, P + "rbtUnit": "0", P + "txtMajor": "2202",
+                            P + "txtSubmajor": "01", P + "txtMinor": minor, P + "btnGetdata": "View Data"},
+                            keep_html=False)
         n_officer = 0
         if "lists" in STAGES or "beeo" in STAGES:
             for tre, tname in treas:
@@ -293,6 +308,8 @@ def main():
                         continue
                     n_officer += 1
                     for i, y in enumerate(YEARS):
+                        if i > 0 and n_officer > LATER_YEARS_OFFICERS:
+                            continue
                         fr, to = fy_dates(y)
                         form.report("beeo", f"d_{tre}_{ddo}_{y}", tre, ddo, fr, to, q_date, keep_html=(n_officer <= 3))
                         if i == 0 and q_scheme and n_officer % SCHEME_EVERY == 1:
