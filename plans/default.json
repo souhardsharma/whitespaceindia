@@ -1,0 +1,38 @@
+[
+ {"name": "fts-gc", "url": "https://api.hpc.tools/v1/public/global-cluster"},
+ {"name": "fts-plans-2026", "url": "https://api.hpc.tools/v1/public/plan/year/2026"},
+ {"name": "fts-plans-2025", "url": "https://api.hpc.tools/v1/public/plan/year/2025"},
+ {"name": "fts-edu-2026-byplan", "url": "https://api.hpc.tools/v1/public/fts/flow?year=2026&groupby=plan&filterBy=destinationGlobalClusterCode:EDU"},
+ {"name": "fts-all-2026-byplan", "url": "https://api.hpc.tools/v1/public/fts/flow?year=2026&groupby=plan"},
+ {"name": "fts-edu-2026-flows", "url": "https://api.hpc.tools/v1/public/fts/flow?year=2026&filterBy=destinationGlobalClusterCode:EDU&limit=1000", "next": "meta.nextLink", "max_pages": 30, "pause": 2.0},
+ {"name": "fts-edu-2025-flows", "url": "https://api.hpc.tools/v1/public/fts/flow?year=2025&filterBy=destinationGlobalClusterCode:EDU&limit=1000", "next": "meta.nextLink", "max_pages": 30, "pause": 2.0},
+ {"name": "fts-docs-v2", "url": "https://api.hpc.tools/docs/v2/"},
+
+ {"name": "wb-proj-fields", "url": "https://search.worldbank.org/api/v2/projects?format=json&rows=3&fl=*"},
+ {"name": "wb-proj-try-mjsectorcode", "url": "https://search.worldbank.org/api/v2/projects?format=json&rows=1&fl=id&mjsectorcode_exact=EX"},
+ {"name": "wb-proj-try-mjsector", "url": "https://search.worldbank.org/api/v2/projects?format=json&rows=1&fl=id&mjsector_exact=Education"},
+ {"name": "wb-proj-try-sector", "url": "https://search.worldbank.org/api/v2/projects?format=json&rows=1&fl=id&sector_exact=Primary%20Education"},
+ {"name": "wb-proj-all", "url": "https://search.worldbank.org/api/v2/projects?format=json&rows=500&os={i}&fl=id,project_name,countryshortname,countrycode,regionname,status,projectstatusdisplay,boardapprovaldate,closingdate,totalamt,totalcommamt,curr_total_commitment,curr_ibrd_commitment,curr_ida_commitment,ibrdcommamt,idacommamt,grantamt,lendinginstr,lendinginstrtype,sector,sector1,sector2,sector3,sector4,sector5,mjsector,mjsector1,mjsector_namecode,sector_namecode,p2a_updated_date,supplementprojectflg,projectfinancialtype,prodline,prodlinetext,impagency,borrower,fiscalyear,url", "range": [0, 24000, 500], "stop_empty": "projects"},
+ {"name": "wb-procnotices-fields", "url": "https://search.worldbank.org/api/v2/procnotices?format=json&rows=3&fl=*"},
+ {"name": "wb-procnotices-recent", "url": "https://search.worldbank.org/api/v2/procnotices?format=json&rows=5&srt=submission_date&order=desc"},
+ {"name": "wb-wds-isr", "url": "https://search.worldbank.org/api/v3/wds?format=json&rows=3&fl=*&docty_exact=Implementation%20Status%20and%20Results%20Report&srt=docdt&order=desc"},
+ {"name": "wb-wds-restruct", "url": "https://search.worldbank.org/api/v3/wds?format=json&rows=3&fl=*&docty_exact=Restructuring%20Paper&srt=docdt&order=desc"},
+ {"name": "wb-contractdata", "url": "https://search.worldbank.org/api/contractdata?format=json&rows=3&fl=*"},
+
+ {"name": "fone-meta-DS00975", "url": "https://datacatalogapi.worldbank.org/dexapps/fone/api/metadata?assetId=DS00975"},
+ {"name": "fone-meta-DS00005", "url": "https://datacatalogapi.worldbank.org/dexapps/fone/api/metadata?assetId=DS00005"},
+ {"name": "fone-meta-DS00979", "url": "https://datacatalogapi.worldbank.org/dexapps/fone/api/metadata?assetId=DS00979"},
+ {"name": "fone-meta-DS00047", "url": "https://datacatalogapi.worldbank.org/dexapps/fone/api/metadata?assetId=DS00047"},
+ {"name": "fone-meta-DS00976", "url": "https://datacatalogapi.worldbank.org/dexapps/fone/api/metadata?assetId=DS00976"},
+ {"name": "fone-meta-DS00048", "url": "https://datacatalogapi.worldbank.org/dexapps/fone/api/metadata?assetId=DS00048"},
+ {"name": "fone-ibrd-latest", "url": "https://datacatalogapi.worldbank.org/dexapps/fone/api/apiservice?datasetId=DS00047&resourceId=RS00005&top=3&type=json"},
+ {"name": "fone-ibrd-hist-first", "url": "https://datacatalogapi.worldbank.org/dexapps/fone/api/apiservice?datasetId=DS00975&resourceId=RS00905&top=3&type=json"},
+ {"name": "fone-ibrd-hist-last", "url": "https://datacatalogapi.worldbank.org/dexapps/fone/api/apiservice?datasetId=DS00975&resourceId=RS00905&top=3&skip=1595000&type=json"},
+ {"name": "fone-notices-tail", "url": "https://datacatalogapi.worldbank.org/dexapps/fone/api/apiservice?datasetId=DS00979&resourceId=RS00909&top=1000&skip={i}&type=json", "range": [412000, 428000, 1000], "stop_empty": "data"},
+ {"name": "fone-awards-tail", "url": "https://datacatalogapi.worldbank.org/dexapps/fone/api/apiservice?datasetId=DS00005&resourceId=RS00005&top=1000&skip={i}&type=json", "range": [292000, 300000, 1000], "stop_empty": "data"},
+ {"name": "fone-awards-head", "url": "https://datacatalogapi.worldbank.org/dexapps/fone/api/apiservice?datasetId=DS00005&resourceId=RS00005&top=1000&skip=0&type=json"},
+
+ {"name": "iati-min", "url": "https://bulk-data.iatistandard.org/datasets-minimal", "timeout": 180},
+ {"name": "iati-orgs", "url": "https://bulk-data.iatistandard.org/reporting-orgs", "timeout": 180},
+ {"name": "iati-full", "url": "https://bulk-data.iatistandard.org/datasets-full", "timeout": 300}
+]
