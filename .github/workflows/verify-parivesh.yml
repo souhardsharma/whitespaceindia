@@ -42,7 +42,8 @@ jobs:
           python scripts/instruments/refresh_proxies.py --out "$INSTRUMENTS_CACHE_DIR/proxies.txt" --workers 4000 --max-minutes 10 --target 400 || true
           echo "pool: $(wc -l < "$INSTRUMENTS_CACHE_DIR/proxies.txt" 2>/dev/null || echo 0) routes"
       - name: Compare
-        timeout-minutes: 300
+        # Ends before the nightly sync (01:30 UTC) starts reading PARIVESH.
+        timeout-minutes: 190
         run: |
           ( while true; do sleep 900; python scripts/instruments/refresh_proxies.py --out "$INSTRUMENTS_CACHE_DIR/proxies.txt" --workers 1000 --max-minutes 8 --target 400 || true; done ) > "$RUNNER_TEMP/refresher.log" 2>&1 &
           python scripts/instruments/verify_against_parivesh.py --out verify-out

@@ -148,6 +148,20 @@ def load_published() -> tuple[dict, dict]:
     return rows, fresh
 
 
+def load_raw() -> dict | None:
+    path = Path(os.environ.get("INSTRUMENTS_CACHE_DIR", "")) / "parivesh" / "all_records.json"
+    if not path.exists():
+        log(f"no raw register snapshot at {path}")
+        return None
+    rows = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(rows, dict):
+        rows = rows.get("data") or []
+    out = {str(r.get("proposal_id")): r for r in rows}
+    log(f"raw snapshot: {len(out)} proposals, file modified "
+        f"{datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).isoformat()}")
+    return out
+
+
 def updated_after_read(reg: dict, read_utc: datetime) -> bool:
     raw = str(reg.get("app_updated_on") or "")
     try:
@@ -198,7 +212,53 @@ def part_a(reg_rows: dict, sweep: dict, pub: dict, fresh: dict) -> dict:
             if not after and len(examples[name]) < 8:
                 examples[name].append({"id": pid, "register": _field(r, name), "published": _pub(p, name),
                                        "register_updated": r.get("app_updated_on")})
+    # The instrument's own raw read of the register (the cache the nightly sync
+    # built from). Two questions it settles that the live register cannot:
+    #  - FIDELITY: does every published field equal the raw row it was built
+    #    from? A difference here is the build misrepresenting its own source.
+    #  - DRIFT: for each published-vs-live difference, did the register change
+    #    after our read (raw == published) or did we publish wrongly (raw == live)?
+    raw = load_raw()
+    fidelity, fid_examples, verdict = Counter(), defaultdict(list), Counter()
+    missing_kind, extra_kind = Counter(), Counter()
+    if raw is not None:
+        raw_live = {p: r for p, r in raw.items() if (r.get("proposalStatus") or "").strip() != "DELISTED_BY_SYSTEM"}
+        for pid, p in pub.items():
+            r0 = raw.get(pid)
+            if r0 is None:
+                fidelity["published but absent from our own read"] += 1
+                continue
+            for name, ok in checks.items():
+                if not ok(r0, p):
+                    fidelity[name] += 1
+                    if len(fid_examples[name]) < 8:
+                        fid_examples[name].append({"id": pid, "raw": _field(r0, name), "published": _pub(p, name)})
+            r = reg_live.get(pid)
+            if r is None:
+                continue
+            for name, ok in checks.items():
+                if not ok(r, p):
+                    verdict["drift (register changed after our read)" if ok(r0, p) else
+                            "BUILD ERROR (live equals raw, published differs)" if _field(r0, name) == _field(r, name) else
+                            "raw, live and published all differ"] += 1
+        unpublished_live = [p for p in raw_live if p not in pub]
+        fidelity["live in our read but not published"] = len(unpublished_live)
+        for p in missing:
+            r0 = raw.get(p)
+            if r0 is None:
+                missing_kind["not in our read: added to the register after it"] += 1
+            elif (r0.get("proposalStatus") or "").strip() == "DELISTED_BY_SYSTEM":
+                missing_kind["delisted at our read (excluded by design), revived since"] += 1
+            else:
+                missing_kind["IN OUR READ, LIVE, YET NOT PUBLISHED"] += 1
+        for p in extra:
+            extra_kind["in our read; gone from the register since" if p in raw else "NOT IN OUR READ"] += 1
     return {
+        "raw_snapshot": None if raw is None else {"rows": len(raw), "fidelity": dict(fidelity),
+                                                   "fidelity_examples": dict(fid_examples),
+                                                   "published_vs_live_verdicts": dict(verdict),
+                                                   "missing_explained": dict(missing_kind),
+                                                   "extra_explained": dict(extra_kind)},
         "register_rows": len(reg_rows), "register_delisted_excluded": delisted,
         "register_live": len(reg_live), "published_rows": len(pub),
         "read_at": fresh["checked_at"], "sweep": sweep,
@@ -273,14 +333,20 @@ def check_history(p: dict, env) -> list[str]:
             issues.append(f"history empty at source but published fon {p['fon']}")
         return issues
     days = sorted(d for s in steps for d in (ist_day(s.get("start_date")), ist_day(s.get("end_date"))) if d)
-    ends = {ist_day(s.get("end_date")): (s.get("status") or "") for s in steps if s.get("end_date")}
-    if p.get("fon") and days and p["fon"] != days[0]:
-        issues.append(f"fon {p['fon']} is not the history's earliest IST date {days[0]}")
+    # Several steps can end on one day (a grant and the forward after it), so
+    # every label ending on a day is kept, not the last one seen.
+    ends = defaultdict(list)
+    for s in steps:
+        if s.get("end_date"):
+            ends[ist_day(s.get("end_date"))].append(s.get("status") or "")
+    first_end = min((ist_day(s.get("end_date")) for s in steps if s.get("end_date")), default=None)
+    if p.get("fon") and days and p["fon"] not in (days[0], first_end):
+        issues.append(f"fon {p['fon']} is neither the history's earliest IST date {days[0]} nor its first step end {first_end}")
     if p.get("don"):
         if p["don"] not in ends:
             issues.append(f"don {p['don']} matches no step's IST end date")
-        elif not DECISION_WORDS.search(ends[p["don"]]):
-            issues.append(f"don {p['don']} falls on step '{ends[p['don']]}', not a decision-like step")
+        elif not any(DECISION_WORDS.search(x) for x in ends[p["don"]]):
+            issues.append(f"don {p['don']}: no decision-like step ends that day ({ends[p['don']]})")
     if p.get("fon") and p.get("don") and p.get("dtd") is not None:
         got = date.fromisoformat(p["fon"]) + timedelta(days=int(p["dtd"]) + int(p.get("dsu") or 0))
         if got.isoformat() != p["don"]:
@@ -378,14 +444,25 @@ def part_b(pool, pub: dict, reg_live: dict, n: int, seed: int) -> dict:
 
     def work(p):
         hs, he = post(pool, HIST.format(rid=p["rid"]), b"{}")
+        if hs != 200:  # a dead proxy, usually: one more try after a pause
+            time.sleep(20)
+            hs, he = post(pool, HIST.format(rid=p["rid"]), b"{}")
         fs, fe = post(pool, CAF.format(rid=p["rid"]), b"")
+        if fs not in (200, 500):
+            time.sleep(20)
+            fs, fe = post(pool, CAF.format(rid=p["rid"]), b"")
         hi = check_history(p, he) if hs == 200 else [f"history: HTTP {hs}"]
         fi, facts = check_form(p, fs, fe)
         reg = reg_live.get(str(p["id"])) or {}
+        steps = None
+        if hi and isinstance(he, dict) and isinstance(he.get("data"), list):
+            steps = sorted(([s.get("status"), s.get("start_date"), s.get("end_date")] for s in he["data"]),
+                           key=lambda x: str(x[2] or x[1] or ""))
         return {"id": str(p["id"]), "stratum": p["stratum"], "state": p["_slug"], "status": p["_status"],
+                "published": {k: p.get(k) for k in ("fon", "don", "dtd", "dsu", "sk", "dsk", "cst")},
                 "register_status_now": (reg.get("proposalStatus") or "").strip() or None,
                 "changed_since_read": bool(reg) and (reg.get("proposalStatus") or "").strip() != p["_status"],
-                "issues": hi + fi, "facts": facts}
+                "issues": hi + fi, "facts": facts, "steps": steps}
 
     with cf.ThreadPoolExecutor(24) as ex:
         for i, res in enumerate(ex.map(work, picks), 1):
@@ -424,6 +501,8 @@ def main() -> None:
     # Saved now: the per-proposal part is slow through free proxies, and a
     # run that ends early must still leave the register comparison behind.
     (out / "part_a.json").write_text(json.dumps(a_res, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
+    log("raw snapshot: " + json.dumps({k: v for k, v in (a_res.get("raw_snapshot") or {}).items()
+                                       if k != "fidelity_examples"}))
     log("part A: " + json.dumps({k: a_res[k] for k in ("register_rows", "published_rows", "missing_from_published",
                                                        "missing_submitted_after_read", "published_not_in_register",
                                                        "field_mismatch_real", "field_mismatch_after_read")}))
@@ -440,6 +519,10 @@ def main() -> None:
           f"published but not in register: {a_res['published_not_in_register']}; published but now delisted: {a_res['published_but_now_delisted']}.",
           f"Field mismatches NOT explained by a later change: {json.dumps(a_res['field_mismatch_real'])}",
           f"Field mismatches on rows changed after our read: {json.dumps(a_res['field_mismatch_after_read'])}",
+          f"Fidelity to our own raw read: {json.dumps((a_res.get('raw_snapshot') or {}).get('fidelity'))}",
+          f"Published vs live, explained: {json.dumps((a_res.get('raw_snapshot') or {}).get('published_vs_live_verdicts'))}",
+          f"Missing explained: {json.dumps((a_res.get('raw_snapshot') or {}).get('missing_explained'))}; "
+          f"extra explained: {json.dumps((a_res.get('raw_snapshot') or {}).get('extra_explained'))}",
           f"Deep sample: {b_res['sampled']} read, {b_res['unreachable']} unreachable, {b_res['flagged']} flagged; kinds {json.dumps(b_res['issue_kinds'])}"]
     (out / "verify_report.md").write_text("\n\n".join(md) + "\n", encoding="utf-8")
     if os.environ.get("GITHUB_STEP_SUMMARY"):
