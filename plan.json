@@ -1,0 +1,30 @@
+{
+ "ts": {
+  "run": true,
+  "series": ["2026-06-01", "2026-11-17"],
+  "save_dates": ["2026-11-13", "2026-11-15", "2026-11-16", "2026-11-17"],
+  "old_dates": ["2025-11-13", "2025-07-15", "2024-11-13", "2024-07-15", "2023-11-13", "2022-11-14", "2021-11-15", "2019-11-13", "2018-07-16"],
+  "range_check": ["2026-11-09", "2026-11-14"],
+  "mandal_date": "2026-11-13",
+  "full_districts": ["3601", "3622"],
+  "watch_districts": ["3605", "3620", "3612"],
+  "watch_mandals_each": 2,
+  "watch_dates": ["2026-11-10", "2026-11-11", "2026-11-12", "2026-11-14", "2026-11-16", "2026-11-17"],
+  "bench": 12,
+  "side": [
+   ["sis_districts", "https://schooledu.telangana.gov.in/SIS/districtStudentReportForISMS.do", null],
+   ["sis_mandals_3601", "https://schooledu.telangana.gov.in/SIS/districtStudentReportForISMS.do", {"mode": "getMandalReportsList", "distcode": "3601", "mandalcode": ""}],
+   ["teachers_districts", "https://schooledu.telangana.gov.in/MNT/teachersReportPrimaryDistrictWise.do", null],
+   ["mdm_month", "https://schooledu.telangana.gov.in/MDM/MDMReport.do", null]
+  ]
+ },
+ "emp": {
+  "run": true,
+  "series": ["2026-10-12", "2026-11-16"],
+  "old_dates": ["2025-11-13", "2024-07-16", "2022-07-01", "2019-11-13", "2017-11-13"],
+  "save_dates": ["2026-11-13", "2026-11-04", "2026-11-16", "2025-11-13", "2017-11-13"],
+  "n_schools": 10,
+  "school_dates": ["2026-11-13", "2026-11-04"],
+  "index_postbacks": ["District", "Zone", "LinkButton2", "LinkButton1"]
+ }
+}
