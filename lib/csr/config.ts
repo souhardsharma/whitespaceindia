@@ -1,6 +1,7 @@
 import type { VerticalConfig } from '@/lib/verticals/types';
 import { WEIGHT_PRESETS } from './constants';
 import { SECTORS } from './score';
+import { BIHAR_VS_MAHARASHTRA } from './findings';
 
 export const csrConfig: VerticalConfig = {
   id: 'csr',
@@ -94,7 +95,7 @@ export const csrConfig: VerticalConfig = {
       number: '02',
       value: '33.76%',
       label: 'Bihar\'s poverty headcount',
-      sub: 'The share of Bihar\'s people in multidimensional poverty in 2019-21, from NITI Aayog\'s MPI 2023. Bihar receives ₹66 of CSR spending per person, against ₹1,436 in Maharashtra.',
+      sub: `The share of Bihar's people in multidimensional poverty in 2019-21, from NITI Aayog's MPI 2023. ${BIHAR_VS_MAHARASHTRA}`,
     },
     {
       number: '03',
