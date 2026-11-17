@@ -1,51 +1,71 @@
 {
- "generated_at": "2026-11-16T06:24:30.443340+00:00",
+ "generated_at": "2026-11-17T06:21:41.594041+00:00",
  "purpose": "Tests the district the instrument reports against the district named in the regulator's signed clearance letter - a different document, not the applicant's own form. Corroborates or refutes the single source the whole profile depends on.",
- "sampled": 83,
+ "sampled": 125,
  "requested": 150,
  "stopped_early": true,
- "seconds": 1299.6,
+ "seconds": 1347.6,
  "outcomes": {
-  "agree": 36,
-  "disagree": 2,
-  "no-district-in-letter": 9,
-  "no-location-text": 0,
-  "download-failed": 36,
+  "agree": 80,
+  "disagree": 8,
+  "no-district-in-letter": 12,
+  "no-location-text": 1,
+  "download-failed": 24,
   "unreadable": 0,
   "no-text-layer": 0
  },
  "download_failures": {
-  "transport": 36
+  "transport": 24
  },
- "comparable": 38,
- "agreement_rate_pct": 94.74,
+ "comparable": 88,
+ "agreement_rate_pct": 90.91,
  "agreement_by_resolution_method": {
   "v": {
-   "agree": 26,
-   "comparable": 28,
-   "sampled": 65,
-   "rate_pct": 92.86
+   "agree": 70,
+   "comparable": 76,
+   "sampled": 105,
+   "rate_pct": 92.11
   },
   "s": {
-   "agree": 8,
-   "comparable": 8,
+   "agree": 9,
+   "comparable": 10,
    "sampled": 15,
-   "rate_pct": 100.0
+   "rate_pct": 90.0
   },
   "c": {
+   "agree": 1,
+   "comparable": 2,
+   "sampled": 4,
+   "rate_pct": 50.0
+  },
+  "a": {
    "agree": 0,
    "comparable": 0,
    "sampled": 1,
    "rate_pct": null
-  },
-  "d": {
-   "agree": 2,
-   "comparable": 2,
-   "sampled": 2,
-   "rate_pct": 100.0
   }
  },
  "disagreements": [
+  {
+   "proposalNo": "SIA/MH/INFRA2/463144/2024",
+   "state": "MAHARASHTRA",
+   "claimed": 520,
+   "foundInLetter": [
+    519
+   ],
+   "method": "s",
+   "certificate": "https://parivesh.nic.in/certificates/_MILLENNIUM_INFRA/5/47344563/V_0_SIA_MH_INFRA2_463144_2024_47344570_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/GJ/MIN/502547/2024",
+   "state": "GUJARAT",
+   "claimed": 486,
+   "foundInLetter": [
+    473
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/joshi_bhaveshkumar_navinchandra/246/110130058/SIA_GJ_MIN_502547_2024_110130059_-signed.pdf"
+  },
   {
    "proposalNo": "SIA/AS/MIN/546206/2025",
    "state": "ASSAM",
@@ -58,14 +78,55 @@
    "certificate": "https://parivesh.nic.in/certificates/_GUWAHATI_INTERNATIONAL_AIRPORT_LIMITED/229/132902565/V_null_SIA_AS_MIN_546206_2025_132902569_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/AS/MIN/481657/2024",
-   "state": "ASSAM",
-   "claimed": 316,
+   "proposalNo": "SIA/CG/MIN/566201/2026",
+   "state": "CHHATTISGARH",
+   "claimed": 400,
    "foundInLetter": [
-    315
+    410
    ],
    "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/dima_hasao_forest_division(west)/5/76729601/V_0_SIA_AS_MIN_481657_2024_76729609_-signed.pdf"
+   "certificate": "https://parivesh.nic.in/certificates/VINOD_KUMAR_SAHU/5/1217220451/V_0_SIA_CG_MIN_566201_2026_1217220452_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/KA/MIN/564757/2026",
+   "state": "KARNATAKA",
+   "claimed": 579,
+   "foundInLetter": [
+    572
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/SANGANNA_M_KOLKUR/246/1216271253/V_0_SIA_KA_MIN_564757_2026_1216271258_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/MH/INFRA2/534076/2025",
+   "state": "MAHARASHTRA",
+   "claimed": 518,
+   "foundInLetter": [
+    519
+   ],
+   "method": "c",
+   "certificate": "https://parivesh.nic.in/certificates/_PIONEER_HOUSING/2/124953260/V_0_SIA_MH_INFRA2_534076_2025_124953261_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/KA/MIN/567454/2026",
+   "state": "KARNATAKA",
+   "claimed": 555,
+   "foundInLetter": [
+    572
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/OPEL_IMPEX/65/1218044068/SIA_KA_MIN_567454_2026_1218044070_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/GJ/MIN/495733/2024",
+   "state": "GUJARAT",
+   "claimed": 478,
+   "foundInLetter": [
+    473,
+    476
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/pithiya_karan_kanjibhai/246/100605001/V_0_SIA_GJ_MIN_495733_2024_100605002_-signed.pdf"
   }
  ],
  "method_notes": [
