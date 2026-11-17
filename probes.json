@@ -1,0 +1,13 @@
+[
+{"name":"dgt-list-p1","url":"https://affiliation-prod-api.skillindiadigital.gov.in/api/v1/public/iti?page=1&per_page=100","headers":{"Accept":"application/json, text/plain, */*","Origin":"https://dgt.skillindiadigital.gov.in","Referer":"https://dgt.skillindiadigital.gov.in/"},"times":3,"pause":5,"timeout":40},
+{"name":"dgt-aff-GR30000012","url":"https://affiliation-prod-api.skillindiadigital.gov.in/api/v1/public/iti/affiliations/GR30000012","headers":{"Accept":"application/json, text/plain, */*","Origin":"https://dgt.skillindiadigital.gov.in","Referer":"https://dgt.skillindiadigital.gov.in/"},"times":2,"pause":5,"timeout":40},
+{"name":"dgt-aff-noheaders","url":"https://affiliation-prod-api.skillindiadigital.gov.in/api/v1/public/iti/affiliations/GR30000017","times":1,"timeout":40},
+{"name":"dgt-site-home","url":"https://dgt.skillindiadigital.gov.in/","times":1,"timeout":40},
+{"name":"ncvtmis-home","url":"https://ncvtmis.gov.in/","times":2,"pause":10,"timeout":60},
+{"name":"ncvtmis-itisearch","url":"https://ncvtmis.gov.in/Pages/ITI/Search.aspx","times":1,"timeout":60},
+{"name":"dgt-gov-home","url":"https://dgt.gov.in/","times":1,"timeout":40},
+{"name":"sidh-tc","kind":"json","url":"https://api-fe.skillindiadigital.gov.in/api/trainingcenters/filter","body":{},"times":1,"timeout":40},
+{"name":"india-dgt-list-p1","family":"india","url":"https://affiliation-prod-api.skillindiadigital.gov.in/api/v1/public/iti?page=1&per_page=100","times":3,"pause":3,"timeout":60},
+{"name":"india-dgt-aff","family":"india","url":"https://affiliation-prod-api.skillindiadigital.gov.in/api/v1/public/iti/affiliations/GR30000012","times":3,"pause":3,"timeout":60},
+{"name":"india-ncvtmis-home","family":"india","url":"https://ncvtmis.gov.in/","times":2,"pause":3,"timeout":60}
+]
