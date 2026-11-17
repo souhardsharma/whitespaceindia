@@ -18,7 +18,7 @@ jobs:
       - name: Runner address
         run: curl -s --max-time 10 https://ipinfo.io/json | grep -E '"(ip|country|org)"' || true
       - name: Probe
-        run: python -I -X utf8 works.py
+        run: python -I -X utf8 mplads.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
