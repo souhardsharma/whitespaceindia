@@ -31,6 +31,20 @@ test("Vercel builds nothing that can run: no framework, no install, no functions
   }
 });
 
+// Every branch pushed to the repository used to deploy, and probe branches
+// push dozens a day: on Hobby that is a daily deployment cap spent on pages
+// nobody visits. Vercel deploys a branch when ANY matching rule is true, so
+// "**" (minimatch: every branch, slashes included) false plus main true is
+// main alone.
+test("Vercel deploys main and no other branch", () => {
+  const rules = vercel.git?.deploymentEnabled;
+  assert.equal(typeof rules, "object", "without git.deploymentEnabled every branch push deploys");
+  assert.equal(rules.main, true, "main must deploy: it carries the redirects");
+  assert.equal(rules["**"], false, "every other branch is off");
+  const on = Object.keys(rules).filter((k) => rules[k] === true);
+  assert.deepEqual(on, ["main"], "a second true rule would let other branches deploy");
+});
+
 test("the legacy CSR hosts send / to the CSR app and the rest path for path", () => {
   for (const h of LEGACY_CSR_HOSTS) {
     assert.equal(redirectFor(h, "/"), `${PRIMARY_ORIGIN}/csr`);
