@@ -28,8 +28,12 @@ jobs:
       - name: Probe
         env:
           EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
-        run: python -I -X utf8 r3.py
+        run: |
+          python -I -X utf8 r5_kv.py || true
+          mv out/results.json out/results_kv.json || true
+          python -I -X utf8 r4_states.py || true
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: probe-out
           path: out/

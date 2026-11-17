@@ -15,6 +15,7 @@ OUT = HERE / "out"
 BASE = "https://koshvani.up.nic.in/"
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 PAUSE, CAP = 1.2, 420
+START, DEADLINE_S = time.time(), 80 * 60
 EDU = ["071", "072", "073", "075", "047", "069"]
 TREAS_CAP = {"071": 120, "072": 70, "073": 50, "075": 20, "047": 30, "069": 20}
 
@@ -72,6 +73,8 @@ def forms_of(raw):
 
 
 def send(name, url, data=None, timeout=120):
+    if time.time() - START > DEADLINE_S:
+        RESULTS.append({"name": name, "status": "skipped: deadline"}); return None
     if N[0] >= CAP:
         RESULTS.append({"name": name, "status": "skipped: cap"}); return None
     wait = PAUSE - (time.time() - LAST[0])
