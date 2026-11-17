@@ -1,0 +1,6 @@
+[
+ {"name": "sulekha-public-gp-2025", "url": "https://plan.lsgkerala.gov.in/formulation/Public.aspx",
+  "prefer": ["2025-2026", "Grama Panchayat", "Thiruvananthapuram", "Education"], "max_requests": 14, "pause": 2.0},
+ {"name": "sulekha-public-gp-2026", "url": "https://plan.lsgkerala.gov.in/formulation/Public.aspx",
+  "prefer": ["2026-2027", "Grama Panchayat", "Kottayam", "Education"], "max_requests": 14, "pause": 2.0}
+]
