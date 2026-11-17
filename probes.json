@@ -1,8 +1,128 @@
 [
-{"name":"kv-pfms-17nov","legacy":true,"url":"https://koshvani.up.nic.in/KoshReports/PFMSCentralSchemeWise.aspx","timeout":90},
-{"name":"kv-pfms-17nov-rupees","legacy":true,"kind":"postback","url":"https://koshvani.up.nic.in/KoshReports/PFMSCentralSchemeWise.aspx","timeout":90,"steps":[{"fields":{"__EVENTTARGET":"ddlAmountIn","ddlAmountIn":"0"}}]},
-{"name":"pfms-home-india","family":"india","url":"https://pfms.nic.in/Home.aspx","timeout":40},
-{"name":"pfms-reports-india","family":"india","url":"https://pfms.nic.in/SitePages/Reports.aspx","timeout":40},
-{"name":"egs-fin-india","family":"india","url":"https://egramswaraj.gov.in/financialProgressReport.do","timeout":40},
-{"name":"aicte-home-india","family":"india","url":"https://www.aicte-india.org/","timeout":40}
+{
+"name": "mota-year-2627",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemewise2627.aspx",
+"timeout": 60
+},
+{
+"name": "mota-year-2526",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemewise2526.aspx",
+"timeout": 60
+},
+{
+"name": "mota-year-2425",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemewise2425.aspx",
+"timeout": 60
+},
+{
+"name": "mota-3682-2627",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd27.aspx?schemecode=3682",
+"timeout": 60
+},
+{
+"name": "mota-3682-2526",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd26.aspx?schemecode=3682",
+"timeout": 60
+},
+{
+"name": "mota-3682-2425",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd25.aspx?schemecode=3682",
+"timeout": 60
+},
+{
+"name": "mota-3373-2627",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd27.aspx?schemecode=3373",
+"timeout": 60
+},
+{
+"name": "mota-3373-2526",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd26.aspx?schemecode=3373",
+"timeout": 60
+},
+{
+"name": "mota-3373-2425",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd25.aspx?schemecode=3373",
+"timeout": 60
+},
+{
+"name": "mota-9272-2627",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd27.aspx?schemecode=9272",
+"timeout": 60
+},
+{
+"name": "mota-9272-2526",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd26.aspx?schemecode=9272",
+"timeout": 60
+},
+{
+"name": "mota-9272-2425",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd25.aspx?schemecode=9272",
+"timeout": 60
+},
+{
+"name": "mota-1115-2627",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd27.aspx?schemecode=1115",
+"timeout": 60
+},
+{
+"name": "mota-1115-2526",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd26.aspx?schemecode=1115",
+"timeout": 60
+},
+{
+"name": "mota-1115-2425",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd25.aspx?schemecode=1115",
+"timeout": 60
+},
+{
+"name": "mota-1118-2627",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd27.aspx?schemecode=1118",
+"timeout": 60
+},
+{
+"name": "mota-1118-2526",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd26.aspx?schemecode=1118",
+"timeout": 60
+},
+{
+"name": "mota-1118-2425",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd25.aspx?schemecode=1118",
+"timeout": 60
+},
+{
+"name": "mota-3381-2627",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd27.aspx?schemecode=3381",
+"timeout": 60
+},
+{
+"name": "mota-3381-2526",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd26.aspx?schemecode=3381",
+"timeout": 60
+},
+{
+"name": "mota-3381-2425",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd25.aspx?schemecode=3381",
+"timeout": 60
+},
+{
+"name": "mota-3547-2627",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd27.aspx?schemecode=3547",
+"timeout": 60
+},
+{
+"name": "mota-3547-2526",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd26.aspx?schemecode=3547",
+"timeout": 60
+},
+{
+"name": "mota-3547-2425",
+"url": "https://tribal.nic.in/PFMS_SentionDtSchemeUpd25.aspx?schemecode=3547",
+"timeout": 60
+},
+{
+"name": "kv-pfms-18nov",
+"legacy": true,
+"url": "https://koshvani.up.nic.in/KoshReports/PFMSCentralSchemeWise.aspx",
+"timeout": 90
+}
 ]
