@@ -1,6 +1,8 @@
 """Throwaway probe: Koshvani second read (grant page + each education grant's scheme page), to compare with
 the read of 17 Nov 02:20Z. Uses r3's sender (one connection, pause, cap, TLS verified)."""
 import json, time
+import os as _os, sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 import r3
 from r3 import send, links, RESULTS, OUT, BASE
 

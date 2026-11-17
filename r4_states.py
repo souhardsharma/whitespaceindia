@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import time
 
+import os as _os, sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 import r3
 from r3 import send, postback, links, RESULTS, OUT
 
