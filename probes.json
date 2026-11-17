@@ -1,0 +1,13 @@
+[
+{"name":"dpwh-portal-home","url":"https://transparency.dpwh.gov.ph/","kind":"get","timeout":40},
+{"name":"za-etenders-ocds-oct-nov","url":"https://ocds-api.etenders.gov.za/api/OCDSReleases?PageNumber=1&PageSize=50&dateFrom=2026-10-18&dateTo=2026-11-17","kind":"get","timeout":60},
+{"name":"ph-philgeps-notices","url":"https://notices.philgeps.gov.ph/GEPSNONPILOT/Tender/SplashOpportunitiesSearchUI.aspx?menuIndex=3&ClickFrom=OpenOpp&Result=3","kind":"get","timeout":40},
+{"name":"bd-egp-home","url":"https://www.eprocure.gov.bd/","kind":"get","timeout":40},
+{"name":"pk-openpunjab","url":"https://openpunjab.pesrp.edu.pk/","kind":"get","timeout":40},
+{"name":"pk-rsu-sindh","url":"https://rsu-sindh.gov.pk/","kind":"get","timeout":40},
+{"name":"ug-budget","url":"https://www.budget.finance.go.ug/","kind":"get","timeout":40},
+{"name":"ng-ubec","url":"https://ubec.gov.ng/","kind":"get","timeout":40},
+{"name":"ke-education","url":"https://www.education.go.ke/","kind":"get","timeout":40},
+{"name":"np-iemis","url":"https://iemis.doe.gov.np/","kind":"get","timeout":40},
+{"name":"ph-deped","url":"https://www.deped.gov.ph/","kind":"get","timeout":40}
+]
