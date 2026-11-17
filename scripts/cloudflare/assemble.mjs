@@ -8,12 +8,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { retiredCardRedirects } from "./retired-cards.mjs";
+import { checkLimits } from "./limits.mjs";
 
 const [root, out] = process.argv.slice(2).map((p) => path.resolve(p));
 if (!root || !out) throw new Error("usage: node scripts/cloudflare/assemble.mjs <project root> <out dir>");
 const appDir = path.join(root, ".next/server/app");
-const MAX_FILES = 20000;
-const MAX_BYTES = 25 * 1024 * 1024;
 
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
@@ -78,11 +77,31 @@ fs.writeFileSync(
 fs.copyFileSync(fileURLToPath(new URL("_headers", import.meta.url)), path.join(out, "_headers"));
 
 let files = 0;
-const big = [];
+const sizes = [];
 walk(out, (p, rel) => {
   files++;
-  if (fs.statSync(p).size > MAX_BYTES) big.push(rel);
+  sizes.push({ rel, bytes: fs.statSync(p).size });
 });
+sizes.sort((a, b) => b.bytes - a.bytes);
 console.log(`${pages} pages, ${files} files, ${consent.length} named consent routes`);
-if (files > MAX_FILES) throw new Error(`${files} files exceeds Cloudflare Pages' ${MAX_FILES}`);
-if (big.length) throw new Error(`over 25 MiB: ${big.join(", ")}`);
+const { errors, warnings, summary } = checkLimits({
+  files,
+  largest: sizes.slice(0, 20),
+  redirectsText: fs.readFileSync(path.join(out, "_redirects"), "utf8"),
+  headersText: fs.readFileSync(path.join(out, "_headers"), "utf8"),
+  routes: JSON.parse(fs.readFileSync(path.join(out, "_routes.json"), "utf8")),
+});
+console.log(`Cloudflare limits: ${summary}`);
+// `::warning::` / `::error::` are GitHub annotations: on a pull request they
+// show on the checks page; anywhere else they are plain lines.
+for (const w of warnings) console.log(`::warning::Cloudflare Pages limit near: ${w}`);
+for (const e of errors) console.log(`::error::Cloudflare Pages limit exceeded: ${e}`);
+if (process.env.GITHUB_STEP_SUMMARY) {
+  fs.appendFileSync(
+    process.env.GITHUB_STEP_SUMMARY,
+    `### Cloudflare Pages limits\n\n${summary}\n\n` +
+      [...errors.map((e) => `- **Exceeded:** ${e}`), ...warnings.map((w) => `- Near: ${w}`)].join("\n") +
+      "\n",
+  );
+}
+if (errors.length) throw new Error(`Cloudflare Pages would refuse this deployment: ${errors.join("; ")}`);
