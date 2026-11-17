@@ -53,6 +53,8 @@ def req(op, url, data=None, tag="", timeout=60, tries=3, pause=1.0):
         if data is not None:
             headers["Content-Type"] = "application/x-www-form-urlencoded"
             headers["Referer"] = url
+        elif host == "edudel.nic.in" and url != EMP:
+            headers["Referer"] = EMP
         r = urllib.request.Request(url, data=data, headers=headers, method="POST" if data is not None else "GET")
         try:
             with op.open(r, timeout=timeout) as resp:
@@ -374,6 +376,9 @@ def delhi(S: dict):
     view("school", base + "EmpAtnReportnew.aspx?dis=allsch", [], P["n_schools"], P["school_dates"])
     view("morning", base + "EmpAtnReportnew.aspx?dis=m&name=Morning%20Schools", P["school_dates"][:1])
     view("offices", base + "EmpAtnReportnew.aspx?dis=DoeOffices", [])
+    view("district10", base + "EmpAtnReportnew.aspx?dis=10&name=District%20East", P["school_dates"][:1])
+    view("zone01", base + "EmpAtnReportnew.aspx?dis=Z01&name=Zone%2001", P["school_dates"][:1])
+    view("all_plain", base + "EmpAtnReportnew.aspx?dis=all&name=All Schools".replace(" ", "+"), P["school_dates"][:1])
     # the index's own postbacks: districts, zones, bottom 50, schools not marked
     for target in P["index_postbacks"]:
         st, index = req(op, EMP, tag="EMP index again")
@@ -382,6 +387,8 @@ def delhi(S: dict):
         keys = date_keys(f, sel)
         if keys[0]:
             set_date(body, sel, keys, dt.date.fromisoformat(P["school_dates"][0]))
+        if target.startswith("LinkButton"):
+            body["ddlDate1"] = P.get("day", "13")
         body["__EVENTTARGET"], body["__EVENTARGUMENT"] = target, ""
         st, pg = req(op, act, urllib.parse.urlencode(list(body.items())).encode(), tag=f"EMP postback {target}")
         (out / f"postback_{target}.html").write_text(pg, encoding="utf-8")
