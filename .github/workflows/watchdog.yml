@@ -15,6 +15,11 @@ on:
   schedule:
     - cron: "30 6 * * *"
   workflow_dispatch:
+    inputs:
+      drill:
+        description: "Add one deliberate failure, to prove the issue opens (the next ordinary run closes it)"
+        type: boolean
+        default: false
 
 concurrency:
   group: watchdog
@@ -72,4 +77,5 @@ jobs:
           LIMITS_RESULT: ${{ needs.limits.result }}
           LIMITS_SUMMARY: ${{ needs.limits.outputs.summary }}
           LIMITS_WARNINGS: ${{ needs.limits.outputs.warnings }}
+          WATCHDOG_DRILL: ${{ inputs.drill }}
         run: node scripts/watchdog.mjs
