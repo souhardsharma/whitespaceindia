@@ -1,0 +1,53 @@
+name: verify-parivesh
+
+# A one-off independent check, run from GitHub's runner only: the published
+# instrument against PARIVESH read fresh through the proxy pool. Lives on the
+# throwaway branch probe-verify-parivesh; commits nothing.
+on:
+  push:
+    branches: [probe-verify-parivesh]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-parivesh
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      INSTRUMENTS_CACHE_DIR: ${{ github.workspace }}/.instruments-cache
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+      - run: pip install --require-hashes -r requirements.txt
+      - name: Last night's proxy pool
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .instruments-cache
+          key: instruments-cache-verify-${{ github.run_id }}
+          restore-keys: |
+            instruments-cache-
+      - name: Refresh the proxy pool
+        continue-on-error: true
+        timeout-minutes: 12
+        run: |
+          mkdir -p "$INSTRUMENTS_CACHE_DIR"
+          python scripts/instruments/refresh_proxies.py --out "$INSTRUMENTS_CACHE_DIR/proxies.txt" --workers 4000 --max-minutes 10 --target 400 || true
+          echo "pool: $(wc -l < "$INSTRUMENTS_CACHE_DIR/proxies.txt" 2>/dev/null || echo 0) routes"
+      - name: Compare
+        timeout-minutes: 95
+        run: |
+          ( while true; do sleep 900; python scripts/instruments/refresh_proxies.py --out "$INSTRUMENTS_CACHE_DIR/proxies.txt" --workers 1000 --max-minutes 8 --target 400 || true; done ) > "$RUNNER_TEMP/refresher.log" 2>&1 &
+          python scripts/instruments/verify_against_parivesh.py --out verify-out
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: verify-report
+          path: verify-out/
