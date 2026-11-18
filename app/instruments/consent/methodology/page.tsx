@@ -147,7 +147,7 @@ export default function Methodology() {
                 ["Village named in the filing", m.resolution.method?.village, "high"],
                 ["Sub-district named in the filing", m.resolution.method?.subdistrict, "high"],
                 ["District named in the filing", m.resolution.method?.lgd_district, "medium"],
-                ["Declared district and site coordinates, overruling the place codes", m.resolution.method?.adjudicated, "high"],
+                ["Declared district and site coordinates agreeing, against the place codes or between districts the codes name", m.resolution.method?.adjudicated, "high"],
                 ["A town spanning districts, settled by the site coordinates or declared district", m.resolution.method?.town_settled, "high"],
                 ["Inferred from the project name", m.resolution.method?.project_name, "low"],
                 ["Not determined", m.resolution.method?.unresolved, "not applicable"],

@@ -1502,6 +1502,19 @@ def test_freshness_contract() -> None:
         check("complete and sectors_unreachable agree",
               (n == 0) if f["complete"] else True,
               f"complete={f['complete']} but {n} unreachable")
+    # The footer states register_complete. It must be exactly "every sector
+    # read, in a full sweep", and the night cannot be complete without it.
+    # Optional until the first sync that writes it.
+    if "register_complete" in f:
+        rc = f["register_complete"]
+        check("register_complete is a boolean", isinstance(rc, bool), repr(rc))
+        if isinstance(rc, bool) and isinstance(n, int):
+            check("register_complete means every sector in a full sweep",
+                  rc == (n == 0 and f.get("window") == "full sweep"),
+                  f"register_complete={rc}, {n} unreachable, window {f.get('window')!r}")
+            check("a complete night read the whole register",
+                  rc or not f.get("complete"),
+                  f"complete={f.get('complete')} but register_complete={rc}")
 
     meta = read_or_none("meta.json") or {}
     pub = (meta.get("counts") or {}).get("proposals_published")
@@ -3762,6 +3775,7 @@ def test_location_adjudication(shards: list[dict]) -> None:
     consistent with the rule that moved it, and that the landmarks resolve.
     """
     stranded, bad_a, n_a, seen = [], [], 0, {}
+    split_stranded: list = []
     valid = set((read_or_none("districts.json") or {}).keys())
     bad_dd: list = []
     for sh in shards:
@@ -3777,6 +3791,12 @@ def test_location_adjudication(shards: list[dict]) -> None:
             named = set(r[F["dall"]] or []) | ({dc} if dc is not None else set())
             if gk == "elsewhere" and dd is not None and dd == gd and dd not in named:
                 stranded.append(r[F["no"]])
+            # Split codes: declaration and coordinates both on ANOTHER named
+            # district, and the point (which prefers the profiled district)
+            # found no block in this one. location.adjudicate() moves these.
+            if (gk == "inside" and dd is not None and dd == gd and dc is not None
+                    and dd != dc and dd in named):
+                split_stranded.append(r[F["no"]])
             if r[F["dm"]] == "a":
                 n_a += 1
                 if not (dc == dd == gd and gk in ("inside", "boundary")):
@@ -3794,6 +3814,16 @@ def test_location_adjudication(shards: list[dict]) -> None:
     check("every adjudicated proposal stands where its declaration and its "
           "coordinates agree", n_a > 0 and not bad_a,
           f"{n_a} adjudicated; inconsistent: {bad_a[:5]}")
+    # Asserted on every build (INSTRUMENTS_DATA_DIR names the candidate). On
+    # the committed copy it waits for the first build with the split-codes
+    # rule (2026-11-18): 314 rows stood that way before it.
+    if CANDIDATE_BUILD or os.environ.get("INSTRUMENTS_ASSERT_SPLIT"):
+        check("no proposal stands in the codes' majority district while its "
+              "declaration and coordinates both name another it names",
+              not split_stranded,
+              f"{len(split_stranded)}, e.g. {split_stranded[:5]}")
+    elif split_stranded:
+        print(f"  note  {len(split_stranded)} split-code rows await the next build")
     wrong = {k: (seen.get(k), v) for k, v in LOCATION_LANDMARKS.items()
              if seen.get(k) != v}
     check(f"all {len(LOCATION_LANDMARKS)} location landmarks resolve to their "

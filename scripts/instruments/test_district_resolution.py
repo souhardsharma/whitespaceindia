@@ -278,6 +278,34 @@ def test_adjudication() -> None:
     same, how = adjudicate(loc(518, None), "inside", 518)
     check("agreement is left alone", how, "kept")
 
+    # Codes naming two districts: the majority (549) is the primary, but the
+    # declaration and the only block both name the other (550). Observed on
+    # 1223869302, published in 549 with a page saying both "agree".
+    moved, how = adjudicate(loc(549, 550, districts=[549, 550]), "inside", 550,
+                            None, [550])
+    check("declaration + coordinates settle split codes", how,
+          "adjudicated_within_named")
+    check("  ...the proposal moves to the district they agree on",
+          moved["primary_district"], 550)
+    check("  ...keeping every district the codes name, primary first",
+          moved["districts"], [550, 549])
+    check("  ...recorded as adjudicated", moved["method"], "adjudicated")
+    # ...but not when a block also falls in the codes' majority district.
+    same, how = adjudicate(loc(549, 550, districts=[549, 550]), "inside", 550,
+                           None, [549, 550])
+    check("a block in the majority district keeps it", how, "kept")
+    check("  ...and nothing moves", same["primary_district"], 549)
+    # ...nor when the codes and the declaration agree (1243990978: placed in
+    # Malkangiri by its sub-district and its declaration, block in Koraput).
+    same, how = adjudicate(loc(399, 399, districts=[399, 398]), "inside", 398,
+                           None, [398])
+    check("codes + declaration outvote a block in another named district",
+          how, "kept")
+    # ...nor on coordinates alone.
+    same, how = adjudicate(loc(549, None, districts=[549, 550]), "inside", 550,
+                           None, [550])
+    check("coordinates alone never move split codes", how, "kept")
+
     # Missing evidence is not evidence.
     same, how = adjudicate(loc(518, None), "elsewhere", 519)
     check("no declaration, no move", how, "kept")

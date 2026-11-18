@@ -130,6 +130,20 @@ def structural() -> None:
     check("that point is a coordinate, not an index into a filtered list",
           isinstance(at, tuple) and len(at) == 2, str(at))
 
+    # A project naming two districts, with a block in each: the published
+    # point is the block in the district the profile describes (named first),
+    # whatever order the form lists its blocks in.
+    v2, f2, at2 = dg.test_points([1, 2], [(5, 25), (5, 5)])
+    check("with blocks in two named districts, the point is in the first named",
+          v2 == "inside" and at2 == (5, 5), f"got {v2} at {at2}")
+    check("  ...and both districts are reported as found", f2 == [1, 2], str(f2))
+    v3, _f3, at3 = dg.test_points([2, 1], [(5, 5), (5, 25)])
+    check("  ...the same when the profile's district is the other one",
+          v3 == "inside" and at3 == (5, 25), f"got {v3} at {at3}")
+    v4, _f4, at4 = dg.test_points([1, 2], [(5, 25)])
+    check("with a block only in the second named district, that block is used",
+          v4 == "inside" and at4 == (5, 25), f"got {v4} at {at4}")
+
     print("\ngeometry the build must refuse")
     check("too few polygons is refused",
           DistrictGeometry.from_polygons({1: a}).usable() is not None)
