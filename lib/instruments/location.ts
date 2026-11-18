@@ -148,7 +148,7 @@ export function locationEvidence(
       // them, and the other two settle which. Only the first is "another".
       out.push(
         named.size > 1
-          ? `The place codes on the application form name ${named.size} districts and point mostly to another, but the district the form declares and the coordinates of its site both place the project in ${here}, which the codes also name. Because two of the filing's three statements of place agree, this profile follows them.`
+          ? `The place codes on the application form name ${named.size} districts. The district the form declares and the coordinates of its site both place the project in ${here}, one of them, and because two of the filing's three statements of place agree, this profile follows them.`
           : `The place codes on the application form point to another district, but the district the form declares and the coordinates of its site both place the project in ${here}. Because two of the filing's three statements of place agree, this profile follows them.`,
       );
       return { sentences: out, contested: false, firm: true };

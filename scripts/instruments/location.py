@@ -389,7 +389,9 @@ def adjudicate(loc: dict, verdict: str | None, falls_in: int | None,
     primary is only their majority. If the declared district is another of
     them and the blocks fall there and not in the primary, the declaration
     and the coordinates settle it: method `adjudicated`, every named district
-    kept, outcome `adjudicated_within_named`.
+    kept, outcome `adjudicated_within_named`. The same applies when a town
+    code placed the primary and neither the coordinates nor the declaration
+    falls among its candidates, instead of leaving it `town_unsettled`.
 
     Returns the (possibly new) location and one of: kept | adjudicated |
     adjudicated_within_named | town_by_coordinates | town_by_declaration |
@@ -409,6 +411,15 @@ def adjudicate(loc: dict, verdict: str | None, falls_in: int | None,
         elif declared is not None and declared in candidates:
             target, outcome = declared, "town_by_declaration"
         else:
+            # The town code settles nothing, and its own candidates are not
+            # where the other evidence points. If that evidence agrees on
+            # another district the codes name, it decides (2026-11-18: two
+            # Thane filings with a Greater Mumbai plot stood "provisionally"
+            # in Mumbai Suburban while declared in Thane, mapped in Thane,
+            # and naming Thane in their codes).
+            split = _split_codes(loc, verdict, under, index)
+            if split is not None:
+                return split
             target, outcome = primary, "town_unsettled"
         districts = [target] + [d for d in named if d not in (primary, target)]
         return _moved(loc, target, districts, "town_settled", primary,
@@ -430,13 +441,30 @@ def adjudicate(loc: dict, verdict: str | None, falls_in: int | None,
     # while their declaration and their coordinates both named another, and
     # their pages said both "agree with that placement". Only the primary is
     # replaced; every district the codes name stays named.
+    split = _split_codes(loc, verdict, under, index)
+    if split is not None:
+        return split
+    return loc, "kept"
+
+
+def _split_codes(loc: dict, verdict: str | None, under: set,
+                 index: LocationIndex | None) -> tuple[dict, str] | None:
+    """The declaration and the blocks agree on another district the codes name.
+
+    Returns the moved location, or None when the rule does not apply: the
+    declared district must be named by the codes, differ from the primary,
+    carry a block, and the primary must carry none.
+    """
+    primary = loc.get("primary_district")
+    named = list(loc.get("districts") or [primary])
+    declared = loc.get("declared_district")
     if (verdict == "inside" and declared is not None and declared != primary
             and declared in named and declared in under
             and primary not in under):
         districts = [declared] + [d for d in named if d != declared]
-        return _moved(loc, declared, districts, "adjudicated", primary,
-                      index), "adjudicated_within_named"
-    return loc, "kept"
+        return (_moved(loc, declared, districts, "adjudicated", primary, index),
+                "adjudicated_within_named")
+    return None
 
 
 def _moved(loc: dict, target: int, districts: list[int], method: str,
