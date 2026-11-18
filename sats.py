@@ -23,8 +23,8 @@ import egress  # noqa: E402
 CTX = egress.NET.TLS
 BASE = "https://sts.karnataka.gov.in/SDB"
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-CAP = 950
-DEADLINE = time.time() + 34 * 60
+CAP = 120
+DEADLINE = time.time() + 9 * 60
 LOG: list[dict] = []
 import http.cookiejar  # noqa: E402
 
@@ -105,6 +105,7 @@ def req(path: str, data: dict | None = None, timeout: int = 60) -> tuple[int, by
     except Exception as e:  # noqa: BLE001 - a failure is a recorded result
         st, raw = -1, f"{type(e).__name__}: {e}".encode()
     _last[0] = time.time()
+    print(st, len(raw), round(time.time() - t0, 2), path[:90], flush=True)
     LOG.append({"path": path[:200], "post": data is not None, "status": st, "bytes": len(raw),
                 "s": round(time.time() - t0, 2), "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
     if st in (429, 503):
@@ -134,7 +135,7 @@ def main() -> None:
     stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     save("diagnose", diagnose())
     req("/front/loadNewSchoolDashboard.htm")  # the page itself first, so any session cookie is set
-    years = ["2026-2027", "2025-2026", "2024-2025"]
+    years = ["2026-2027"]
     types = ["RR", "FR", "NS", "NOC", "PP"]
     dash, auto = {}, {}
     for y in years:
@@ -146,8 +147,7 @@ def main() -> None:
     save("auto_dist", auto)
 
     rows = {}
-    plan = [("RR", "2026-2027"), ("FR", "2026-2027"), ("RR", "2025-2026"), ("NS", "2026-2027"),
-            ("NOC", "2026-2027"), ("FR", "2025-2026")]
+    plan = [("RR", "2026-2027")]
     for t, y in plan:
         for d in dash.get(f"{t}|{y}", []):
             if "_error" in d or not d.get("total_application"):
@@ -159,7 +159,7 @@ def main() -> None:
         save("rows", rows)
 
     arows = {}
-    for t, y in [("RR", "2026-2027"), ("RR", "2025-2026"), ("FR", "2026-2027"), ("FR", "2025-2026")]:
+    for t, y in [("RR", "2026-2027")]:
         for d in auto.get(f"{t}|{y}", []):
             if "_error" in d or not d.get("total_application"):
                 continue
@@ -183,7 +183,7 @@ def main() -> None:
     names = {"2903": "VIJAYAPURA (2903)", "2924": "DAKSHINA KANNADA (2924)", "2901": "BELAGAVI (2901)"}
     sdir = OUT / "schoolsearch"
     sdir.mkdir(exist_ok=True)
-    for dist in ["2903", "2924", "2901"]:
+    for dist in ["2903"][:0]:
         st, raw = req(f"/front/loadBRCWithoutCode.htm?dise=true&id={dist}")
         xml = raw.decode("utf-8", "replace")
         (sdir / f"brc_{dist}.xml").write_text(xml, encoding="utf-8")
