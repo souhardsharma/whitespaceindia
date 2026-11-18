@@ -160,6 +160,9 @@ def main() -> None:
                    "type": headers.get("Content-Type", ""), "last_modified": headers.get("Last-Modified", ""),
                    "etag": headers.get("ETag", ""), "head": raw[:160].decode("utf-8", "replace")}
             results.append(row)
+            with open(OUT / "results.jsonl", "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(row) + "
+")
             print(f"{status:>4} {len(raw):>10,} {secs:>7}s  {name}", flush=True)
             time.sleep(p.get("pause", 1.5))
     (OUT / "results.json").write_text(json.dumps(results, indent=1), encoding="utf-8")

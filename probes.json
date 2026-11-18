@@ -1,559 +1,162 @@
 [
  {
-  "name": "od-day-20261019",
+  "name": "od-ddo-KJREDN023-fy2018",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=19%2F10%2F2026&p_to_date=19%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2018&p_to_date=31%2F03%2F2019&p_ddo_code=KJREDN023&p_fin_year_from=2018&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261020",
+  "name": "od-ddo-KJREDN023-fy2023",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=20%2F10%2F2026&p_to_date=20%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2023&p_to_date=31%2F03%2F2024&p_ddo_code=KJREDN023&p_fin_year_from=2023&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261021",
+  "name": "od-ddo-KJREDN023-fy2024",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=21%2F10%2F2026&p_to_date=21%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2024&p_to_date=31%2F03%2F2025&p_ddo_code=KJREDN023&p_fin_year_from=2024&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261022",
+  "name": "od-ddo-KLDEDN046-fy2018",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=22%2F10%2F2026&p_to_date=22%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2018&p_to_date=31%2F03%2F2019&p_ddo_code=KLDEDN046&p_fin_year_from=2018&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261023",
+  "name": "od-ddo-KLDEDN046-fy2023",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=23%2F10%2F2026&p_to_date=23%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2023&p_to_date=31%2F03%2F2024&p_ddo_code=KLDEDN046&p_fin_year_from=2023&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261024",
+  "name": "od-ddo-KLDEDN046-fy2024",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=24%2F10%2F2026&p_to_date=24%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2024&p_to_date=31%2F03%2F2025&p_ddo_code=KLDEDN046&p_fin_year_from=2024&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261025",
+  "name": "od-ddo-BLGEDN023-fy2018",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=25%2F10%2F2026&p_to_date=25%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2018&p_to_date=31%2F03%2F2019&p_ddo_code=BLGEDN023&p_fin_year_from=2018&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261026",
+  "name": "od-ddo-BLGEDN023-fy2023",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=26%2F10%2F2026&p_to_date=26%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2023&p_to_date=31%2F03%2F2024&p_ddo_code=BLGEDN023&p_fin_year_from=2023&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261027",
+  "name": "od-ddo-BLGEDN023-fy2024",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=27%2F10%2F2026&p_to_date=27%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2024&p_to_date=31%2F03%2F2025&p_ddo_code=BLGEDN023&p_fin_year_from=2024&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261028",
+  "name": "od-ddo-ANGEDN027-fy2018",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=28%2F10%2F2026&p_to_date=28%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2018&p_to_date=31%2F03%2F2019&p_ddo_code=ANGEDN027&p_fin_year_from=2018&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261029",
+  "name": "od-ddo-ANGEDN027-fy2023",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=29%2F10%2F2026&p_to_date=29%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2023&p_to_date=31%2F03%2F2024&p_ddo_code=ANGEDN027&p_fin_year_from=2023&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261030",
+  "name": "od-ddo-ANGEDN027-fy2024",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=30%2F10%2F2026&p_to_date=30%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2024&p_to_date=31%2F03%2F2025&p_ddo_code=ANGEDN027&p_fin_year_from=2024&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261031",
+  "name": "od-ddo-BBSEDN017-fy2018",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=31%2F10%2F2026&p_to_date=31%2F10%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2018&p_to_date=31%2F03%2F2019&p_ddo_code=BBSEDN017&p_fin_year_from=2018&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261101",
+  "name": "od-ddo-BBSEDN017-fy2023",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F11%2F2026&p_to_date=01%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2023&p_to_date=31%2F03%2F2024&p_ddo_code=BBSEDN017&p_fin_year_from=2023&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261102",
+  "name": "od-ddo-BBSEDN017-fy2024",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=02%2F11%2F2026&p_to_date=02%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2024&p_to_date=31%2F03%2F2025&p_ddo_code=BBSEDN017&p_fin_year_from=2024&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261103",
+  "name": "od-ddo-GJMEDN037-fy2018",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=03%2F11%2F2026&p_to_date=03%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2018&p_to_date=31%2F03%2F2019&p_ddo_code=GJMEDN037&p_fin_year_from=2018&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261104",
+  "name": "od-ddo-GJMEDN037-fy2023",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=04%2F11%2F2026&p_to_date=04%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2023&p_to_date=31%2F03%2F2024&p_ddo_code=GJMEDN037&p_fin_year_from=2023&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261105",
+  "name": "od-ddo-GJMEDN037-fy2024",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=05%2F11%2F2026&p_to_date=05%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2024&p_to_date=31%2F03%2F2025&p_ddo_code=GJMEDN037&p_fin_year_from=2024&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261106",
+  "name": "od-ddo-BLGREV020-fy2025",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=06%2F11%2F2026&p_to_date=06%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2025&p_to_date=31%2F03%2F2026&p_ddo_code=BLGREV020&p_fin_year_from=2025&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
  },
  {
-  "name": "od-day-20261107",
+  "name": "od-ddo-KJRREV853-fy2025",
   "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=07%2F11%2F2026&p_to_date=07%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
+  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2025&p_to_date=31%2F03%2F2026&p_ddo_code=KJRREV853&p_fin_year_from=2025&p_treasury_code=%25&p_header=Voucher%20details&output=html",
   "timeout": 60,
   "timeout2": 240,
   "pause": 1.5
- },
- {
-  "name": "od-day-20261108",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=08%2F11%2F2026&p_to_date=08%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20261109",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=09%2F11%2F2026&p_to_date=09%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20261110",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=10%2F11%2F2026&p_to_date=10%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20261111",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=11%2F11%2F2026&p_to_date=11%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20261112",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=12%2F11%2F2026&p_to_date=12%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20261113",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=13%2F11%2F2026&p_to_date=13%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20261114",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=14%2F11%2F2026&p_to_date=14%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20261115",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=15%2F11%2F2026&p_to_date=15%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20261116",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=16%2F11%2F2026&p_to_date=16%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20261117",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=17%2F11%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20251103",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=03%2F11%2F2025&p_to_date=03%2F11%2F2025&p_ddo_code=%25&p_fin_year_from=2025&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20240701",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F07%2F2024&p_to_date=01%2F07%2F2024&p_ddo_code=%25&p_fin_year_from=2024&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20190701",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F07%2F2019&p_to_date=01%2F07%2F2019&p_ddo_code=%25&p_fin_year_from=2019&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20120102",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=02%2F01%2F2012&p_to_date=02%2F01%2F2012&p_ddo_code=%25&p_fin_year_from=2011&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20260401",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=01%2F04%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-day-20260331",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=31%2F03%2F2026&p_to_date=31%2F03%2F2026&p_ddo_code=%25&p_fin_year_from=2025&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-week-20261102-07",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=02%2F11%2F2026&p_to_date=07%2F11%2F2026&p_ddo_code=%25&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-KJREDN023-fy2627",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=KJREDN023&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-DGREDN006-fy2627",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=DGREDN006&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-JPREDN027-fy2627",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=JPREDN027&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-ANGEDN027-fy2627",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=ANGEDN027&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-BDHEDN008-fy2627",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=BDHEDN008&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-GJMEDN037-fy2627",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=GJMEDN037&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-KLDEDN046-fy2627",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=KLDEDN046&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-JYREDN010-fy2627",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=JYREDN010&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-NRGEDN020-fy2627",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=NRGEDN020&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-MBJEDN033-fy2627",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=MBJEDN033&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-KPTEDN025-fy2627",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=KPTEDN025&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-BBSEDN017-fy2627",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2026&p_to_date=17%2F11%2F2026&p_ddo_code=BBSEDN017&p_fin_year_from=2026&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-KJREDN023-fy2526",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2025&p_to_date=31%2F03%2F2026&p_ddo_code=KJREDN023&p_fin_year_from=2025&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-ddo-KLDEDN046-fy2526",
-  "kind": "stub",
-  "url": "https://www.odishatreasury.gov.in/webportal/TreasuryWiseTv.do?p_from_date=01%2F04%2F2025&p_to_date=31%2F03%2F2026&p_ddo_code=KLDEDN046&p_fin_year_from=2025&p_treasury_code=%25&p_header=Voucher%20details&output=html",
-  "timeout": 60,
-  "timeout2": 240,
-  "pause": 1.5
- },
- {
-  "name": "od-lov-ddo",
-  "kind": "chain",
-  "before": [
-   "https://www.odishatreasury.gov.in/webportal/Lov?item=SELECT_DDO&"
-  ],
-  "url": "https://www.odishatreasury.gov.in/webportal/files/BodyFrame.jsp",
-  "timeout": 120
- },
- {
-  "name": "od-lov-treasury",
-  "kind": "chain",
-  "before": [
-   "https://www.odishatreasury.gov.in/webportal/Lov?item=ALL_TREASURIES&"
-  ],
-  "url": "https://www.odishatreasury.gov.in/webportal/files/BodyFrame.jsp",
-  "timeout": 120
- },
- {
-  "name": "od-holidays",
-  "url": "https://www.odishatreasury.gov.in/webportal/HolidaySelectAction.do",
-  "timeout": 60
- },
- {
-  "name": "home-cg-ekosh",
-  "url": "https://ekoshonline.cg.nic.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-ka-khajane2",
-  "url": "https://khajane2.karnataka.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-kl-treasury",
-  "url": "https://www.treasury.kerala.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-tg-ifmis",
-  "url": "https://ifmis.telangana.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-tg-treasury",
-  "url": "https://treasury.telangana.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-ap-cfms",
-  "url": "https://cfms.ap.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-mp-treasury",
-  "url": "https://www.mptreasury.org/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-mp-ifmis",
-  "url": "https://mpifmis.mp.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-br-cfms",
-  "url": "https://cfms.bihar.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-as-finassam",
-  "url": "https://www.finassam.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-pb-ifms",
-  "url": "https://ifms.punjab.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-gj-cybertreasury",
-  "url": "https://cybertreasury.gujarat.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-tn-karuvoolam",
-  "url": "https://www.karuvoolam.tn.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-wb-ifms",
-  "url": "https://wbifms.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-rj-ifms",
-  "url": "https://ifms.raj.nic.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-rj-paymanager",
-  "url": "https://paymanager.raj.nic.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-uk-ekosh",
-  "url": "https://ekosh.uk.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-uk-ifms",
-  "url": "https://ifms.uk.gov.in/IFMSddo.aspx",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-hr-ifms",
-  "url": "https://ifms.haryana.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-mh-beams",
-  "url": "https://beams.mahakosh.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
- },
- {
-  "name": "home-mh-koshwahini",
-  "url": "https://koshwahini.mahakosh.gov.in/",
-  "timeout": 30,
-  "pause": 0.5
  }
 ]
