@@ -24,25 +24,11 @@ jobs:
           pip install -q pysocks==1.7.1
           python -I -X utf8 scripts/education/refresh_pool.py india --max-minutes 10 || true
           wc -l "$EDUCATION_CACHE_DIR/pools/india.txt" || true
-      - name: Third-party CPPP dump (size first; fetched only if under 6 GB)
-        continue-on-error: true
-        run: |
-          mkdir -p dump out
-          curl -sSI --max-time 60 https://mirror.s3.surf/tenders_vps.db | tee out/dump_head.txt
-          size=$(grep -i '^content-length' out/dump_head.txt | tr -dc '0-9')
-          echo "size=$size"
-          if [ -n "$size" ] && [ "$size" -lt 6000000000 ]; then
-            start=$(date +%s)
-            curl -sS --max-time 1500 -o dump/tenders_vps.db https://mirror.s3.surf/tenders_vps.db
-            echo "download_secs=$(( $(date +%s) - start ))" >> out/dump_head.txt
-            sha256sum dump/tenders_vps.db >> out/dump_head.txt
-          fi
-          df -h . >> out/dump_head.txt
       - name: Probe
         env:
           EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
-          CAP_CPPP: "150"
-          CAP_BIDPLUS: "60"
+          CAP_CPPP: "620"
+          CAP_BIDPLUS: "20"
           CAP_GEM: "10"
         run: python -I -X utf8 probe.py
       - uses: actions/upload-artifact@v4

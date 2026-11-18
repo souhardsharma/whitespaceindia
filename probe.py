@@ -1,22 +1,17 @@
-"""Reopen-procurement probe (read only).
+"""Reopen-procurement probe, run 2 (read only).
 
-A. CPPP GePNIC from the runner's own address: organisation table, every education organisation's
-   active list, the detail page of every re-tendered (suffix > 1) tender, and the gated pages once
-   each to record that they ask a CAPTCHA (none is answered).
-B. GeM through the Indian pool: how often a session opens, how often an awarded-bid search answers,
-   how long each answered request takes, and the award dates of school-education buyers, so that a
-   weekly read can be costed.
-C. The India Procurement Watch dump (third-party copy of CPPP to 26 Jun 2026), if it was downloaded
-   by the workflow: re-tender cadence by week and the _1/_N title match, for education organisations.
+A. CPPP GePNIC from the runner's own address, 1.5 s apart: every education organisation's active
+   list, the detail page of EVERY active education tender, its corrigendum table (title, type) and,
+   for up to 12 corrigenda of different types, the "View Corrigendum History" popup (saved raw; if it
+   asks a CAPTCHA, no further popup is asked and nothing is answered).
+B. GeM through the Indian pool: which search form still filters awarded bids by a school-education
+   department (the free-text phrase was ignored on 18 Nov, numFound = every bid).
 """
 import json
-import os
 import re
-import sqlite3
 import sys
 import time
-from collections import Counter, defaultdict
-from datetime import datetime, timedelta
+from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -24,183 +19,137 @@ import lib_procure as P  # noqa: E402
 
 RES = {"started_utc": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())}
 TID = re.compile(r"^(\d{4})_([A-Za-z0-9]+)_(\d+)_(\d+)$")
+CORR_ROW = re.compile(r"<tr class=\"(?:odd|even)\"[^>]*>\s*<td>(\d+)</td>\s*<td>(.*?)</td>\s*<td>(.*?)</td>\s*<td>(.*?)</td>",
+                      re.S)
 
 
 def save():
     P.save("result.json", RES)
 
 
+def field(html, caption):
+    # GePNIC writes a caption either as <b>caption</b> or as the bare text of a td_caption cell
+    m = (re.search(r"<b>\s*" + re.escape(caption) + r"\s*</b>\s*</td>\s*<td[^>]*>(.*?)</td>", html, re.S)
+         or re.search(r"<td class=\"td_caption\"[^>]*>\s*" + re.escape(caption) + r"\s*</td>\s*<td[^>]*>(.*?)</td>",
+                      html, re.S))
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", m.group(1))).strip() if m else None
+
+
+def corrigenda(html):
+    body = re.sub(r"<!--.*?-->", "", html, flags=re.S)
+    i = body.find('id="corrigendumDocumenttable"')
+    if i < 0:
+        return []
+    table = body[i:body.find("</table>", i)]
+    out = []
+    for sno, title, kind, view in CORR_ROW.findall(table):
+        link = re.search(r'href="([^"]+)"', view)
+        out.append({"title": re.sub(r"\s+", " ", title).strip(), "type": re.sub(r"\s+", " ", kind).strip(),
+                    "link": "https://eprocure.gov.in" + link.group(1).replace("&amp;", "&") if link else None})
+    return out
+
+
 def cppp():
-    s = P.Sess("open", spacing=1.2)
-    t0 = time.time()
-    orgs, n = P.cppp_org_table(s, tag="orgs")
+    s = P.Sess("open", spacing=1.5)
+    orgs, _ = P.cppp_org_table(s, tag="orgs")
     edu = [o for o in orgs if P.EDU.search(o["name"]) and not P.NOT_EDU.search(o["name"])]
-    RES["cppp_orgs_total"] = len(orgs)
-    RES["cppp_edu_orgs"] = [(o["name"], o["count"]) for o in edu]
-    tenders = []
+    RES["cppp_orgs_total"], RES["cppp_edu_orgs"] = len(orgs), len(edu)
+    rows = []
     for o in edu:
         try:
             st, body, _ = s.req(o["link"], check=lambda a, b: a == 200, tag=f"org {o['name'][:40]}")
         except Exception as e:  # noqa: BLE001 - one organisation failing is recorded, the sweep goes on
             RES.setdefault("org_errors", []).append([o["name"], str(e)[:120]])
             continue
-        links = re.findall(r'href="([^"]*FrontEndViewTender[^"]*)"', body.decode("utf-8", "replace"))
-        rows = P.cppp_tenders(body.decode("utf-8", "replace"), o["name"])
-        for r, link in zip(rows, links):
+        html = body.decode("utf-8", "replace")
+        links = re.findall(r'href="([^"]*FrontEndViewTender[^"]*)"', html)
+        for r, link in zip(P.cppp_tenders(html, o["name"]), links):
             r["link"] = "https://eprocure.gov.in" + link.replace("&amp;", "&")
-        tenders += rows
-    RES["cppp_sweep_secs"] = round(time.time() - t0, 1)
-    retendered = []
-    for r in tenders:
-        m = TID.match(r["brackets"][-1]) if r["brackets"] else None
-        r["suffix"] = int(m.group(4)) if m else None
-        if r["suffix"] and r["suffix"] > 1:
-            retendered.append(r)
-    (P.OUT / "detail").mkdir(exist_ok=True)
-    for r in retendered:
+            rows.append(r)
+    RES["cppp_tenders"] = len(rows)
+    save()
+    t0 = time.time()
+    popups_asked, popup_types, captcha_seen = 0, set(), False
+    (P.OUT / "popup").mkdir(exist_ok=True)
+    for r in rows:
+        tid = r["brackets"][-1] if r["brackets"] else "?"
         try:
-            st, body, _ = s.req(r["link"], check=lambda a, b: a == 200, tag=f"detail {r['brackets'][-1]}")
-            (P.OUT / "detail" / (r["brackets"][-1] + ".html")).write_bytes(body)
+            st, body, _ = s.req(r.pop("link"), check=lambda a, b: a == 200, tag=f"detail {tid}")
         except Exception as e:  # noqa: BLE001
             r["detail_error"] = str(e)[:120]
-    for r in tenders:
-        r.pop("link", None)
-    P.save("cppp_edu_tenders.json", tenders)
-    RES["cppp_tenders"] = len(tenders)
-    RES["cppp_suffix"] = sorted(Counter(r["suffix"] for r in tenders).items(), key=lambda x: (x[0] is None, x[0]))
-    for pg in ("WebCancelledTenderLists", "ResultOfTenders", "FrontEndLatestActiveCorrigendums"):
-        try:
-            st, body, _ = s.req(f"{P.C}?page={pg}&service=page", tag=f"gated {pg}")
-            RES[f"gated_{pg}"] = {"status": st, "bytes": len(body),
-                                  "captcha": bool(re.search(rb"captcha", body, re.I)),
-                                  "rows": len(P.cppp_rows(body.decode("utf-8", "replace")))}
-        except Exception as e:  # noqa: BLE001
-            RES[f"gated_{pg}"] = str(e)[:120]
+            continue
+        html = body.decode("utf-8", "replace")
+        r["type"], r["category"] = field(html, "Tender Type"), field(html, "Tender Category")
+        r["value"], r["bid_validity"] = field(html, "Tender Value in &#8377;"), field(html, "Bid Validity(Days)")
+        r["corr"] = corrigenda(html)
+        for c in r["corr"]:
+            link = c.pop("link")
+            if captcha_seen or popups_asked >= 12 or c["type"] in popup_types or not link:
+                continue
+            popups_asked += 1
+            popup_types.add(c["type"])
+            try:
+                st, pb, _ = s.req(link, tag=f"popup {tid} {c['type']}")
+                (P.OUT / "popup" / f"{tid}_{len(popup_types)}.html").write_bytes(pb)
+                captcha_seen = bool(re.search(rb"captcha", pb, re.I))
+                c["popup"] = {"status": st, "bytes": len(pb), "captcha": captcha_seen}
+            except Exception as e:  # noqa: BLE001
+                c["popup"] = str(e)[:120]
+    RES["detail_secs"] = round(time.time() - t0, 1)
+    P.save("cppp_edu_detail.json", rows)
+    with_corr = [r for r in rows if r.get("corr")]
+    RES["tenders_with_corr"] = len(with_corr)
+    RES["corr_types"] = Counter(c["type"] for r in rows for c in r.get("corr", [])).most_common()
+    RES["popup_captcha"] = captcha_seen
     RES["cppp_sent"] = dict(P.SENT)
     save()
 
 
-SCHOOL_QUERIES = ['"Samagra Shiksha"', '"School Education"', '"Basic Shiksha"', '"Kendriya Vidyalaya"']
+JK = "School Education Department Jammu and Kashmir"
 
 
-def gem(budget_s=1500):
-    """Awarded bids of school buyers through the Indian pool, inside a time budget."""
+def gem(budget_s=900):
     t_end = time.time() + budget_s
-    out = {"setup_ok": 0, "setup_fail": 0, "search_ok": 0, "search_fail": 0, "search_secs": [], "awards": []}
+    tests = {
+        "ft_phrase_awarded": ("/all-bids-data", P.ft(f'"{JK}"', by_status="bid_awarded", sort="Bid-End-Date-Latest")),
+        "ft_plain_awarded": ("/all-bids-data", P.ft(JK, by_status="bid_awarded", sort="Bid-End-Date-Latest")),
+        "ft_field_awarded": ("/all-bids-data", P.ft(f'ba_official_details_deptName:"{JK}"', by_status="bid_awarded",
+                                                    sort="Bid-End-Date-Latest")),
+        "ms_jk": ("/search-bids", P.ms(JK, "JAMMU & KASHMIR")),
+        "ms_jk_awarded": ("/search-bids", P.ms(JK, "JAMMU & KASHMIR", bidStatusType="bidrastatus",
+                                               byStatus="bid_awarded")),
+    }
+    out = {"setup_ok": 0, "setup_fail": 0}
     RES["gem"] = out
     sess = None
-    for q in SCHOOL_QUERIES:
-        for page in (1, 2, 3):
-            if time.time() > t_end:
-                break
-            try:
-                if sess is None:
-                    sess = P.Sess("india", setup=P.gem_setup, spacing=1.2, tries=6, timeout=30)
-                    out["setup_ok"] += 1
-                t0 = time.time()
-                d, secs, n = P.gpost(sess, "/all-bids-data",
-                                     payload=P.ft(q, by_status="bid_awarded", sort="Bid-End-Date-Latest", page=page),
-                                     tag=f"awarded {q} p{page}")
-                out["search_ok"] += 1
-                out["search_secs"].append(round(time.time() - t0, 1))
-                docs = (P.rr(d) or {}).get("docs", [])
-                out["awards"] += [{"q": q, **P.slim(x)} for x in docs]
-                out.setdefault("numFound", {})[q] = (P.rr(d) or {}).get("numFound")
-            except RuntimeError as e:
-                if sess is None:
-                    out["setup_fail"] += 1
-                else:
-                    out["search_fail"] += 1
-                sess = None
-                out.setdefault("errors", []).append(str(e)[:120])
-            except SystemExit as e:
-                out.setdefault("errors", []).append(str(e))
-                break
-            save()
+    for key, (path, payload) in tests.items():
+        if time.time() > t_end:
+            break
+        try:
+            if sess is None:
+                sess = P.Sess("india", setup=P.gem_setup, spacing=1.2, tries=6, timeout=30)
+                out["setup_ok"] += 1
+            t0 = time.time()
+            d, secs, n = P.gpost(sess, path, payload=payload, tag=key)
+            r = P.rr(d) or {}
+            docs = [P.slim(x) for x in r.get("docs", [])]
+            out[key] = {"secs": round(time.time() - t0, 1), "numFound": r.get("numFound"),
+                        "depts": Counter(x.get("ba_official_details_deptName") for x in docs).most_common(),
+                        "statuses": [x.get("b_buyer_status") for x in docs],
+                        "ends": [x.get("final_end_date_sort") for x in docs], "msg": None if r else str(d)[:300]}
+        except RuntimeError as e:
+            out["setup_fail" if sess is None else "search_fail_" + key] = str(e)[:120]
+            sess = None
+        except SystemExit as e:
+            out["stopped"] = str(e)
+            break
+        save()
     out["sent"] = dict(P.SENT)
     save()
 
 
-def dump():
-    db = Path(os.environ.get("DUMP_DB", "dump/tenders_vps.db"))
-    if not db.exists():
-        RES["dump"] = "not downloaded"
-        return
-    con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
-    tables = {t: [c[1] for c in con.execute(f"PRAGMA table_info({t})")]
-              for (t,) in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    RES["dump_tables"] = tables
-    save()
-    cols = tables.get("tenders", [])
-    org_col = next((c for c in cols if "org" in c.lower()), None)
-    id_col = next((c for c in cols if c.lower() in ("tender_id", "tenderid")), None)
-    pub_col = next((c for c in cols if "publish" in c.lower()), None)
-    title_col = next((c for c in cols if "title" in c.lower()), None)
-    corr_col = next((c for c in cols if "corrig" in c.lower()), None)
-    RES["dump_cols_used"] = [org_col, id_col, pub_col, title_col, corr_col]
-    if not (org_col and id_col and pub_col):
-        save()
-        return
-    sql = f"SELECT {org_col}, {id_col}, {pub_col}, {title_col or 'NULL'}, {corr_col or 'NULL'} FROM tenders"
-    edu_rows, orgs, n = [], Counter(), 0
-    for org, tid, pub, title, corr in con.execute(sql):
-        n += 1
-        if org and P.EDU.search(org) and not P.NOT_EDU.search(org):
-            edu_rows.append((org, tid, pub, title, corr))
-            orgs[org] += 1
-    RES["dump_rows"] = n
-    RES["dump_edu_rows"] = len(edu_rows)
-    RES["dump_edu_orgs"] = len(orgs)
-    RES["dump_pub_samples"] = [r[2] for r in edu_rows[:5]]
-
-    def day(v):
-        text = str(v or "").strip()
-        for fmt, width in (("%d-%b-%Y %I:%M %p", 20), ("%Y-%m-%d %H:%M:%S", 19), ("%Y-%m-%dT%H:%M:%S", 19),
-                           ("%d-%m-%Y %H:%M", 16), ("%d-%b-%Y", 11), ("%Y-%m-%d", 10), ("%d-%m-%Y", 10)):
-            try:
-                return datetime.strptime(text[:width], fmt).date()
-            except ValueError:
-                continue
-        return None
-
-    by_base = defaultdict(list)
-    dated = []
-    for org, tid, pub, title, corr in edu_rows:
-        m = TID.match(str(tid or ""))
-        d = day(pub)
-        if not m:
-            continue
-        by_base[(m.group(1), m.group(2), m.group(3))].append((int(m.group(4)), d, title, org, corr))
-        dated.append((int(m.group(4)), d, bool(corr)))
-    last = max((d for _, d, _ in dated if d), default=None)
-    RES["dump_last_pub"] = str(last)
-    if last:
-        start = last - timedelta(days=7 * 12 + last.weekday())
-        weeks = defaultdict(lambda: {"retender_days": set(), "retenders": 0, "tenders": 0, "corr_url": 0})
-        for suf, d, corr in dated:
-            if not d or d < start:
-                continue
-            w = str(d - timedelta(days=d.weekday()))
-            weeks[w]["tenders"] += 1
-            weeks[w]["corr_url"] += corr
-            if suf > 1:
-                weeks[w]["retenders"] += 1
-                weeks[w]["retender_days"].add(str(d))
-        RES["dump_weeks"] = {w: {**v, "retender_days": len(v["retender_days"])} for w, v in sorted(weeks.items())}
-    pairs = []
-    for base, items in by_base.items():
-        sufs = {s for s, *_ in items}
-        if len(sufs) > 1:
-            items.sort(key=lambda x: x[0])
-            pairs.append({"base": "_".join(base), "rounds": [[s, str(d), (t or "")[:120], o[:50]] for s, d, t, o, _ in items]})
-    RES["dump_multi_round_bases"] = len(pairs)
-    RES["dump_suffix_counts"] = sorted(Counter(s for s, _, _ in dated).items())
-    P.save("dump_pairs.json", pairs)
-    save()
-
-
 def main():
-    for step in (cppp, gem, dump):
+    for step in (cppp, gem):
         try:
             step()
         except BaseException as e:  # noqa: BLE001 - outermost: record and run the next step
