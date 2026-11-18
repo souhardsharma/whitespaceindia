@@ -1483,6 +1483,13 @@ def main() -> None:
         # able to say "checked, partially" rather than showing a timestamp
         # that means less than it appears to.
         "complete": complete,
+        # Whether THE REGISTER was read in full: every sector, a full sweep.
+        # `complete` also turns false when a per-proposal pass (forms,
+        # histories) ran out of time, and the footer read it as "register read
+        # incompletely" on nights that read all ten sectors (2026-11-17). The
+        # footer states this one; the forms and histories still owed show on
+        # each proposal that lacks them.
+        "register_complete": not failed_sectors and since is None,
         "sectors_unreachable": len(failed_sectors),
         "window": since or "full sweep",
         "proposals_published": freshness["proposals_published"],

@@ -16,12 +16,7 @@
  * put a confident date on an incomplete read.
  */
 import freshnessJson from "@/public/data/instruments/consent/freshness.json";
-
-type Freshness = {
-  checked_at?: string;
-  complete?: boolean;
-  sectors_unreachable?: number;
-};
+import { registerReadInPart, type Freshness } from "@/lib/instruments/currency";
 
 const IST = "Asia/Kolkata";
 
@@ -60,7 +55,7 @@ export default function RegisterCurrency({
     );
   }
 
-  const partial = f.checked_at != null && f.complete === false;
+  const partial = registerReadInPart(f);
   const unreachable = f.sectors_unreachable ?? 0;
 
   return (

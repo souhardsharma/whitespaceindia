@@ -149,3 +149,84 @@ test("a disagreeing declaration without coordinates is not firm", () => {
   assert.equal(e.firm, false);
   assert.match(e.sentences.join(" "), /does not agree/);
 });
+
+// A filing that names two districts. `inside` then means "inside one of
+// them", and the page used to call that agreement with the profiled one:
+// 533 pages on 2026-11-17, among them 1243990978 (placed in Malkangiri by its
+// sub-district and its declaration, its only block in Koraput).
+const TWO = { "398": "Koraput", "399": "Malkangiri", "549": "Visakhapatnam", "550": "East Godavari" };
+
+test("coordinates in another named district are not called agreement", () => {
+  const e = locationEvidence(
+    { ...base, resolution: "subdistrict", district: 399, allDistricts: [399, 398], declaredDistrict: 399, fallsIn: 398 },
+    TWO,
+  );
+  const text = e.sentences.join(" ");
+  assert.doesNotMatch(text, /both agree/);
+  assert.match(text, /fall in Koraput, another district this filing names, instead/);
+  assert.match(text, /keeps the district the codes and the declaration agree on/);
+  assert.equal(e.firm, true);
+});
+
+test("a declaration of another named district is not called agreement", () => {
+  const e = locationEvidence(
+    { ...base, district: 549, allDistricts: [549, 550], declaredDistrict: 550, fallsIn: 549 },
+    TWO,
+  );
+  const text = e.sentences.join(" ");
+  assert.doesNotMatch(text, /both agree/);
+  assert.match(text, /declares, East Godavari, is another district this filing names, not Visakhapatnam/);
+  assert.match(text, /fall inside Visakhapatnam/);
+  assert.equal(e.firm, false);
+});
+
+test("coordinates alone in another named district are named as such", () => {
+  const e = locationEvidence(
+    { ...base, district: 549, allDistricts: [549, 550], declaredDistrict: null, fallsIn: 550 },
+    TWO,
+  );
+  const text = e.sentences.join(" ");
+  assert.match(text, /declares no district/);
+  assert.match(text, /fall in East Godavari, another district this filing names, not in Visakhapatnam/);
+  assert.equal(e.firm, false);
+});
+
+test("split codes settled by the declaration and coordinates say the codes also name it", () => {
+  const e = locationEvidence(
+    { ...base, resolution: "adjudicated", district: 550, allDistricts: [550, 549], declaredDistrict: 550, fallsIn: 550 },
+    TWO,
+  );
+  const text = e.sentences.join(" ");
+  assert.match(text, /name 2 districts and point mostly to another/);
+  assert.match(text, /both place the project in East Godavari, which the codes also name/);
+  assert.doesNotMatch(text, /point to another district, but/);
+});
+
+test("a boundary verdict on a multi-district filing names no single district", () => {
+  const e = locationEvidence(
+    { ...base, district: 549, allDistricts: [549, 550], declaredDistrict: 549, verdict: "boundary", fallsIn: 550 },
+    TWO,
+  );
+  assert.match(e.sentences.join(" "), /boundary of a district this filing names/);
+});
+
+test("every agreement sentence is true of the profiled district", () => {
+  // Exhaustive over a small space: whenever the page says the coordinates
+  // fall inside or agree, they fall in the profiled district.
+  for (const fallsIn of [549, 550, null]) {
+    for (const declaredDistrict of [549, 550, null]) {
+      for (const verdict of ["inside", "boundary", "elsewhere", null]) {
+        const text = locationEvidence(
+          { ...base, district: 549, allDistricts: [549, 550], declaredDistrict, verdict, fallsIn },
+          TWO,
+        ).sentences.join(" ");
+        if (/fall inside Visakhapatnam|both agree with that placement/.test(text)) {
+          assert.equal(fallsIn, 549, `${verdict} ${fallsIn} ${declaredDistrict}: ${text}`);
+        }
+        if (/both agree with that placement|also declares Visakhapatnam/.test(text)) {
+          assert.equal(declaredDistrict, 549, text);
+        }
+      }
+    }
+  }
+});

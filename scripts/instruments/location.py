@@ -385,8 +385,15 @@ def adjudicate(loc: dict, verdict: str | None, falls_in: int | None,
     changed, because the codes did not choose it and the page must not say
     they did.
 
+    SPLIT CODES. When the codes themselves name several districts, the
+    primary is only their majority. If the declared district is another of
+    them and the blocks fall there and not in the primary, the declaration
+    and the coordinates settle it: method `adjudicated`, every named district
+    kept, outcome `adjudicated_within_named`.
+
     Returns the (possibly new) location and one of: kept | adjudicated |
-    town_by_coordinates | town_by_declaration | town_unsettled | contested
+    adjudicated_within_named | town_by_coordinates | town_by_declaration |
+    town_unsettled | contested
     """
     primary = loc.get("primary_district")
     if primary is None:
@@ -414,6 +421,21 @@ def adjudicate(loc: dict, verdict: str | None, falls_in: int | None,
             return _moved(loc, declared, [declared], "adjudicated", primary,
                           index), "adjudicated"
         return loc, "contested"
+    # SPLIT CODES, SETTLED BY THE OTHER TWO. The codes name several districts
+    # and the primary is simply the one with the most plots. When the district
+    # the form declares is another of those the codes name, and the site's
+    # blocks fall there and none falls in the primary, two statements agree
+    # on a district the third also names: the project is placed there.
+    # Measured 2026-11-17: 314 proposals stood in the codes' majority district
+    # while their declaration and their coordinates both named another, and
+    # their pages said both "agree with that placement". Only the primary is
+    # replaced; every district the codes name stays named.
+    if (verdict == "inside" and declared is not None and declared != primary
+            and declared in named and declared in under
+            and primary not in under):
+        districts = [declared] + [d for d in named if d != declared]
+        return _moved(loc, declared, districts, "adjudicated", primary,
+                      index), "adjudicated_within_named"
     return loc, "kept"
 
 
