@@ -266,3 +266,25 @@ export function locationEvidence(
   const anyDisagrees = (declared != null && !declaredHere) || coords.agrees === false;
   return { sentences: out, contested: false, firm: anyAgrees && !anyDisagrees };
 }
+
+/**
+ * Which of a multi-district filing's districts the profile describes, as a
+ * noun phrase, worded from how the location was established.
+ *
+ * Both the profile and the findings said "the one where it names the most
+ * places" for every multi-district filing. That is how the codes choose
+ * (village and sub-district routes), and false wherever something else chose:
+ * an adjudication follows the declared district and the coordinates, and a
+ * town code is settled by them, whatever the codes' count says.
+ */
+export function profiledDistrictPhrase(resolution: ResolutionMethod | string): string {
+  switch (resolution) {
+    case "village":
+    case "subdistrict":
+      return "the district where it names the most places";
+    case "adjudicated":
+      return "the district its declared district and site coordinates agree on";
+    default:
+      return "the district it is placed in, as set out above";
+  }
+}
