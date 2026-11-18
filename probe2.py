@@ -3,10 +3,12 @@ for amount and scheme extraction; and Andhra Pradesh GOIR asked again with longe
 from __future__ import annotations
 
 import json
+import sys
 import traceback
 from pathlib import Path
 
-import probe as P
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import probe as P  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 TARGETS = {(t["src"], t["no"]) for t in json.loads((HERE / "money_targets.json").read_text("utf-8"))}
