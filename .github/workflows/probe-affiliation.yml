@@ -17,6 +17,8 @@ jobs:
           python-version: "3.12"
       - name: Runner address
         run: curl -s --max-time 10 https://ipinfo.io/json | grep -E '"(country|org)"' || true
+      - name: Complete the certificate chain (AIA)
+        run: bash complete_chain.sh
       - name: Read
         env:
           STATES: "28,27,5"

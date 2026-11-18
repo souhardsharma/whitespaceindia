@@ -27,6 +27,12 @@ CAP = int(os.environ.get("CAP", "3200"))
 DEADLINE = time.time() + 60 * float(os.environ.get("MINUTES", "100"))
 LOG: list[dict] = []
 CTX = ssl.create_default_context()
+# SARAS serves its leaf without the intermediate. The intermediate is fetched from the address the leaf names
+# (AIA) by complete_chain.sh before this runs and added as a CA; with PARTIAL_CHAIN cleared OpenSSL still accepts
+# a chain only if it ends at a root the runner already trusts. Verification is never relaxed.
+CTX.verify_flags &= ~ssl.VERIFY_X509_PARTIAL_CHAIN
+if Path("intermediate.pem").exists():
+    CTX.load_verify_locations(cafile="intermediate.pem")
 OP = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
                                  urllib.request.HTTPSHandler(context=CTX))
 
@@ -45,6 +51,7 @@ def send(url, data=None, headers=None, timeout=60):
         status, raw = e.code, b""
     except Exception as e:  # noqa: BLE001
         status, raw = -1, repr(e).encode()
+        LOG.append({"error": repr(e)[:300]})
     LOG.append({"url": url.replace(BASE, ""), "status": status, "bytes": len(raw),
                 "s": round(time.time() - t0, 2), "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
     time.sleep(PAUSE)
