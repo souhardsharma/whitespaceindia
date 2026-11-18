@@ -183,6 +183,23 @@ def main():
         st, p = send(op, BASE + name)
         (OUT / name.replace(".aspx", ".html")).write_text(p, encoding="utf-8")
         summary[name] = st
+    # Indian pool: three GETs of the public pages (reachability only)
+    try:
+        pool = egress.open_pool("india", reload_every=0)
+        pr = []
+        for name in ["Glance_Report.aspx", "ViewExpenditure.aspx", "Glance_Report.aspx"]:
+            t0 = time.time()
+            st, body = egress.fetch(pool, BASE + name, timeout=60, deadline=time.time() + 150)
+            pr.append({"page": name, "status": st, "bytes": len(body), "s": round(time.time() - t0, 1),
+                       "head": body[:120].decode("utf-8", "replace")})
+            if st == 200:
+                (OUT / ("pool_" + name.replace(".aspx", ".html"))).write_bytes(body)
+        summary["india_pool"] = pr
+        print(json.dumps(pr), flush=True)
+    except Exception as e:  # noqa: BLE001
+        summary["india_pool"] = f"{type(e).__name__}: {e}"
+    if summary["Glance_Report.aspx"] != 200:
+        MANDALS[:] = MANDALS[:1]
     bills, mandals, prog = {}, [], []
     try:
         for dist, midx in MANDALS:
