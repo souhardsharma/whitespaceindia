@@ -16,6 +16,9 @@ on:
         default: "no"
       india:
         default: "no"
+      reopen:
+        description: "comma list for reopen.py (empty = plan.json on push only)"
+        default: ""
 permissions:
   contents: read
 jobs:
@@ -30,7 +33,7 @@ jobs:
       - name: Runner address
         run: curl -s --max-time 10 https://ipinfo.io/json | grep -E '"(ip|country|org)"' || true
       - name: Indian pool (only when a probe needs it)
-        if: (github.event_name == 'push' && hashFiles('need_india') != '') || inputs.india == 'yes'
+        if: inputs.india == 'yes'
         env:
           EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
         run: |
@@ -38,16 +41,23 @@ jobs:
           python -I -X utf8 scripts/education/refresh_pool.py india --max-minutes 10 || true
           wc -l "$EDUCATION_CACHE_DIR/pools/india.txt" || true
       - name: Static probes
-        if: github.event_name == 'push' || inputs.static == 'yes'
+        if: inputs.static == 'yes'
         env:
           EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
         run: python -I -X utf8 probe.py
       - name: Poshan stages
+        if: github.event_name != 'push' && inputs.stage != ''
         env:
           EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
           STAGE: ${{ github.event_name == 'push' && 'cadence,sample' || inputs.stage }}
           ARG: ${{ github.event_name == 'push' && '{}' || inputs.arg }}
         run: python -I -X utf8 poshan.py
+      - name: Reopen stages
+        if: github.event_name == 'push' || inputs.reopen != ''
+        env:
+          STAGE: ${{ inputs.reopen }}
+          ARG: ${{ github.event_name == 'push' && '' || inputs.arg }}
+        run: python -I -X utf8 reopen.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
