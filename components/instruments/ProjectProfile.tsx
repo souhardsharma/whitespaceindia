@@ -51,7 +51,7 @@ import {
   type LegalDetermination,
 } from "./ConsentScreen";
 import { PLUM } from "./InstrumentChrome";
-import { locationEvidence } from "@/lib/instruments/location";
+import { locationEvidence, profiledDistrictPhrase } from "@/lib/instruments/location";
 import { presentState, titleCase } from "@/lib/instruments/place";
 import { FollowButton } from "./Watchlist";
 import LinkedClearances from "./LinkedClearances";
@@ -496,7 +496,7 @@ function LocationPanel({
           <>
             {" "}
             The filing names {p.allDistricts.length} districts, and this profile
-            describes the one where it names the most places. A project that
+            describes {profiledDistrictPhrase(p.resolution)}. A project that
             runs across districts, such as a road or a pipeline, may affect
             people in each of them.
           </>

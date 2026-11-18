@@ -230,3 +230,24 @@ test("every agreement sentence is true of the profiled district", () => {
     }
   }
 });
+
+import { profiledDistrictPhrase } from "../location.ts";
+import { readFileSync } from "node:fs";
+
+test("which district the profile describes is worded from how it was placed", () => {
+  assert.match(profiledDistrictPhrase("village"), /names the most places/);
+  assert.match(profiledDistrictPhrase("subdistrict"), /names the most places/);
+  // An adjudication follows the declaration and the coordinates, not the count.
+  assert.doesNotMatch(profiledDistrictPhrase("adjudicated"), /most/);
+  assert.match(profiledDistrictPhrase("adjudicated"), /declared district and site coordinates agree on/);
+  // A town code is settled by other evidence, or left provisional.
+  assert.doesNotMatch(profiledDistrictPhrase("town_settled"), /most/);
+});
+
+test("no page or finding types 'the most places' itself", () => {
+  for (const f of ["../../../components/instruments/ProjectProfile.tsx", "../findings.ts"]) {
+    const src = readFileSync(new URL(f, import.meta.url), "utf8");
+    assert.doesNotMatch(src, /most places|most sites/, `${f} states the rule itself`);
+    assert.match(src, /profiledDistrictPhrase\(/, `${f} must word it through location.ts`);
+  }
+});
