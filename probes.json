@@ -1,0 +1,12 @@
+[
+ {"name": "rc-erc-direct", "url": "https://web.ncte.gov.in/page-regional-committee/erc", "family": "open", "times": 2, "pause": 3},
+ {"name": "rc-src-direct-browserlike", "url": "https://web.ncte.gov.in/page-regional-committee/src", "family": "open",
+  "headers": {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Language": "en-IN,en;q=0.9", "Referer": "https://web.ncte.gov.in/"}, "pause": 3},
+ {"name": "appeal-direct", "url": "https://web.ncte.gov.in/page-appeal-orders", "family": "open", "pause": 3},
+ {"name": "old-host-direct", "url": "https://ncte.gov.in/", "family": "open", "pause": 3},
+ {"name": "cf-pdf-erc415-direct", "url": "https://d3swgpghzvje7l.cloudfront.net/WebAdmin/pdf/phpwebRCMeetings/2026/1_1206_6afbcecf2e5e7.pdf", "family": "open", "pause": 2},
+ {"name": "cf-pdf-appeal472-direct", "url": "https://d3swgpghzvje7l.cloudfront.net/WebAdmin/pdf/phpwebAppeal/2026/appeal_472_6adf3df738863.pdf", "family": "open", "pause": 2},
+ {"name": "rc-erc-india", "url": "https://web.ncte.gov.in/page-regional-committee/erc", "family": "india", "times": 3, "pause": 5},
+ {"name": "rc-wrc-india", "url": "https://web.ncte.gov.in/page-regional-committee/wrc", "family": "india", "times": 2, "pause": 5},
+ {"name": "appeal-india", "url": "https://web.ncte.gov.in/page-appeal-orders", "family": "india", "times": 2, "pause": 5}
+]
