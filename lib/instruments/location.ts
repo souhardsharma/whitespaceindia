@@ -57,19 +57,47 @@ function nm(names: Names, code: number | null): string {
   return names[String(code)] ?? `district ${code}`;
 }
 
-/** What the coordinates say, as a clause, or null when they say nothing testable. */
+/**
+ * What the coordinates say about THE PROFILED DISTRICT, as a clause.
+ *
+ * The pipeline's verdict is tested against every district the filing names:
+ * `inside` means a block falls in one of them, not necessarily in the one
+ * this profile describes. Read as agreement with the profile's district, it
+ * told 533 pages that the coordinates "agree with that placement" while they
+ * fell in another named district (2026-11-17; 1243990978 is placed in
+ * Malkangiri with its only block in Koraput). Agreement is therefore `fallsIn`
+ * equal to the profiled district; a block in another named district is said
+ * to be exactly that.
+ */
 function coordinateClause(
   verdict: string | null,
   fallsIn: number | null,
   names: Names,
   here: string,
+  district: number,
+  multi: boolean,
 ): { text: string; agrees: boolean | null } {
   switch (verdict) {
     case "inside":
+      if (fallsIn != null && fallsIn !== district) {
+        return {
+          text: `The coordinates of its site fall in ${nm(names, fallsIn)}, another district this filing names, not in ${here}.`,
+          agrees: false,
+        };
+      }
+      if (fallsIn == null && multi) {
+        // Inside one of the named districts, but which one is not recorded.
+        return {
+          text: "The coordinates of its site fall inside one of the districts this filing names, but which one is not recorded.",
+          agrees: null,
+        };
+      }
       return { text: `The coordinates of its site fall inside ${here}.`, agrees: true };
     case "boundary":
       return {
-        text: `The coordinates of its site lie on the boundary of ${here}, so they neither confirm nor contradict it.`,
+        text: multi
+          ? "The coordinates of its site lie on the boundary of a district this filing names, so they neither confirm nor contradict the placement."
+          : `The coordinates of its site lie on the boundary of ${here}, so they neither confirm nor contradict it.`,
         agrees: null,
       };
     case "elsewhere":
@@ -109,13 +137,19 @@ export function locationEvidence(
   const here = nm(names, p.district);
   const named = new Set<number>([p.district, ...(p.allDistricts ?? [])]);
   const declared = p.declaredDistrict;
-  const coords = coordinateClause(p.verdict, p.fallsIn, names, here);
+  const coords = coordinateClause(p.verdict, p.fallsIn, names, here, p.district, named.size > 1);
   const out: string[] = [];
 
   switch (p.resolution) {
     case "adjudicated":
+      // Two kinds of adjudication (location.py adjudicate()): the codes point
+      // only elsewhere and the filing is moved to the one district the other
+      // two agree on; or the codes name several districts, this one among
+      // them, and the other two settle which. Only the first is "another".
       out.push(
-        `The place codes on the application form point to another district, but the district the form declares and the coordinates of its site both place the project in ${here}. Because two of the filing's three statements of place agree, this profile follows them.`,
+        named.size > 1
+          ? `The place codes on the application form name ${named.size} districts and point mostly to another, but the district the form declares and the coordinates of its site both place the project in ${here}, which the codes also name. Because two of the filing's three statements of place agree, this profile follows them.`
+          : `The place codes on the application form point to another district, but the district the form declares and the coordinates of its site both place the project in ${here}. Because two of the filing's three statements of place agree, this profile follows them.`,
       );
       return { sentences: out, contested: false, firm: true };
 
@@ -185,11 +219,15 @@ export function locationEvidence(
 
   // Placed from the codes: the declaration and the coordinates are the two
   // independent checks on them.
-  const declaredAgrees = declared != null && named.has(declared);
+  // Agreement is with the district THIS profile describes. A declaration of
+  // another district the codes also name is not agreement with this one; it
+  // used to be counted as such, and the page then said "both agree".
+  const declaredHere = declared != null && declared === p.district;
+  const declaredNamed = declared != null && named.has(declared);
   const contested =
     p.verdict === "elsewhere" &&
     declared != null &&
-    !declaredAgrees &&
+    !declaredNamed &&
     p.fallsIn != null &&
     declared !== p.fallsIn;
   if (contested) {
@@ -202,23 +240,29 @@ export function locationEvidence(
   const decl =
     declared == null
       ? "The form declares no district to compare."
-      : declaredAgrees
+      : declaredHere
         ? `The form also declares ${here}.`
-        : `The district the form declares, ${nm(names, declared)}, does not agree.`;
+        : declaredNamed
+          ? `The district the form declares, ${nm(names, declared)}, is another district this filing names, not ${here}.`
+          : `The district the form declares, ${nm(names, declared)}, does not agree.`;
 
-  if (declaredAgrees && coords.agrees === true) {
+  if (declaredHere && coords.agrees === true) {
     out.push("The district the form declares and the coordinates of its site both agree with that placement.");
     return { sentences: out, contested: false, firm: true };
   }
-  if (declaredAgrees && coords.agrees === false) {
+  if (declaredHere && coords.agrees === false) {
+    const where =
+      p.fallsIn != null && named.has(p.fallsIn)
+        ? `${nm(names, p.fallsIn)}, another district this filing names,`
+        : nm(names, p.fallsIn);
     out.push(
-      `The form also declares ${here}. The coordinates of its site fall in ${nm(names, p.fallsIn)} instead, and with two statements against one, this profile keeps the district the codes and the declaration agree on.`,
+      `The form also declares ${here}. The coordinates of its site fall in ${where} instead, and with two statements against one, this profile keeps the district the codes and the declaration agree on.`,
     );
     return { sentences: out, contested: false, firm: true };
   }
   out.push(decl, coords.text);
   // Firm only if something independent agrees and nothing contradicts.
-  const anyAgrees = declaredAgrees || coords.agrees === true;
-  const anyDisagrees = (declared != null && !declaredAgrees) || coords.agrees === false;
+  const anyAgrees = declaredHere || coords.agrees === true;
+  const anyDisagrees = (declared != null && !declaredHere) || coords.agrees === false;
   return { sentences: out, contested: false, firm: anyAgrees && !anyDisagrees };
 }

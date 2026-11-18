@@ -385,14 +385,21 @@ class DistrictGeometry:
                                           if d}), pts[0]
 
         found: list[int] = []
-        inside_pt = None
+        # The point published is a block in the FIRST named district (the one
+        # the profile describes) when any block falls there, else the first
+        # block in any other named district. Taken in block order alone, a
+        # project with blocks in both its own district and a neighbour it
+        # also names could publish the neighbour's block, and every sentence
+        # downstream would then describe the wrong district's ground.
+        rank = {c: i for i, c in enumerate(known)}
+        inside_pt, inside_rank = None, len(known)
         for lat, lon in pts:
             pt = Point(lon, lat)
             hit = next((c for c in known if self._prepared[c].contains(pt)), None)
             if hit is not None:
                 found.append(hit)
-                if inside_pt is None:
-                    inside_pt = (lat, lon)
+                if rank[hit] < inside_rank:
+                    inside_pt, inside_rank = (lat, lon), rank[hit]
                 continue
             here = self.locate(lat, lon)
             if here is not None:
