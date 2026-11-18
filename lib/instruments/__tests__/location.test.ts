@@ -197,8 +197,8 @@ test("split codes settled by the declaration and coordinates say the codes also 
     TWO,
   );
   const text = e.sentences.join(" ");
-  assert.match(text, /name 2 districts and point mostly to another/);
-  assert.match(text, /both place the project in East Godavari, which the codes also name/);
+  assert.match(text, /place codes on the application form name 2 districts\./);
+  assert.match(text, /both place the project in East Godavari, one of them/);
   assert.doesNotMatch(text, /point to another district, but/);
 });
 

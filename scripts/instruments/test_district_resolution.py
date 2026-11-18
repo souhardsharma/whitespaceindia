@@ -305,6 +305,22 @@ def test_adjudication() -> None:
     same, how = adjudicate(loc(549, None, districts=[549, 550]), "inside", 550,
                            None, [550])
     check("coordinates alone never move split codes", how, "kept")
+    # A town code that settles nothing, beside a plot in another district
+    # the declaration and the block agree on (SIA/MH/INFRA2/550865/2025:
+    # Greater Mumbai plot, Thane plot, declared Thane, block in Thane).
+    moved, how = adjudicate(loc(518, 517, districts=[518, 517],
+                                ambiguous=[518, 519]), "inside", 517, None, [517])
+    check("an unsettled town code yields to split-code agreement", how,
+          "adjudicated_within_named")
+    check("  ...placing it where the declaration and block agree",
+          moved["primary_district"], 517)
+    check("  ...as an adjudication, not a town settlement", moved["method"],
+          "adjudicated")
+    # ...but a town code its coordinates DO settle is still a town settlement.
+    moved, how = adjudicate(loc(518, 517, districts=[518, 517],
+                                ambiguous=[518, 519]), "inside", 519, None, [519])
+    check("  ...while coordinates in a town candidate still settle the town",
+          how, "town_by_coordinates")
 
     # Missing evidence is not evidence.
     same, how = adjudicate(loc(518, None), "elsewhere", 519)
