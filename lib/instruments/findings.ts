@@ -22,6 +22,7 @@
  */
 
 import type { DistrictRecord, Project } from "./types";
+import { profiledDistrictPhrase } from "./location.ts";
 import type { LegalDetermination } from "@/components/instruments/ConsentScreen";
 // Relative, not the @/ alias: this module is imported by node --test, which
 // does not resolve tsconfig path aliases.
@@ -278,7 +279,7 @@ export function findingsForProject(
   if (project.multiDistrictCount && project.multiDistrictCount > 1) {
     out.push({
       id: "project.linear",
-      text: `The filing names sites in ${project.multiDistrictCount} districts, so the project may affect people in each of them, while the population profile below covers only the district with the most sites.`,
+      text: `The filing names sites in ${project.multiDistrictCount} districts, so the project may affect people in each of them, while the population profile below covers only ${profiledDistrictPhrase(project.resolution)}.`,
       basis: ["district.allDistricts"],
       rule: "Shown when the filing names more than one district.",
       kind: "declared",
