@@ -41,7 +41,7 @@ LOG, NEXT = [], [0.0]
 FIELDS = ["School Category", "School Type", "MDM Served", "Student Attendance", "Teacher Attendance",
           "Food Grain", "Funds", "Aadhaar Enrollment", "Last Inspection"]
 # State abbr, code, districts to read (names matched case-insensitively; None = spread), clusters per district
-PLAN = [
+PLAN_ALL = [
     ("TR", "16", None, 8, 2),
     ("MP", "23", ["RATLAM", "REWA", "UMARIA", "DHAR", "NARSIMHAPUR", "KHARGONE", "SHEOPUR", "SAGAR", "BHOPAL", "JHABUA"], 0, 1),
     ("JK", "01", ["KUPWARA", "BARAMULLA", "ANANTNAG", "SRINAGAR", "BUDGAM", "PULWAMA", "JAMMU", "RAMBAN", "KATHUA", "DODA"], 0, 1),
@@ -49,7 +49,8 @@ PLAN = [
     ("AS", "18", None, 5, 1),
     ("HP", "02", None, 5, 1),
 ]
-random.seed(20261118)
+PLAN = [p for p in PLAN_ALL if p[0] in os.environ.get("PV_STATES", "TR,MP,JK,UA,AS,HP").split(",")]
+random.seed(int(os.environ.get("PV_SEED", "20261118")))
 
 
 def strip(s):
@@ -122,7 +123,29 @@ def jload(t):
         return []
 
 
+def relist():
+    """Re-read the panel of every school in relist.json (no picker calls)."""
+    res = {"mode": "relist", "schools": []}
+    L = json.loads((Path(__file__).resolve().parent / "relist.json").read_text(encoding="utf-8"))
+    try:
+        for x in L:
+            o = panel(x["code"], x["d"], x["b"], x["c"], x["s"])
+            o.update({k: x[k] for k in ("state", "code", "d", "dname", "b", "c", "s")})
+            res["schools"].append(o)
+    except Cap:
+        res["stopped"] = "cap"
+    (OUT / "pv_relist.json").write_text(json.dumps(res, ensure_ascii=False, indent=0), encoding="utf-8")
+    (OUT / "log_relist.json").write_text(json.dumps(LOG, indent=0), encoding="utf-8")
+    print(f"relist requests {len(LOG)} ok {sum(1 for x in LOG if x['status'] == 200)} schools {len(res['schools'])}")
+
+
 def main():
+    if os.environ.get("PV_RELIST") == "1":
+        relist()
+        if os.environ.get("PV_STATES"):
+            LOG.clear()
+        else:
+            return
     res = {"plan": [p[:2] for p in PLAN], "schools": [], "clusters": [], "state_pages": {}}
     try:
         for abbr, code, names, nspread, ncl in PLAN:
@@ -139,6 +162,10 @@ def main():
                 step = max(1, len(dists) // nspread)
                 chosen = dists[::step][:nspread]
             for d, dname in chosen:
+                if os.environ.get("PV_RELOAD") == "1":  # fresh page token per district (MP lost blocks after 3)
+                    st, page = req(f"/SchoolReporting/Index/{abbr}", referer=ref)
+                    m = re.search(r'name="__RequestVerificationToken"[^>]*value="([^"]+)"', page)
+                    tok = m.group(1) if m else tok
                 st, t = req("/SchoolReporting/GetBlocksByDisttJS", data={"DisttCode": d, "__RequestVerificationToken": tok},
                             referer=ref)
                 blocks = jload(t)

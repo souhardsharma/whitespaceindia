@@ -1,9 +1,11 @@
 # Throwaway: reads one public education source from GitHub's runner. Serves nothing; deleted afterwards.
 name: edu-probe
 on:
-  push:
-    branches: [probe-edu-hunt-meal-second]
   workflow_dispatch:
+    inputs:
+      relist: {description: "1 = re-read relist.json", default: "1"}
+      states: {description: "states for a fresh sample after the relist", default: "MP"}
+      reload: {description: "1 = fresh token per district", default: "1"}
 permissions:
   contents: read
 jobs:
@@ -18,6 +20,11 @@ jobs:
       - name: Runner address
         run: curl -s --max-time 10 https://ipinfo.io/json | grep -E '"(country|org)"' || true
       - name: Probe
+        env:
+          PV_RELIST: ${{ github.event.inputs.relist }}
+          PV_STATES: ${{ github.event.inputs.states }}
+          PV_RELOAD: ${{ github.event.inputs.reload }}
+          PV_CAP: "600"
         run: python -I -X utf8 pvrun.py || true
       - uses: actions/upload-artifact@v4
         if: always()
