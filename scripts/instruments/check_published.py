@@ -1190,7 +1190,7 @@ def test_source_coverage(shards: list[dict]) -> None:
     check("meta publishes a legend for dm", name_code is not None,
           str(by_code)[:80])
     seen: dict[str, int] = {}
-    bad_code = ok_without_source = 0
+    bad_code = ok_without_source = placed = 0
     missing = [sh["slug"] for sh in shards
                if "cf" not in set(sh["fields"])]
     check("every shard carries cf", not missing,
@@ -1205,6 +1205,8 @@ def test_source_coverage(shards: list[dict]) -> None:
                 bad_code += 1
                 continue
             seen[v] = seen.get(v, 0) + 1
+            if "dc" in F and r[F["dc"]] is not None:
+                placed += 1
             # `ok` asserts a form was read AND placed the proposal, so a
             # resolution method that never touched the form contradicts it.
             if v == "ok" and name_code and "dm" in F and r[F["dm"]] == name_code:
@@ -1274,11 +1276,21 @@ def test_source_coverage(shards: list[dict]) -> None:
         check("the read cohort is a strict subset while anything is unread",
               (read < total_rows) if unread else (read == total_rows),
               f"read {read} of {total_rows}, unread {unread}")
+        # Each published rate must be ITS OWN definition over ITS OWN
+        # denominator: placed rows over the whole register, and placed over
+        # the forms actually read. A swap of the two labels fails this. It
+        # used to assert only that the two numbers differ while anything was
+        # unread, and on 2026-11-18 both rounded to 99.65 with 76 forms
+        # unread - two correct figures that happened to coincide - and the
+        # night's publish stopped. Rates that round to one figure cannot be
+        # mislabelled: swapped, they publish the same numbers.
         whole = meta.get("resolution_rate_pct")
-        check("the two resolution rates are not the same number",
-              unread == 0 or whole is None or got is None or whole != got,
-              f"whole-register {whole} == read-cohort {got}, with {unread} "
-              f"proposals unread - one of the two is mislabelled")
+        whole_want = round(100 * placed / total_rows, 2) if total_rows else None
+        check("the two resolution rates are each what their label says",
+              whole is None or got is None
+              or (whole == whole_want and got == want),
+              f"whole-register {whole} (rows give {whole_want}), read-cohort "
+              f"{got} (rows give {want}), {unread} unread")
     # The coordinate outcomes must partition the register exactly. They did
     # not: a filing whose every block was discarded was counted both as its
     # own outcome and as "no location filed", and present + absent still summed
