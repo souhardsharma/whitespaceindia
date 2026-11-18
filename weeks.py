@@ -5,7 +5,8 @@ import time
 from datetime import date, timedelta
 from pathlib import Path
 
-import wd_probe
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # python -I leaves the script's folder off the path
+import wd_probe  # noqa: E402
 
 FIRST_MONDAY = date(2026, 4, 27)
 LAST_DAY = date(2026, 11, 18)
