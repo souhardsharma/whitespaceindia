@@ -17,17 +17,6 @@ jobs:
           python-version: "3.12"
       - name: Runner address
         run: curl -s --max-time 10 https://ipinfo.io/json | grep -E '"(ip|country|org)"' || true
-      - name: DNS and reach
-        run: |
-          getent ahosts schoolinfra.ap.gov.in || true
-          dig +short A schoolinfra.ap.gov.in @8.8.8.8 || true
-          dig +short AAAA schoolinfra.ap.gov.in @8.8.8.8 || true
-          dig +short A schoolinfra.ap.gov.in @1.1.1.1 || true
-          for i in 1 2 3; do curl -4 -s -o /dev/null -w '%{http_code} %{time_total}s %{remote_ip}' --max-time 40 https://schoolinfra.ap.gov.in/stmsworks/Dashboard/Glance_Report.aspx || echo " curl4 fail $?"; echo; sleep 5; done
-          curl -6 -s -o /dev/null -w '%{http_code} %{remote_ip}' --max-time 30 https://schoolinfra.ap.gov.in/stmsworks/Dashboard/Glance_Report.aspx || echo " curl6 fail $?"
-          echo
-          curl -4 -s -o /dev/null -w '%{http_code} %{time_total}s' --max-time 30 https://cse.ap.gov.in/ || echo " cse fail $?"
-          echo
       - name: Indian pool
         env:
           EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
@@ -38,7 +27,7 @@ jobs:
       - name: Probe
         env:
           EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
-        run: MINUTES=20 python -I -X utf8 probe.py
+        run: python -I -X utf8 probe2.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
