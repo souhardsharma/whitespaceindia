@@ -9,33 +9,20 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
-        with:
-          python-version: "3.12"
       - name: Runner address
-        run: curl -s --max-time 10 https://ipinfo.io/json | grep -E '"(country|org)"' || true
-      # The host serves its leaf certificate without the intermediate. Fetch the
-      # intermediate from the leaf's own AIA address and add it to the system
-      # bundle; verification stays on and the chain must still reach a root.
-      - name: Complete the certificate chain
-        run: |
-          H=r3appprd.sap.mcgm.gov.in
-          openssl s_client -connect $H:443 -servername $H </dev/null 2>/dev/null | openssl x509 > leaf.pem
-          URL=$(openssl x509 -in leaf.pem -noout -ext authorityInfoAccess | grep -o 'CA Issuers - URI:[^ ]*' | head -1 | sed 's/CA Issuers - URI://')
-          echo "issuer at $URL"
-          curl -s --max-time 20 "$URL" -o inter.bin
-          (openssl x509 -inform DER -in inter.bin -out inter.pem 2>/dev/null || openssl x509 -in inter.bin -out inter.pem)
-          openssl x509 -in inter.pem -noout -subject -issuer
-          cat /etc/ssl/certs/ca-certificates.crt inter.pem > "$RUNNER_TEMP/bundle.pem"
-          openssl verify -CAfile "$RUNNER_TEMP/bundle.pem" leaf.pem
-          echo "SSL_CERT_FILE=$RUNNER_TEMP/bundle.pem" >> "$GITHUB_ENV"
-      - name: Probe
+        run: curl -s --max-time 10 https://ipinfo.io/json | grep -E '"(country|region|org)"' || true
+      # Run 44392720118 got HTTP 403 on the first GET of every session. Record what the refusal says, three
+      # requests 20 s apart, so the cause (address, path, or the host as a whole) is on file.
+      - name: What the refusal says
         run: |
           mkdir -p out
-          python -I -X utf8 weeks.py | tee out/log.txt
+          for path in /sap/bc/webdynpro/sap/zpur_order_data /sap/public/bc/ur/nw7/js/lightspeed.js /; do
+            curl -s --max-time 30 -D - -o "out/body_$(echo $path | tr '/' '_').html" -w "HTTP %{http_code} %{size_download} bytes $path\n" "https://r3appprd.sap.mcgm.gov.in$path" | tee -a out/log.txt
+            sleep 20
+          done
+          head -c 1500 out/body__sap_bc_webdynpro_sap_zpur_order_data.html || true
       - uses: actions/upload-artifact@v4
         with:
           name: probe-out
