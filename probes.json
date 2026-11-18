@@ -1,0 +1,83 @@
+[
+ {
+  "name": "tx_counts_nc",
+  "url": "https://data.texas.gov/resource/tqgd-mf4x.json?$select=count(*)%20as%20n,max(non_compliance_id)%20as%20mx,min(non_compliance_id)%20as%20mn"
+ },
+ {
+  "name": "tx_counts_act",
+  "url": "https://data.texas.gov/resource/m5q4-3y3d.json?$select=count(*)%20as%20n,min(activity_date)%20as%20mn,max(activity_date)%20as%20mx"
+ },
+ {
+  "name": "tx_trs",
+  "url": "https://data.texas.gov/resource/wmur-pmzc.json?$order=state_id",
+  "pages": 3,
+  "page": 20000
+ },
+ {
+  "name": "tx_ops",
+  "url": "https://data.texas.gov/resource/bc5r-88dy.json?$select=operation_id,operation_number,operation_name,operation_type,operation_status,county,accepts_child_care_subsidies,adverse_action,corrective_action,conditions_on_permit,temporarily_closed,issuance_date,type_of_issuance,total_capacity,deficiency_high,deficiency_medium_high,total_inspections&$order=operation_id",
+  "pages": 4,
+  "page": 20000
+ },
+ {
+  "name": "tx_act",
+  "url": "https://data.texas.gov/resource/m5q4-3y3d.json?$where=activity_date%3E='2025-04-01'&$order=activity_id",
+  "pages": 4,
+  "page": 50000
+ },
+ {
+  "name": "tx_nc",
+  "url": "https://data.texas.gov/resource/tqgd-mf4x.json?$select=operation_id,activity_id,non_compliance_id,standard_number_description,standard_risk_level,corrected_at_inspection,corrected_date,date_correction_verified&$order=non_compliance_id%20DESC",
+  "pages": 8,
+  "page": 50000
+ },
+ {
+  "name": "tx_sec",
+  "url": "https://data.texas.gov/resource/ywgb-2ig8.json?$select=count(*)%20as%20n"
+ },
+ {
+  "name": "trs_guidelines_pdf",
+  "url": "https://www.twc.texas.gov/sites/default/files/wf/docs/texas-rising-star-certification-guidelines-twc.pdf",
+  "ext": "pdf"
+ },
+ {
+  "name": "trs_guidelines_docx",
+  "url": "https://www.twc.texas.gov/sites/default/files/wf/docs/texas-rising-star-certification-guidelines-twc.docx",
+  "ext": "docx"
+ },
+ {
+  "name": "trs_guidelines_2025_pdf",
+  "url": "https://www.childcare.texas.gov/sites/default/files/texas-rising-star/documents/Guidelines_(January_2025)_FINAL.pdf",
+  "ext": "pdf"
+ },
+ {
+  "name": "ct_viol",
+  "url": "https://data.ct.gov/resource/ccit-2ev8.json?$select=caseidnt,caseactionidnt,visitdate,closedate,caselastmodifieddate,actiontype,casetype,violationstatute,violationdescription&$where=visitdate%3E='2026-01-01'&$order=caseviolationlinkidnt",
+  "pages": 3,
+  "page": 50000
+ },
+ {
+  "name": "ct_insp",
+  "url": "https://data.ct.gov/resource/6rnk-h6iy.json?$select=caseidnt,caseactionidnt,licensenumber,inspectionnumber,inspectiontype,inspectionstatus,visitdate,closedate,caselastmodifieddate,resolutiondescription&$where=visitdate%3E='2025-06-01'&$order=caseactionidnt",
+  "pages": 3,
+  "page": 50000
+ },
+ {
+  "name": "ct_inv",
+  "url": "https://data.ct.gov/resource/tett-bw6q.json?$select=caseidnt,casenumber,licensenumber,howreceived,dateopened,dateclosed,caselastmodifieddate,resolutiondescription&$where=dateopened%3E='2025-01-01'&$order=caseidnt",
+  "pages": 2,
+  "page": 50000
+ },
+ {
+  "name": "de_comp",
+  "url": "https://data.delaware.gov/resource/wb83-pkcv.json?$order=:id",
+  "pages": 3,
+  "page": 50000
+ },
+ {
+  "name": "nyc_bus",
+  "url": "https://data.cityofnewyork.us/resource/ez4e-fazm.json?$where=occurred_on%3E='2026-08-01'&$order=busbreakdown_id",
+  "pages": 2,
+  "page": 50000
+ }
+]
