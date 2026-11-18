@@ -95,12 +95,17 @@ def read(target: str, district: str, kind: str, codes: list[str]) -> dict:
     results = {"route": s.proxy, "listed": len(listed) - 1, "institutions": {}}
     if codes == ["ALL"]:
         codes = [c for c in listed if c != "0"]
+    results["codes"] = codes
     for code in codes:
         t0 = time.time()
-        rpage = post(s, page, {P + "ddlDistrict": district, P + "ddlBlock": "",
-                               P + "ddlActiveInactive": kind, P + "ddlCategoryType": "",
-                               P + "ddlGovtPvt": "", P + "ddlHostel": code,
-                               P + "btnShow": "Generate Report"})
+        try:
+            rpage = post(s, page, {P + "ddlDistrict": district, P + "ddlBlock": "",
+                                   P + "ddlActiveInactive": kind, P + "ddlCategoryType": "",
+                                   P + "ddlGovtPvt": "", P + "ddlHostel": code,
+                                   P + "btnShow": "Generate Report"})
+        except (egress.SessionLost, RuntimeError) as e:
+            results["lost"] = f"{code}: {e}"[:300]
+            break
         results["institutions"][code] = {"name": listed.get(code), "secs": round(time.time() - t0, 1),
                                          **table_aggregate(rpage)}
     return results
