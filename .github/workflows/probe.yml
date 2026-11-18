@@ -28,7 +28,7 @@ jobs:
       - name: Probe
         env:
           EDUCATION_CACHE_DIR: ${{ runner.temp }}/edu
-        run: python -I -X utf8 probe.py
+        run: python -I -X utf8 probe2.py
       - uses: actions/upload-artifact@v4
         with:
           name: probe-out
