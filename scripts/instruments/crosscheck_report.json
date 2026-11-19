@@ -1,36 +1,36 @@
 {
- "generated_at": "2026-11-18T20:56:58.903030+00:00",
+ "generated_at": "2026-11-19T04:18:04.825265+00:00",
  "purpose": "Tests the district the instrument reports against the district named in the regulator's signed clearance letter - a different document, not the applicant's own form. Corroborates or refutes the single source the whole profile depends on.",
- "sampled": 149,
+ "sampled": 111,
  "requested": 150,
  "stopped_early": true,
- "seconds": 1215.8,
+ "seconds": 1218.7,
  "outcomes": {
-  "agree": 87,
-  "disagree": 12,
-  "no-district-in-letter": 24,
+  "agree": 54,
+  "disagree": 10,
+  "no-district-in-letter": 17,
   "no-location-text": 0,
-  "download-failed": 26,
+  "download-failed": 30,
   "unreadable": 0,
   "no-text-layer": 0
  },
  "download_failures": {
-  "transport": 26
+  "transport": 30
  },
- "comparable": 99,
- "agreement_rate_pct": 87.88,
+ "comparable": 64,
+ "agreement_rate_pct": 84.38,
  "agreement_by_resolution_method": {
   "s": {
-   "agree": 11,
-   "comparable": 15,
-   "sampled": 26,
-   "rate_pct": 73.33
+   "agree": 9,
+   "comparable": 13,
+   "sampled": 23,
+   "rate_pct": 69.23
   },
   "v": {
-   "agree": 75,
-   "comparable": 82,
-   "sampled": 118,
-   "rate_pct": 91.46
+   "agree": 44,
+   "comparable": 49,
+   "sampled": 84,
+   "rate_pct": 89.8
   },
   "d": {
    "agree": 0,
@@ -41,7 +41,7 @@
   "c": {
    "agree": 1,
    "comparable": 2,
-   "sampled": 3,
+   "sampled": 2,
    "rate_pct": 50.0
   }
  },
@@ -78,16 +78,6 @@
    "certificate": "https://parivesh.nic.in/certificates/_GUWAHATI_INTERNATIONAL_AIRPORT_LIMITED/229/132899363/V_null_SIA_AS_MIN_546200_2025_132899369_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/RJ/MIN/495924/2025",
-   "state": "RAJASTHAN",
-   "claimed": 118,
-   "foundInLetter": [
-    112
-   ],
-   "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/sunil_kumar/246/101135413/V_0_SIA_RJ_MIN_495924_2025_101135414_-signed.pdf"
-  },
-  {
    "proposalNo": "SIA/TN/MIN/467394/2024",
    "state": "TAMIL NADU",
    "claimed": 614,
@@ -98,14 +88,14 @@
    "certificate": "https://parivesh.nic.in/certificates/_DALMIA_CEMENT_(BHARAT)_LIMITED/229/56382633/SIA_TN_MIN_467394_2024_56382639_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/CG/MIN/576857/2026",
-   "state": "CHHATTISGARH",
-   "claimed": 409,
+   "proposalNo": "SIA/RJ/MIN/495924/2025",
+   "state": "RAJASTHAN",
+   "claimed": 118,
    "foundInLetter": [
-    410
+    112
    ],
    "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/SANKALP_SINGH_RAJPUT/2/1225408224/V_0_SIA_CG_MIN_576857_2026_1225408230_-signed.pdf"
+   "certificate": "https://parivesh.nic.in/certificates/sunil_kumar/246/101135413/V_0_SIA_RJ_MIN_495924_2025_101135414_-signed.pdf"
   },
   {
    "proposalNo": "SIA/AS/MIN/481728/2024",
@@ -156,16 +146,6 @@
    ],
    "method": "c",
    "certificate": "https://parivesh.nic.in/certificates/ASHVI_DEVELOPERS_PRIVATE_LIMITED/65/99456885/SIA_MH_INFRA2_495281_2025_99456887_-signed.pdf"
-  },
-  {
-   "proposalNo": "SIA/TN/MIN/478800/2024",
-   "state": "TAMIL NADU",
-   "claimed": 627,
-   "foundInLetter": [
-    603
-   ],
-   "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/KARUPPASAMY_NADAR_KASILINGAM/229/73580646/V_null_SIA_TN_MIN_478800_2024_73580650_-signed.pdf"
   }
  ],
  "method_notes": [
