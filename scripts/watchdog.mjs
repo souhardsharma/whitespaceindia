@@ -264,6 +264,39 @@ async function checkBudgets() {
   );
 }
 
+// What Google needs to discover the site: robots.txt naming both sitemap
+// indexes, and the backend host's copy of the sitemaps readable with every
+// child listed there and every page in it on the public site. Google never
+// read a sitemap on pages.dev (scripts/cloudflare/sitemap-host.mjs).
+async function checkCrawlPath() {
+  const bad = [];
+  const robots = await http(`${SITE}/robots.txt?wd=${Date.now()}`);
+  const text = robots.body.toString("utf8");
+  if (robots.status !== 200) bad.push(`pages.dev robots.txt ${robots.status || robots.error}`);
+  for (const want of [`Sitemap: ${SITE}/sitemap-index.xml`, `Sitemap: ${BACKEND}/sitemap-index.xml`]) {
+    if (!text.includes(want)) bad.push(`robots.txt lacks "${want}"`);
+  }
+  const brobots = await http(`${BACKEND}/robots.txt`);
+  if (brobots.status !== 200 || !/Allow: \/sitemap-index\.xml/.test(brobots.body.toString("utf8"))) {
+    bad.push(`backend robots.txt ${brobots.status || brobots.error}`);
+  }
+  const idx = await http(`${BACKEND}/sitemap-index.xml`, {}, 90000);
+  const xml = idx.body.toString("utf8");
+  const children = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  if (idx.status !== 200 || !xml.startsWith("<?xml")) bad.push(`backend sitemap index ${idx.status || idx.error}`);
+  else if (children.length < 2 || children.some((u) => !u.startsWith(`${BACKEND}/`))) {
+    bad.push(`backend index lists ${children.length} children, not all on the backend host`);
+  } else {
+    const child = await http(children[children.length - 1], {}, 90000);
+    const cx = child.body.toString("utf8");
+    const pages = [...cx.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    if (child.status !== 200 || pages.length === 0) bad.push(`backend child sitemap ${child.status || child.error}`);
+    else if (pages.some((u) => !u.startsWith(`${SITE}/`))) bad.push("a backend child sitemap lists pages off the public site");
+  }
+  record("crawl path for Google", bad.length === 0,
+    bad.length ? bad.join("; ") : `robots.txt names both indexes; backend index lists ${children.length} sitemaps, all readable`);
+}
+
 async function checkVercel() {
   const r = await http(`${VERCEL}/instruments`);
   const loc = r.headers.get("location") || "";
@@ -322,7 +355,7 @@ async function report() {
 
 async function main() {
   if (!REPO || !TOKEN) throw new Error("GITHUB_REPOSITORY and GH_TOKEN are required");
-  for (const check of [checkSync, checkFreshness, checkPages, checkAwake, checkDeploys, checkBudgets, checkVercel, checkLimitsJob]) {
+  for (const check of [checkSync, checkFreshness, checkPages, checkAwake, checkDeploys, checkBudgets, checkCrawlPath, checkVercel, checkLimitsJob]) {
     try {
       await check();
     } catch (e) {

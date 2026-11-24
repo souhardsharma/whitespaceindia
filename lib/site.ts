@@ -27,6 +27,13 @@ export const LEGACY_CSR_HOSTS: ReadonlySet<string> = new Set([
   "csr.whitespaceindia.com",
 ]);
 
+/**
+ * The host that serves the sitemaps a second time (scripts/cloudflare/
+ * sitemap-host.mjs, which carries the same value as BACKEND_ORIGIN): Google
+ * never read them on pages.dev. It still redirects every other path.
+ */
+export const BACKEND_SITEMAP_ORIGIN = "https://whitespaceindia-backend.onrender.com";
+
 /** Every host that redirects to the primary origin, path for path. */
 export const MOVED_HOSTS: ReadonlySet<string> = new Set([
   "whitespaceindia.vercel.app",
