@@ -1,0 +1,44 @@
+name: render-retry
+
+# When Render reports a failed deploy of main, ask it to deploy again, at most
+# twice a UTC day (scripts/cloudflare/render-retry.sh says why and when not).
+# Render posts its deploy results to GitHub as deployment statuses; a status
+# from Render's app raises this event, a status written by this repository's
+# own token would not, so this cannot trigger itself.
+on:
+  deployment_status:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: render-retry
+  cancel-in-progress: false
+
+jobs:
+  retry:
+    if: >-
+      github.event.deployment_status.state == 'failure' &&
+      contains(github.event.deployment.environment, 'whitespaceindia-backend') &&
+      github.event.deployment.ref == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: main
+          fetch-depth: 200
+      - name: Ask Render for a new deploy
+        env:
+          FAILED_SHA: ${{ github.event.deployment.sha }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          bash scripts/cloudflare/render-retry.sh
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            for i in 1 2 3; do
+              git pull --rebase -q origin main && git push -q origin HEAD:main && exit 0
+              sleep 15
+            done
+            echo "::error::could not push the redeploy marker"; exit 1
+          fi
