@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/lib/site";
+import { BACKEND_SITEMAP_ORIGIN, SITE_URL } from "@/lib/site";
 
 const BASE_URL = SITE_URL;
 
@@ -81,7 +81,11 @@ export default function robots(): MetadataRoute.Robots {
     ],
     // One index naming the site's own sitemap and the per-state proposal
     // sitemaps (app/sitemap-index.xml/route.ts), so a new filing state needs
-    // no change here.
-    sitemap: `${BASE_URL}/sitemap-index.xml`,
+    // no change here. Named twice: on this host, and on the backend's host,
+    // because Google never read a sitemap on pages.dev while it read the same
+    // files on vercel.app within days (scripts/cloudflare/sitemap-host.mjs).
+    // A sitemap on another host counts when this robots.txt names it.
+    // pages.dev's own stays first: scripts/seo_check.mjs reads the first.
+    sitemap: [`${BASE_URL}/sitemap-index.xml`, `${BACKEND_SITEMAP_ORIGIN}/sitemap-index.xml`],
   };
 }

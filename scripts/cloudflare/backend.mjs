@@ -11,6 +11,7 @@ import http from "node:http";
 import path from "node:path";
 import { timingSafeEqual } from "node:crypto";
 import next from "next";
+import { BACKEND_ORIGIN, backendRobots, isSitemapPath, rewriteIndex } from "./sitemap-host.mjs";
 
 const KEY = process.env.BACKEND_KEY || "";
 const PORT = Number(process.env.PORT || 3000);
@@ -106,6 +107,43 @@ function ask(pathname, timeoutMs) {
   });
 }
 
+// A sitemap for an unkeyed caller (Google). The children are the build's own
+// prerendered files, handed over as they are; the index is read from this
+// server with the key and its child entries moved to this host.
+const HERE = (process.env.RENDER_EXTERNAL_URL || BACKEND_ORIGIN).replace(/\/$/, "");
+
+function serveSitemap(req, res) {
+  const pathname = String(req.url).split("?")[0];
+  if (pathname !== "/sitemap-index.xml") {
+    req.url = pathname;
+    handle(req, res);
+    return;
+  }
+  const inner = http.get(
+    { host: "127.0.0.1", port: PORT, path: pathname, headers: { "x-backend-key": KEY }, timeout: 20_000 },
+    (r) => {
+      const chunks = [];
+      r.on("data", (c) => chunks.push(c));
+      r.on("end", () => {
+        if (r.statusCode !== 200) {
+          res.writeHead(503, { "content-type": "text/plain", "retry-after": "60" }).end("sitemap unavailable");
+          return;
+        }
+        const body = rewriteIndex(Buffer.concat(chunks).toString("utf8"), SITE, HERE);
+        res.writeHead(200, {
+          "content-type": "application/xml; charset=utf-8",
+          "cache-control": "public, max-age=3600",
+        });
+        res.end(req.method === "HEAD" ? undefined : body);
+      });
+    },
+  );
+  inner.on("timeout", () => inner.destroy());
+  inner.on("error", () => {
+    if (!res.headersSent) res.writeHead(503, { "content-type": "text/plain", "retry-after": "60" }).end("sitemap unavailable");
+  });
+}
+
 async function warm() {
   const until = Date.now() + WARM_LIMIT_MS;
   for (const p of WARM) {
@@ -130,6 +168,19 @@ http
       return;
     }
     if (!keyMatches(req.headers["x-backend-key"])) {
+      // The sitemaps and this host's robots.txt are the one exception to the
+      // redirect: Google could not read the sitemaps on pages.dev
+      // (sitemap-host.mjs), and pages.dev's robots.txt names these instead.
+      const readOnly = req.method === "GET" || req.method === "HEAD";
+      if (readOnly && req.url === "/robots.txt") {
+        res.writeHead(200, { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" });
+        res.end(req.method === "HEAD" ? undefined : backendRobots());
+        return;
+      }
+      if (readOnly && isSitemapPath(req.url)) {
+        serveSitemap(req, res);
+        return;
+      }
       res.writeHead(308, { location: publicUrl(req.url), "content-type": "text/plain" }).end();
       return;
     }
