@@ -1,51 +1,67 @@
 {
- "generated_at": "2026-11-23T05:03:11.393779+00:00",
+ "generated_at": "2026-11-24T04:20:24.383155+00:00",
  "purpose": "Tests the district the instrument reports against the district named in the regulator's signed clearance letter - a different document, not the applicant's own form. Corroborates or refutes the single source the whole profile depends on.",
- "sampled": 144,
+ "sampled": 150,
  "requested": 150,
- "stopped_early": true,
- "seconds": 1200.0,
+ "stopped_early": false,
+ "seconds": 1044.0,
  "outcomes": {
-  "agree": 101,
-  "disagree": 4,
-  "no-district-in-letter": 24,
-  "no-location-text": 0,
-  "download-failed": 15,
+  "agree": 98,
+  "disagree": 8,
+  "no-district-in-letter": 31,
+  "no-location-text": 1,
+  "download-failed": 12,
   "unreadable": 0,
   "no-text-layer": 0
  },
  "download_failures": {
-  "transport": 15
+  "transport": 12
  },
- "comparable": 105,
- "agreement_rate_pct": 96.19,
+ "comparable": 106,
+ "agreement_rate_pct": 92.45,
  "agreement_by_resolution_method": {
   "v": {
-   "agree": 80,
-   "comparable": 83,
-   "sampled": 115,
-   "rate_pct": 96.39
+   "agree": 78,
+   "comparable": 86,
+   "sampled": 124,
+   "rate_pct": 90.7
   },
   "s": {
-   "agree": 17,
-   "comparable": 17,
-   "sampled": 21,
+   "agree": 10,
+   "comparable": 10,
+   "sampled": 14,
+   "rate_pct": 100.0
+  },
+  "a": {
+   "agree": 2,
+   "comparable": 2,
+   "sampled": 2,
    "rate_pct": 100.0
   },
   "d": {
-   "agree": 1,
-   "comparable": 1,
-   "sampled": 2,
+   "agree": 5,
+   "comparable": 5,
+   "sampled": 6,
    "rate_pct": 100.0
   },
   "c": {
    "agree": 3,
-   "comparable": 4,
-   "sampled": 6,
-   "rate_pct": 75.0
+   "comparable": 3,
+   "sampled": 4,
+   "rate_pct": 100.0
   }
  },
  "disagreements": [
+  {
+   "proposalNo": "SIA/TN/INFRA2/593898/2026",
+   "state": "TAMIL NADU",
+   "claimed": 604,
+   "foundInLetter": [
+    603
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/_CASA_GRAND_BUILDER_PRIVATE_LIMITED/36/1243740769/V_0_SIA_TN_INFRA2_593898_2026_1243740770_-signed.pdf"
+  },
   {
    "proposalNo": "SIA/AS/MIN/546438/2025",
    "state": "ASSAM",
@@ -58,14 +74,24 @@
    "certificate": "https://parivesh.nic.in/certificates/_GUWAHATI_INTERNATIONAL_AIRPORT_LIMITED/229/133013522/V_null_SIA_AS_MIN_546438_2025_133013526_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/MH/INFRA2/550569/2025",
-   "state": "MAHARASHTRA",
-   "claimed": 518,
+   "proposalNo": "SIA/KA/MIN/514428/2025",
+   "state": "KARNATAKA",
+   "claimed": 555,
    "foundInLetter": [
-    519
+    572
    ],
-   "method": "c",
-   "certificate": "https://parivesh.nic.in/certificates/ATMOSPHERE_REALTY_PVT_LTD/2/135723465/V_0_SIA_MH_INFRA2_550569_2025_135723466_-signed.pdf"
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/ARJUN_JANERIO_MORAES/246/114664293/V_0_SIA_KA_MIN_514428_2025_114664294_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/RJ/MIN/496230/2024",
+   "state": "RAJASTHAN",
+   "claimed": 126,
+   "foundInLetter": [
+    131
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/chanchal_shakhawat/246/101732829/V_0_SIA_RJ_MIN_496230_2024_101732830_-signed.pdf"
   },
   {
    "proposalNo": "SIA/GJ/MIN/498662/2024",
@@ -78,14 +104,34 @@
    "certificate": "https://parivesh.nic.in/certificates/prankada_kiransinh_natvarsinh/246/106163496/SIA_GJ_MIN_498662_2024_106163497_-signed.pdf"
   },
   {
-   "proposalNo": "SIA/KA/MIN/564816/2026",
-   "state": "KARNATAKA",
-   "claimed": 579,
+   "proposalNo": "SIA/PB/MIN/490561/2024",
+   "state": "PUNJAB",
+   "claimed": 35,
    "foundInLetter": [
-    572
+    41
    ],
    "method": "v",
-   "certificate": "https://parivesh.nic.in/certificates/KAMR_ENTERPRISES/246/1216310283/V_0_SIA_KA_MIN_564816_2026_1216310284_-signed.pdf"
+   "certificate": "https://parivesh.nic.in/certificates/MANPREET_SINGH/38/89189700/V_1_SIA_PB_MIN_490561_2024_89189709_-signed.pdf"
+  },
+  {
+   "proposalNo": "SIA/HP/MIN/532590/2025",
+   "state": "HIMACHAL PRADESH",
+   "claimed": 33,
+   "foundInLetter": [
+    26
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/jodh_bir_singh/246/124121439/V_0_SIA_HP_MIN_532590_2025_124121440_-signed.pdf"
+  },
+  {
+   "proposalNo": "IA/MH/IND3/576817/2026",
+   "state": "MAHARASHTRA",
+   "claimed": 517,
+   "foundInLetter": [
+    505
+   ],
+   "method": "v",
+   "certificate": "https://parivesh.nic.in/certificates/_MACROTECH_POLYCHEM_PRIVATE_LIMITED/2/1225373441/V_1_IA_MH_IND3_576817_2026_1225373442_-signed.pdf"
   }
  ],
  "method_notes": [
