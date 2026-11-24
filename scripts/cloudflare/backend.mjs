@@ -3,7 +3,9 @@
 // BACKEND_KEY is a visitor or crawler that found this host, and is sent to
 // the same path on the public site (308), so the backend's own address serves
 // no second copy of anything and spends almost nothing. /healthz is open for
-// the host's health check, and says ready only once the slow pages are warm.
+// the host's health check and says ready as soon as the port is open; the
+// slow pages are warmed behind it. The sitemaps and this host's robots.txt
+// are open too (sitemap-host.mjs).
 //
 //   BACKEND_KEY=... PORT=10000 node scripts/cloudflare/backend.mjs
 import fs from "node:fs";
@@ -78,11 +80,17 @@ function adoptProxyHeaders(req) {
 // The pages readers wait on. The first render after a start loads the page's
 // code and parses the change log (lib/instruments/server.ts keeps it per
 // process): the first /latest after the data deploy of 2026-10-29 took 22.9 s,
-// against 3-5 s on a warm server. Each is asked once, here, before /healthz
-// answers 200. Render moves traffic to a new deploy only when that check
-// passes, so the old instance serves readers meanwhile. Bounded, because a
-// page that will not render must not hold a deploy back or leave the check
-// failing for long.
+// against 3-5 s on a warm server. Each is asked once, here, right after the
+// server starts listening.
+//
+// /healthz answers 200 as soon as the port is open, NOT after the warm. Render
+// gives a deploy 15 minutes from "Deploying" to a passing health check, and on
+// 2026-11-20 and 11-21 its free tier spent 13 min 47 s and 5 min 25 s before it
+// even started this process: the 30 s the warm took came out of the little
+// time left, both deploys timed out, and the backend served the previous
+// night's data for a day each time. A reader is not the one who pays for a
+// cold /latest: the Cloudflare proxy serves its kept copy (proxy.mjs, stale
+// for up to 6 h) while the page is re-read behind it.
 const WARM = ["/instruments/consent/latest", "/instruments/consent/feed"];
 const WARM_LIMIT_MS = 40_000;
 let ready = false;
@@ -153,7 +161,6 @@ async function warm() {
     const status = await ask(p, left);
     console.log(`warm ${p} ${status || "failed"} in ${Date.now() - t0} ms`);
   }
-  ready = true;
 }
 
 const app = next({ dev: false, dir: process.cwd() });
@@ -192,6 +199,9 @@ http
     handle(req, res);
   })
   .listen(PORT, "0.0.0.0", () => {
+    // Healthy now (see WARM): the warm runs behind, never in front of, the
+    // health check.
+    ready = true;
     console.log(`backend on :${PORT}`);
     warm();
   });
