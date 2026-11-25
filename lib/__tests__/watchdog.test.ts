@@ -37,9 +37,12 @@ test("Render's worst case is a full month awake plus every deploy counted twice"
 });
 
 // Vercel stays redirect-only and its old full-app deployments stay behind a
-// login (Deployment Protection). Measured live on 2026-11-25 after the unpause.
+// login (Deployment Protection). Measured live on 2026-11-25 after the unpause
+// (root and trailing slash after the vercel.json fix of the same day).
 const healthy = {
   parent: { status: 308, location: `${SITE}/instruments` },
+  root: { status: 308, location: `${SITE}/` },
+  slash: { status: 308, location: `${SITE}/csr-spending` },
   csr: { status: 308, location: `${SITE}/csr` },
   alias: { status: 302, location: "https://vercel.com/sso-api?url=x&nonce=y" },
 };
@@ -52,7 +55,11 @@ test("a paused team, a full app or protection turned off each fail", () => {
   const paused = judgeVercel({ ...healthy, parent: { status: 402, location: null } });
   assert.match(paused.join(), /paused again/);
   const full = judgeVercel({ ...healthy, csr: { status: 200, location: null } });
-  assert.match(full.join(), /full app/);
+  assert.match(full.join(), /instead of redirecting/);
+  const stub = judgeVercel({ ...healthy, root: { status: 200, location: null } });
+  assert.match(stub.join(), /vercel.app\/ 200/, "the parent host's home page served the stub with a 200 once");
+  const slash404 = judgeVercel({ ...healthy, slash: { status: 404, location: null } });
+  assert.equal(slash404.length, 1, "a trailing slash answered 404 once");
   const open = judgeVercel({ ...healthy, alias: { status: 200, location: null } });
   assert.match(open.join(), /Deployment Protection is off/);
   const openRedirect = judgeVercel({ ...healthy, alias: { status: 308, location: `${SITE}/` } });

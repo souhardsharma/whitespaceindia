@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "",
-  "buildCommand": "mkdir -p vercel-redirect-only && echo 'Moved to https://whitespaceindia.pages.dev' > vercel-redirect-only/index.html",
+  "buildCommand": "mkdir -p vercel-redirect-only && echo 'Moved to https://whitespaceindia.pages.dev' > vercel-redirect-only/index.html && cp public/googlec2c59ca60c194f86.html vercel-redirect-only/",
   "outputDirectory": "vercel-redirect-only",
   "git": {
     "deploymentEnabled": {
@@ -18,8 +18,13 @@
       "permanent": true
     },
     {
-      "source": "/:path*",
-      "destination": "https://whitespaceindia.pages.dev/:path*",
+      "source": "/(.+)/",
+      "destination": "https://whitespaceindia.pages.dev/$1",
+      "permanent": true
+    },
+    {
+      "source": "/((?!googlec2c59ca60c194f86\\.html$).*)",
+      "destination": "https://whitespaceindia.pages.dev/$1",
       "permanent": true
     }
   ]

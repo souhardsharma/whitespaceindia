@@ -323,7 +323,9 @@ async function checkCrawlPath() {
 }
 
 // Vercel is redirect-only (vercel.json). Three probes say whether it stays so:
-// both public hosts answer 308 to the same path on the live site, and a
+// both public hosts answer 308 to the same path on the live site (the root
+// and a trailing slash included: "/:path*" matched neither, and the parent
+// host's home page served the build's stub text until 2026-11-25), and a
 // deployment's own address asks for a Vercel login. That last one is
 // Deployment Protection (Standard Protection, project settings), turned on
 // 2026-11-25 when the team was unpaused: without it every old deployment's
@@ -333,15 +335,17 @@ async function checkCrawlPath() {
 export const VERCEL_CSR = "https://whitespaceindia-csr.vercel.app";
 export const VERCEL_DEPLOYMENT_ALIAS = "https://whitespaceindia-git-main-souhard-sharmas-projects.vercel.app";
 
-export function judgeVercel({ parent, csr, alias }) {
+export function judgeVercel({ parent, root, slash, csr, alias }) {
   const bad = [];
   for (const [name, r, want] of [
     ["whitespaceindia.vercel.app/instruments", parent, `${SITE}/instruments`],
+    ["whitespaceindia.vercel.app/", root, `${SITE}/`],
+    ["whitespaceindia.vercel.app/csr-spending/", slash, `${SITE}/csr-spending`],
     ["whitespaceindia-csr.vercel.app/", csr, `${SITE}/csr`],
   ]) {
     if ([301, 308].includes(r.status) && r.location === want) continue;
     if (r.status === 402) bad.push(`${name} 402: the Vercel team is paused again`);
-    else if (r.status === 200) bad.push(`${name} 200: Vercel serves a full app again, not the redirect build`);
+    else if (r.status === 200) bad.push(`${name} 200: Vercel serves a page there instead of redirecting`);
     else bad.push(`${name} answered ${r.status || r.error} ${r.location || ""}`.trim());
   }
   const gated = alias.status === 401 || (alias.status === 302 && (alias.location || "").startsWith("https://vercel.com/sso-api"));
@@ -360,6 +364,8 @@ async function checkVercel() {
   };
   const bad = judgeVercel({
     parent: await probe(`${VERCEL}/instruments`),
+    root: await probe(`${VERCEL}/`),
+    slash: await probe(`${VERCEL}/csr-spending/`),
     csr: await probe(`${VERCEL_CSR}/`),
     alias: await probe(`${VERCEL_DEPLOYMENT_ALIAS}/`),
   });

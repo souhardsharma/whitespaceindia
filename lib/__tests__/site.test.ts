@@ -10,18 +10,63 @@ import { readFileSync } from "node:fs";
 
 const vercel = JSON.parse(readFileSync(new URL("../../vercel.json", import.meta.url), "utf8"));
 
-// Vercel's redirect matching, as far as these two rules use it: a `has` host
-// regex over the whole host, then "/" exactly or "/:path*" for any path.
+// Vercel's redirect matching, as far as these rules use it: a `has` host regex
+// over the whole host, then a source written as an anchored regular
+// expression whose groups fill $1.. in the destination. Named parameters
+// ("/:path*") are NOT modelled, and the test below refuses them: production
+// once ran "/:path*", which matches neither "/" nor a path ending in "/", so
+// the parent host's home page served the stub's text with a 200 and every
+// trailing-slash address answered 404 (found live 2026-11-25), while an
+// earlier version of this function, which assumed it matched, passed.
 function redirectFor(host: string, path: string): string | null {
   for (const rule of vercel.redirects) {
     const cond = rule.has?.[0];
     if (cond && !new RegExp(`^(?:${cond.value})$`).test(host)) continue;
-    if (rule.source === "/" && path !== "/") continue;
+    const m = new RegExp(`^${rule.source}$`).exec(path);
+    if (!m) continue;
     assert.equal(rule.permanent, true, "a moved host answers 308, which carries the old URL's standing");
-    return rule.destination.replace("/:path*", path === "/" ? "/" : path);
+    return rule.destination.replace(/\$(\d)/g, (_: string, i: string) => m[Number(i)] ?? "");
   }
   return null;
 }
+
+test("Vercel redirect sources are plain regular expressions, never named parameters", () => {
+  for (const rule of vercel.redirects) {
+    assert.doesNotMatch(rule.source, /:/, `${rule.source}: a named parameter does not match "/" or a trailing slash`);
+    assert.doesNotMatch(rule.destination.replace(/^https:\/\//, ""), /:/, rule.destination);
+  }
+});
+
+test("every path on every Vercel host is redirected, the root and trailing slashes included", () => {
+  for (const host of ["whitespaceindia.vercel.app", ...LEGACY_CSR_HOSTS]) {
+    for (const path of ["/", "/a", "/a/", "/a/b/c", "/a/b/c/", "/instruments/consent/123"]) {
+      const to = redirectFor(host, path);
+      assert.ok(to, `${host}${path} would be served by Vercel, not redirected`);
+      assert.equal(new URL(to).origin, PRIMARY_ORIGIN);
+    }
+  }
+});
+
+// Search Console verifies a property by fetching this file from the host with a
+// 200. Redirected with everything else, the two Vercel properties lost their
+// verification, and without it a Change of Address to the live site cannot be
+// filed. It is the only path Vercel serves itself.
+const VERIFY_FILE = "googlec2c59ca60c194f86.html";
+
+test("the Search Console verification file is served on Vercel, not redirected", () => {
+  for (const host of ["whitespaceindia.vercel.app", "whitespaceindia-csr.vercel.app"]) {
+    assert.equal(redirectFor(host, `/${VERIFY_FILE}`), null, `${host} must serve /${VERIFY_FILE}`);
+    assert.ok(redirectFor(host, `/${VERIFY_FILE}x`), "only that exact name escapes the redirect");
+    assert.ok(redirectFor(host, `/a/${VERIFY_FILE}`));
+  }
+  assert.match(vercel.buildCommand, new RegExp(`cp public/${VERIFY_FILE.replace(".", "\\.")} vercel-redirect-only/`));
+  assert.equal(readFileSync(new URL(`../../public/${VERIFY_FILE}`, import.meta.url), "utf8").trim(), `google-site-verification: ${VERIFY_FILE}`);
+});
+
+test("a trailing slash is dropped in the same hop, as the live site would drop it", () => {
+  assert.equal(redirectFor("whitespaceindia.vercel.app", "/csr-spending/maharashtra/"), `${PRIMARY_ORIGIN}/csr-spending/maharashtra`);
+  assert.equal(redirectFor("whitespaceindia-csr.vercel.app", "/about/"), `${PRIMARY_ORIGIN}/about`);
+});
 
 test("Vercel builds nothing that can run: no framework, no install, no functions", () => {
   assert.equal(vercel.framework, null, "a framework build brings back the functions that paused the team");
