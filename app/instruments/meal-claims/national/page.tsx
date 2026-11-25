@@ -60,6 +60,7 @@ export default function MealNational() {
     meals: sumOf(nat.states, "meals"),
   };
   const withDistricts = nat.states.filter((s) => s.districts.length);
+  const selfDisagree = nat.states.flatMap((s) => (s.district_sum ? [{ s, sum: s.district_sum }] : []));
   const readAt = whenIST(nat.read_at);
 
   const figureHeads = (
@@ -206,6 +207,51 @@ export default function MealNational() {
               </div>
             </section>
 
+            {selfDisagree.length ? (
+              <section className="px-6 md:px-12 py-12 border-b border-[#1c1c19]" aria-labelledby="disagree-heading">
+                <div className="max-w-6xl mx-auto">
+                  <h2 id="disagree-heading" className={`${SECTION_HEADING} mb-3`}>Where the State row and its districts differ</h2>
+                  <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl mb-5">
+                    For these States the national system&rsquo;s own district
+                    table for {dayShort(nat.day)} adds up to different figures
+                    from the State&rsquo;s row in the table above. Both are
+                    shown as the system printed them, and neither is
+                    corrected. Where a State is marked on holiday, its row has
+                    so far shown no returns while its districts counted the
+                    schools that sent one.
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[680px] border-collapse">
+                      <thead>
+                        <tr>
+                          <th className={TH} rowSpan={2}>State or UT</th>
+                          <th className={`${TH} text-right`} colSpan={3}>State row</th>
+                          <th className={`${TH} text-right`} colSpan={3}>Its districts added up</th>
+                        </tr>
+                        <tr className="border-b border-[#1c1c19]">
+                          {[0, 1].map((side) => (
+                            [M.nat_schools.label, M.nat_reported.label, M.nat_meals.label].map((label) => (
+                              <th key={`${side}-${label}`} className={`${TH} text-right`}>{label}</th>
+                            ))
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selfDisagree.map(({ s, sum }) => (
+                          <tr key={s.slug} className="border-b border-[#1c1c19]/15">
+                            <td className={TD}><a className={LINK} href={`#${s.slug}`}>{s.name}</a></td>
+                            {[s.schools, s.reported, s.meals, sum.schools, sum.reported, sum.meals].map((value, i) => (
+                              <td key={i} className={`${TD} text-right`}>{value == null ? "blank" : count(value)}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </section>
+            ) : null}
+
             {nat.compare.length ? (
               <section className="px-6 md:px-12 py-12 border-b border-[#1c1c19]" aria-labelledby="compare-heading">
                 <div className="max-w-6xl mx-auto">
@@ -216,7 +262,9 @@ export default function MealNational() {
                     lists and were read at different hours, so small
                     differences are expected. A difference too large for either
                     reason means the two systems hold different returns for
-                    the State.
+                    the State. Where the national side shows no returns, look
+                    at the table above: the State row may be the one that is
+                    empty.
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[680px] border-collapse">
@@ -266,7 +314,7 @@ export default function MealNational() {
                     <summary className="tap-target cursor-pointer py-3.5 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
                       <span className="font-headline font-bold text-[20px] tracking-[-0.01em]">{s.name}</span>
                       <span className="font-body text-[13px] opacity-75 tabular-nums">
-                        {count(s.districts.length)} districts &middot;{" "}
+                        {count(s.districts.length)} {s.districts.length === 1 ? "district" : "districts"} &middot;{" "}
                         {share(sumOf(s.districts, "reported"), sumOf(s.districts, "schools")) ?? "no share"} reported
                         {s.district_day ? ` on ${dayShort(s.district_day)}` : ""}
                       </span>

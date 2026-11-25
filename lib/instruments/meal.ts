@@ -509,6 +509,9 @@ export interface NationalState extends NationalFigures {
   /** The latest day its district table was read for. */
   district_day: string | null;
   districts: NationalDistrict[];
+  /** What the district table adds up to, when it is for the day read and
+   *  disagrees with the State row; otherwise null. Absent in older files. */
+  district_sum?: { schools: number; reported: number; meals: number } | null;
 }
 
 /** One State on one day, as each of the two systems holds it: schools, reported, meals. */

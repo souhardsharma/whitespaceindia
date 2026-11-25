@@ -420,11 +420,22 @@ export default function MealMethodology() {
               India, and the server the nightly run uses is outside India.
               The run therefore builds a list of open relays in India each
               night, checks each one against the system, and reads through
-              those that pass. Every request is encrypted to the
-              Ministry&rsquo;s own certificate, so a relay carries the page
-              without being able to read or change it. On a night when no
-              relay works, the national tables keep their previous date and
-              the rest of the instrument is unaffected.
+              those that pass. It uses a few of them at a time and counts
+              their requests together, so more relays do not mean more
+              requests for the system to answer. A relay that stops working
+              is replaced by another, and the list is checked again every
+              quarter of an hour while the national read lasts. Every request is encrypted to
+              the Ministry&rsquo;s own certificate, so a relay carries the
+              page without being able to read or change it. On a night when
+              no relay works, the national tables keep their previous date
+              and the rest of the instrument is unaffected.
+            </p>
+            <p>
+              The daily reporting system at mdmhp.nic.in, which the tests
+              are run on, has so far answered the run directly. If it stops
+              answering altogether, the run asks it through one of the same
+              relays, inside the same allowance of requests. A refusal
+              is different: the run does not go round one by any route.
             </p>
             <p>
               The national figures are not put through the
