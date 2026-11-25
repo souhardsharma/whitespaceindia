@@ -1,19 +1,115 @@
 {
-  "measured_on": "2026-11-25",
-  "requests_sent": 448,
-  "requests_failed": 0,
-  "median_seconds": 1.06,
-  "states": ["05", "16"],
-  "dates": ["2026-09-15", "2026-10-30", "2026-11-18", "2026-11-23"],
-  "tables_read": 191,
-  "school_days_tested": 2516,
-  "over": 53,
-  "over_wide": 11,
-  "over_by_one_or_two": 27,
-  "by_state": {
-    "05": {"school_days_tested": 1886, "over": 28, "over_wide": 4},
-    "16": {"school_days_tested": 630, "over": 25, "over_wide": 7}
+ "measured_on": "2026-11-25",
+ "requests_sent": 448,
+ "requests_failed": 0,
+ "median_seconds": 1.06,
+ "states": [
+  "05",
+  "16"
+ ],
+ "dates": [
+  "2026-09-15",
+  "2026-10-30",
+  "2026-11-18",
+  "2026-11-23"
+ ],
+ "tables_read": 191,
+ "school_days_tested": 2516,
+ "over": 53,
+ "over_wide": 11,
+ "over_by_one_or_two": 27,
+ "by_state": {
+  "05": {
+   "school_days_tested": 1886,
+   "over": 28,
+   "over_wide": 4
   },
-  "school_history_from": "2024-07-15",
-  "school_history_empty_at": "2024-03-15"
+  "16": {
+   "school_days_tested": 630,
+   "over": 25,
+   "over_wide": 7
+  }
+ },
+ "school_history_from": "2024-07-15",
+ "school_history_empty_at": "2024-03-15",
+ "year_read": {
+  "from": "2025-11-18",
+  "to": "2026-11-16",
+  "dates_read": 143,
+  "weeks": 52,
+  "weeks_with_records": 50,
+  "host_blanks": [
+   [
+    "2026-06-05",
+    "2026-06-25"
+   ],
+   [
+    "2026-05-14",
+    "2026-05-14"
+   ]
+  ],
+  "state_silences": [
+   {
+    "st": "37",
+    "span": "about eleven weeks of winter",
+    "vacation": true
+   },
+   {
+    "st": "23",
+    "span": "1 May to 15 June",
+    "vacation": true
+   },
+   {
+    "st": "06",
+    "span": "25 May to 30 June",
+    "vacation": true
+   },
+   {
+    "st": "18",
+    "span": "1 to 31 July",
+    "vacation": true
+   },
+   {
+    "st": "30",
+    "span": "2 to 21 November",
+    "vacation": true
+   },
+   {
+    "st": "16",
+    "span": "18 May to 8 June, and 17 to 26 October",
+    "vacation": true
+   },
+   {
+    "st": "05",
+    "span": "1 to 13 January, and 27 May to 30 June",
+    "vacation": true
+   },
+   {
+    "st": "31",
+    "span": "about twelve weeks from April",
+    "vacation": false
+   }
+  ]
+ },
+ "enrolment_filed_month": {
+  "month": "2026-10",
+  "pct": {
+   "38": 100.0,
+   "16": 98.9,
+   "18": 93.0,
+   "05": 89.2,
+   "23": 56.9,
+   "01": 53.2,
+   "15": 38.3,
+   "02": 28.4,
+   "06": 27.6,
+   "37": 23.2,
+   "31": 11.1,
+   "12": 8.8,
+   "30": 7.6,
+   "04": 6.9,
+   "14": 5.6,
+   "13": 1.5
+  }
+ }
 }
