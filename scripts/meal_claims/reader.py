@@ -41,6 +41,7 @@ TIMEOUT_S = 90
 ATTEMPTS = 3
 BACKOFF_S = 10
 BREAKER_FAILS = 5
+RELAYS_A_NIGHT = 20       # most times a silent host is asked through another route
 REFUSALS = frozenset({401, 403, 407, 429})
 
 # path -> what it is. Nothing else is ever requested.
@@ -299,13 +300,20 @@ class Host:
     budget     most requests this object will send (attempts count).
     deadline   time.time() after which nothing more is sent.
     log        callable(dict) given one record per attempt.
+    relay      callable() giving an opener on another route, or None. It is
+               asked only when the host has been SILENT: several requests in
+               a row that got no HTTP answer at all. An answer that refuses
+               (401, 403, 429) is never taken round this way, and the budget
+               and the pace are the same on every route.
     """
 
     def __init__(self, budget: int | None = None, deadline: float | None = None,
                  pace: float = PACE_S, log=None, opener=None, sleep=time.sleep,
-                 clock=time.time):
+                 clock=time.time, relay=None):
         self.budget, self.deadline, self.pace = budget, deadline, pace
         self.log, self.sleep, self.clock = log, sleep, clock
+        self.relay, self.relayed = relay, 0
+        self._silent_in_a_row = 0
         self.sent = 0
         self.answered = 0
         self.failed = 0
@@ -382,19 +390,36 @@ class Host:
             if status == 200:
                 self.answered += 1
                 self.latencies.append(secs)
-                self._fails_in_a_row = 0
+                self._fails_in_a_row = self._silent_in_a_row = 0
                 return body.decode("utf-8", "replace")
             self.failed += 1
             self._fails_in_a_row += 1
+            self._silent_in_a_row = self._silent_in_a_row + 1 if status == -1 else 0
             if status in REFUSALS:
                 raise Refused(f"HTTP {status} on {path}")
             if self._fails_in_a_row >= BREAKER_FAILS:
+                if self._silent_in_a_row >= BREAKER_FAILS and self._change_route():
+                    # The form token belonged to the session left behind, so
+                    # this request is owed and the next one starts afresh.
+                    raise Unreadable(f"{path}: no answer; the next request goes by another route")
                 raise Refused(f"{self._fails_in_a_row} failures in a row, last on {path}")
             if status != -1:
                 last = f"HTTP {status}"
             if attempt < ATTEMPTS:
                 self.sleep(BACKOFF_S * attempt)
         raise Unreadable(f"{path}: {last}")
+
+    def _change_route(self) -> bool:
+        """Take another route after a run of silence. False when there is none."""
+        if self.relay is None or self.relayed >= RELAYS_A_NIGHT:
+            return False
+        opener = self.relay()
+        if opener is None:
+            return False
+        self._opener, self.relayed = opener, self.relayed + 1
+        self._token = self._calendar_state = None
+        self._fails_in_a_row = self._silent_in_a_row = 0
+        return True
 
     # -- the reads
     def token(self, fresh: bool = False) -> str:

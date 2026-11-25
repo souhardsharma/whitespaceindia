@@ -368,6 +368,30 @@ def put_ams(db, page: dict, read_at: str, total_agrees: bool) -> None:
                (state, day, len(page["rows"]), read_at, int(total_agrees)))
 
 
+AMS_TABLES = ("ams_state_day", "ams_district_day", "ams_read", "ams_night")
+
+
+def take_ams(db, other: Path) -> int:
+    """Replace the national tables with those of another store file: the copy
+    the national read worked on while the meal read was writing this one.
+    Returns the number of tables in the ledger afterwards. A copy that holds
+    fewer than this store is refused, because a read only ever adds."""
+    connect(other).close()    # the same schema, or it raises
+    db.execute("attach database ? as side", (str(other),))
+    try:
+        here = db.execute("select count(*) from ams_read").fetchone()[0]
+        there = db.execute("select count(*) from side.ams_read").fetchone()[0]
+        if there < here:
+            raise ValueError(f"{other} holds {there} national tables, this store {here}")
+        for name in AMS_TABLES:
+            db.execute(f"delete from {name}")
+            db.execute(f"insert into {name} select * from side.{name}")
+        db.commit()
+    finally:
+        db.execute("detach database side")
+    return there
+
+
 def ams_read_at(db) -> dict[tuple[str, str], str]:
     """(State name or '' for the all-States table, day) -> when it was last read."""
     return {(r["state"], r["day"]): r["read_at"] for r in db.execute("select state, day, read_at from ams_read")}

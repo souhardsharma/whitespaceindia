@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import datetime as dt
 import itertools
+import shutil
 import sys
 import tempfile
+import threading
 import urllib.parse
 from pathlib import Path
 
@@ -25,6 +27,12 @@ import ams_sync as AS  # noqa: E402
 import store as ST  # noqa: E402
 
 PASS = FAIL = 0
+
+
+def QUIET(*_):
+    """A night's progress lines are not part of what is tested."""
+
+
 SERIAL = itertools.count()
 YESTERDAY = dt.date(2026, 11, 24)
 STATES = [f"STATE {n:02d}" for n in range(1, 35)] + ["A & N ISLANDS", "TRIPURA"]
@@ -196,7 +204,7 @@ def test_a_night_reads_in_order_and_survives_its_routes():
         servers.append(Page(today, lose_after=25))
         return AMS.Flow(servers[-1].request)
 
-    row = AS.run(db, new_flow, YESTERDAY, "2026-11-25T02:00:00Z", deadline=float("inf"), cap=120, clock=lambda: 0)
+    row = AS.run(db, new_flow, YESTERDAY, "2026-11-25T02:00:00Z", deadline=float("inf"), cap=120, clock=lambda: 0, say=QUIET)
     check("the night stops at its cap", row["outcome"] == "cap reached" and row["sent"] <= 120, row)
     check("routes that died were replaced", row["routes_lost"] >= 3 and len(servers) >= 4, row["routes_lost"])
     read = ST.ams_read_at(db)
@@ -210,7 +218,7 @@ def test_a_night_reads_in_order_and_survives_its_routes():
           got["meals"] == figures("TRIPURAGOMATI", YESTERDAY)["meals"])
 
     row = AS.run(db, lambda: AMS.Flow(Page(today).request), YESTERDAY, "2026-11-25T03:00:00Z",
-                 deadline=float("inf"), cap=5000, clock=lambda: 0)
+                 deadline=float("inf"), cap=5000, clock=lambda: 0, say=QUIET)
     read = ST.ams_read_at(db)
     days = {day for (state, day) in read if not state}
     check("a night with room reads all 30 days", row["outcome"] == "complete" and len(days) == 30, len(days))
@@ -218,7 +226,7 @@ def test_a_night_reads_in_order_and_survives_its_routes():
           not any(state == "A & N ISLANDS" and day != "2026-11-24" for (state, day) in read))
     before = row["tables"]
     row = AS.run(db, lambda: AMS.Flow(Page(today).request), YESTERDAY, "2026-11-25T04:00:00Z",
-                 deadline=float("inf"), cap=5000, clock=lambda: 0)
+                 deadline=float("inf"), cap=5000, clock=lambda: 0, say=QUIET)
     check("a second run the same night re-reads only what is not settled",
           row["tables"] < before / 4, (row["tables"], before))
     check("the night with no route says so",
@@ -232,6 +240,67 @@ def test_a_night_reads_in_order_and_survives_its_routes():
     check("three refusals in a row end the pass", row["outcome"] == "refused" and row["tables"] == 0, row)
 
 
+def test_flows_side_by_side_read_the_same_night():
+    print("\nside by side")
+    today = YESTERDAY + dt.timedelta(days=1)
+    one, six = store(), store()
+    AS.run(one, lambda: AMS.Flow(Page(today).request), YESTERDAY, "2026-11-25T02:00:00Z", deadline=float("inf"),
+           cap=5000, clock=lambda: 0, say=QUIET)
+    opened = []
+    guard = threading.Lock()
+
+    def new_flow():
+        with guard:
+            opened.append(Page(today, lose_after=40))
+        return AMS.Flow(opened[-1].request)
+
+    row = AS.run(six, new_flow, YESTERDAY, "2026-11-25T02:00:00Z", deadline=float("inf"), cap=5000, clock=lambda: 0,
+                 say=QUIET, flows=6)
+    check("six flows finish the night", row["outcome"] == "complete" and row["routes_lost"] > 0, row)
+    check("more than one route was in use at once", len(opened) >= 6, len(opened))
+    for name in ("ams_state_day", "ams_district_day"):
+        rows = [[tuple(r) for r in db.execute(f"select * from {name} order by 1, 2, 3")] for db in (one, six)]
+        check(f"{name} holds what one flow would have read", rows[0] == rows[1] and len(rows[0]) > 100,
+              (len(rows[0]), len(rows[1])))
+    ledger = [sorted((r["state"], r["day"]) for r in db.execute("select state, day from ams_read")) for db in (one, six)]
+    check("the ledger names the same tables", ledger[0] == ledger[1])
+    row = AS.run(store(), new_flow, YESTERDAY, "2026-11-25T02:00:00Z", deadline=float("inf"), cap=200, clock=lambda: 0,
+                 say=QUIET, flows=6)
+    check("six flows stop at the cap, give or take a request each",
+          row["outcome"] == "cap reached" and row["sent"] <= 200 + 6, row["sent"])
+
+
+def test_the_side_copy_is_taken_whole():
+    print("\nside copy")
+    today = YESTERDAY + dt.timedelta(days=1)
+    folder = Path(tempfile.mkdtemp())
+    main_db = ST.connect(folder / "store.sqlite")
+    AS.run(main_db, lambda: AMS.Flow(Page(today).request), YESTERDAY, "2026-11-25T02:00:00Z", deadline=float("inf"),
+           cap=60, clock=lambda: 0, say=QUIET)
+    main_db.commit()
+    shutil.copy(folder / "store.sqlite", folder / "national.sqlite")
+    side = ST.connect(folder / "national.sqlite")
+    AS.run(side, lambda: AMS.Flow(Page(today).request), YESTERDAY, "2026-11-25T03:00:00Z", deadline=float("inf"),
+           cap=400, clock=lambda: 0, say=QUIET)
+    want = {name: [tuple(r) for r in side.execute(f"select * from {name} order by 1, 2, 3")] for name in ST.AMS_TABLES}
+    side.close()
+    before = main_db.execute("select count(*) from ams_read").fetchone()[0]
+    taken = ST.take_ams(main_db, folder / "national.sqlite")
+    check("the store takes every table the copy read", taken > before, (before, taken))
+    check("all four national tables are the copy's", all(
+        [tuple(r) for r in main_db.execute(f"select * from {name} order by 1, 2, 3")] == want[name]
+        for name in ST.AMS_TABLES))
+    check("both nights are on record", main_db.execute("select count(*) from ams_night").fetchone()[0] == 2)
+    empty = folder / "empty.sqlite"
+    ST.connect(empty).close()
+    try:
+        ST.take_ams(main_db, empty)
+        check("a copy holding less is refused", False)
+    except ValueError:
+        check("a copy holding less is refused", True)
+    check("and the store is left as it was", main_db.execute("select count(*) from ams_read").fetchone()[0] == taken)
+
+
 def test_settling():
     print("\nsettling")
     day = dt.date(2026, 11, 20)
@@ -243,7 +312,8 @@ def test_settling():
 
 def main() -> int:
     for fn in (test_a_table_is_read_as_the_page_shows_it, test_the_flow_asks_as_the_page_does,
-               test_a_night_reads_in_order_and_survives_its_routes, test_settling):
+               test_a_night_reads_in_order_and_survives_its_routes,
+               test_flows_side_by_side_read_the_same_night, test_the_side_copy_is_taken_whole, test_settling):
         fn()
     print()
     if FAIL:
