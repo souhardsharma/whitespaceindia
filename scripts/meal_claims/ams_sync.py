@@ -155,6 +155,16 @@ def run(db, new_flow, yesterday: dt.date, stamp: str, deadline: float,
                     break
                 continue
             refused = 0
+            if page["total"] is None:
+                # Every table ends in a TOTAL row. One without it was cut
+                # short, and storing it would replace a whole day with a part.
+                drop()
+                misreads += 1
+                if misreads >= ATTEMPTS:
+                    unreadable.append(f"{what}: no TOTAL row")
+                    say(f"  not read: {what}: no TOTAL row")
+                    break
+                continue
             wrong = AMS.disagreements(page)
             if wrong:
                 disagree.append(f"{what}: {'; '.join(wrong)}")
@@ -179,6 +189,7 @@ def route_flows(say=print):
     import egress as EG
 
     failed: set[str] = set()
+    last_sent = [0.0]     # across routes: a new route does not excuse the spacing
 
     def new_flow():
         routes = EG.NET.load_proxies(EG.pool_path("ams"))
@@ -194,6 +205,10 @@ def route_flows(say=print):
             if data is not None:
                 headers.update({"Content-Type": "application/x-www-form-urlencoded",
                                 "Origin": AMS.ORIGIN, "Referer": AMS.PAGE})
+            wait = last_sent[0] + SPACING_S - time.time()
+            if wait > 0:
+                time.sleep(wait)
+            last_sent[0] = time.time()
             try:
                 status, body, _ = session.request(url, data=data, headers=headers)
             except EG.SessionLost as e:

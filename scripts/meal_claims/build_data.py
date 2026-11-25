@@ -476,8 +476,10 @@ def write_national(db, out: Path) -> dict:
         "from ams_state_day group by day order by day")][-STATE_SERIES_DAYS:]
     for r in db.execute("select * from ams_state_day where day=? order by name", (latest,)):
         name = national_name(r["name"])
-        series = [[d["day"], d["schools"] or 0, d["reported"] or 0, d["meals"] or 0] for d in db.execute(
-            "select day, schools, reported, meals from ams_state_day where name=? order by day", (r["name"],))]
+        # a day whose figures the source left blank is left out, not drawn as 0
+        series = [[d["day"], d["schools"], d["reported"], d["meals"]] for d in db.execute(
+            "select day, schools, reported, meals from ams_state_day where name=? and schools is not null "
+            "and reported is not null and meals is not null order by day", (r["name"],))]
         district_day = db.execute("select max(day) from ams_district_day where state=?", (r["name"],)).fetchone()[0]
         districts = [{"name": tidy(d["name"]), **{k: d[k] for k in NATIONAL_FIGURES}} for d in db.execute(
             "select * from ams_district_day where state=? and day=? order by name", (r["name"], district_day))]
@@ -485,8 +487,11 @@ def write_national(db, out: Path) -> dict:
             "name": name, "slug": slug(name), "st": RD.state_code_of(name),
             **{k: r[k] for k in NATIONAL_FIGURES}, "approved": r["approved"],
             "series": series[-STATE_SERIES_DAYS:], "district_day": district_day, "districts": districts})
-        here = db.execute("select schools, reported, meals from state_day where st=? and day=?",
-                          (doc["states"][-1]["st"], latest)).fetchone()
+        # only while the day is still in the State's published series
+        here = db.execute(
+            "select schools, reported, meals from state_day where st=? and day=? and day in "
+            "(select day from state_day where st=? order by day desc limit ?)",
+            (doc["states"][-1]["st"], latest, doc["states"][-1]["st"], STATE_SERIES_DAYS)).fetchone()
         if here:
             doc["compare"].append({"st": doc["states"][-1]["st"], "name": name, "day": latest,
                                    "here": [here["schools"], here["reported"], here["meals"]],
