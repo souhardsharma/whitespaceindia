@@ -104,8 +104,7 @@ CARDS = [
          "PEOPLE & CONSENT",
          "Who lives where\nit would be built,", "and which consent\nrules apply.",
          "Instrument 01 · Clearance filings"),
-    # The schoolhouse and its open book, re-inked teal with scripts/og/reink.py.
-    Card("meal-claims-1.jpg", "meal-claims.webp", (130, 100, 1230, 1200), TEAL,
+    Card("meal-claims-2.jpg", "meal-plates.webp", (130, 100, 1230, 1200), TEAL,
          "MEAL CLAIMS CHECK",
          "Meals reported,", "against each\nschool’s own\nfilings.",
          "Instrument 02 · PM POSHAN reports"),

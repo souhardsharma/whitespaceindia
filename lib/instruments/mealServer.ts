@@ -9,7 +9,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type {
-  District, MealFreshness, MealMeta, Measure, Recent, StateFile, StateRow,
+  DayRow, District, HistoryFile, MealFreshness, MealMeta, Measure, Recent, StateFile, StateRow,
 } from "@/lib/instruments/meal";
 
 const DIR = join(process.cwd(), "public", "data", "instruments", "meal-claims");
@@ -31,6 +31,13 @@ export const mealState = (st: string) => read<StateFile>(`state/${st}.json`);
 
 export type HolidayLists = Record<string, { days: { date: string; reason: string }[]; read_at: string | null }>;
 export const mealHolidays = () => read<HolidayLists>("holidays.json");
+
+/** Every day a district's table has been read for, oldest first. */
+export function districtSeries(state: StateRow, dc: string): DayRow[] {
+  return state.history_years.flatMap((year) =>
+    (read<HistoryFile>(`history/${state.st}/${year}.json`).districts[dc] ?? [])
+      .map(([day, schools, , , reported, meals]): DayRow => [day, schools, reported, meals]));
+}
 
 export function stateBySlug(slug: string): StateRow | undefined {
   return mealStates().find((s) => s.slug === slug);

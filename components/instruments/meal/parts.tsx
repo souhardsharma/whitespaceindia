@@ -8,6 +8,7 @@ import {
   FLAG_KINDS, TEAL, count, dayShort, flagAfterword, flagSentence, weekday,
   type DayRow, type Flag, type Measure,
 } from "@/lib/instruments/meal";
+import { calendar, formatValue, segments, valueOf } from "@/lib/instruments/mealChart";
 
 export const SECTION_HEADING = "font-label text-[11px] uppercase tracking-[0.24em] opacity-75";
 export const SMALL_LABEL = "font-label text-[9px] uppercase tracking-[0.2em] opacity-70";
@@ -109,6 +110,9 @@ export function DayBars({
   const rows = series.map((r) => ({ day: r[0], meals: r.length === 4 ? r[3] : r[1] }));
   const max = Math.max(1, ...rows.map((r) => r.meals ?? 0));
   const w = 100 / Math.max(1, rows.length);
+  // Bars rise one after another, and the last starts within 400 ms however
+  // many there are, so the whole entrance is over in 900 ms.
+  const stagger = Math.min(14, 400 / Math.max(1, rows.length));
   return (
     <figure>
       <svg
@@ -131,6 +135,8 @@ export function DayBars({
               height={h}
               fill={flagged.has(r.day) ? "#1c1c19" : TEAL}
               fillOpacity={weekday(r.day) === "Sunday" && !flagged.has(r.day) ? 0.55 : 1}
+              className="meal-bar"
+              style={{ animationDelay: `${Math.round(i * stagger)}ms` }}
             >
               <title>{`${dayShort(r.day)}: ${count(r.meals)} meals reported`}</title>
             </rect>
@@ -145,5 +151,42 @@ export function DayBars({
         </figcaption>
       ) : null}
     </figure>
+  );
+}
+
+const SPARK_W = 96;
+const SPARK_H = 22;
+
+/**
+ * The share of listed schools that reported, day by day, small enough for a
+ * table cell. The line stops at a day with no report and starts again after
+ * it; a day standing alone between two gaps is a short dash.
+ */
+export function Spark({ series, label }: { series: DayRow[]; label: string }) {
+  const days = calendar(series);
+  const values = days.map((d) => valueOf(d.row, "share"));
+  const runs = segments(values);
+  if (!runs.length) return <span className="opacity-60">not read</span>;
+  const first = runs[0][0];
+  const last = runs[runs.length - 1][1];
+  const x = (i: number) => (days.length > 1 ? (i / (days.length - 1)) * SPARK_W : SPARK_W / 2);
+  const y = (v: number) => SPARK_H - 1.5 - (v / 100) * (SPARK_H - 3);
+  const point = (i: number) => `${x(i).toFixed(1)},${y(values[i] ?? 0).toFixed(1)}`;
+  const path = runs.map(([a, b]) => (a === b
+    ? `M${(x(a) - 1).toFixed(1)},${y(values[a] ?? 0).toFixed(1)}h2`
+    : `M${Array.from({ length: b - a + 1 }, (_, k) => point(a + k)).join("L")}`)).join("");
+  return (
+    <svg
+      viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}
+      width={SPARK_W}
+      height={SPARK_H}
+      role="img"
+      aria-label={`${label}: ${formatValue(values[first] ?? 0, "share")} on ${dayShort(days[first].day)}, ${
+        formatValue(values[last] ?? 0, "share")} on ${dayShort(days[last].day)}`}
+      className="inline-block align-middle"
+    >
+      <line x1="0" x2={SPARK_W} y1={SPARK_H - 0.5} y2={SPARK_H - 0.5} stroke="#1c1c19" strokeOpacity="0.25" strokeWidth="1" />
+      <path d={path} fill="none" stroke={TEAL} strokeWidth="1.25" strokeLinejoin="miter" />
+    </svg>
   );
 }
