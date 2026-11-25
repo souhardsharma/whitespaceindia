@@ -8,13 +8,28 @@ they verify, and a rotation at the end that drops a route only when it was
 probed and failed (and only when at least 50 verified, so an outage on our
 side cannot empty a good pool).
 
-Only the probe changes: a route is verified against the target family it
-will carry (egress.TARGETS), and the answer must have that source's shape.
+Three things are added here, and none of them is a second pool mechanism:
+
+  the probe    a route is verified against the target family it will carry
+               (egress.TARGETS), and the answer must have that source's shape.
+  the lists    more public lists, most of them India-only SOCKS5 and SOCKS4,
+               are added to the refresher's own for the length of this run.
+               For a family that answers Indian addresses only, candidates
+               outside India's address ranges are not probed at all: on
+               2026-11-25 a ten-minute run spent itself on 274,620 candidates
+               of which 30 verified.
+  the seed     `--seed FILE` enters another pool's routes as known ones, so
+               they are re-verified first. The meal workflow passes the pool
+               People & Consent verified against PARIVESH the same night:
+               both sources answer India only, so a route good for one is the
+               likeliest to be good for the other.
 
     EDUCATION_CACHE_DIR=... python scripts/education/refresh_pool.py india --max-minutes 10
 """
 from __future__ import annotations
 
+import bisect
+import json
 import os
 import sys
 import time
@@ -31,8 +46,121 @@ import refresh_proxies as RP  # noqa: E402
 NET = egress.NET
 
 
+# India-only lists, (scheme, url), one bare ip:port a line. Each answered on
+# 2026-11-25. The refresher's own India lists are read as well.
+INDIA_LISTS = [
+    ("socks5", "https://raw.githubusercontent.com/SoliSpirit/proxy-list/main/Countries/socks5/India.txt"),
+    ("socks4", "https://raw.githubusercontent.com/SoliSpirit/proxy-list/main/Countries/socks4/India.txt"),
+    ("http", "https://raw.githubusercontent.com/SoliSpirit/proxy-list/main/Countries/http/India.txt"),
+    ("socks5", "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks5&country=IN&timeout=10000"),
+    ("socks4", "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks4&country=IN&timeout=10000"),
+    ("http", "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&country=IN&timeout=10000"),
+]
+# The same, as JSON pages of 500 (the refresher reads page 1 itself).
+GEONODE_INDIA_PAGE = ("https://proxylist.geonode.com/api/proxy-list?country=IN"
+                      "&limit=500&page={page}&sort_by=lastChecked&sort_type=desc")
+GEONODE_PAGES = (2, 3, 4)
+# SOCKS5 lists of every country that the refresher does not carry.
+MORE_SOCKS = [
+    ("socks5", "https://raw.githubusercontent.com/Anonym0usWork1221/Free-Proxies/main/proxy_files/socks5_proxies.txt"),
+    ("socks5", "https://raw.githubusercontent.com/databay-labs/free-proxy-list/master/socks5.txt"),
+    ("socks5", "https://raw.githubusercontent.com/TuanMinPay/live-proxy/master/socks5.txt"),
+]
+
+
+def india_extra() -> list[str]:
+    """Routes from the India-only lists above, in the pool's notation."""
+    routes: list[str] = []
+    for scheme, url in INDIA_LISTS:
+        try:
+            hits = [RP.as_route(scheme, addr) for addr in RP.ADDR.findall(RP.fetch_text(url))]
+        except Exception as exc:  # noqa: BLE001 - a list that is down is skipped
+            print(f"      0 India {scheme} from {url.split('/')[2]}  ({type(exc).__name__})")
+            continue
+        print(f"  {len(hits):>5} India {scheme} from {url.split('/')[2]}")
+        routes += hits
+    for page in GEONODE_PAGES:
+        try:
+            rows = json.loads(RP.fetch_text(GEONODE_INDIA_PAGE.format(page=page))).get("data") or []
+        except Exception as exc:  # noqa: BLE001
+            print(f"      0 India from geonode page {page}  ({type(exc).__name__})")
+            break
+        hits = [RP.as_route(proto, f"{r['ip']}:{r['port']}") for r in rows
+                for proto in (r.get("protocols") or [])[:1]
+                if RP.ADDR.match(f"{r.get('ip')}:{r.get('port')}")]
+        print(f"  {len(hits):>5} India from geonode page {page}")
+        routes += hits
+        if len(rows) < 500:
+            break
+    return routes
+
+
+def in_ranges(route: str, ranges) -> bool:
+    starts, ends = ranges
+    try:
+        ip = RP.ip_number(route)
+    except ValueError:
+        return False
+    i = bisect.bisect_right(starts, ip) - 1
+    return i >= 0 and ip <= ends[i]
+
+
+def india_only(routes: list[str], ranges, known: set[str]) -> list[str]:
+    """Indian candidates, and every known route whatever its address: a
+    route that verified before is evidence, and the address table is not
+    perfect. With no table, the candidates are left as they are."""
+    if not ranges:
+        return routes
+    kept = [r for r in routes if r in known or in_ranges(r, ranges)]
+    print(f"  {len(kept):,} of {len(routes):,} candidates are known or in India; "
+          "the rest are not probed for this target")
+    return kept
+
+
+def enter_seed(seed: Path, out: Path) -> int:
+    """Add another pool's routes to this pool's file as known routes. A line
+    already there is left as it is. Returns how many were added."""
+    if not seed.exists():
+        print(f"  no seed at {seed}")
+        return 0
+    have = {ln.split()[0] for ln in (out.read_text(encoding="utf-8").splitlines()
+                                     if out.exists() else []) if ln.strip()}
+    new = []
+    for ln in seed.read_text(encoding="utf-8").splitlines():
+        route = ln.split()[0] if ln.strip() else ""
+        # the shape a pool line has, and nothing else from a file not ours
+        if route and route not in have and (RP.ADDR.match(route) or RP.SCHEMED.match(route)):
+            have.add(route)
+            new.append(route)
+    with open(out, "a", encoding="utf-8") as f:
+        f.writelines(f"{route} 0 0\n" for route in new)
+    print(f"  seed: {len(new)} routes entered from {seed.name}")
+    return len(new)
+
+
+def widen(target: egress.Target, out: Path) -> None:
+    """Point the refresher's own gather and ordering at this target."""
+    listed = {url for _, url in RP.SOCKS_SOURCES}
+    RP.SOCKS_SOURCES.extend(s for s in MORE_SOCKS if s[1] not in listed)
+    gather, order = RP.gather, RP.india_first
+
+    def gather_wider() -> list[str]:
+        # India lists first: gather() orders by list, most promising first.
+        return RP.cap_ports(india_extra() + gather())[0]
+
+    def order_for_target(routes: list[str], ranges) -> list[str]:
+        if target.india_only:
+            known = {ln.split()[0] for ln in (out.read_text(encoding="utf-8").splitlines()
+                                              if out.exists() else []) if ln.strip()}
+            routes = india_only(routes, ranges, known)
+        return order(routes, ranges)
+
+    RP.gather, RP.india_first = gather_wider, order_for_target
+
+
 def make_probe(target: egress.Target):
-    def probe(proxy: str, timeout: int = 12):
+    def probe(proxy: str, timeout: int = 0):
+        timeout = max(timeout, target.probe_timeout)
         opener = NET.Route(proxy).opener()
         t0 = time.time()
         req = urllib.request.Request(target.probe_url, headers=NET.DEFAULT_HEADERS)
@@ -63,15 +191,21 @@ def make_probe(target: egress.Target):
 def main() -> int:
     if len(sys.argv) < 2 or sys.argv[1] not in egress.TARGETS:
         print(f"usage: refresh_pool.py <{'|'.join(egress.TARGETS)}> "
-              "[refresh_proxies options]")
+              "[--seed FILE] [refresh_proxies options]")
         return 2
     target = egress.TARGETS[sys.argv[1]]
     out = egress.pool_path(target.name)
     out.parent.mkdir(parents=True, exist_ok=True)
+    rest = sys.argv[2:]
+    print(f"target {target.name}: {target.note}")
+    if "--seed" in rest:
+        at = rest.index("--seed")
+        enter_seed(Path(rest[at + 1]), out)
+        del rest[at:at + 2]
     RP.PROBE = target.probe_url
     RP.probe = make_probe(target)
-    sys.argv = [sys.argv[0], "--out", str(out)] + sys.argv[2:]
-    print(f"target {target.name}: {target.note}")
+    widen(target, out)
+    sys.argv = [sys.argv[0], "--out", str(out)] + rest
     return RP.run()
 
 
