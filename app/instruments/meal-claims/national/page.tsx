@@ -50,7 +50,8 @@ function FigureCells({ f }: { f: NationalFigures }) {
 export default function MealNational() {
   const nat = mealNational();
   const M = mealMeasures();
-  const pages = new Map(mealStates().map((s) => [s.st, s.slug]));
+  const mdm = mealStates();
+  const pages = new Map(mdm.map((s) => [s.st, s.slug]));
   const all: NationalFigures = {
     schools: sumOf(nat.states, "schools"),
     reported: sumOf(nat.states, "reported"),
@@ -65,6 +66,9 @@ export default function MealNational() {
   const filling = Boolean(nat.day && nat.read_at
     && Date.parse(nat.read_at) < Date.parse(`${nat.day}T00:00:00+05:30`) + 3 * 86_400_000);
   const readAt = whenIST(nat.read_at);
+  // On both systems, but with no row in the meal system's all-States table, which the comparison reads.
+  const uncompared = mdm.filter((s) => s.from_districts && nat.states.some((n) => n.st === s.st)
+    && !nat.compare.some((row) => row.st === s.st));
 
   const figureHeads = (
     <>
@@ -114,7 +118,7 @@ export default function MealNational() {
                 </dl>
                 <p className="mt-7 font-body text-[13px] leading-relaxed opacity-70 max-w-3xl">
                   These are the figures for {dayLong(nat.day)}
-                  {readAt ? `, read on ${readAt}` : ""}. Schools can still file a
+                  {readAt ? `, read on ${readAt} IST` : ""}. Schools can still file a
                   day&rsquo;s return after that day has passed, so the latest
                   two days are read again each night and their figures can
                   still rise.
@@ -165,7 +169,7 @@ export default function MealNational() {
                 <h2 id="states-heading" className={`${SECTION_HEADING} mb-5`}>
                   Each State and Union Territory on {dayShort(nat.day)}
                 </h2>
-                <div className="overflow-x-auto">
+                <div className="relative overflow-x-auto">
                   <table className="w-full min-w-[860px] border-collapse">
                     <thead>
                       <tr className="border-b border-[#1c1c19]">
@@ -228,7 +232,7 @@ export default function MealNational() {
                     its row has so far shown no returns, while its district
                     table counts the schools that did file one.
                   </p>
-                  <div className="overflow-x-auto">
+                  <div className="relative overflow-x-auto">
                     <table className="w-full min-w-[680px] border-collapse">
                       <thead>
                         <tr>
@@ -271,10 +275,11 @@ export default function MealNational() {
                     accounts for small differences. A larger one has no
                     explanation on this page.
                     {selfDisagree.length
-                      ? " When the national system has marked a State as on holiday, it has so far printed the State's row with no returns, and that State's district totals are in the table of States whose row and districts differ."
+                      ? " When the national system has marked a State as on holiday, it has so far printed the State's row with no returns. Where that State's districts counted any return, their totals are in the table of States whose row and districts differ."
                       : ""}
+                    {uncompared.map((s) => ` ${s.name} is on both systems but has no row in the meal system's all-States table, which this comparison reads. Its figures there come only from its district table, so it is not compared.`).join("")}
                   </p>
-                  <div className="overflow-x-auto">
+                  <div className="relative overflow-x-auto">
                     <table className="w-full min-w-[680px] border-collapse">
                       <thead>
                         <tr className="border-b border-[#1c1c19]">

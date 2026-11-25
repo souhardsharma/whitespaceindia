@@ -12,7 +12,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { KindTag, SMALL_LABEL } from "@/components/instruments/meal/parts";
 import {
-  FLAG_KINDS, MEAL_DATA, TEAL, count, dayShort, districtPath, flagSentence, schoolPath,
+  FLAG_KINDS, MEAL_DATA, TEAL, count, dayShort, districtPath, flagSentence, schoolPath, whenIST,
   type FlagKind, type Recent, type RecentRow,
 } from "@/lib/instruments/meal";
 
@@ -119,7 +119,10 @@ export default function LatestList({
               </div>
               <div className="md:col-span-6">
                 <p className="font-body text-[13.5px] leading-relaxed">{flagSentence(r)}</p>
-                <p className={`${SMALL_LABEL} mt-1.5`}>first seen {dayShort(stamps[r.seen] ?? r.first)}</p>
+                <p className={`${SMALL_LABEL} mt-1.5`}>
+                  {/* the run's time, so flags first seen on one date still show their order */}
+                  first seen {whenIST(stamps[r.seen]) ? `${whenIST(stamps[r.seen])} IST` : dayShort(r.first)}
+                </p>
               </div>
             </li>
           ))}

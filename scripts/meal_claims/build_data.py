@@ -110,7 +110,7 @@ def flag_rows(db) -> list[dict]:
 def public_flag(row: dict) -> dict:
     """A flag as a school's page shows it: the day, the kind, the figures."""
     keep = ("day", "kind", "meals", "enrolled", "excess", "wide", "usual", "days_compared",
-            "rule", "same_served", "same_days", "other_served", "other_days", "reason", "now")
+            "rule", "same_served", "same_days", "other_served", "other_days", "same_set_aside", "reason", "now")
     out = {k: row[k] for k in keep if k in row}
     out["first"] = row["first"][:10]
     out["standing"] = row["standing"]
@@ -126,6 +126,12 @@ def tally(rows: list[dict]) -> dict:
         "flag_spike": sum(1 for r in standing if r["kind"] == "spike"),
         "schools_flagged": len({(r["st"], r["code"], r["shift"]) for r in standing}),
     }
+
+
+# A table read before the store kept each table's rows (schema 1) was tested
+# and counted, but its schools cannot be listed. Counted apart, so a page
+# never sets "N tables read" beside a list that holds none of them.
+UNLISTED = "not exists (select 1 from school_day s where s.st=r.st and s.cc=r.cc and s.day=r.day)"
 
 
 def read_tables(db) -> dict[tuple[str, str], dict]:
@@ -190,8 +196,8 @@ def build(db, out: Path, generated_at: str) -> dict:
         by_state.setdefault(f["st"], []).append(f)
 
     tables = {r["st"]: dict(r) for r in db.execute(
-        "select st, count(*) tables_read, sum(tested) school_days_tested, sum(over) over_in_tables "
-        "from cluster_read group by st")}   # every table has its cluster row (sync.school_table)
+        f"select st, count(*) tables_read, sum({UNLISTED}) tables_unlisted, sum(tested) school_days_tested, "
+        "sum(over) over_in_tables from cluster_read r group by st")}   # every table has its cluster row (sync.school_table)
     counts_known = {r["st"]: dict(r) for r in db.execute(
         "select st, (select count(*) from block b where b.st=d.st) blocks, "
         "(select count(*) from cluster c where c.st=d.st) clusters, count(*) districts "
@@ -231,6 +237,7 @@ def build(db, out: Path, generated_at: str) -> dict:
             "districts": known.get("districts", 0), "blocks": known.get("blocks", 0),
             "clusters": known.get("clusters", 0),
             "tables_read": tables.get(st, {}).get("tables_read", 0),
+            "tables_unlisted": tables.get(st, {}).get("tables_unlisted") or 0,
             "school_days_tested": tables.get(st, {}).get("school_days_tested") or 0,
             "over_in_tables": tables.get(st, {}).get("over_in_tables") or 0,
             **tally(by_state.get(st, [])),
@@ -276,6 +283,7 @@ def build(db, out: Path, generated_at: str) -> dict:
         "budget_cap": SY.BUDGET_CAP,
         "budget_step": SY.BUDGET_STEP,
         "months": months[-MONTHS_KEPT:],
+        "months_kept": MONTHS_KEPT,
         "csv_months": months,
         "list_days": LIST_DAYS,
         "blank_ranges": blank_ranges(db),
@@ -287,6 +295,7 @@ def build(db, out: Path, generated_at: str) -> dict:
             "blocks": sum(s["blocks"] for s in states),
             "clusters": sum(s["clusters"] for s in states),
             "tables_read": sum(s["tables_read"] for s in states),
+            "tables_unlisted": sum(s["tables_unlisted"] for s in states),
             "clusters_read": sum(s["clusters_read"] for s in states),
             "schools_read": sum(s["schools_read"] for s in states),
             "school_days_tested": sum(s["school_days_tested"] for s in states),
@@ -342,8 +351,9 @@ def write_state(db, out: Path, state: dict, series: list, flags: list[dict], lat
     for f in flags:
         by_district.setdefault(f["dc"], []).append(f)
     tables = {r["dc"]: dict(r) for r in db.execute(
-        "select c.dc, count(*) tables_read, sum(r.tested) school_days_tested, sum(r.over) over_in_tables "
-        "from cluster_read r join cluster c on c.st=r.st and c.cc=r.cc where r.st=? group by c.dc", (st,))}
+        f"select c.dc, count(*) tables_read, sum({UNLISTED}) tables_unlisted, sum(r.tested) school_days_tested, "
+        "sum(r.over) over_in_tables from cluster_read r join cluster c on c.st=r.st and c.cc=r.cc "
+        "where r.st=? group by c.dc", (st,))}
     districts = []
     for d in db.execute("select * from district where st=? order by name", (st,)):
         day = db.execute("select * from district_day where st=? and dc=? order by day desc limit 1",
@@ -378,6 +388,7 @@ def write_state(db, out: Path, state: dict, series: list, flags: list[dict], lat
                                    (st, d["dc"])).fetchone()[0],
             "clusters_read": clusters_read, "schools_read": schools_read,
             "tables_read": tables.get(d["dc"], {}).get("tables_read", 0),
+            "tables_unlisted": tables.get(d["dc"], {}).get("tables_unlisted") or 0,
             "school_days_tested": tables.get(d["dc"], {}).get("school_days_tested") or 0,
             "over_in_tables": tables.get(d["dc"], {}).get("over_in_tables") or 0,
             **tally(mine),

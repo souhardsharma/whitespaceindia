@@ -44,6 +44,8 @@ export interface Flag {
   same_days?: number;
   other_served?: number;
   other_days?: number;
+  /** Dates on the same weekday left out of the count: holidays, breaks and days the State was shut. */
+  same_set_aside?: string[];
   reason?: string;
 }
 
@@ -111,6 +113,8 @@ export type DayRow = [string, number, number, number];
 
 export interface Tally {
   tables_read: number;
+  /** Tables read before every school row was kept: tested and counted, with no school to list. */
+  tables_unlisted: number;
   school_days_tested: number;
   over_in_tables: number;
   flag_over: number;
@@ -128,6 +132,8 @@ export interface StateRow extends Tally {
   schools: number | null;
   reported: number | null;
   meals: number | null;
+  /** True for a State missing from the all-States table: its figures are the sum of its district table. */
+  from_districts: boolean;
   enr_day: string | null;
   enr_filed: number | null;
   enr_schools: number | null;
@@ -273,6 +279,8 @@ export interface MealMeta {
   thresholds: Record<string, number>;
   buckets: number;
   months: string[];
+  /** How many months of school files are kept; older flags stay in the CSVs. */
+  months_kept: number;
   csv_months: string[];
   list_days: number;
   blank_ranges: [string, string][];
@@ -356,6 +364,27 @@ export function lastOpenDay(series: DayRow[], openShare: number): DayRow | null 
   return null;
 }
 
+/**
+ * States listed on the system whose schools hardly file there: on no day
+ * read did `shutShare` of them report. Their schools stay in the counts of
+ * schools listed, and a share of all schools reporting is drawn without them.
+ */
+export function silentStates<T extends { series: DayRow[] }>(states: T[], shutShare: number): T[] {
+  return states.filter((s) => s.series.length > 0 && s.series.every(([, schools, reported]) => !schools || reported / schools < shutShare));
+}
+
+/** The highest share of a State's schools that reported on any day read. */
+export function bestShare(series: DayRow[]): string | null {
+  const best = series.reduce<DayRow | null>(
+    (top, row) => (row[1] && (!top || row[2] / row[1] > top[2] / top[1]) ? row : top), null);
+  return best ? share(best[2], best[1]) : null;
+}
+
+/** "a school" or "3 schools": a count and its noun, in Indian digits. */
+export function counted(n: number, noun: string, plural = `${noun}s`): string {
+  return `${count(n)} ${n === 1 ? noun : plural}`;
+}
+
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August",
   "September", "October", "November", "December"];
@@ -381,6 +410,12 @@ export function dayShort(iso: string): string {
 export function dayLong(iso: string): string {
   const p = parts(iso);
   return `${WEEKDAYS[p.wd]} ${p.d} ${MONTHS[p.m - 1]} ${p.y}`;
+}
+
+/** "24 November" */
+function dayMonth(iso: string): string {
+  const p = parts(iso);
+  return `${p.d} ${MONTHS[p.m - 1]}`;
 }
 
 /** "November 2026" from "2026-11". */
@@ -423,7 +458,13 @@ export function flagSentence(f: Flag): string {
     return `The school reported ${meals} on a date its State's own list on this system marks as a holiday${why}, a day on which few of the State's schools reported. A school that keeps its own calendar may have been open.`;
   }
   const wd = weekday(f.day);
-  return `The school reported ${meals} on a ${wd}. Its own record shows meals on ${nf.format(f.same_served ?? 0)} of the ${times(f.same_days ?? 0, `other ${wd}`)} read outside holidays and breaks, and on ${nf.format(f.other_served ?? 0)} of ${times(f.other_days ?? 0, "day")} on other weekdays.`;
+  const skipped = f.same_set_aside ?? [];
+  const aside = skipped.length === 1
+    ? ` The ${wd} left out was ${dayMonth(skipped[0])}.`
+    : skipped.length
+      ? ` The ${wd}s left out were ${skipped.slice(0, -1).map(dayMonth).join(", ")} and ${dayMonth(skipped[skipped.length - 1])}.`
+      : "";
+  return `The school reported ${meals} on a ${wd}. Its own record shows meals on ${nf.format(f.same_served ?? 0)} of the ${times(f.same_days ?? 0, `other ${wd}`)} read outside holidays, breaks and days its State was shut, and on ${nf.format(f.other_served ?? 0)} of ${times(f.other_days ?? 0, "day")} on other weekdays.${aside}`;
 }
 
 /** What became of a flag whose day was read again and no longer supports it. */

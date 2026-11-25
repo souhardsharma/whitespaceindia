@@ -136,6 +136,11 @@ def check_roster(c: Checker, folder: Path, st: str, d: dict, where: str) -> None
     """A district's schools as read: the counts on its page are counts of this file."""
     path = folder / "roster" / f"{st}-{d['dc']}.json"
     c.ok(d["clusters_read"] <= d["clusters"], f"{where}: more clusters read than known")
+    c.ok(0 <= d["tables_unlisted"] <= d["tables_read"], f"{where}: {d['tables_unlisted']} unlisted of {d['tables_read']} tables")
+    # A table whose rows were kept puts its schools in the roster; a page
+    # must never print "tables read" over a list that holds none of them.
+    c.ok(d["schools_read"] > 0 or d["tables_read"] == d["tables_unlisted"],
+         f"{where}: {d['tables_read'] - d['tables_unlisted']} tables with rows kept and no school read")
     if not d["schools_read"]:
         c.ok(not path.exists() and not d["clusters_read"], f"{where}: a roster with no school in it")
         return
@@ -249,6 +254,8 @@ def check(folder: Path) -> list[str]:
     c.ok(meta["thresholds"] == FL.THRESHOLDS, "meta.thresholds differs from flags.THRESHOLDS")
     c.ok(meta.get("budget_cap") == SY.BUDGET_CAP, "meta.budget_cap is not the nightly run's ceiling")
     c.ok(meta.get("budget_step") == SY.BUDGET_STEP, "meta.budget_step is not the nightly run's step")
+    c.ok(isinstance(meta.get("months_kept"), int) and 0 < len(meta["months"]) <= meta["months_kept"]
+         or not meta["months"], f"meta.months holds {len(meta['months'])}, more than months_kept")
     c.ok(meta.get("calibration") == load(Path(__file__).resolve().parent, "calibration.json"), "meta.calibration differs from calibration.json")
     for key in ("flag_over", "flag_over_wide", "flag_closed", "flag_spike", "schools_flagged",
                 "tables_read", "school_days_tested", "schools", "clusters_read", "schools_read",
@@ -271,7 +278,7 @@ def check(folder: Path) -> list[str]:
     # -- States, and the district files under them
     seen_slugs = set()
     totals = {k: 0 for k in ("flag_over", "flag_over_wide", "flag_closed", "flag_spike",
-                             "tables_read", "school_days_tested", "over_in_tables")}
+                             "tables_read", "tables_unlisted", "school_days_tested", "over_in_tables")}
     listed_schools: dict[str, dict] = {}
     for s in states["states"]:
         st = s["st"]
@@ -294,7 +301,7 @@ def check(folder: Path) -> list[str]:
         detail = json.loads(path.read_text(encoding="utf-8"))
         c.ok(len(detail["districts"]) == s["districts"], f"state {st}: district count disagrees with its file")
         sub = {k: 0 for k in ("flag_over", "flag_over_wide", "flag_closed", "flag_spike", "tables_read",
-                              "clusters_read", "schools_read")}
+                              "tables_unlisted", "clusters_read", "schools_read")}
         history = check_history(c, folder, st, s["history_years"], meta["day"])
         codes = set()
         for d in detail["districts"]:

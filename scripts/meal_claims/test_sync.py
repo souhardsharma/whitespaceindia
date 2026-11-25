@@ -514,9 +514,75 @@ def test_store_round_trip() -> None:
     folder.cleanup()
 
 
+def test_a_nameless_cluster_has_its_list_read_first() -> None:
+    print("nameless clusters")
+    folder, db = fresh_store()
+    for st, bc in (("16", "160501"), ("16", "160502"), ("23", "230101")):
+        db.execute("insert into block (st, dc, bc, name) values (?,?,?,?)", (st, bc[:4], bc, "B"))
+    db.execute("insert into cluster (st, dc, bc, cc, name) values ('16','1605','160501','1605010001','A')")
+    # a table read before its block's list: the cluster has a code and no name
+    db.execute("insert into cluster (st, dc, bc, cc) values ('23','2301','230101','2301010001')")
+    order = [b["bc"] for b in SY.unread_blocks(db, {"16": 0.9, "23": 0.1})]
+    check("the block holding a nameless cluster is read first", order[0] == "230101", order)
+    check("then the States that file the most enrolment", order[1:] == ["160501", "160502"], order)
+    db.close()
+    folder.cleanup()
+
+
+def test_a_tightened_rule_removes_its_flags_before_judging() -> None:
+    print("a tightened rule")
+    folder, db = fresh_store()
+    weekday = {"rule": "weekday", "meals": 27, "same_served": 0, "other_served": 9, "other_days": 12}
+    rows = [("15", "1", "2026-11-03", "closed", {**weekday, "same_days": 2}),
+            ("15", "2", "2026-11-03", "closed", {**weekday, "same_days": 3}),
+            ("15", "3", "2026-11-04", "closed", {"rule": "holiday", "meals": 5, "reason": "Deepawali"}),
+            ("15", "4", "2026-11-03", "over", {"meals": 30, "enrolled": 20, "excess": 10, "wide": True})]
+    for st, code, day, kind, basis in rows:
+        db.execute("insert into flag values (?,?,?,?,?,?,?,?,1)",
+                   (st, code, "1", day, kind, json.dumps(basis), "2026-11-04T01:00:00+00:00",
+                    "2026-11-04T01:00:00+00:00"))
+    check("one flag rests on fewer dates than the rule now asks", SY.withdraw_by_rule(db, YESTERDAY) == 1)
+    left = {r["code"] for r in db.execute("select code from flag")}
+    check("it is deleted, and every other flag is kept", left == {"2", "3", "4"}, left)
+    db.execute("insert into flag values ('15','1','1','2026-11-03','closed',?,?,?,1)",
+               (json.dumps({**weekday, "same_days": 2}), "2026-11-04T01:00:00+00:00", "2026-11-04T01:00:00+00:00"))
+    row = SY.run(db, PretendHost(budget=300), YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet)
+    check("a night removes it before it can be marked as no longer standing",
+          db.execute("select count(*) from flag where code='1' and st='15'").fetchone()[0] == 0
+          and row["notes"].get("withdrawn_by_rule") == 1, row["notes"].get("withdrawn_by_rule"))
+    db.close()
+    folder.cleanup()
+
+
+def test_a_flag_the_rule_still_raises_is_kept() -> None:
+    print("a flag later weeks support")
+    folder, db = fresh_store()
+    # Tuesdays and Sundays unserved, every other day 27 meals; 3 Nov (a
+    # Tuesday) served. First judged on two earlier Tuesdays, it now has
+    # October's four behind it as well.
+    for month, days in ((10, 31), (11, 30)):
+        meals = [0 if dt.date(2026, month, d).weekday() in (1, 6) else 27 for d in range(1, days + 1)]
+        if month == 11:
+            meals[2] = 27
+        ST.put_month(db, "15", "5", "1", {"year": 2026, "month": month, "meals": meals}, "r")
+    old = {"rule": "weekday", "meals": 27, "same_days": 2, "same_served": 0, "other_served": 9, "other_days": 12}
+    db.execute("insert into flag values ('15','5','1','2026-11-03','closed',?,?,?,1)",
+               (json.dumps(old), "2026-11-04T01:00:00+00:00", "2026-11-04T01:00:00+00:00"))
+    check("nothing is withdrawn", SY.withdraw_by_rule(db, YESTERDAY) == 0)
+    row = db.execute("select basis, first_stamp from flag where code='5'").fetchone()
+    check("the flag keeps its first stamp", row is not None and row["first_stamp"] == "2026-11-04T01:00:00+00:00")
+    check("and rests on the dates now held", row is not None and json.loads(row["basis"])["same_days"] >= 3,
+          row and row["basis"])
+    db.close()
+    folder.cleanup()
+
+
 def main() -> int:
     for fn in (test_budget_rises_slowly_and_falls_fast,
                test_a_night_stays_inside_its_budget, test_cluster_lists_do_not_wait_for_every_district,
+               test_a_nameless_cluster_has_its_list_read_first,
+               test_a_tightened_rule_removes_its_flags_before_judging,
+               test_a_flag_the_rule_still_raises_is_kept,
                test_history_is_read_to_where_the_record_begins,
                test_every_school_row_read_is_kept, test_an_older_store_is_brought_forward,
                test_a_refusal_ends_the_run_and_keeps_what_was_read,

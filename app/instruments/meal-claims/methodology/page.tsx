@@ -5,8 +5,8 @@ import { pageMeta, pageLd } from "@/lib/instruments/metadata";
 import { InstrumentFooter, InstrumentHeader } from "@/components/instruments/InstrumentChrome";
 import { FlagNotFinding, SECTION_HEADING, SMALL_LABEL, TD, TH } from "@/components/instruments/meal/parts";
 import {
-  MEAL_BASE, MEAL_HOST, MEAL_OG, TEAL, UDISE_HOST, count, dayLong, monthLabel, share, whenIST,
-  type Measure,
+  MEAL_BASE, MEAL_HOST, MEAL_OG, TEAL, UDISE_HOST, bestShare, count, dayLong, monthLabel, share,
+  silentStates, whenIST, type Measure,
 } from "@/lib/instruments/meal";
 import { mealFreshness, mealMeasures, mealMeta, mealStates } from "@/lib/instruments/mealServer";
 
@@ -68,6 +68,7 @@ export default function MealMethodology() {
   const pct = (x: number) => `${x * 100}%`;
   const T = m.thresholds;
   const filed = Object.entries(cal.enrolment_filed_month.pct).sort((a, b) => b[1] - a[1]);
+  const silent = silentStates(states, T.state_shut_share);
 
   return (
     <div className="min-h-screen bg-[#fcf9f4] text-[#1c1c19] flex flex-col">
@@ -125,9 +126,11 @@ export default function MealMethodology() {
               Nearly every figure in this instrument comes from the daily
               reporting system at{" "}
               <a href={MEAL_HOST} target="_blank" rel="noopener noreferrer">mdmhp.nic.in</a>.{" "}
-              {count(m.counts.states)} States and Union Territories file on
-              it, for {count(m.counts.schools)} schools in{" "}
-              {count(m.counts.districts)} districts. Without a login it
+              {count(m.counts.states)} States and Union Territories are on
+              it, with {count(m.counts.schools)} schools listed in{" "}
+              {count(m.counts.districts)} districts.
+              {silent.map((s) => ` ${s.name}'s ${count(s.schools)} schools are listed there, but almost none of them file a daily return: on its best day read, ${bestShare(s.series)} reported.`).join("")}{" "}
+              Without a login it
               serves a table for each State, district, block and cluster,
               with a table of its schools under each cluster, for earlier
               dates as well as the current one, though its own date picker
@@ -219,9 +222,12 @@ export default function MealMethodology() {
                 days with no report from the school (a vacation or a
                 festival week) is set aside before counting, because it shows
                 nothing about a weekly rest. The State&rsquo;s listed holidays
-                are set aside too, and so is any weekday the State normally
-                works on which under {pct(T.state_shut_share)} of its schools
-                reported. Before they were set aside, one
+                are set aside too, and so is any date on which under{" "}
+                {pct(T.state_shut_share)} of the State&rsquo;s schools
+                reported, when its schools were at work on at least half of
+                the other dates read on that weekday. A flag names the dates
+                of its own weekday that were set aside. Before they were set
+                aside, one
                 festival week and one holiday were enough to make an ordinary
                 Tuesday look like a school&rsquo;s rest day.
               </p>
@@ -230,7 +236,11 @@ export default function MealMethodology() {
                 count of Sunday reports, because some schools, madrasas among
                 them, rest on Friday and serve on Sunday, and a Sunday test
                 would flag them every week for keeping their own lawful
-                holiday.
+                holiday. A Sunday meal is flagged as a meal on a closed day
+                only when the school&rsquo;s own record shows it rests on
+                Sundays, as for any other weekday, or when the Sunday is on
+                the State&rsquo;s holiday list. The other two tests treat a
+                Sunday like any other day.
               </p>
               <p>
                 The holiday rule relies on the State&rsquo;s own list on the
@@ -299,10 +309,13 @@ export default function MealMethodology() {
             </p>
             <p>
               {count(m.counts.tables_read)} school tables have been read so
-              far. They cover {count(m.counts.clusters_read)} clusters and{" "}
-              {count(m.counts.schools_read)} schools, and hold{" "}
-              {count(m.counts.school_days_tested)} school-days that could be
-              tested against enrolment. The months of the schools those
+              far, and hold {count(m.counts.school_days_tested)} school-days
+              that could be tested against enrolment. Their schools number{" "}
+              {count(m.counts.schools_read)}, in{" "}
+              {count(m.counts.clusters_read)} clusters
+              {m.counts.tables_unlisted
+                ? `. That count leaves out the schools of ${count(m.counts.tables_unlisted)} tables read before the instrument kept every school a table lists; their flags and tested school-days are counted all the same`
+                : ""}. The months of the schools those
               tables named are tested as well, and most flags above enrolment
               come from them. Flags and tested school-days count only what
               the sample has reached, so neither is a rate for a State or a
@@ -358,7 +371,7 @@ export default function MealMethodology() {
               read after the month had closed, and the share of schools that
               had filed by then was:
             </p>
-            <div className="overflow-x-auto">
+            <div className="relative overflow-x-auto">
               <table className="border-collapse min-w-[320px]">
                 <thead>
                   <tr className="border-b border-[#1c1c19]">
@@ -383,7 +396,7 @@ export default function MealMethodology() {
               every school, and between 45% and 85% in{" "}
               {count(filed.filter(([, p]) => p >= 45 && p < 85).length)}.
               In the others it reaches a minority. Rajasthan is on the
-              system but files almost no enrolment, and it does not appear in
+              system but files almost no enrolment and almost no daily returns, and it does not appear in
               the table.{" "}
               <Link href={`${MEAL_BASE}/states`}>The State list</Link> gives
               each State&rsquo;s current share.

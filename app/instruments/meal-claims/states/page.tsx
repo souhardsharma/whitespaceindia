@@ -72,7 +72,7 @@ export default function MealStates() {
                     {share(s.enr_filed, s.enr_schools) ?? "no share"} filed enrolment
                   </p>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="relative overflow-x-auto">
                   <table className="w-full min-w-[680px] border-collapse">
                     <thead>
                       <tr className="border-b border-[#1c1c19]">

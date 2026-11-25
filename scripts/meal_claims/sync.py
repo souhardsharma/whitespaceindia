@@ -428,10 +428,7 @@ class Night:
                     "select 1 from block where clusters_read_at is null").fetchone():
                 break
             block_table(d)
-        # The States that file the most enrolment first: their clusters are
-        # the ones the enrolment test can be run on.
-        unread = self.db.execute("select st, dc, bc from block where clusters_read_at is null").fetchall()
-        for b in sorted(unread, key=lambda b: (-filing.get(b["st"], 0), b["st"], b["bc"])):
+        for b in unread_blocks(self.db, filing):
             if self.host.sent >= stop_at:
                 return
             cluster_list(b)
@@ -584,6 +581,56 @@ class Night:
         return True
 
 
+def unread_blocks(db, filing: dict[str, float]) -> list:
+    """Blocks whose cluster list has not been read, in the order to read them.
+
+    First the blocks holding a cluster known only by its code: a table read
+    before its block's list (a closed day, a named school) records the
+    cluster with no name, and a flagged school's page would print an empty
+    cluster until the list is read. Then the States that file the most
+    enrolment, whose clusters the enrolment test can be run on.
+    """
+    unread = db.execute(
+        "select b.st, b.dc, b.bc, exists (select 1 from cluster c where c.st=b.st and c.bc=b.bc "
+        "and coalesce(c.name, '')='') nameless from block b where b.clusters_read_at is null").fetchall()
+    return sorted(unread, key=lambda b: (-b["nameless"], -filing.get(b["st"], 0), b["st"], b["bc"]))
+
+
+def withdraw_by_rule(db, upto: dt.date) -> int:
+    """Delete the flags the current thresholds no longer raise on the figures held.
+
+    A flag kept from before a rule was tightened would be marked "no longer
+    standing" the next time its school is judged, which tells readers the
+    school's figures changed when only the rule did. So it is settled before
+    anything is judged. Today the candidates are weekday closed-day flags whose
+    stored basis rests on fewer dates of its weekday than the rule now asks
+    for. Each is judged again on the school's figures as now held, because
+    weeks read since can supply the missing dates: a flag the rule still
+    raises keeps its first stamp and takes the new basis, and only the others
+    are deleted.
+    """
+    rows = db.execute(
+        "select st, code, shift, day from flag where kind='closed' "
+        "and json_extract(basis, '$.rule')='weekday' and json_extract(basis, '$.same_days') < ?",
+        (FL.THRESHOLDS["offday_min_same_weekdays"],)).fetchall()
+    gone = 0
+    for r in rows:
+        st, code, shift, day = r["st"], r["code"], r["shift"], r["day"]
+        raised = {ST.iso(f["date"]): f for f in FL.month_flags(
+            ST.series(db, st, code, shift), upto, ST.enrolment(db, st, code, shift),
+            ST.holidays(db, st), ST.shut_days(db, st, FL.state_shut)) if f["kind"] == "closed"}
+        key = (st, code, shift, day)
+        if day in raised and raised[day].get("rule") == "weekday":
+            basis = {k: v for k, v in raised[day].items() if k not in ("date", "kind")}
+            db.execute("update flag set basis=? where st=? and code=? and shift=? and day=? and kind='closed'",
+                       (json.dumps(basis, sort_keys=True), *key))
+        else:
+            db.execute("delete from flag where st=? and code=? and shift=? and day=? and kind='closed'", key)
+            gone += 1
+    db.commit()
+    return gone
+
+
 def judge(db, st: str, code: str, shift: str, year: int, month: int, upto: dt.date, stamp: str) -> None:
     """Run the three tests over one school's month as now held, and settle
     that month's earlier flags against it: a flag the figures no longer
@@ -622,6 +669,10 @@ def run(db, host: RD.Host, yesterday: dt.date, stamp: str, say=print, named=(), 
     """One night. Returns the row recorded for it."""
     night = Night(db, host, yesterday, stamp, say)
     outcome = "complete"
+    withdrawn = withdraw_by_rule(db, yesterday)
+    if withdrawn:
+        night.notes["withdrawn_by_rule"] = withdrawn
+        say(f"{withdrawn} flag(s) the current thresholds no longer raise were removed")
     try:
         night.run_pass("states", night.states)
         night.run_pass("districts", night.districts)

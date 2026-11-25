@@ -47,7 +47,7 @@ const COLUMNS: [string, string][] = [
   ["school_name", "The institution's name as the system writes it."],
   ["date", "The school-day the flag concerns."],
   ["flag", "over (meals above filed enrolment), closed (meals on a closed day) or spike (one-day spike)."],
-  ["meals_reported", "Meals the school reported for the date, as first read."],
+  ["meals_reported", "Meals the school reported for the date, as last read while the flag stood."],
   ["enrolment_filed", "For over: the enrolment the school filed for the month."],
   ["usual_daily_count", "For spike: the median of the school's other serving days read."],
   ["closed_day_rule", "For closed: weekday (the school's own record) or holiday (the State's list)."],
@@ -120,7 +120,7 @@ export default function MealData() {
 
           <section className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby="files-heading">
             <h2 id="files-heading" className={`${SECTION_HEADING} mb-4`}>The files</h2>
-            <div className="overflow-x-auto">
+            <div className="relative overflow-x-auto">
               <table className="w-full min-w-[620px] max-w-4xl border-collapse">
                 <thead>
                   <tr className="border-b border-[#1c1c19]">
@@ -144,9 +144,10 @@ export default function MealData() {
             </div>
             <p className="font-body text-[13.5px] leading-relaxed opacity-80 mt-5 max-w-3xl">
               State codes: {states.map((s) => `${s.st} ${s.name}`).join(", ")}.
-              School files are kept for the last {count(m.months.length)}{" "}
-              {m.months.length === 1 ? "month" : "months"} read; the CSVs keep
-              every month.
+              School files are kept for the last {count(m.months_kept)} months
+              read, and {count(m.months.length)}{" "}
+              {m.months.length === 1 ? "month has" : "months have"} been read
+              so far. The CSVs keep every month.
             </p>
           </section>
 

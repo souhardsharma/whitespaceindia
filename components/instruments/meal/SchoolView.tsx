@@ -74,6 +74,9 @@ function RegisterRow({ measure, children }: { measure: Measure; children: React.
   );
 }
 
+/** The States where the meal system's codes were compared with UDISE codes by hand, and matched. */
+const CODES_COMPARED: Record<string, string> = { "02": "Himachal Pradesh", "16": "Tripura" };
+
 /**
  * What the Ministry's register of schools says about this school. It is a
  * second filing, made once a year on a different system, and it is set
@@ -87,17 +90,28 @@ function Register({ school, measures, filed }: { school: School; measures: Measu
   // "on 3 Nov 2026, 14:05 IST", or a plain statement when the time was not kept
   const asked = whenIST(held.read_at) ? `on ${whenIST(held.read_at)} IST` : "at a time not recorded";
   if (!r) {
+    const compared = CODES_COMPARED[school.st];
     return (
       <section className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby="udise-heading">
         <h2 id="udise-heading" className={`${SECTION_HEADING} mb-3`}>This school in UDISE+</h2>
         <p className="font-body text-[13.5px] leading-relaxed opacity-75 max-w-3xl">
           UDISE+, the Ministry of Education&rsquo;s register of schools, returned
           no school for the code {udiseCode(school.code)} when asked {asked}.
-          In Tripura and Himachal Pradesh, the two States where codes were
-          compared by hand, the meal system lists a school under its UDISE
-          code. That has not been checked in the other States, where a
-          school&rsquo;s code on the meal system may differ from its UDISE
-          code.
+          {compared ? (
+            <>
+              {" "}In {compared} the meal system has listed schools under
+              their UDISE codes wherever the two were compared by hand, so
+              why this code returns nothing is not known.
+            </>
+          ) : (
+            <>
+              {" "}In Tripura and Himachal Pradesh, the two States where codes
+              were compared by hand, the meal system lists a school under its
+              UDISE code. That has not been checked in the other States, where
+              a school&rsquo;s code on the meal system may differ from its
+              UDISE code.
+            </>
+          )}
         </p>
       </section>
     );
@@ -227,7 +241,9 @@ export default function SchoolView() {
         {s.name}
       </h1>
       <p className="mt-4 font-body text-[14px] opacity-75">
-        {s.block} block, {s.district} &middot; cluster {s.cluster} &middot; school code {s.code}
+        {s.block} block, {s.district}
+        {/* A cluster read before its block's list has a code and, until that list is read, no name. */}
+        {s.cluster ? <> &middot; cluster {s.cluster}</> : null} &middot; school code {s.code}
         {s.shift !== "1" ? `, shift ${s.shift}` : ""}
       </p>
       <FlagNotFinding className="mt-7 max-w-3xl" />
@@ -300,7 +316,7 @@ export default function SchoolView() {
             {whenIST(enrolment.enrolment_read_at) ? `, as read on ${whenIST(enrolment.enrolment_read_at)} IST,` : ""}{" "}
             because a wrong filing can put a report above enrolment.
           </p>
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="border-collapse min-w-[640px]">
               <thead>
                 <tr className="border-b border-[#1c1c19]">
@@ -328,7 +344,9 @@ export default function SchoolView() {
           this school on the PM POSHAN daily reporting system at{" "}
           <a href={MEAL_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">mdmhp.nic.in</a>.
           To find them there, choose the State and the date, then{" "}
-          {s.district} district, {s.block} block and cluster {s.cluster}.
+          {s.cluster
+            ? `${s.district} district, ${s.block} block and cluster ${s.cluster}.`
+            : `${s.district} district and ${s.block} block, and then the cluster that lists the school.`}
           The system shows a school&rsquo;s day-by-day month for the current
           month, and its date picker reaches back one month, so an older
           day cannot be checked there.

@@ -7,8 +7,9 @@ import {
 } from "@/components/instruments/meal/parts";
 import SeriesChart from "@/components/instruments/meal/SeriesChart";
 import {
-  AMS_HOST, MEAL_BASE, MEAL_HOST, MEAL_OG, TEAL, UDISE_HOST, count, dayLong, dayShort, districtPath, flagFigures,
-  lastOpenDay, schoolPath, share, statePath, whenIST, type DayRow,
+  AMS_HOST, MEAL_BASE, MEAL_HOST, MEAL_OG, TEAL, UDISE_HOST, bestShare, count, dayLong, dayShort,
+  districtPath, flagFigures, lastOpenDay, schoolPath, share, silentStates, statePath, whenIST,
+  type DayRow, type RecentRow,
 } from "@/lib/instruments/meal";
 import {
   mealFreshness, mealMeasures, mealMeta, mealRecent, mealStates,
@@ -36,6 +37,23 @@ function allStates(series: DayRow[][]): DayRow[] {
   return [...days.values()].sort((a, b) => a[0].localeCompare(b[0]));
 }
 
+/** One row per school, its first in the list's order, with how many flags it has there. */
+function bySchool(rows: RecentRow[]): { row: RecentRow; flags: number }[] {
+  const out = new Map<string, { row: RecentRow; flags: number }>();
+  for (const row of rows) {
+    const held = out.get(row.k);
+    if (held) held.flags += 1;
+    else out.set(row.k, { row, flags: 1 });
+  }
+  return [...out.values()];
+}
+
+/** "Rajasthan" or "Rajasthan and Nagaland". */
+function names(states: { name: string }[]): string {
+  const all = states.map((s) => s.name);
+  return all.length > 1 ? `${all.slice(0, -1).join(", ")} and ${all[all.length - 1]}` : all[0] ?? "";
+}
+
 export default function MealClaimsCheck() {
   const m = mealMeta();
   const M = mealMeasures();
@@ -48,9 +66,14 @@ export default function MealClaimsCheck() {
   const reported = onDay.reduce((n, s) => n + (s.reported ?? 0), 0);
   const listed = onDay.reduce((n, s) => n + (s.schools ?? 0), 0);
   const meals = onDay.reduce((n, s) => n + (s.meals ?? 0), 0);
-  const series = allStates(states.map((s) => s.series));
+  // A State listed on the system whose schools hardly file there is left out
+  // of the chart: Rajasthan joined the series late (its district tables from
+  // 19 Nov), and adding its schools to the share drew a fall in reporting
+  // that never happened.
+  const silent = silentStates(states, m.thresholds.state_shut_share);
+  const series = allStates(states.filter((s) => !silent.includes(s)).map((s) => s.series));
   const shut = onDay.filter((s) => s.schools && (s.reported ?? 0) / s.schools < m.thresholds.state_shut_share).length;
-  const newest = recent.rows.filter((r) => r.standing).slice(0, 8);
+  const newest = bySchool(recent.rows.filter((r) => r.standing)).slice(0, 8);
 
   return (
     <div className="min-h-screen bg-[#fcf9f4] text-[#1c1c19] flex flex-col">
@@ -72,12 +95,14 @@ export default function MealClaimsCheck() {
             <div className="mt-9 grid grid-cols-1 md:grid-cols-12 gap-8">
               <p className="md:col-span-7 font-body text-[15px] leading-relaxed opacity-80">
                 Children in classes I to VIII who enrol and attend school are
-                entitled by law to a midday meal (PM POSHAN). In{" "}
-                {count(c.states)} States and Union Territories a daily return
-                is filed for each school into one government system, kept by
-                the National Informatics Centre in Himachal Pradesh, which
-                shows the meals reported for each day beside the enrolment
-                filed for the month. Each night Meal Claims Check reads a
+                entitled by law to a midday meal (PM POSHAN).{" "}
+                {count(c.states)} States and Union Territories are on one
+                government system, kept by the National Informatics Centre in
+                Himachal Pradesh, which holds a daily return for each school
+                that files there and shows the meals reported for each day
+                beside the enrolment filed for the month.
+                {silent.length ? ` The schools of ${names(silent)} are listed on it, but almost none of them file a daily return there.` : ""}{" "}
+                Each night Meal Claims Check reads a
                 sample of these school tables and flags every school-day in
                 them on which the meals exceed that enrolment. It also flags
                 meals reported on a day the school does not serve, and a day
@@ -100,7 +125,8 @@ export default function MealClaimsCheck() {
                 measure={M.reported}
                 value={count(reported)}
                 note={`${share(reported, listed) ? `${share(reported, listed)} of schools listed had reported for ${dayShort(m.day)} when the nightly run read that day.` : `The reporting share for ${dayShort(m.day)} cannot be worked out.`} Returns filed after the read are not counted.${
-                  shut ? ` In ${count(shut)} of the ${count(onDay.length)} States, fewer than ${m.thresholds.state_shut_share * 100}% of schools reported that day.` : ""}`}
+                  shut ? ` In ${count(shut)} of the ${count(onDay.length)} States, fewer than ${m.thresholds.state_shut_share * 100}% of schools reported that day.` : ""}${
+                  silent.length ? ` Of the schools listed, ${count(silent.reduce((n, s) => n + (s.schools ?? 0), 0))} are in ${names(silent)}, where almost none file a daily return.` : ""}`}
               />
               <Stat measure={M.school_days_tested} value={count(c.school_days_tested)} />
               <Stat measure={M.schools_flagged} value={count(c.schools_flagged)} />
@@ -116,7 +142,7 @@ export default function MealClaimsCheck() {
                 ["over", M.flag_over, c.flag_over,
                   `${count(c.flag_over_wide)} of these are above by a wide margin. The thresholds were set on an earlier sample, in which ${count(m.calibration.over_by_one_or_two)} of the ${count(m.calibration.over)} excesses were of one or two meals. Because a wrong enrolment filing can put a report above enrolment, each school's page lists the enrolment it filed month by month.`],
                 ["closed", M.flag_closed, c.flag_closed,
-                  "The weekday rule finds each school's closed day from its own record, so a school that rests on Friday and serves on Sunday is not flagged for a Sunday meal. A Sunday on the State's holiday list can still be flagged."],
+                  "The weekday rule finds each school's closed day from its own record. A school that rests on Friday and serves on Sunday has Friday as its closed day, so its Sunday meals raise no closed-day flag. A Sunday on the State's holiday list can still be flagged."],
                 ["spike", M.flag_spike, c.flag_spike,
                   "A typing slip can produce a spike. The figure still stands in the system as filed, and in the one case checked by hand it had been added to the district's total."],
               ] as const).map(([kind, measure, n, note]) => (
@@ -161,12 +187,15 @@ export default function MealClaimsCheck() {
                 {count(meals)} meals. A day is left empty when it has not been
                 read or no school reported on it, and an empty day raises no
                 flag.
+                {silent.length
+                  ? ` The chart leaves out ${names(silent)}, where on no day read did as many as ${m.thresholds.state_shut_share * 100}% of schools report (${silent.map((s) => `${silent.length > 1 ? `${s.name} ` : ""}at most ${bestShare(s.series)}`).join(", ")}). Counting ${silent.length === 1 ? "its" : "their"} schools would lower the share with no change in reporting.`
+                  : ""}
               </p>
             </div>
             <div className="md:col-span-8">
               <SeriesChart
                 series={series}
-                label={`Reports from schools in the ${count(c.states)} States and Union Territories on this system, on each of the last ${series.length} days read`}
+                label={`Reports from schools in ${count(c.states - silent.length)} of the ${count(c.states)} States and Union Territories on this system, on each of the last ${series.length} days read`}
                 mealsLabel={M.meals.label}
                 shareLabel={M.reported_pct.label}
                 blanks={m.blank_ranges}
@@ -187,7 +216,7 @@ export default function MealClaimsCheck() {
               working day read, with its date shown where that is not{" "}
               {dayShort(m.day)}.
             </p>
-            <div className="overflow-x-auto">
+            <div className="relative overflow-x-auto">
               <table className="w-full min-w-[860px] border-collapse">
                 <thead>
                   <tr className="border-b border-[#1c1c19]">
@@ -251,8 +280,8 @@ export default function MealClaimsCheck() {
                 </Link>
               </div>
               <ul className="border-t border-[#1c1c19]">
-                {newest.map((r) => (
-                  <li key={`${r.k}-${r.day}-${r.kind}`} className="py-3.5 border-b border-[#1c1c19]/15 grid grid-cols-1 md:grid-cols-12 gap-x-6 gap-y-1 items-baseline">
+                {newest.map(({ row: r, flags }) => (
+                  <li key={r.k} className="py-3.5 border-b border-[#1c1c19]/15 grid grid-cols-1 md:grid-cols-12 gap-x-6 gap-y-1 items-baseline">
                     <div className="md:col-span-5 font-body text-[14.5px] leading-snug">
                       <Link href={schoolPath(r.k)} prefetch={false} className="underline underline-offset-4 decoration-[#1c1c19]/30 hover:decoration-[#1c1c19]">
                         {r.name}
@@ -266,7 +295,10 @@ export default function MealClaimsCheck() {
                     </div>
                     <div className="md:col-span-2 font-label text-[12px] tabular-nums">{dayShort(r.day)}</div>
                     <div className="md:col-span-2"><KindTag kind={r.kind} wide={r.wide} /></div>
-                    <div className="md:col-span-3 font-body text-[13.5px] tabular-nums">{flagFigures(r)}</div>
+                    <div className="md:col-span-3 font-body text-[13.5px] tabular-nums">
+                      {flagFigures(r)}
+                      {flags > 1 ? <span className="block text-[12px] opacity-70 mt-0.5">{count(flags)} flags in recent runs</span> : null}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -280,8 +312,8 @@ export default function MealClaimsCheck() {
               <h2 className={`${SECTION_HEADING} mb-4`}>Limits of the data</h2>
               <ul className="font-body text-[14px] leading-relaxed opacity-80 space-y-3 list-disc pl-4">
                 <li>
-                  All {count(c.states)} States and Union Territories file
-                  into this one system, so the nightly run limits its
+                  All {count(c.states)} States and Union Territories are on
+                  this one system, so the nightly run limits its
                   requests to it ({count(fresh.sent)} last night) and reads
                   school tables as a sample, working through the clusters in
                   turn. A school with no flag may not have been read yet.

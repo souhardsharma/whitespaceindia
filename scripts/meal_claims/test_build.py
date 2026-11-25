@@ -157,6 +157,36 @@ def test_damage_is_noticed() -> None:
         v["rows"][0]["standing"] = False
     damaged("a flag that no longer stands on the latest list", "flags/recent.json", stale_flag_listed)
 
+    def months_kept_short(v):
+        v["months_kept"] = 0
+    damaged("more months of school files than are kept", "meta.json", months_kept_short)
+
+
+def test_tables_read_before_rows_were_kept() -> None:
+    print("tables read before rows were kept")
+    folder = tempfile.TemporaryDirectory()
+    base = Path(folder.name)
+    db = ST.connect(base / "store.sqlite")
+    SY.run(db, PretendHost(budget=300), YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet)
+    db.execute("delete from school_day")   # as a store of schema 1 holds them
+    meta = BD.build(db, base / "out", "2026-11-20T02:00:00+00:00")
+    db.close()
+    failures = CP.check(base / "out")
+    check("the build passes the contract", failures == [], failures[:5])
+    district = json.loads((base / "out" / "state" / "16.json").read_text(encoding="utf-8"))["districts"][0]
+    check("each table is counted and counted as unlisted",
+          district["tables_read"] == district["tables_unlisted"] > 0 and district["schools_read"] == 0, district)
+    check("and meta carries the same count", meta["counts"]["tables_unlisted"] == district["tables_unlisted"])
+    check("no roster is written for them", not (base / "out" / "roster" / "16-1605.json").exists())
+    out = base / "out"
+    edit(out / "state" / "16.json", lambda v: v["districts"][0].__setitem__("tables_unlisted", 0))
+    edit(out / "states.json", lambda v: next(s for s in v["states"] if s["st"] == "16").__setitem__("tables_unlisted", 0))
+    edit(out / "meta.json", lambda v: v["counts"].__setitem__("tables_unlisted", 0))
+    failures = CP.check(out)
+    check("tables called listed over a district with no school read are refused",
+          any("no school read" in f for f in failures), failures[:3])
+    folder.cleanup()
+
 
 def test_a_failed_build_changes_nothing() -> None:
     print("promotion")
@@ -227,7 +257,8 @@ def test_the_national_files() -> None:
 
 
 def main() -> int:
-    for fn in (test_a_correct_build_passes, test_damage_is_noticed, test_a_failed_build_changes_nothing,
+    for fn in (test_a_correct_build_passes, test_damage_is_noticed, test_tables_read_before_rows_were_kept,
+               test_a_failed_build_changes_nothing,
                test_the_national_files):
         fn()
     print()

@@ -47,6 +47,18 @@ test("a closed-day flag names the school's own weekday, whichever it is", () => 
   assert.doesNotMatch(s, /Sunday/);
 });
 
+test("a weekday flag names every kind of date it left out, and which dates", () => {
+  const tuesday: Flag = {
+    ...base, day: "2026-11-03", kind: "closed", meals: 27, rule: "weekday",
+    same_served: 0, same_days: 3, other_served: 9, other_days: 12, same_set_aside: ["2026-11-24"],
+  };
+  const s = flagSentence(tuesday);
+  assert.match(s, /outside holidays, breaks and days its State was shut/);
+  assert.match(s, /The Tuesday left out was 24 November\./);
+  const two = flagSentence({ ...tuesday, same_set_aside: ["2026-11-10", "2026-11-24"] });
+  assert.match(two, /The Tuesdays left out were 10 November and 24 November\./);
+});
+
 test("a holiday flag rests on the State's list and says so", () => {
   const f: Flag = { ...base, day: "2026-11-01", kind: "closed", meals: 12, rule: "holiday", reason: "Gazetted" };
   assert.match(flagSentence(f), /its State's own list on this system marks as a holiday \(Gazetted\)/);

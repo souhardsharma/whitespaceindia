@@ -51,13 +51,15 @@ export default function MealLatest() {
             Latest flags
           </h1>
           <p className="mt-5 font-body text-[15px] leading-relaxed opacity-80 max-w-3xl">
-            {count(recent.total)} school-days were flagged for the first time in{" "}
+            {count(recent.total)} {recent.total === 1 ? "flag was" : "flags were"} raised for the first time in{" "}
             {recent.stamps.length === 1 ? "the latest run" : `the last ${count(recent.stamps.length)} runs`} of
             the nightly read{recent.stamps.length ? `, since ${dayShort(recent.stamps[0])}` : ""}.
-            A table read for the first time can add a flag on an earlier date,
-            so each flag is listed under the run in which it was first seen, newest
-            run first. Excesses over enrolment that are not marked wide
-            come after every other flag in the list.
+            One school-day can carry two flags of different kinds. A table
+            read for the first time can add a flag on an earlier date, so
+            each flag carries the time of the run in which it was first
+            seen, and the newest runs come first. Excesses over enrolment
+            that are not marked wide come after every other flag in the
+            list.
             {recent.rows.length < recent.total
               ? ` This list holds the first ${count(recent.rows.length)}. The monthly files have all of them.`
               : ""}

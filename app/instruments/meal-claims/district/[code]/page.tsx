@@ -9,8 +9,8 @@ import {
 import Roster from "@/components/instruments/meal/Roster";
 import SeriesChart from "@/components/instruments/meal/SeriesChart";
 import {
-  MEAL_BASE, MEAL_OG, count, dayLong, dayShort, districtCode, districtPath, flagFigures,
-  schoolPath, share, statePath,
+  MEAL_BASE, MEAL_OG, count, counted, dayLong, dayShort, districtCode, districtPath, flagFigures,
+  lastOpenDay, schoolPath, share, statePath,
 } from "@/lib/instruments/meal";
 import { allDistricts, districtSeries, mealMeasures, mealMeta } from "@/lib/instruments/mealServer";
 
@@ -60,6 +60,12 @@ export default async function MealDistrict({ params }: Props) {
   const path = districtPath(s.st, d.dc);
   
   const series = districtSeries(s, d.dc);
+  const t = mealMeta().thresholds;
+  // The latest day read can be a holiday; the share on it then says nothing
+  // about how fully the district reports, so its last working day is given too.
+  const open = lastOpenDay(d.series, t.state_open_share);
+  const stateDay = s.series.find((r) => r[0] === d.day);
+  const stateShut = Boolean(stateDay && stateDay[1] && stateDay[2] / stateDay[1] < t.state_shut_share);
 
   return (
     <div className="min-h-screen bg-[#fcf9f4] text-[#1c1c19] flex flex-col">
@@ -94,7 +100,9 @@ export default async function MealDistrict({ params }: Props) {
               <Stat
                 measure={M.reported_pct}
                 value={share(d.reported, d.schools) ?? "not read"}
-                note={`${count(d.reported)} schools, ${count(d.meals)} meals reported`}
+                note={`${count(d.reported)} schools, ${count(d.meals)} meals reported${
+                  stateShut ? `. Under ${t.state_shut_share * 100}% of ${s.name}'s schools reported that day` : ""}${
+                  open && open[0] !== d.day ? `. On ${dayShort(open[0])}, its last working day read, ${share(open[2], open[1])} reported` : ""}`}
               />
               <Stat
                 measure={M.enr_filed_pct}
@@ -104,7 +112,7 @@ export default async function MealDistrict({ params }: Props) {
               <Stat
                 measure={M.school_days_tested}
                 value={count(d.school_days_tested)}
-                note={`from ${count(d.tables_read)} school tables read`}
+                note={`from ${counted(d.tables_read, "school table")} read`}
               />
             </dl>
           </div>
@@ -118,12 +126,12 @@ export default async function MealDistrict({ params }: Props) {
                 <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-5 max-w-3xl">
                   {count(d.flagged.length)} {d.flagged.length === 1 ? "school" : "schools"} in{" "}
                   {d.name} {d.flagged.length === 1 ? "holds" : "hold"} a flag from the last 120 days on the figures as last read,{" "}
-                  {count(d.flagged.reduce((n, f) => n + f.over + f.closed + f.spike, 0))} school-days in all. A school&rsquo;s name
+                  {counted(d.flagged.reduce((n, f) => n + f.over + f.closed + f.spike, 0), "flag")} in all. A school&rsquo;s name
                   opens its month as filed, with each flag and the figures
                   behind it.
                 </p>
                 <FlagNotFinding className="mb-7 max-w-3xl" />
-                <div className="overflow-x-auto">
+                <div className="relative overflow-x-auto">
                   <table className="w-full min-w-[760px] border-collapse">
                     <thead>
                       <tr className="border-b border-[#1c1c19]">
@@ -163,8 +171,8 @@ export default async function MealDistrict({ params }: Props) {
             ) : (
               <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl">
                 No school in {d.name} holds a flag on what has been read so far
-                ({count(d.tables_read)} school tables,{" "}
-                {count(d.school_days_tested)} school-days that could be
+                ({counted(d.tables_read, "school table")},{" "}
+                {counted(d.school_days_tested, "school-day")} that could be
                 tested against enrolment). School tables are read as a
                 sample, and the schools outside it have not been checked.
               </p>
@@ -196,6 +204,21 @@ export default async function MealDistrict({ params }: Props) {
           </section>
         ) : null}
 
+        {d.tables_unlisted > 0 && !d.schools_read ? (
+          <section className="px-6 md:px-12 py-12 border-b border-[#1c1c19]" aria-labelledby="schools-heading">
+            <div className="max-w-6xl mx-auto">
+              <h2 id="schools-heading" className={`${SECTION_HEADING} mb-3`}>Schools read</h2>
+              <p className="font-body text-[13.5px] leading-relaxed opacity-70 max-w-3xl">
+                The {counted(d.tables_read, "school table")} read in {d.name} so
+                far {d.tables_read === 1 ? "was" : "were"} read before the
+                instrument kept every school a table lists. Their flags and
+                tested school-days are counted above, and their schools will
+                be listed here once their clusters are read again.
+              </p>
+            </div>
+          </section>
+        ) : null}
+
         {d.schools_read ? (
           <section className="px-6 md:px-12 py-12 border-b border-[#1c1c19]" aria-labelledby="schools-heading">
             <div className="max-w-6xl mx-auto">
@@ -206,7 +229,10 @@ export default async function MealDistrict({ params }: Props) {
                 listed for the district up to now. Each school is shown with
                 the enrolment it had filed and the meals it reported on the
                 date its cluster was last read.
-                {d.clusters_read < d.clusters ? " The other clusters have not been read yet." : ""} A
+                {d.clusters_read < d.clusters ? " The other clusters have not been read yet." : ""}
+                {d.tables_unlisted
+                  ? ` Of the ${counted(d.tables_read, "school table")} read here, ${count(d.tables_unlisted)} ${d.tables_unlisted === 1 ? "was" : "were"} read before the instrument kept every school a table lists, and ${d.tables_unlisted === 1 ? "its" : "their"} schools are not in this list.`
+                  : ""}{" "}A
                 flagged school&rsquo;s name opens its page.
               </p>
               <Roster
@@ -225,7 +251,7 @@ export default async function MealDistrict({ params }: Props) {
           <div className="max-w-6xl mx-auto">
             <h2 id="blocks-heading" className={`${SECTION_HEADING} mb-6`}>Blocks</h2>
             {d.blocks.length ? (
-              <div className="overflow-x-auto">
+              <div className="relative overflow-x-auto">
                 <table className="w-full min-w-[720px] border-collapse">
                   <thead>
                     <tr className="border-b border-[#1c1c19]">

@@ -30,7 +30,9 @@ THRESHOLDS = {
     # at most this share of the other dates falling on this weekday. A fifth
     # means one served date is tolerated only among five: at a third, two
     # reports on one weekday in a month each made an off-day of the other.
-    "offday_min_same_weekdays": 2,
+    # Three dates at least: on two, a school was called shut on Tuesdays while
+    # its third Tuesday, set aside as a day its State was shut, had 28 meals.
+    "offday_min_same_weekdays": 3,
     "offday_max_served_share": 0.2,
     "offday_min_other_weekday_rate": 0.5,
     # a run of at least this many days without a report is a break, and a
@@ -139,8 +141,15 @@ def off_day(series: dict[dt.date, int], day: dt.date, upto: dt.date,
         return None
     if rest_served / len(rest) < THRESHOLDS["offday_min_other_weekday_rate"]:
         return None
-    return {"same_served": same_served, "same_days": len(same),
-            "other_served": rest_served, "other_days": len(rest)}
+    basis = {"same_served": same_served, "same_days": len(same),
+             "other_served": rest_served, "other_days": len(rest)}
+    # The same weekday's dates left out, so a reader counting the school's
+    # bars can see why a served one does not count against the flag.
+    skipped = sorted(d.isoformat() for d in series
+                     if d != day and d <= upto and d in set_aside and d.weekday() == day.weekday())
+    if skipped:
+        basis["same_set_aside"] = skipped
+    return basis
 
 
 def state_shut(reported: int | None, schools: int | None) -> bool | None:

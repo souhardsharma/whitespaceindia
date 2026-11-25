@@ -76,7 +76,7 @@ export default function Roster({
         {rows.length < matching.length ? ` The first ${count(rows.length)} are shown.` : ""}
       </p>
       {rows.length ? (
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse">
             <thead>
               <tr className="border-b border-[#1c1c19]">

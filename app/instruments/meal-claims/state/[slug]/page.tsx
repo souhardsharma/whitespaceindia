@@ -8,7 +8,7 @@ import {
 } from "@/components/instruments/meal/parts";
 import SeriesChart from "@/components/instruments/meal/SeriesChart";
 import {
-  MEAL_BASE, MEAL_OG, count, dayLong, dayShort, districtPath, lastOpenDay, monthLabel, share, statePath,
+  MEAL_BASE, MEAL_OG, count, counted, dayLong, dayShort, districtPath, lastOpenDay, monthLabel, share, statePath,
   whenIST,
 } from "@/lib/instruments/meal";
 import {
@@ -96,7 +96,7 @@ export default async function MealState({ params }: Props) {
               <Stat
                 measure={M.schools_flagged}
                 value={count(s.schools_flagged)}
-                note={`${count(flags)} flagged school-days, from ${count(s.tables_read)} school tables and the months of the schools they named`}
+                note={`${counted(flags, "flag")}, from ${counted(s.tables_read, "school table")} and the months of the schools they named`}
               />
             </dl>
             <FlagNotFinding className="mt-9 max-w-3xl" />
@@ -128,7 +128,7 @@ export default async function MealState({ params }: Props) {
         <section className="px-6 md:px-12 py-12 border-b border-[#1c1c19]" aria-labelledby="districts-heading">
           <div className="max-w-6xl mx-auto">
             <h2 id="districts-heading" className={`${SECTION_HEADING} mb-6`}>Districts</h2>
-            <div className="overflow-x-auto">
+            <div className="relative overflow-x-auto">
               <table className="w-full min-w-[820px] border-collapse">
                 <thead>
                   <tr className="border-b border-[#1c1c19]">
@@ -175,7 +175,7 @@ export default async function MealState({ params }: Props) {
                 normally serve on that weekday, or if the date is on the
                 State&rsquo;s holiday list.
               </p>
-              <div className="overflow-x-auto">
+              <div className="relative overflow-x-auto">
                 <table className="w-full min-w-[520px] max-w-3xl border-collapse">
                   <thead>
                     <tr className="border-b border-[#1c1c19]">

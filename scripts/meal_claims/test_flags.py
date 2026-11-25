@@ -121,12 +121,13 @@ def test_the_one_day_spike() -> None:
     check("against a usual count near 25", spikes and 20 <= spikes[0]["usual"] <= 30, spikes)
     check("too early to call that Sunday an off-day: one other Sunday lies in a break",
           [f for f in found if f["kind"] == "closed"] == [])
-    later = dt.date(2026, 11, 23)
-    series[dt.date(2026, 11, 22)] = 0
-    for day in (16, 17, 18, 19, 20, 21, 23):
+    later = dt.date(2026, 11, 30)
+    for day in (22, 29):
+        series[dt.date(2026, 11, day)] = 0
+    for day in (16, 17, 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 30):
         series[dt.date(2026, 11, day)] = 20
     closed = [f for f in FL.month_flags(series, later, {}, {}, {}) if f["kind"] == "closed"]
-    check("after two ordinary empty Sundays it is a day the school does not normally serve",
+    check("after three ordinary empty Sundays it is a day the school does not normally serve",
           [f["date"].day for f in closed] == [1] and closed[0]["rule"] == "weekday", closed)
     check("an ordinary day is not a spike", FL.spike(30, [30, 26, 23, 9, 25, 24, 22]) is None)
     check("too little history says nothing", FL.spike(900, [30, 26]) is None)
@@ -135,17 +136,25 @@ def test_the_one_day_spike() -> None:
 def test_a_report_cannot_vouch_for_itself() -> None:
     print("off-day rule")
     monday = dt.date(2026, 11, 2)
-    # Served Monday to Saturday for three weeks, never on Sunday, then once.
+    # Served Monday to Saturday for four weeks, never on Sunday, then once.
     series = {monday + dt.timedelta(days=i): (0 if (monday + dt.timedelta(days=i)).weekday() == 6 else 40)
-              for i in range(21)}
-    sunday = dt.date(2026, 11, 22)
+              for i in range(27)}
+    sunday = dt.date(2026, 11, 29)
     series[sunday] = 38
     upto = sunday
     basis = FL.off_day(series, sunday, upto)
-    check("a first Sunday after two empty ones is an off-day",
-          basis == {"same_served": 0, "same_days": 2, "other_served": 18, "other_days": 18}, basis)
-    check("one earlier Sunday is too little to say",
+    check("a first Sunday after three empty ones is an off-day",
+          basis == {"same_served": 0, "same_days": 3, "other_served": 24, "other_days": 24}, basis)
+    check("two earlier Sundays are too little to say",
           FL.off_day({d: m for d, m in series.items() if d >= dt.date(2026, 11, 15)}, sunday, upto) is None)
+    shut_sunday = dt.date(2026, 11, 8)
+    series[shut_sunday] = 25
+    check("a served Sunday set aside keeps it from counting, and is named",
+          FL.off_day(series, sunday, upto, {shut_sunday}) is None
+          and FL.off_day({**series, dt.date(2026, 11, 1): 0}, sunday, upto, {shut_sunday})
+          == {"same_served": 0, "same_days": 3, "other_served": 24, "other_days": 24,
+              "same_set_aside": ["2026-11-08"]},
+          FL.off_day({**series, dt.date(2026, 11, 1): 0}, sunday, upto, {shut_sunday}))
     check("a school that rarely serves at all is not judged",
           FL.off_day({d: (m if d == sunday else 0) for d, m in series.items()}, sunday, upto) is None)
     check("days after `upto` are not read as empty days",
@@ -154,16 +163,16 @@ def test_a_report_cannot_vouch_for_itself() -> None:
 
 def test_a_break_or_a_holiday_is_not_a_weekly_rest() -> None:
     print("breaks and holidays")
-    start = dt.date(2026, 10, 26)
-    days = [start + dt.timedelta(days=i) for i in range(30)]
+    start = dt.date(2026, 10, 19)
+    days = [start + dt.timedelta(days=i) for i in range(37)]
     # Monday to Saturday, with a festival week (7 to 11 November) and one
     # holiday Tuesday (24 November) on which the whole State was shut.
-    series = {d: (0 if d.weekday() == 6 or 7 <= d.day <= 11 or d.day == 24 else 60) for d in days}
+    series = {d: (0 if d.weekday() == 6 or (d.month == 11 and (7 <= d.day <= 11 or d.day == 24)) else 60) for d in days}
     upto = dt.date(2026, 11, 24)
     check("the festival week is a break",
           FL.breaks(series, upto) == {dt.date(2026, 11, d) for d in (7, 8, 9, 10, 11)}, FL.breaks(series, upto))
     check("a lone Sunday is not a break", dt.date(2026, 11, 15) not in FL.breaks(series, upto))
-    shut = {d: d.weekday() == 6 or d.day == 24 for d in days}
+    shut = {d: d.weekday() == 6 or d == upto for d in days}
     check("the holiday Tuesday is a one-off; Sundays are not",
           FL.one_off_shut(shut, upto) == {dt.date(2026, 11, 24)}, FL.one_off_shut(shut, upto))
     november = {d: (0 if d.day == 17 else m) for d, m in series.items() if d.month == 11}
