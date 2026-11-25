@@ -108,10 +108,11 @@ function Register({ school, measures, filed }: { school: School; measures: Measu
         This school in UDISE+{r.year ? `, ${r.year}` : ""}
       </h2>
       <p className="font-body text-[13.5px] leading-relaxed opacity-75 mb-4 max-w-3xl">
-        UDISE+ is the Ministry of Education&rsquo;s register of schools. A
-        school files its entry there once a year, outside the meal system. This entry is listed as{" "}
-        {r.name ?? "this school"}, code {udiseCode(school.code)}, and was read
-        on {asked} IST. None of it is tested against the meal reports.
+        UDISE+ is the Ministry of Education&rsquo;s register of schools,
+        where a school files its entry once a year, outside the meal system.
+        This entry is listed as {r.name ?? "this school"}, code{" "}
+        {udiseCode(school.code)}, and was read on {asked} IST. None of it is
+        tested against the meal reports.
       </p>
       <dl className="max-w-4xl border-t border-[#1c1c19]/40">
         {classes ? <RegisterRow measure={measures.udise_classes}>{classes}</RegisterRow> : null}
@@ -169,7 +170,7 @@ export default function SchoolView() {
     const s = view.months[0].school;
     return applyHead({
       title: `${s.name}, ${s.district}: midday meal reports | Meal Claims Check`,
-      description: `The midday meal counts ${s.name} (${s.block}, ${s.district}) reported day by day, the enrolment it filed, and each day on which the two disagree. A flag, not a finding.`,
+      description: `The daily midday meal counts ${s.name} (${s.block}, ${s.district}) reported, set against the enrolment it filed, with each day on which the two disagree marked beside its figures.`,
       path: schoolPath(view.key),
       index: false,
     }, SITE_URL);
@@ -260,8 +261,9 @@ export default function SchoolView() {
                   label={`Meals ${school.name} reported on each day of ${monthLabel(month)}`}
                 />
                 <p className={`${SMALL_LABEL} mt-3 normal-case tracking-normal text-[12px] font-body`}>
-                  Meals reported each day, as read on {whenIST(school.meals_read_at) ?? "an unknown date"} IST.
-                  Dark bars are flagged days. A day with no bar has no report.
+                  The bars show the meals reported each day, as read on{" "}
+                  {whenIST(school.meals_read_at) ?? "an unknown date"} IST.
+                  Flagged days are dark, and a day with no bar has no report.
                 </p>
               </div>
             ) : (
@@ -281,7 +283,7 @@ export default function SchoolView() {
         <section className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby="enrolment-heading">
           <h2 id="enrolment-heading" className={`${SECTION_HEADING} mb-3`}>The enrolment this school filed, {year}</h2>
           <p className="font-body text-[13.5px] leading-relaxed opacity-70 max-w-3xl">
-            None. The system holds no enrolment filing from this school for
+            The system holds no enrolment filing from this school for
             any month of {year}, as read on{" "}
             {whenIST(enrolment.enrolment_read_at) ?? "an unknown date"} IST, so
             its meal reports cannot be compared with enrolment.
@@ -292,10 +294,10 @@ export default function SchoolView() {
           <h2 id="enrolment-heading" className={`${SECTION_HEADING} mb-3`}>The enrolment this school filed, {year}</h2>
           <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-5 max-w-3xl">
             A wrong enrolment filing can put a report above enrolment, so the
-            year&rsquo;s filings are listed here. If the
-            figure drops sharply from one month to the next while the daily
-            meals stay level, the filing is the likelier error. Read on{" "}
+            year&rsquo;s filings are listed here, as read on{" "}
             {whenIST(enrolment.enrolment_read_at) ?? "an unknown date"} IST.
+            If the figure drops sharply from one month to the next while the
+            daily meals stay level, the filing is the likelier error.
           </p>
           <div className="overflow-x-auto">
             <table className="border-collapse min-w-[640px]">
@@ -328,7 +330,7 @@ export default function SchoolView() {
           {s.block} block and cluster {s.cluster}, and pick the date. The
           system shows a school&rsquo;s day-by-day month only for the current
           month, so an earlier month has to be checked one date at a time.
-          A school may correct a figure after it was read. When a later read
+          A school may correct a figure after it was read, and when a later read
           no longer supports a flag, the flag is marked above as no longer
           standing.
         </p>

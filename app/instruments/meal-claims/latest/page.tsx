@@ -55,8 +55,9 @@ export default function MealLatest() {
             {count(recent.stamps.length)} {recent.stamps.length === 1 ? "night" : "nights"} of
             reading{recent.stamps.length ? `, since ${dayShort(recent.stamps[0])}` : ""}.
             A table read for the first time can add a flag on an earlier date,
-            so flags are listed under the night they were first seen. Reports far above enrolment, closed-day reports and spikes
-            are at the top.
+            so flags are listed under the night they were first seen. Narrow
+            excesses over enrolment are listed after every other kind of
+            flag.
             {recent.rows.length < recent.total
               ? ` This list holds the first ${count(recent.rows.length)}. The monthly files have all of them.`
               : ""}

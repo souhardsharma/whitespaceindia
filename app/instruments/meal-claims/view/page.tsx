@@ -18,7 +18,7 @@ import { MEAL_BASE, MEAL_OG } from "@/lib/instruments/meal";
 
 const TITLE = "School | Meal Claims Check";
 const DESCRIPTION =
-  "One school's midday meal reports day by day, the enrolment it filed, and each day on which the two disagree. A flag, not a finding.";
+  "One school's daily midday meal reports set against the enrolment it filed, with each day on which the two disagree marked beside its figures.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },

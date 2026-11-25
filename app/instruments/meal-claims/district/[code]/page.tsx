@@ -200,10 +200,11 @@ export default async function MealDistrict({ params }: Props) {
             <div className="max-w-6xl mx-auto">
               <h2 id="schools-heading" className={`${SECTION_HEADING} mb-3`}>Schools read</h2>
               <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-6 max-w-3xl">
-                {count(d.schools_read)} schools in {count(d.clusters_read)} of
-                the {count(d.clusters)} clusters listed for the district so
-                far, each with the enrolment it had filed and the meals it
-                reported on the date its cluster was last read.
+                {count(d.schools_read)} schools have been read, in{" "}
+                {count(d.clusters_read)} of the {count(d.clusters)}
+                clusters listed for the district so far, each shown with the enrolment it had
+                filed and the meals it reported on the date its cluster was
+                last read.
                 {d.clusters_read < d.clusters ? " The other clusters have not been read yet." : ""} A
                 flagged school&rsquo;s name opens its page.
               </p>

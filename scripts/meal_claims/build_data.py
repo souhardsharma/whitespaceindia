@@ -529,7 +529,7 @@ def write_national(db, out: Path) -> dict:
 
 
 def write_recent(out: Path, flags: list[dict], nights: list[dict]) -> None:
-    """Flags first seen in the last nights, the stronger ones first when the
+    """Flags first seen in recent nights, the stronger ones first when the
     list has to be cut; `total` always says how many there were."""
     stamps = [n["stamp"] for n in nights][-RECENT_NIGHTS:]
     fresh = [f for f in flags if f["standing"] and f["first"] in stamps]

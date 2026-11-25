@@ -58,11 +58,12 @@ export function Stat({
 export function FlagNotFinding({ className = "" }: { className?: string }) {
   return (
     <p className={`font-body text-[13.5px] leading-relaxed border-y py-3 ${className}`} style={{ borderColor: TEAL }}>
-      <strong className="font-semibold">A flag, not a finding.</strong>{" "}
-      A flag marks two figures that one school filed on one government
-      system and that do not agree. A wrong enrolment filing can produce one.
-      So can a typing slip, or a meal served to children from another school.
-      A flag does not show that anything improper happened.
+      <strong className="font-semibold">A flag marks a school-day on which the
+      school filed two figures on one government system that disagree.</strong>{" "}
+      A wrong enrolment filing or a typing slip can be enough to cause one, as
+      can meals served to children enrolled at another school, so what
+      lies behind a flag is for the school&rsquo;s block office or an
+      auditor to establish.
     </p>
   );
 }

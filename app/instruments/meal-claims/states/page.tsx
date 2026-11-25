@@ -14,7 +14,7 @@ export const metadata = pageMeta({
   path: PATH,
   title: "Midday meal reporting by State and district | Meal Claims Check",
   description:
-    "Every State, Union Territory and district on India's PM POSHAN daily meal reporting system: schools listed, the share reporting, the share that filed enrolment, and the schools whose meal reports their own filings contradict.",
+    "India's PM POSHAN daily meal reporting system, State by State and district by district: schools listed, the share reporting, the share that filed enrolment, and the schools whose meal reports their own filings contradict.",
   image: MEAL_OG,
 });
 
@@ -41,11 +41,12 @@ export default function MealStates() {
             </h1>
             <p className="mt-5 font-body text-[15px] leading-relaxed opacity-80 max-w-3xl">
               {count(m.counts.states)} States and Union Territories file into
-              the system, across {count(m.counts.districts)} districts. A
-              State&rsquo;s reporting share is for its last working day
-              read. District rows show what the system held for the latest
-              day read ({dayShort(m.day)}), which may have been a holiday,
-              and how much of the State has been tested so far.
+              the system, across {count(m.counts.districts)} districts.
+              Each State&rsquo;s reporting share is for its last working day
+              read. Its district rows show what the system held for the latest day
+              read ({dayShort(m.day)}), which may have been a holiday,
+              along with how much of each district has been tested so
+              far.
             </p>
             <FlagNotFinding className="mt-7 max-w-3xl" />
           </div>
