@@ -23,6 +23,7 @@ def _n(x: float) -> str:
 SOURCE = "PM POSHAN daily reporting system, NIC Himachal Pradesh (mdmhp.nic.in)"
 OURS = "Counted by this instrument from the tables it has read"
 UDISE = "UDISE+ school report card, Ministry of Education (kys.udiseplus.gov.in)"
+NATIONAL = "PM POSHAN Automated Monitoring System, Ministry of Education (pmposhan-ams.education.gov.in)"
 
 MEASURES: dict[str, dict] = {
     "schools": {
@@ -139,5 +140,52 @@ MEASURES: dict[str, dict] = {
         "label": "Children given free textbooks",
         "definition": "Children in classes I to V (primary) and VI to VIII (upper primary) to whom the school says it gave free textbooks in the year shown. The school files this once a year for the textbook scheme, outside the meal system. It is not an enrolment figure, though it covers the same classes as the meal scheme.",
         "unit": "children", "source": UDISE,
+    },
+    "nat_schools": {
+        "label": "Schools listed",
+        "definition": "The national system's \"Total Schools\" for the State or district: the schools in its master list.",
+        "unit": "schools", "source": NATIONAL,
+    },
+    "nat_reported": {
+        "label": "Schools that reported",
+        "definition": "Schools the national system counts as having sent a return for the date.",
+        "unit": "schools", "source": NATIONAL,
+    },
+    "nat_reported_pct": {
+        "label": "Share of schools reporting",
+        "definition": "Schools that sent a return for the date, as a share of the schools listed.",
+        "formula": "nat_reported / nat_schools x 100",
+        "unit": "%", "source": NATIONAL,
+    },
+    "nat_holiday": {
+        "label": "Schools on holiday",
+        "definition": "The national system's \"Holiday\" column for the date, as it prints it.",
+        "unit": "schools", "source": NATIONAL,
+    },
+    "nat_enrolled": {
+        "label": "Enrolment",
+        "definition": "The national system's \"Student Enrolment\" for every school it lists in the State or district.",
+        "unit": "children", "source": NATIONAL,
+    },
+    "nat_approved": {
+        "label": "Children approved",
+        "definition": "The national system's \"No. of Students approved by PAB\": the number of children the scheme's Programme Approval Board approved meals for in the State for the year. Shown for States only.",
+        "unit": "children", "source": NATIONAL,
+    },
+    "nat_rep_enrolled": {
+        "label": "Enrolment in reporting schools",
+        "definition": "Enrolment of the schools that sent a return for the date.",
+        "unit": "children", "source": NATIONAL,
+    },
+    "nat_meals": {
+        "label": "Meals reported",
+        "definition": "The national system's \"Availed meals\": meals the reporting schools said children took on the date.",
+        "unit": "meals", "source": NATIONAL,
+    },
+    "nat_meals_pct": {
+        "label": "Meals per 100 enrolled",
+        "definition": "Meals reported, per 100 children enrolled in the schools that reported.",
+        "formula": "nat_meals / nat_rep_enrolled x 100",
+        "unit": "per 100", "source": NATIONAL,
     },
 }
