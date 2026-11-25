@@ -137,6 +137,7 @@ export default function MealClaimsCheck() {
               {[
                 [`${MEAL_BASE}/latest`, "Latest flags"],
                 [`${MEAL_BASE}/states`, "By State and district"],
+                [`${MEAL_BASE}/national`, "All 36 States and UTs"],
                 [`${MEAL_BASE}/methodology`, "How each test works"],
               ].map(([href, label]) => (
                 <Link

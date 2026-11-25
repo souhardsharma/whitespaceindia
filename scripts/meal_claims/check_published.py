@@ -19,6 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import ams as AMS  # noqa: E402
 import flags as FL  # noqa: E402
 import measures as ME  # noqa: E402
 import udise as UD  # noqa: E402
@@ -170,6 +171,60 @@ def check_udise(c: Checker, held: dict | None, meta: dict, where: str) -> None:
     low, high = record["low_class"], record["high_class"]
     if low is not None and high is not None:
         c.ok(low <= high <= 12, f"{where}: UDISE+ classes {low} to {high}")
+
+
+def check_national(c: Checker, folder: Path, states: dict) -> None:
+    """The national system's files: every State once, sums that close, and
+    the comparison drawn from the two files it claims to compare."""
+    c.ok((folder / "national.json").is_file(), "national.json is missing")
+    if not (folder / "national.json").is_file():
+        return
+    nat = load(folder, "national.json")
+    c.ok(nat["read"] == bool(nat["states"]), "national.read disagrees with its rows")
+    if not nat["read"]:
+        return
+    names = [s["name"] for s in nat["states"]]
+    c.ok(AMS.MIN_STATES <= len(names) <= 40, f"national.json lists {len(names)} States")
+    c.ok(len(set(names)) == len(names) and len({s["slug"] for s in nat["states"]}) == len(names),
+         "a State appears twice in national.json")
+    c.ok(nat["first_day"] <= nat["day"] and nat["series"][-1][0] == nat["day"], "national.json dates are out of order")
+    for column, key in ((1, "schools"), (2, "reported"), (3, "meals")):
+        c.ok(nat["series"][-1][column] == sum(s[key] or 0 for s in nat["states"]),
+             f"the all-India {key} for {nat['day']} is not the sum of the States")
+    held = {s["st"]: s for s in states["states"]}
+    codes = [s["st"] for s in nat["states"] if s["st"]]
+    c.ok(len(set(codes)) == len(codes), "two national rows claim one State on the meal system")
+    for s in nat["states"]:
+        where = f"national {s['name']}"
+        c.ok(s["st"] is None or s["st"] in RD.STATES, f"{where}: unknown State code {s['st']}")
+        c.ok(not contact_in(s["name"]), f"{where}: contact detail in a name")
+        for key in ("schools", "reported", "holiday", "enrolled", "approved", "rep_enrolled", "meals"):
+            c.ok(s[key] is None or (isinstance(s[key], int) and s[key] >= 0), f"{where}: {key} is {s[key]!r}")
+        c.ok(s["series"] and s["series"][-1][0] <= nat["day"], f"{where}: series runs past the day read")
+        c.ok(bool(s["districts"]) == bool(s["district_day"]), f"{where}: district rows without their date")
+        if s["schools"] is not None and s["reported"] is not None and s["reported"] > s["schools"]:
+            c.source(False, f"{where}: {s['reported']} schools reported of {s['schools']} listed")
+        if s["districts"] and s["district_day"] == nat["day"]:
+            for key in ("schools", "reported", "meals"):
+                total = sum(d[key] or 0 for d in s["districts"])
+                if total != (s[key] or 0):
+                    c.source(False, f"{where}: districts sum to {total} {key}, the State row says {s[key]}")
+        for d in s["districts"]:
+            c.ok(not contact_in(d["name"]), f"{where}: contact detail in district {d['name']}")
+    for row in nat["compare"]:
+        mine = held.get(row["st"])
+        c.ok(mine is not None, f"comparison for {row['st']}, which is not in states.json")
+        if mine:
+            day = next((r for r in mine["series"] if r[0] == row["day"]), None)
+            c.ok(day is not None and day[1:] == row["here"],
+                 f"comparison {row['name']}: the meal system's side is not what states.json holds")
+        theirs = next((s for s in nat["states"] if s["st"] == row["st"]), None)
+        c.ok(theirs is not None and [theirs["schools"], theirs["reported"], theirs["meals"]] == row["national"],
+             f"comparison {row['name']}: the national side is not the State's own row")
+    c.ok((folder / "national" / "states.csv").is_file(), "national/states.csv is missing")
+    for month in nat["district_months"]:
+        path = folder / "national" / f"districts-{month}.csv"
+        c.ok(path.is_file() and path.stat().st_size < 20 * 2**20, f"national/districts-{month}.csv is missing or too large")
 
 
 def check(folder: Path) -> list[str]:
@@ -347,6 +402,7 @@ def check(folder: Path) -> list[str]:
         for h in hol["days"]:
             c.ok(not contact_in(h["reason"]), f"holidays {st}: contact detail in a reason")
             dt.date.fromisoformat(h["date"])
+    check_national(c, folder, states)
     check.passed, check.oddities = c.passed, c.oddities
     return c.failures
 

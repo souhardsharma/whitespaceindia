@@ -401,19 +401,48 @@ export default function MealMethodology() {
             </ul>
           </Section>
 
-          <Section id="others" title="Systems that are not read">
+          <Section id="national" title="The national system">
             <p>
               The Ministry&rsquo;s national Automated Monitoring System
-              (pmposhan-ams.education.gov.in) lists schools in all 36 States
-              and Union Territories, with their meals for the last thirty
-              days. Opened by hand on 25 November 2026, it showed the same
-              meal counts as this system for eight Tripura schools on 24
-              November, left a ninth school out, and showed a different
-              enrolment for six of the eight. The server the nightly run uses
-              is outside India. On the same day the national system closed
-              every connection from that server, and Jharkhand&rsquo;s own
-              system (mdm.jharkhand.gov.in) gave it no answer. Neither is
-              reached by another route, so neither is read.
+              (pmposhan-ams.education.gov.in) holds returns from all 36
+              States and Union Territories for the last thirty days. Its
+              &ldquo;AMS Reporting Status&rdquo; page gives a day&rsquo;s
+              totals for each State and, one step down, for each district.
+              The nightly run reads those two levels and publishes them on
+              the <Link href={`${MEAL_BASE}/national`}>All India page</Link>.
+              It reads the latest two days every night, because schools go
+              on filing after a day has passed, and works back through the
+              thirty days as its time allows. A day once read is kept after
+              the source has dropped it.
+            </p>
+            <p>
+              The system closes every connection from an address outside
+              India, and the server the nightly run uses is outside India.
+              The run therefore builds a list of open relays in India each
+              night, checks each one against the system, and reads through
+              those that pass. Every request is encrypted to the
+              Ministry&rsquo;s own certificate, so a relay carries the page
+              without being able to read or change it. On a night when no
+              relay holds, the national tables keep their previous date and
+              the rest of the instrument is unaffected.
+            </p>
+            <p>
+              No test is run on the national figures. Each table is added
+              up and compared with its own TOTAL row, and a table that does
+              not add up is stored with that noted. Opened by hand
+              on 25 November 2026, the system showed the same meal counts as
+              mdmhp.nic.in for eight Tripura schools on 24 November, left a
+              ninth school out, and showed a different enrolment for six of
+              the eight.
+            </p>
+          </Section>
+
+          <Section id="others" title="Systems that are not read">
+            <p>
+              Jharkhand keeps its own system (mdm.jharkhand.gov.in). On 25
+              November 2026 it gave the nightly run&rsquo;s server no
+              answer, and it is not read. Jharkhand&rsquo;s State and
+              district totals come from the national system instead.
             </p>
             <p>
               UDISE+ publishes enrolment by class, but only behind a search

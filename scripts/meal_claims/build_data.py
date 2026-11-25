@@ -23,6 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import ams as AMS  # noqa: E402
 import check_published as CP  # noqa: E402
 import flags as FL  # noqa: E402
 import measures as ME  # noqa: E402
@@ -252,6 +253,7 @@ def build(db, out: Path, generated_at: str) -> dict:
                     "select day, reason from holiday where st=? order by day, reason", (st,))]}
     write_json(out / "holidays.json", holidays)
     write_json(out / "measures.json", ME.MEASURES)
+    write_national(db, out)
 
     last_night = nights[-1] if nights else None
     meta = {
@@ -423,6 +425,86 @@ def write_csv(path: Path, rows: list[dict]) -> None:
                     f.get("now", "")])
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(buf.getvalue(), encoding="utf-8")
+
+
+# The national system abbreviates two names; everywhere else its capitals are
+# set in ordinary case.
+NATIONAL_NAMES = {
+    "A & N ISLANDS": "Andaman & Nicobar Islands",
+    "DNH & DD": "Dadra & Nagar Haveli and Daman & Diu",
+}
+NATIONAL_STATE_COLUMNS = ["date", "state", "schools", "schools_reported", "schools_on_holiday", "enrolment",
+                          "children_approved", "enrolment_in_reporting_schools", "meals"]
+NATIONAL_DISTRICT_COLUMNS = ["date", "state", "district", "schools", "schools_reported", "schools_on_holiday",
+                             "enrolment", "enrolment_in_reporting_schools", "meals"]
+NATIONAL_FIGURES = ("schools", "reported", "holiday", "enrolled", "rep_enrolled", "meals")
+
+
+def national_name(name: str) -> str:
+    return NATIONAL_NAMES.get(name, tidy(name))
+
+
+def _csv(path: Path, header: list[str], rows) -> None:
+    buf = io.StringIO()
+    w = csv.writer(buf, lineterminator="\n")
+    w.writerow(header)
+    w.writerows([["" if v is None else v for v in row] for row in rows])
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(buf.getvalue(), encoding="utf-8")
+
+
+def write_national(db, out: Path) -> dict:
+    """The national system's figures: every State and UT, and its districts.
+
+    national.json holds the latest day read and each State's last weeks; the
+    CSVs hold every State-day and district-day the store has, which is more
+    than the source itself keeps on screen.
+    """
+    days = [r["day"] for r in db.execute("select distinct day from ams_state_day order by day")]
+    night = db.execute("select stamp, outcome, sent, tables from ams_night order by stamp desc limit 1").fetchone()
+    doc = {"read": bool(days), "day": days[-1] if days else None, "first_day": days[0] if days else None,
+           "days": len(days), "night": dict(night) if night else None,
+           "window_days": AMS.WINDOW_DAYS, "series": [], "states": [], "compare": [], "district_months": []}
+    if not days:
+        write_json(out / "national.json", doc)
+        return doc
+    latest = days[-1]
+    read_at = ST.ams_read_at(db)
+    doc["read_at"] = read_at.get(("", latest))
+    doc["series"] = [[r["day"], r["schools"] or 0, r["reported"] or 0, r["meals"] or 0] for r in db.execute(
+        "select day, sum(schools) schools, sum(reported) reported, sum(meals) meals "
+        "from ams_state_day group by day order by day")][-STATE_SERIES_DAYS:]
+    for r in db.execute("select * from ams_state_day where day=? order by name", (latest,)):
+        name = national_name(r["name"])
+        series = [[d["day"], d["schools"] or 0, d["reported"] or 0, d["meals"] or 0] for d in db.execute(
+            "select day, schools, reported, meals from ams_state_day where name=? order by day", (r["name"],))]
+        district_day = db.execute("select max(day) from ams_district_day where state=?", (r["name"],)).fetchone()[0]
+        districts = [{"name": tidy(d["name"]), **{k: d[k] for k in NATIONAL_FIGURES}} for d in db.execute(
+            "select * from ams_district_day where state=? and day=? order by name", (r["name"], district_day))]
+        doc["states"].append({
+            "name": name, "slug": slug(name), "st": RD.state_code_of(name),
+            **{k: r[k] for k in NATIONAL_FIGURES}, "approved": r["approved"],
+            "series": series[-STATE_SERIES_DAYS:], "district_day": district_day, "districts": districts})
+        here = db.execute("select schools, reported, meals from state_day where st=? and day=?",
+                          (doc["states"][-1]["st"], latest)).fetchone()
+        if here:
+            doc["compare"].append({"st": doc["states"][-1]["st"], "name": name, "day": latest,
+                                   "here": [here["schools"], here["reported"], here["meals"]],
+                                   "national": [r["schools"], r["reported"], r["meals"]]})
+    _csv(out / "national" / "states.csv", NATIONAL_STATE_COLUMNS, (
+        [r["day"], national_name(r["name"]), r["schools"], r["reported"], r["holiday"], r["enrolled"],
+         r["approved"], r["rep_enrolled"], r["meals"]]
+        for r in db.execute("select * from ams_state_day order by day, name")))
+    months = [r[0] for r in db.execute("select distinct substr(day, 1, 7) from ams_district_day order by 1")]
+    for month in months:
+        _csv(out / "national" / f"districts-{month}.csv", NATIONAL_DISTRICT_COLUMNS, (
+            [r["day"], national_name(r["state"]), tidy(r["name"]), r["schools"], r["reported"], r["holiday"],
+             r["enrolled"], r["rep_enrolled"], r["meals"]]
+            for r in db.execute("select * from ams_district_day where substr(day, 1, 7)=? "
+                                "order by day, state, name", (month,))))
+    doc["district_months"] = months
+    write_json(out / "national.json", doc)
+    return doc
 
 
 def write_recent(out: Path, flags: list[dict], nights: list[dict]) -> None:

@@ -9,17 +9,22 @@ a school's name - and checks that the contract notices. Offline.
 """
 from __future__ import annotations
 
+import datetime as dt
 import json
+import shutil
 import sys
 import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import ams as AMS  # noqa: E402
+import ams_sync as AS  # noqa: E402
 import build_data as BD  # noqa: E402
 import check_published as CP  # noqa: E402
 import store as ST  # noqa: E402
 import sync as SY  # noqa: E402
+import test_ams as TA  # noqa: E402
 from test_sync import PretendFinder, PretendHost, YESTERDAY, quiet  # noqa: E402
 
 PASS = FAIL = 0
@@ -171,8 +176,59 @@ def test_a_failed_build_changes_nothing() -> None:
     folder.cleanup()
 
 
+def test_the_national_files() -> None:
+    print("the national system's files")
+    folder = tempfile.TemporaryDirectory()
+    base = Path(folder.name)
+    db = ST.connect(base / "store.sqlite")
+    SY.run(db, PretendHost(budget=300), YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet,
+           finder=PretendFinder())
+    BD.build(db, base / "before", "2026-11-20T02:00:00+00:00")
+    check("a store with no national read still builds and passes",
+          CP.check(base / "before") == []
+          and json.loads((base / "before" / "national.json").read_text(encoding="utf-8"))["read"] is False)
+    today = YESTERDAY + dt.timedelta(days=1)
+    AS.run(db, lambda: AMS.Flow(TA.Page(today).request), YESTERDAY, "2026-11-20T01:30:00Z",
+           deadline=float("inf"), cap=200, say=quiet, clock=lambda: 0)
+    out = base / "out"
+    BD.build(db, out, "2026-11-20T02:00:00+00:00")
+    db.close()
+    failures = CP.check(out)
+    check("passes the contract", failures == [], failures[:5])
+    nat = json.loads((out / "national.json").read_text(encoding="utf-8"))
+    check("36 States and UTs", len(nat["states"]) == 36 and nat["day"] == YESTERDAY.isoformat(), len(nat["states"]))
+    tripura = next(s for s in nat["states"] if s["name"] == "Tripura")
+    check("a State on both systems carries the meal system's code", tripura["st"] == "16")
+    check("its districts are listed in ordinary case",
+          [d["name"] for d in tripura["districts"]] == ["Dhalai", "Gomati", "Sipahijala"], tripura["districts"])
+    check("an abbreviated name is written out",
+          any(s["name"] == "Andaman & Nicobar Islands" for s in nat["states"]))
+    check("both systems are set side by side for the same day",
+          any(row["st"] == "16" and row["day"] == nat["day"] for row in nat["compare"]), nat["compare"])
+    lines = (out / "national" / "states.csv").read_text(encoding="utf-8").splitlines()
+    check("the State CSV holds every State-day read", len(lines) == 1 + 36 * nat["days"], len(lines))
+    check("a district CSV is written for each month", nat["district_months"] and all(
+        (out / "national" / f"districts-{m}.csv").is_file() for m in nat["district_months"]))
+
+    def damaged(name: str, change) -> None:
+        copy = base / "damaged"
+        shutil.rmtree(copy, ignore_errors=True)
+        shutil.copytree(out, copy)
+        edit(copy / "national.json", change)
+        check(f"refuses {name}", CP.check(copy) != [])
+
+    damaged("a State listed twice", lambda v: v["states"].append(v["states"][0]))
+    damaged("an all-India total the States do not sum to", lambda v: v["series"][-1].__setitem__(3, 1))
+    damaged("a comparison that is not the meal system's own figure",
+            lambda v: v["compare"][0]["here"].__setitem__(2, 1))
+    damaged("a phone number in a district's name",
+            lambda v: v["states"][-1]["districts"][0].__setitem__("name", "Dhalai 9876543210"))
+    folder.cleanup()
+
+
 def main() -> int:
-    for fn in (test_a_correct_build_passes, test_damage_is_noticed, test_a_failed_build_changes_nothing):
+    for fn in (test_a_correct_build_passes, test_damage_is_noticed, test_a_failed_build_changes_nothing,
+               test_the_national_files):
         fn()
     print()
     if FAIL:
