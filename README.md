@@ -14,6 +14,7 @@ Whitespace India reads India's public records together to find places where a pr
 | [CSR Opportunity Index](https://whitespaceindia.pages.dev/csr) | Ranks 651 districts by the gap between multidimensional poverty and corporate social responsibility (CSR) spending | Live |
 | [CSR spending by State](https://whitespaceindia.pages.dev/csr-spending) | Reported CSR spending against poverty, district by district, for each of 36 States and Union Territories, and the [list of whitespace districts](https://whitespaceindia.pages.dev/csr-spending/whitespace-districts) | Live |
 | [Instrument 01: People & Consent](https://whitespaceindia.pages.dev/instruments/consent) | Takes an environmental clearance proposal and shows who lives where it would be built, what they live on, and which consent obligations attach | Live, refreshed nightly |
+| [Instrument 02: Meal Claims Check](https://whitespaceindia.pages.dev/instruments/meal-claims) | Reads the PM POSHAN daily meal reports of 17 States and Union Territories and flags school-days on which a school's report contradicts its own filings | Live, refreshed nightly |
 | Health, Education, Energy indexes | District indexes built on the same framework as CSR | In preview: placeholder data, not indexed |
 
 ## CSR Opportunity Index
@@ -58,6 +59,22 @@ Its files and endpoints are documented at [/instruments/consent/data](https://wh
 | Census 2011 district boundaries | [datameet](https://github.com/datameet/maps) |
 | Presidential Orders scheduling Fifth Schedule areas | Gazette of India; Ministry of Panchayati Raj |
 
+## Instrument 02: Meal Claims Check
+
+Meal Claims Check reads the PM POSHAN (midday meal) daily reporting system at mdmhp.nic.in, kept by the National Informatics Centre, Himachal Pradesh, into which 17 States and Union Territories file a return for every school. It flags three things:
+
+- a school-day on which the meals reported exceed the enrolment the school filed for the month;
+- meals reported on a weekday the school's own record shows it does not serve, or on a State-listed holiday while the State was shut;
+- a one-day count several times the school's usual one.
+
+A flag is two filed figures that disagree. It is not a finding about a school, and the instrument scores and ranks nothing. Each flag shows the figures it rests on, and a flag a later read no longer supports is kept and marked as no longer standing.
+
+A scheduled job reads the source once a day inside a request budget it sets for itself, stops at the first refusal, and publishes only files that pass the contract (`scripts/meal_claims/check_published.py`). School tables are read as a rotating sample, so counts are counts of what has been read. The method and its limits are at [/instruments/meal-claims/methodology](https://whitespaceindia.pages.dev/instruments/meal-claims/methodology); the files are documented at [/instruments/meal-claims/data](https://whitespaceindia.pages.dev/instruments/meal-claims/data).
+
+| Source | Publisher |
+|--------|-----------|
+| PM POSHAN daily meal reporting system (mdmhp.nic.in): daily reports, monthly enrolment filings, State holiday lists | National Informatics Centre, Himachal Pradesh, for the Department of School Education & Literacy, Ministry of Education; filed by State education departments |
+
 ## Tech stack
 
 - **Framework:** Next.js 15 (App Router), TypeScript, Tailwind CSS
@@ -93,7 +110,7 @@ app/
   csr/ about/ methodology/ reports/ simulator/
                            the CSR index and its pages
   csr-spending/            CSR spending by State, and the whitespace districts
-  instruments/             the instruments shelf and Instrument 01
+  instruments/             the instruments shelf, Instrument 01 and Instrument 02
   health/ education/ energy/
                            indexes in preview
   api/                     brief PDFs, subscriptions, instrument search and exports
@@ -103,10 +120,11 @@ public/data/               published data for each arm
 scripts/
   csr/                     CSR data pipeline (rebuild_data.py)
   instruments/             Instrument 01 pipeline, nightly sync and test suites
+  meal_claims/             Instrument 02 pipeline, nightly read and test suites
   make_og.py, make_icons.mjs
                            link-preview cards and site icons
   seo_check.mjs            what a search engine reads, checked in CI
-.github/workflows/         CI, and the nightly instrument sync
+.github/workflows/         CI, and the nightly instrument syncs
 ```
 
 ## Author

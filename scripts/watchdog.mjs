@@ -145,6 +145,22 @@ async function checkFreshness() {
   );
 }
 
+// Instrument 02 reads its source once a day in its own workflow
+// (meal-claims-sync.yml). The published read time says whether that happened,
+// whichever trigger started it; a refusal is published as an outcome, and is
+// the owner's to hear about because the run halves its own budget after one.
+async function checkMealClaims() {
+  const r = await http(`${SITE}/data/instruments/meal-claims/freshness.json?wd=${Date.now()}`);
+  if (r.status !== 200) return record("meal claims data", false, `freshness.json answered ${r.status}`);
+  const f = JSON.parse(r.body.toString("utf8"));
+  const ageH = (Date.now() - new Date(f.checked_at)) / 3600000;
+  record(
+    "meal claims data",
+    ageH <= 50 && f.outcome !== "refused",
+    `source read ${ageH.toFixed(1)} h ago for ${f.day}: ${f.outcome}, ${f.sent} of ${f.budget} requests, ${f.failed} failed`,
+  );
+}
+
 async function checkPages() {
   const n = Date.now();
   const expect = [
@@ -159,6 +175,15 @@ async function checkPages() {
     ["/instruments/consent/district/110", 200],
     ["/instruments/consent/1232987606", 200],
     ["/view/consent/rows/0.json", 200],
+    ["/instruments/meal-claims", 200],
+    ["/instruments/meal-claims/states", 200],
+    ["/instruments/meal-claims/state/tripura", 200],
+    ["/instruments/meal-claims/latest", 200],
+    ["/instruments/meal-claims/methodology", 200],
+    ["/instruments/meal-claims/data", 200],
+    // A school page is one static page behind a redirect rule; this is the rule.
+    ["/instruments/meal-claims/school/16050718101-1", 200],
+    ["/data/instruments/meal-claims/states.json", 200],
     ["/sitemap-index.xml", 200],
     ["/robots.txt", 200],
     [`/instruments/consent/feed?wd=${n}`, 200],
@@ -355,7 +380,7 @@ async function report() {
 
 async function main() {
   if (!REPO || !TOKEN) throw new Error("GITHUB_REPOSITORY and GH_TOKEN are required");
-  for (const check of [checkSync, checkFreshness, checkPages, checkAwake, checkDeploys, checkBudgets, checkCrawlPath, checkVercel, checkLimitsJob]) {
+  for (const check of [checkSync, checkFreshness, checkMealClaims, checkPages, checkAwake, checkDeploys, checkBudgets, checkCrawlPath, checkVercel, checkLimitsJob]) {
     try {
       await check();
     } catch (e) {
