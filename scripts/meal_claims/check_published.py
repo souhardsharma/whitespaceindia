@@ -21,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import flags as FL  # noqa: E402
 import measures as ME  # noqa: E402
+import udise as UD  # noqa: E402
 import reader as RD  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
@@ -108,6 +109,68 @@ def flag_supported(c: Checker, f: dict, where: str) -> None:
             c.ok(f.get("rule") == "holiday" and "reason" in f, f"{where}: closed flag with no rule it rests on")
 
 
+def check_history(c: Checker, folder: Path, st: str, years: list[int], last_day: str) -> dict[str, list]:
+    """The State's yearly district files. Returns each district's latest row."""
+    latest: dict[str, list] = {}
+    found = sorted(int(p.stem) for p in (folder / "history" / st).glob("*.json")) \
+        if (folder / "history" / st).is_dir() else []
+    c.ok(found == years, f"state {st}: history files {found}, the State lists {years}")
+    for year in found:
+        doc = load(folder, f"history/{st}/{year}.json")
+        c.ok(doc["st"] == st and doc["year"] == year, f"history/{st}/{year}.json names another State or year")
+        for dc, rows in doc["districts"].items():
+            where = f"history {st}-{dc} {year}"
+            days = [r[0] for r in rows]
+            c.ok(days == sorted(set(days)), f"{where}: days repeat or are out of order")
+            c.ok(all(d[:4] == str(year) and d <= last_day for d in days), f"{where}: a day outside its year or after the last read")
+            for day, schools, filed, _enrolled, reported, meals in rows:
+                c.source(0 <= reported <= schools, f"{where} {day}: {reported} reported of {schools}")
+                c.ok(meals >= 0 and (filed is None or filed >= 0), f"{where} {day}: a negative count")
+            latest[dc] = rows[-1]
+    return latest
+
+
+def check_roster(c: Checker, folder: Path, st: str, d: dict, where: str) -> None:
+    """A district's schools as read: the counts on its page are counts of this file."""
+    path = folder / "roster" / f"{st}-{d['dc']}.json"
+    c.ok(d["clusters_read"] <= d["clusters"], f"{where}: more clusters read than known")
+    if not d["schools_read"]:
+        c.ok(not path.exists() and not d["clusters_read"], f"{where}: a roster with no school in it")
+        return
+    if not c.ok(path.is_file(), f"{where}: roster file is missing"):
+        return
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    c.ok(len(doc["schools"]) == d["schools_read"], f"{where}: roster holds {len(doc['schools'])} schools, the page says {d['schools_read']}")
+    c.ok(len(doc["clusters"]) == d["clusters_read"], f"{where}: roster clusters disagree with the count")
+    keys = [s[0] for s in doc["schools"]]
+    c.ok(len(keys) == len(set(keys)), f"{where}: a school is listed twice")
+    for key, name, cc, enrolled, meals in doc["schools"]:
+        c.ok(cc in doc["clusters"], f"{where}: school {key} in a cluster the file does not describe")
+        c.ok(not contact_in(name), f"{where}: contact detail in a school name")
+        c.ok((enrolled is None or enrolled >= 0) and (meals is None or meals >= 0), f"{where}: school {key} has a negative count")
+
+
+def check_udise(c: Checker, held: dict | None, meta: dict, where: str) -> None:
+    """A school's UDISE+ entry carries the kept fields and nothing else."""
+    if held is None:
+        return
+    c.ok(set(held) == {"read_at", "record"}, f"{where}: UDISE+ entry has keys {sorted(held)}")
+    c.ok(held["read_at"] <= meta["generated_at"], f"{where}: UDISE+ read after the build")
+    record = held["record"]
+    if record is None:
+        return
+    c.ok(tuple(sorted(record)) == tuple(sorted(UD.FIELDS)), f"{where}: UDISE+ record has fields {sorted(record)}")
+    for name, value in record.items():
+        if name in UD.NUMBERS:
+            c.ok(value is None or (isinstance(value, int) and (value >= 0 or name in UD.CLASSES)), f"{where}: UDISE+ {name} is {value!r}")
+        else:
+            c.ok(value is None or (isinstance(value, str) and not contact_in(value)),
+                 f"{where}: UDISE+ {name} is not plain text")
+    low, high = record["low_class"], record["high_class"]
+    if low is not None and high is not None:
+        c.ok(low <= high <= 12, f"{where}: UDISE+ classes {low} to {high}")
+
+
 def check(folder: Path) -> list[str]:
     c = Checker()
     needed = ["meta.json", "states.json", "freshness.json", "measures.json", "holidays.json",
@@ -124,7 +187,8 @@ def check(folder: Path) -> list[str]:
     c.ok(meta["thresholds"] == FL.THRESHOLDS, "meta.thresholds differs from flags.THRESHOLDS")
     c.ok(meta.get("calibration") == load(Path(__file__).resolve().parent, "calibration.json"), "meta.calibration differs from calibration.json")
     for key in ("flag_over", "flag_over_wide", "flag_closed", "flag_spike", "schools_flagged",
-                "tables_read", "school_days_tested", "schools"):
+                "tables_read", "school_days_tested", "schools", "clusters_read", "schools_read",
+                "udise_asked", "udise_found"):
         c.ok(isinstance(meta["counts"].get(key), int), f"meta.counts.{key} is not a number")
         c.ok(key in ME.MEASURES, f"count {key} has no entry in the registry")
 
@@ -165,7 +229,9 @@ def check(folder: Path) -> list[str]:
             continue
         detail = json.loads(path.read_text(encoding="utf-8"))
         c.ok(len(detail["districts"]) == s["districts"], f"state {st}: district count disagrees with its file")
-        sub = {k: 0 for k in ("flag_over", "flag_over_wide", "flag_closed", "flag_spike", "tables_read")}
+        sub = {k: 0 for k in ("flag_over", "flag_over_wide", "flag_closed", "flag_spike", "tables_read",
+                              "clusters_read", "schools_read")}
+        history = check_history(c, folder, st, s["history_years"], meta["day"])
         codes = set()
         for d in detail["districts"]:
             where = f"district {st}-{d['dc']}"
@@ -176,6 +242,11 @@ def check(folder: Path) -> list[str]:
                 c.source(0 <= d["enr_filed"] <= d["schools"], f"{where}: more filed than listed")
             for k in sub:
                 sub[k] += d[k]
+            check_roster(c, folder, st, d, where)
+            if d["day"] is not None:
+                c.ok(history.get(d["dc"]) == [d["day"], d["schools"], d["enr_filed"], d["enrolled"],
+                                               d["reported"], d["meals"]],
+                     f"{where}: its latest day is not the last row of its history")
             for b in d["blocks"]:
                 c.source(b["reported"] <= b["schools"], f"{where} block {b['bc']}: reported exceeds schools")
             for school in d["flagged"]:
@@ -188,6 +259,18 @@ def check(folder: Path) -> list[str]:
             c.ok(sub[k] == s[k], f"state {st}: {k} is {s[k]} but its districts sum to {sub[k]}")
     for k, v in totals.items():
         c.ok(meta["counts"][k] == v, f"meta.counts.{k} is {meta['counts'][k]} but the States sum to {v}")
+    for k in ("clusters_read", "schools_read"):
+        c.ok(meta["counts"][k] == sum(s[k] for s in states["states"]),
+             f"meta.counts.{k} is not the sum of the States")
+    c.ok(meta["counts"]["clusters_read"] <= meta["counts"]["clusters"], "more clusters read than are known")
+    hist = meta["history"]
+    if hist["state_first_day"]:
+        c.ok(meta["span"]["first_day"] <= hist["state_first_day"] <= meta["day"],
+             "the first day with a report is outside the span read")
+    rosters = {p.stem for p in (folder / "roster").glob("*.json")} if (folder / "roster").is_dir() else set()
+    named = {f"{s['st']}-{d['dc']}" for s in states["states"]
+             for d in load(folder, f"state/{s['st']}.json")["districts"] if d["schools_read"]}
+    c.ok(rosters == named, f"roster files and districts with schools read differ: {sorted(rosters ^ named)[:5]}")
 
     # -- every flag, from the monthly CSVs (the complete list) and the school files
     csv_rows = []
@@ -227,6 +310,7 @@ def check(folder: Path) -> list[str]:
                 if school["enrolment"] is not None:
                     c.ok(len(school["enrolment"]) == 12, f"{where}: enrolment history is not twelve months")
                 c.ok(bool(school["flags"]), f"{where}: a school file entry with no flag")
+                check_udise(c, school.get("udise"), meta, where)
                 for f in school["flags"]:
                     in_files += 1
                     c.ok(f["day"][:7] == month, f"{where}: flag of {f['day']} filed under {month}")
@@ -235,6 +319,7 @@ def check(folder: Path) -> list[str]:
                         held = school["meals"][int(f["day"][8:]) - 1]
                         c.ok(held > f["enrolled"], f"{where} {f['day']}: the month now shows {held}, not above {f['enrolled']}")
     kept = [r for r in csv_rows if r["date"][:7] in meta["months"]]
+    c.ok(meta["counts"]["udise_found"] <= meta["counts"]["udise_asked"], "more schools found in UDISE+ than asked for")
     c.ok(in_files == len(kept), f"school files hold {in_files} flags, the CSVs {len(kept)} for the same months")
 
     # -- the latest list

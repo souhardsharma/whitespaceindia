@@ -22,6 +22,7 @@ def _n(x: float) -> str:
 
 SOURCE = "PM POSHAN daily reporting system, NIC Himachal Pradesh (mdmhp.nic.in)"
 OURS = "Counted by this instrument from the tables it has read"
+UDISE = "UDISE+ school report card, Ministry of Education (kys.udiseplus.gov.in)"
 
 MEASURES: dict[str, dict] = {
     "schools": {
@@ -66,6 +67,16 @@ MEASURES: dict[str, dict] = {
         "definition": "Cluster tables of schools this instrument has read, each for one date. A cluster is a group of neighbouring schools; one table lists every school in it for one day.",
         "unit": "tables", "source": OURS,
     },
+    "clusters_read": {
+        "label": "Clusters with a school table read",
+        "definition": "Clusters for which this instrument has read the table of schools at least once.",
+        "unit": "clusters", "source": OURS,
+    },
+    "schools_read": {
+        "label": "Schools read",
+        "definition": "Schools named in the school tables this instrument has read. Each is published with the enrolment it had filed and the meals it reported on the latest date read.",
+        "unit": "schools", "source": OURS,
+    },
     "school_days_tested": {
         "label": "School-days tested against enrolment",
         "definition": "Rows of those tables in which the school had filed an enrolment above zero and had reported that day. Only these rows can show meals above enrolment.",
@@ -98,5 +109,35 @@ MEASURES: dict[str, dict] = {
         "label": "Schools with a flag",
         "definition": "Schools with at least one flag that still stands on the figures as last read.",
         "unit": "schools", "source": OURS,
+    },
+    "udise_asked": {
+        "label": "Flagged schools looked up in UDISE+",
+        "definition": "Schools with a flag whose code this instrument has asked UDISE+ for. UDISE+ is the Ministry of Education's yearly register of schools, kept apart from the meal reporting system.",
+        "unit": "schools", "source": OURS,
+    },
+    "udise_found": {
+        "label": "Of those, found in UDISE+",
+        "definition": "Flagged schools for which UDISE+ holds a report card under the code the meal system lists the school by.",
+        "unit": "schools", "source": OURS,
+    },
+    "udise_classes": {
+        "label": "Classes taught",
+        "definition": "The lowest and highest class the school teaches, as it declared them to UDISE+ for the year shown. PM POSHAN meals are for pre-primary and classes I to VIII, so a school teaching up to class XII has children the scheme does not feed.",
+        "unit": "class", "source": UDISE,
+    },
+    "udise_category": {
+        "label": "Kind of school",
+        "definition": "The school's category, type and management as UDISE+ records them. A madrasa or other school with its own calendar may keep working days its State's holiday list does not show.",
+        "source": UDISE,
+    },
+    "udise_status": {
+        "label": "Status in the register",
+        "definition": "Whether UDISE+ lists the school as operational in the year shown.",
+        "source": UDISE,
+    },
+    "udise_textbooks": {
+        "label": "Children given free textbooks",
+        "definition": "Children in classes I to V (primary) and VI to VIII (upper primary) to whom the school says it gave free textbooks in the year shown. It is filed once a year for a different purpose and is not the school's enrolment, but it is a count of children in the classes the meal scheme covers, filed outside the meal system.",
+        "unit": "children", "source": UDISE,
     },
 }

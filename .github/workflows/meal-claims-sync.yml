@@ -17,7 +17,8 @@
 # upload can be put back by hand from any of the last fourteen nights.
 #
 # HOW HARD IT LEANS ON THE SOURCE. sync.py counts requests. The first night
-# sent 300; each clean night adds 150 up to 1,000; a refusal ends the run at
+# sent 300; each clean night adds half again, up to 5,000 (about three and a
+# half hours at the pause the reader keeps); a refusal ends the run at
 # once and halves the next night's, and so does a night of failed or slow
 # answers. Nothing here goes round a refusal, and nothing is read from
 # anywhere but this runner.
@@ -97,7 +98,7 @@ jobs:
     # day is read rather than lost.
     if: ${{ !cancelled() && needs.gate.outputs.go != 'false' }}
     runs-on: ubuntu-26.04
-    timeout-minutes: 150
+    timeout-minutes: 300
     permissions:
       contents: write
 
@@ -171,7 +172,7 @@ jobs:
             [[ "$school" =~ ^[0-9]{2}:[0-9]+:[0-9]+:[0-9]+:[0-9]{1,2}$ ]] || { echo "::error::not a school: $school"; exit 1; }
             args+=(--school "$school")
           done
-          python -I -X utf8 scripts/meal_claims/sync.py --store "$STORE" --minutes 100 "${args[@]}"
+          python -I -X utf8 scripts/meal_claims/sync.py --store "$STORE" --minutes 240 "${args[@]}"
 
       - name: Pack the store
         # EVERY outcome from here on keeps what the night read.
