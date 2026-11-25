@@ -14,7 +14,7 @@ not read at all. What a night does not reach is still unread the next night
 and is planned again from the store; nothing is carried in a queue.
 
 The host answers Indian addresses only, so every request goes down a
-verified Indian route (egress.Session). Several flows run side by side, each
+verified Indian route (egress.Session). Ten flows run side by side, each
 on a route of its own, and all of them together keep one pace. When a route
 dies its flow starts again on another, for as long as the night's minutes
 last; the pool file is read again each time, so routes a refresher verifies
@@ -50,7 +50,7 @@ IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 REQUEST_CAP = 2400        # most requests in one night
 SPACING_S = 3.0           # between requests on one route
 PACE_S = 1.5              # between requests on all routes together
-FLOWS = 6                 # flows side by side, each on its own route
+FLOWS = 10                # flows side by side, each on its own route
 REPORT_EVERY = 25         # tables between two progress lines
 SETTLED_AFTER_DAYS = 2    # a day's figures stop moving: a table read sooner is read again
 ATTEMPTS = 3              # routes tried for one table that will not parse

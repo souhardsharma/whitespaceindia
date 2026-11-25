@@ -100,7 +100,7 @@ export default function MealClaimsCheck() {
               <Stat
                 measure={M.reported}
                 value={count(reported)}
-                note={`${share(reported, listed) ?? "no share"} of schools listed, ${dayShort(m.day)}.${
+                note={`${share(reported, listed) ?? "no share"} of schools listed, ${dayShort(m.day)}, as read the next morning; returns filed later are not in it.${
                   shut ? ` In ${count(shut)} of the ${count(onDay.length)} States, fewer than ${m.thresholds.state_shut_share * 100}% of schools reported that day.` : ""}`}
               />
               <Stat measure={M.school_days_tested} value={count(c.school_days_tested)} />
@@ -206,6 +206,9 @@ export default function MealClaimsCheck() {
                 <tbody>
                   {states.map((s) => {
                     const open = lastOpenDay(s.series, m.thresholds.state_open_share);
+                    // No day reached the open share: the latest day any school reported, so
+                    // a State whose few schools file every day does not read as none.
+                    const some = open ? null : [...s.series].reverse().find((r) => r[2] > 0) ?? null;
                     return (
                     <tr key={s.st} className="border-b border-[#1c1c19]/15">
                       <td className={TD}>
@@ -215,9 +218,14 @@ export default function MealClaimsCheck() {
                       </td>
                       <td className={`${TD} text-right`}>{count(s.schools)}</td>
                       <td className={`${TD} text-right`}>
-                        {open ? share(open[2], open[1]) : share(s.reported, s.schools) ?? "not read"}
+                        {open ? share(open[2], open[1]) : some ? share(some[2], some[1]) : share(s.reported, s.schools) ?? "not read"}
                         {open && open[0] !== m.day ? <span className="opacity-60"> ({dayShort(open[0])})</span> : null}
-                        {!open && s.series.length ? <span className="opacity-60"> (no working day in {count(s.series.length)} read)</span> : null}
+                        {some ? (
+                          <span className="opacity-60">
+                            {" "}({dayShort(some[0])}; under {m.thresholds.state_open_share * 100}% on every one of {count(s.series.length)} days read)
+                          </span>
+                        ) : null}
+                        {!open && !some && s.series.length ? <span className="opacity-60"> (none reported on any of {count(s.series.length)} days read)</span> : null}
                       </td>
                       <td className={TD}><Spark series={s.series} label={M.reported_pct.label} /></td>
                       <td className={`${TD} text-right`}>{share(s.enr_filed, s.enr_schools) ?? "not read"}</td>
@@ -294,7 +302,8 @@ export default function MealClaimsCheck() {
                 </li>
                 <li>
                   The holiday lists on the system cover whole States and
-                  have gaps, and there is no list of vacations at all. A date
+                  have gaps. Some include the State&rsquo;s vacations and
+                  others leave them out. A date
                   absent from a list is not taken as proof that schools were
                   open. A
                   school&rsquo;s weekly holiday is worked out from its own
