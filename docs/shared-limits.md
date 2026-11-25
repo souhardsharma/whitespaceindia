@@ -17,7 +17,18 @@ enforces each one, and what a new tool has to do.
 | Render instance hours | 750 a month, whole workspace | ONE service, awake all day (at most 744 h); the watchdog projects the worst case, every deploy counted twice |
 | Render build minutes | 500 a month | the watchdog projects them from the month's deploys |
 | Render memory | 512 MB | server code reads bounded slices, never whole datasets |
+| Render bandwidth | 5 GB a month; past it Render SUSPENDS every free service until the month ends | the Pages proxy keeps GET answers in Cloudflare's cache for an hour (`proxy.mjs`) |
+| Pages build time | 20 minutes a build | builds of main take 80-210 s (measured Nov 2026) |
+| Pages Function CPU | 10 ms a request (free Workers plan) | the functions only proxy and cache; the heavy work runs on Render |
 | GitHub API (owner's account) | 5,000 requests an hour | shared with the Worker that starts the nightly sync |
+| Vercel (Hobby) | 10 GB Fast Origin Transfer, 100 GB Fast Data Transfer, 1M edge requests a month; a breach pauses the whole team | `vercel.json` builds nothing and only redirects, `site.test.ts` pins that; Deployment Protection keeps old deployments behind a login; the watchdog fails on a 402, a 200 or an unprotected deployment address |
+
+Measured 2026-11-25, with 25 of 30 days gone: Render 453 of 750 instance
+hours, 41 MB of 5 GB bandwidth, 72 of 500 pipeline minutes; Pages Functions 66
+requests in 24 hours (limit 100,000 a day), no CPU-limit errors (p99 16 ms);
+Vercel Fast Origin Transfer 2.65 of 10 GB over 30 days, nearly all of it from
+before the pause. Function requests and Render bandwidth have no free API the
+watchdog can read without a token, so they are read from the two dashboards.
 
 ## A new tool, from its first branch
 
@@ -51,7 +62,12 @@ enforces each one, and what a new tool has to do.
 7. **Polling GitHub** from scripts or agents: 150 seconds apart or more, never
    several at once.
 8. **Vercel** is redirect-only and deploys `main` alone (`vercel.json`
-   `git.deploymentEnabled`); nothing new is ever served from it.
+   `git.deploymentEnabled`); nothing new is ever served from it. The team was
+   paused 2026-10-27 to 2026-11-25 and was lifted with Vercel's ONE-TIME Hobby
+   grace period (help agent at vercel.com/help, "Unblock My Account"), so a
+   second breach has no free way back. Never give `vercel.json` a framework, a
+   function, ISR or image optimisation, and never turn Deployment Protection
+   off: every old deployment's own URL still holds the full app.
 
 ## When something goes wrong
 
