@@ -120,6 +120,10 @@ class Unreadable(Exception):
     """One request failed after its attempts. The caller records it as owed."""
 
 
+class Empty(Unreadable):
+    """The host answered, twice, with a table that has no rows for that date."""
+
+
 def _key(name: str) -> str:
     return re.sub(r"[^a-z]", "", name.lower().replace("&", "and"))
 
@@ -412,7 +416,7 @@ class Host:
             rows = parse_state_table(body)
             if rows:
                 return rows
-        raise Unreadable("the all-States table came back empty twice")
+        raise Empty("the all-States table came back empty twice")
 
     def districts(self, st: str, day: dt.date) -> list[dict]:
         return parse_districts(self._send("/Home/GetDisttWiseSummaryHome", {

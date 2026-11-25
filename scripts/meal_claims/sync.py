@@ -4,17 +4,25 @@ What one night reads, in this order, so the things every page depends on are
 read first and the sampling takes what is left:
 
   states     the all-States table for yesterday and the two days before it
-             (figures move for a day or two as late reports arrive), and a
-             stretch of earlier days until the history is filled
-  districts  every State's district table for yesterday
+             (figures move for a day or two as late reports arrive)
+  districts  every State's district table for yesterday, and again for the
+             day two before it, once late reports have settled
   holidays   each State's own holiday list, weekly
+  history    earlier dates of the all-States table, newest first, back to
+             where the host holds nothing
   closed     where a State was shut yesterday and meals were still reported:
              down through district, block and cluster to the schools
+  district history
+             each State's district table for the earlier dates on which that
+             State reported, newest first, with what the closed days left
   hierarchy  block and cluster lists, oldest first
   sample     school tables of clusters, chosen by how long since each was read
              and how many of its schools have filed an enrolment to test against
   detail     the month and the enrolment history of each school a table named;
              what the budget does not reach is owed to the next night
+
+Every school table read is kept row by row, so the store comes to hold each
+school the host lists and what it showed on the day read.
 
 The budget is requests, counted by the reader. It starts small and rises by
 itself over clean nights (`next_budget`); a refusal ends the run at once and
@@ -37,25 +45,40 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import flags as FL  # noqa: E402
 import reader as RD  # noqa: E402
 import store as ST  # noqa: E402
+import udise as UD  # noqa: E402
 
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 
 BUDGET_START = 300
-BUDGET_STEP = 150
-BUDGET_CAP = 1000
+BUDGET_STEP = 150           # the least a clean night adds
+BUDGET_GROWTH = 1.5         # ... and the multiple it grows by once that is more
+# About 14,000 clusters hold the schools. At 1,000 requests a night one pass
+# over them took a month, and a school's month can only be read while it is
+# the current month. At 5,000, with the pause between requests unchanged, a
+# pass takes about a week and the night about two hours.
+BUDGET_CAP = 5000
 BUDGET_FLOOR = 150
 CLEAN_FAIL_SHARE = 0.02     # a night is clean under this share of failed attempts
 SLOW_FACTOR = 1.6           # ... and when its median answer is under this multiple of earlier nights'
-HISTORY_DAYS = 400          # how far back the all-States history is filled
+# The all-States history is read back until this many days in a row, older
+# than the oldest day with a report, hold none. The host has gone blank for
+# three weeks at a time (5 to 25 June 2026) and States take long vacations,
+# but never all of them for four months.
+HISTORY_ENDS_AFTER_BLANK_DAYS = 120
+SETTLED_AFTER_DAYS = 2      # late reports stop arriving: the day's district tables are read again
 HOLIDAY_EVERY_DAYS = 7
 MONTH_REREAD_DAYS = 7       # a followed school's month is read again after this long
 ENROL_REREAD_DAYS = 30
 OWED_KEEP_DAYS = 20         # a month not read within this long is no longer that month
+UDISE_CAP = 300             # requests a night to the second source, UDISE+
+UDISE_MINUTES = 10          # ... and the time it may take after the meal system's
+UDISE_REFRESH_DAYS = 120    # its records are filed once a year; a school is asked again after this long
 FAULTY_FAIL_AFTER = 3       # this many nights running not read whole, and the job goes red
 
 # Shares of the night's budget. `closed` and `detail` are ceilings; what they
 # do not use goes to the sample.
-SHARE_HISTORY = 0.08
+SHARE_HISTORY = 0.05            # earlier dates of the all-States table
+SHARE_DISTRICT_HISTORY = 0.25   # earlier dates of the district tables, while any are owed
 SHARE_CLOSED = 0.25
 SHARE_HIERARCHY = 0.20
 SHARE_HIERARCHY_BUILDING = 0.50   # while most blocks have no cluster list yet
@@ -84,8 +107,8 @@ def yesterday_ist(now: dt.datetime | None = None) -> dt.date:
 def next_budget(nights: list[dict], today: str | None = None) -> int:
     """Tonight's request budget, from the nights before it (oldest first).
 
-    Up one step after a clean night, halved after a refusal or a night of
-    failures or slow answers, otherwise held. A run that never reached the
+    Up after a clean night (by half, and by at least one step), halved
+    after a refusal or a night of failures or slow answers, otherwise held. A run that never reached the
     host (no request answered) teaches nothing and changes nothing. A second
     run on one date (`today`, UTC) never steps up: the ramp is per night, so
     a run dispatched by hand cannot hurry it.
@@ -101,7 +124,7 @@ def next_budget(nights: list[dict], today: str | None = None) -> int:
     if last["outcome"] == "refused" or slow or failing:
         return max(BUDGET_FLOOR, last["budget"] // 2)
     if last["outcome"] == "complete" and last.get("stamp", "")[:10] != today:
-        return min(BUDGET_CAP, last["budget"] + BUDGET_STEP)
+        return min(BUDGET_CAP, max(last["budget"] + BUDGET_STEP, int(last["budget"] * BUDGET_GROWTH)))
     return last["budget"]
 
 
@@ -147,6 +170,50 @@ def far_above_neighbours(rows: list[dict]) -> list[dict]:
             and r["meals"] >= NEIGHBOUR_RATIO * usual]
 
 
+def second_source(db, finder, stamp: str, say=print) -> dict:
+    """Ask UDISE+ for the record of each flagged school not asked in the
+    last UDISE_REFRESH_DAYS, newest flags first. Its own request count, its
+    own refusal: nothing here touches the meal system or the night's outcome."""
+    note = {"sent": 0, "read": 0, "none": 0, "unreadable": 0}
+    stale = (dt.date.fromisoformat(stamp[:10]) - dt.timedelta(days=UDISE_REFRESH_DAYS)).isoformat()
+    year = int((db.execute("select value from info where key='udise_year'").fetchone() or [UD.FIRST_YEAR_ID])[0])
+    due = db.execute(
+        "select f.st, f.code, max(f.day) latest from flag f left join udise u on u.st=f.st and u.code=f.code "
+        "where f.standing=1 and (u.read_at is null or u.read_at < ?) group by f.st, f.code "
+        "order by latest desc, f.code", (stale,)).fetchall()
+    try:
+        held = [json.loads(r["record"])["year"] for r in
+                db.execute("select record from udise where record is not null and year_id=?", (year,))]
+        if due and held:
+            # A new academic year is taken up the night UDISE+ first answers
+            # for it: an answer that names a later year than any record held.
+            try:
+                ahead = finder.report_card(due[0]["code"], year + 1)
+                if ahead and (ahead["year"] or "") > max(y or "" for y in held):
+                    year += 1
+                    db.execute("insert or replace into info values ('udise_year', ?)", (str(year),))
+            except RD.Unreadable:
+                note["unreadable"] += 1
+        for school in due:
+            try:
+                record = finder.report_card(school["code"], year)
+            except RD.Unreadable as e:
+                note["unreadable"] += 1
+                say(f"  unreadable: {e}")
+                continue
+            ST.put_udise(db, school["st"], school["code"], year, record, stamp)
+            note["read" if record else "none"] += 1
+    except RD.OutOfBudget:
+        pass
+    except RD.Refused as e:
+        note["refused"] = str(e)
+        say(f"::warning::UDISE+ refused; its reading stops here for tonight: {e}")
+    db.commit()
+    note["sent"] = finder.sent
+    say(f"UDISE+: {note['sent']} requests, {note['read']} records, {note['none']} codes it does not hold")
+    return note
+
+
 class Night:
     """One run: the host, the store, and what is still owed."""
 
@@ -185,34 +252,94 @@ class Night:
     def states(self) -> None:
         for back in range(3):
             day = self.yesterday - dt.timedelta(days=back)
-            rows = self.read(self.host.state_table, day)
-            if rows:
-                ST.put_state_day(self.db, day, rows, now_utc())
+            self.state_day(day)
         self.notes["state_table"] = bool(self.db.execute(
             "select 1 from state_day where day=?", (ST.iso(self.yesterday),)).fetchone())
 
+    def state_day(self, day: dt.date) -> None:
+        """One date of the all-States table, entered in the ledger when the
+        host answered, with rows or with none."""
+        try:
+            rows = self.host.state_table(day)
+        except RD.Empty:
+            rows = []
+        except (RD.Unreadable, ValueError) as e:
+            self.notes["unreadable"] += 1
+            self.say(f"  unreadable: {e}")
+            return
+        ST.put_state_day(self.db, day, rows, now_utc())
+        ST.mark_read(self.db, "states", "", day, len(rows), now_utc())
+
+    def history_floor(self) -> dt.date | None:
+        """The oldest day the all-States table has a report for, once enough
+        blank days older than it have been read to call it the first."""
+        got = self.db.execute("select value from info where key='history_floor'").fetchone()
+        if got:
+            return dt.date.fromisoformat(got["value"])
+        oldest = self.db.execute("select min(day) from state_day where reported>0").fetchone()[0]
+        if oldest is None:
+            return None
+        older = self.db.execute("select count(*) from table_read where kind='states' and day<?",
+                                (oldest,)).fetchone()[0]
+        if older < HISTORY_ENDS_AFTER_BLANK_DAYS:
+            return None
+        self.db.execute("insert or replace into info values ('history_floor', ?)", (oldest,))
+        return dt.date.fromisoformat(oldest)
+
     def history(self) -> None:
-        """Fill earlier days of the all-States table, newest first."""
+        """Earlier dates of the all-States table, newest first, until the
+        host's record runs out."""
         stop_at = self.allowance(SHARE_HISTORY)
-        held = {r["day"] for r in self.db.execute("select distinct day from state_day")}
-        for back in range(3, HISTORY_DAYS):
-            if self.host.sent >= stop_at:
-                return
-            day = self.yesterday - dt.timedelta(days=back)
-            if ST.iso(day) in held:
-                continue
-            rows = self.read(self.host.state_table, day)
-            if rows:
-                ST.put_state_day(self.db, day, rows, now_utc())
+        held = ST.days_read(self.db, "states")
+        day = self.yesterday - dt.timedelta(days=3)
+        while self.host.sent < stop_at and self.history_floor() is None:
+            if ST.iso(day) not in held:
+                self.state_day(day)
+            day -= dt.timedelta(days=1)
+
+    def district_history(self) -> None:
+        """District tables of earlier dates, newest first: for each State,
+        the dates on which the all-States table shows it reporting. A State
+        that table leaves out (Rajasthan) is asked for every date any other
+        State reported on."""
+        stop_at = self.allowance(SHARE_DISTRICT_HISTORY,
+                                 keep=SHARE_HIERARCHY + SHARE_SAMPLE_KEPT + SHARE_DETAIL)
+        listed = {r["st"] for r in self.db.execute("select distinct st from state_day")}
+        held = {st: ST.days_read(self.db, "districts", st) for st in RD.STATES}
+        owed = 0
+        for row in self.db.execute(
+                "select day, group_concat(case when reported>0 then st end) sts from state_day "
+                "where day<? group by day having sum(reported)>0 order by day desc",
+                (ST.iso(self.yesterday),)).fetchall():
+            reporting = set((row["sts"] or "").split(","))
+            day = dt.date.fromisoformat(row["day"])
+            for st in RD.STATES:
+                if row["day"] in held[st] or (st in listed and st not in reporting):
+                    continue
+                if self.host.sent >= stop_at:
+                    owed += 1
+                    continue
+                self.district_table(st, day)
+        self.notes["district_days_owed"] = owed
+
+    def district_table(self, st: str, day: dt.date) -> bool:
+        rows = self.read(self.host.districts, st, day)
+        if rows is None:
+            return False
+        ST.put_districts(self.db, st, day, rows)
+        ST.mark_read(self.db, "districts", st, day, len(rows), now_utc())
+        return bool(rows)
 
     def districts(self) -> None:
-        read = 0
-        for st in RD.STATES:
-            rows = self.read(self.host.districts, st, self.yesterday)
-            if rows:
-                ST.put_districts(self.db, st, self.yesterday, rows)
-                read += 1
+        read = sum(self.district_table(st, self.yesterday) for st in RD.STATES)
         self.notes["district_tables"] = read
+        settled = self.yesterday - dt.timedelta(days=SETTLED_AFTER_DAYS)
+        for st in RD.STATES:
+            first = self.db.execute("select read_at from table_read where kind='districts' and st=? and day=?",
+                                    (st, ST.iso(settled))).fetchone()
+            # Read once more, and only a table first read before the day had settled.
+            if first and first["read_at"] and first["read_at"][:10] <= ST.iso(settled + dt.timedelta(days=1)):
+                self.district_table(st, settled)
 
     def holidays(self) -> None:
         due = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=HOLIDAY_EVERY_DAYS)).isoformat()
@@ -376,6 +503,7 @@ class Night:
         rows = self.read(self.host.schools, st, dc, bc, cc, day)
         if rows is None:
             return None
+        ST.put_school_day(self.db, st, dc, bc, cc, day, rows)
         # A table can be read before its block's cluster list is (a closed
         # day, a named school). The cluster is recorded here so the table is
         # counted under its district; the list fills in the rest later.
@@ -488,7 +616,7 @@ def judge(db, st: str, code: str, shift: str, year: int, month: int, upto: dt.da
                    (json.dumps(basis, sort_keys=True), stamp, st, code, shift, row["day"], row["kind"]))
 
 
-def run(db, host: RD.Host, yesterday: dt.date, stamp: str, say=print, named=()) -> dict:
+def run(db, host: RD.Host, yesterday: dt.date, stamp: str, say=print, named=(), finder=None) -> dict:
     """One night. Returns the row recorded for it."""
     night = Night(db, host, yesterday, stamp, say)
     outcome = "complete"
@@ -500,6 +628,7 @@ def run(db, host: RD.Host, yesterday: dt.date, stamp: str, say=print, named=()) 
             night.run_pass("named", lambda: night.named(list(named)))
         night.run_pass("history", night.history)
         night.run_pass("closed", night.closed)
+        night.run_pass("district history", night.district_history)
         night.run_pass("hierarchy", night.hierarchy)
         reserve = int((host.budget or 0) * SHARE_DETAIL)
         night.run_pass("sample", lambda: night.sample(min(reserve, max(0, (host.left() or 0) // 2))))
@@ -513,6 +642,8 @@ def run(db, host: RD.Host, yesterday: dt.date, stamp: str, say=print, named=()) 
         say(f"::warning::the host refused; the run stops here: {e}")
     if outcome == "complete" and not (night.notes.get("state_table") and night.notes.get("district_tables")):
         outcome = "partial"
+    if finder is not None:
+        night.notes["udise"] = second_source(db, finder, stamp, say)
     health = host.health()
     row = {"stamp": stamp, "day": ST.iso(yesterday), "budget": host.budget, "sent": health["sent"],
            "failed": health["failed"], "median_s": health["median_s"], "p90_s": health["p90_s"],
@@ -565,7 +696,8 @@ def main() -> int:
     yesterday = args.day or yesterday_ist()
     print(f"reading for {yesterday}, budget {budget} requests")
     host = RD.Host(budget=budget, deadline=time.time() + args.minutes * 60)
-    row = run(db, host, yesterday, now_utc(), named=[tuple(v.split(":")) for v in args.school])
+    finder = UD.Finder(budget=UDISE_CAP, deadline=time.time() + (args.minutes + UDISE_MINUTES) * 60)
+    row = run(db, host, yesterday, now_utc(), named=[tuple(v.split(":")) for v in args.school], finder=finder)
     print(json.dumps(row, indent=1))
     # A refusal is a result, not a crash: the store keeps what was read, the
     # pages are rebuilt from it, and the next night asks for half as much.

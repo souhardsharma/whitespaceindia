@@ -5,6 +5,11 @@ district's or a State's for whatever date is asked. So the history a flag is
 judged against - which weekdays a school serves on, what it usually reports,
 which nights read what - has to be kept here, or it is gone.
 
+Every school table read is kept row by row (`school_day`), with the schools
+it named (`roster`), and every dated table asked for is entered in
+`table_read` whether or not it held anything: a date the host has nothing
+for is asked once, not every night.
+
 The file is NOT committed. It travels between runs as a release asset
 (`pack` / `unpack`), and the published files are rebuilt from it every night.
 It holds counts, codes, institution names and dates, and nothing else.
@@ -18,7 +23,7 @@ import shutil
 import sqlite3
 from pathlib import Path
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 SCHEMA = """
 create table if not exists info(key text primary key, value text);
@@ -54,6 +59,23 @@ create table if not exists cluster_read(
   tested int, over int, read_at text,
   primary key (st, cc, day));
 
+-- every dated State or district table asked for, and how many rows it held;
+-- kind is 'states' (st is '') or 'districts'
+create table if not exists table_read(
+  kind text, st text, day text, rows int, read_at text,
+  primary key (kind, st, day));
+
+-- every school a school table has shown, and the days it was first and last seen
+create table if not exists roster(
+  st text, code text, shift text, name text, dc text, bc text, cc text,
+  first_day text, last_day text,
+  primary key (st, code, shift));
+
+-- one school table as read: [[code, shift, enrolment filed or null, meals or null], ...]
+create table if not exists school_day(
+  st text, cc text, day text, rows text,
+  primary key (st, cc, day));
+
 -- schools the instrument follows: every school a flag has named
 create table if not exists school(
   st text, code text, shift text, name text, dc text, bc text, cc text,
@@ -87,6 +109,13 @@ create table if not exists closed_day(
   examined_at text,
   primary key (st, day));
 
+-- a school's own record in UDISE+, the Ministry's register of schools:
+-- record is the kept fields as JSON, or null when UDISE+ holds no school
+-- under the code. Keyed by school, not shift: the register has one entry.
+create table if not exists udise(
+  st text, code text, year_id int, record text, read_at text,
+  primary key (st, code));
+
 create table if not exists night(
   stamp text primary key, day text, budget int, sent int, failed int,
   median_s real, p90_s real, outcome text, notes text);
@@ -102,9 +131,30 @@ def connect(path: Path) -> sqlite3.Connection:
     if got is None:
         db.execute("insert into info values ('schema', ?)", (str(SCHEMA_VERSION),))
         db.commit()
+    elif int(got["value"]) == 1:
+        upgrade_from_1(db)
     elif int(got["value"]) != SCHEMA_VERSION:
         raise RuntimeError(f"store schema {got['value']}, this code reads {SCHEMA_VERSION}")
     return db
+
+
+def upgrade_from_1(db) -> None:
+    """Version 2 added three tables. The tables read before it are entered in
+    the ledger from the rows they left, so none is asked for again."""
+    db.execute("insert or ignore into table_read select 'states', '', day, count(*), max(read_at) "
+               "from state_day group by day")
+    db.execute("insert or ignore into table_read select 'districts', st, day, count(*), null "
+               "from district_day group by st, day")
+    db.execute("update info set value=? where key='schema'", (str(SCHEMA_VERSION),))
+    db.commit()
+
+
+def mark_read(db, kind: str, st: str, day: dt.date, rows: int, read_at: str) -> None:
+    db.execute("insert or replace into table_read values (?,?,?,?,?)", (kind, st, iso(day), rows, read_at))
+
+
+def days_read(db, kind: str, st: str = "") -> set[str]:
+    return {r["day"] for r in db.execute("select day from table_read where kind=? and st=?", (kind, st))}
 
 
 def pack(path: Path, out: Path) -> None:
@@ -193,6 +243,18 @@ def follow(db, st: str, school: dict, dc: str, bc: str, cc: str, stamp: str) -> 
         (st, school["code"], school["shift"], school["name"], dc, bc, cc, stamp))
 
 
+def put_school_day(db, st: str, dc: str, bc: str, cc: str, day: dt.date, rows: list[dict]) -> None:
+    """Keep one school table as read, and the schools it named."""
+    db.execute("insert or replace into school_day values (?,?,?,?)", (st, cc, iso(day), json.dumps(
+        [[r["code"], r["shift"], r["enrolled"], r["meals"]] for r in rows], separators=(",", ":"))))
+    for r in rows:
+        db.execute(
+            "insert into roster values (?,?,?,?,?,?,?,?,?) on conflict (st, code, shift) do update set "
+            "name=excluded.name, dc=excluded.dc, bc=excluded.bc, cc=excluded.cc, "
+            "first_day=min(first_day, excluded.first_day), last_day=max(last_day, excluded.last_day)",
+            (st, r["code"], r["shift"], r["name"], dc, bc, cc, iso(day), iso(day)))
+
+
 def put_month(db, st: str, code: str, shift: str, month: dict, read_at: str) -> None:
     db.execute("insert or replace into school_month values (?,?,?,?,?,?,?)",
                (st, code, shift, month["year"], month["month"], json.dumps(month["meals"]), read_at))
@@ -217,6 +279,20 @@ def put_flag(db, st: str, code: str, shift: str, flag: dict, stamp: str) -> bool
     db.execute("insert into flag values (?,?,?,?,?,?,?,?,1)",
                (st, code, shift, day, kind, basis, stamp, stamp))
     return True
+
+
+def put_udise(db, st: str, code: str, year_id: int, record: dict | None, read_at: str) -> None:
+    db.execute("insert or replace into udise values (?,?,?,?,?)",
+               (st, code, year_id, None if record is None else json.dumps(record, sort_keys=True), read_at))
+
+
+def udise(db, st: str, code: str) -> dict | None:
+    """What was learned about a school from UDISE+: None when never asked,
+    else the date asked and the record (None when there is none)."""
+    row = db.execute("select record, read_at from udise where st=? and code=?", (st, code)).fetchone()
+    if row is None:
+        return None
+    return {"read_at": row["read_at"], "record": json.loads(row["record"]) if row["record"] else None}
 
 
 def series(db, st: str, code: str, shift: str) -> dict[dt.date, int]:
