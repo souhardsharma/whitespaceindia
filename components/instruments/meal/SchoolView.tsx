@@ -230,6 +230,9 @@ export default function SchoolView() {
 
       {view.months.map(({ month, school }) => {
         const filed = school.enrolment?.[Number(month.slice(5)) - 1] ?? null;
+        // Before the school's own enrolment record is read, the figure a flag
+        // rests on is the one its cluster table printed for the month.
+        const inTable = school.enrolment ? null : school.flags.find((f) => f.enrolled != null && f.day.startsWith(month))?.enrolled ?? null;
         const flagged = new Set(school.flags.filter((f) => f.standing).map((f) => f.day));
         return (
           <section key={month} className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby={`m-${month}`}>
@@ -241,8 +244,11 @@ export default function SchoolView() {
                 Enrolment filed for the month:{" "}
                 <strong className="font-semibold">
                   {/* An enrolment history not read yet is not a school that filed nothing. */}
-                  {filed != null ? count(filed) : school.enrolment ? "none filed" : "not read yet"}
+                  {filed != null ? count(filed) : school.enrolment ? "none filed" : inTable != null ? count(inTable) : "not read yet"}
                 </strong>
+                {inTable != null ? (
+                  <span className="opacity-75"> as the cluster table showed it; the school&rsquo;s own enrolment record has not been read yet</span>
+                ) : null}
               </p>
             </div>
             {school.meals ? (

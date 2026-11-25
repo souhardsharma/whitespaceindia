@@ -32,6 +32,7 @@ from __future__ import annotations
 import bisect
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -61,11 +62,25 @@ INDIA_LISTS = [
 GEONODE_INDIA_PAGE = ("https://proxylist.geonode.com/api/proxy-list?country=IN"
                       "&limit=500&page={page}&sort_by=lastChecked&sort_type=desc")
 GEONODE_PAGES = (2, 3, 4)
-# SOCKS5 lists of every country that the refresher does not carry.
+# A list that tags each address with its country ("1.2.3.4:80 IN-N-S +").
+SPYS = "https://spys.me/proxy.txt"
+SPYS_INDIA = re.compile(r"^(\d{1,3}(?:\.\d{1,3}){3}:\d{2,5}) IN-", re.M)
+# Lists of every country that the refresher does not carry; the address
+# filter keeps their Indian entries for an India-only target. Each answered
+# on 2026-11-25.
 MORE_SOCKS = [
     ("socks5", "https://raw.githubusercontent.com/Anonym0usWork1221/Free-Proxies/main/proxy_files/socks5_proxies.txt"),
     ("socks5", "https://raw.githubusercontent.com/databay-labs/free-proxy-list/master/socks5.txt"),
     ("socks5", "https://raw.githubusercontent.com/TuanMinPay/live-proxy/master/socks5.txt"),
+    ("socks5", "https://api.openproxylist.xyz/socks5.txt"),
+    ("socks5", "https://raw.githubusercontent.com/zevtyardt/proxy-list/main/socks5.txt"),
+    ("socks5", "https://raw.githubusercontent.com/Vann-Dev/proxy-list/main/proxies/socks5.txt"),
+    ("socks5", "https://raw.githubusercontent.com/B4RC0DE-TM/proxy-list/main/SOCKS5.txt"),
+    ("socks5", "https://raw.githubusercontent.com/im-razvan/proxy_list/main/socks5.txt"),
+    ("socks5", "https://raw.githubusercontent.com/ProxyScraper/ProxyScraper/main/socks5.txt"),
+]
+MORE_HTTP = [
+    "https://raw.githubusercontent.com/proxy4parsing/proxy-list/main/http.txt",
 ]
 
 
@@ -80,6 +95,12 @@ def india_extra() -> list[str]:
             continue
         print(f"  {len(hits):>5} India {scheme} from {url.split('/')[2]}")
         routes += hits
+    try:
+        hits = SPYS_INDIA.findall(RP.fetch_text(SPYS))
+        print(f"  {len(hits):>5} India http from {SPYS.split('/')[2]}")
+        routes += hits
+    except Exception as exc:  # noqa: BLE001
+        print(f"      0 India http from {SPYS.split('/')[2]}  ({type(exc).__name__})")
     for page in GEONODE_PAGES:
         try:
             rows = json.loads(RP.fetch_text(GEONODE_INDIA_PAGE.format(page=page))).get("data") or []
@@ -137,6 +158,7 @@ def widen(target: egress.Target, out: Path, seed: list[str]) -> None:
     """Point the refresher's own gather and ordering at this target."""
     listed = {url for _, url in RP.SOCKS_SOURCES}
     RP.SOCKS_SOURCES.extend(s for s in MORE_SOCKS if s[1] not in listed)
+    RP.SOURCES.extend(url for url in MORE_HTTP if url not in RP.SOURCES)
     gather, order = RP.gather, RP.india_first
 
     def gather_wider() -> list[str]:

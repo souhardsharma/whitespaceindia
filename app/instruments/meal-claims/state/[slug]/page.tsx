@@ -44,6 +44,9 @@ export default async function MealState({ params }: Props) {
   const open = lastOpenDay(s.series, meta.thresholds.state_open_share);
   const file = mealState(s.st);
   const holidays = mealHolidays()[s.st];
+  // A date can be listed twice under two reasons; it is one date.
+  const holidayDates = new Set(holidays?.days.map((d) => d.date)).size;
+  const vacationDates = new Set(holidays?.days.filter((d) => /vacation/i.test(d.reason)).map((d) => d.date)).size;
   const path = statePath(s.slug);
   const flags = s.flag_over + s.flag_closed + s.flag_spike;
 
@@ -204,11 +207,12 @@ export default async function MealState({ params }: Props) {
             <h2 className={`${SECTION_HEADING} mb-3`}>The State&rsquo;s holiday list</h2>
             <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl">
               {holidays?.read_at
-                ? `The system lists ${count(holidays.days.length)} holiday dates for ${s.name}, as read on ${whenIST(holidays.read_at)} IST.`
+                ? `The system lists ${count(holidayDates)} holiday dates for ${s.name}, as read on ${whenIST(holidays.read_at)} IST${
+                    vacationDates ? `; ${count(vacationDates)} of them are marked as vacations` : ", none of them marked as a vacation"}.`
                 : `The system's holiday list for ${s.name} has not been read.`}{" "}
-              The list covers the whole State. It gives no district or school
-              holidays and no vacations, and some States list far more dates
-              than others. A date absent from the list is not taken as proof that schools
+              The list covers the whole State and gives no district or school
+              holidays, and some States list far more dates than others. A
+              date absent from the list is not taken as proof that schools
               were open.
             </p>
           </div>

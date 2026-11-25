@@ -509,8 +509,14 @@ class Session:
     session somewhere else.
     """
 
+    # A free relay drops about half its requests now and then (People &
+    # Consent, measured 2026-09-25). One more try on the SAME relay keeps the
+    # session; a second failure gives the relay up.
+    RETRIES = 1
+    RETRY_PAUSE_S = 3.0
+
     def __init__(self, target: str, *, spacing: float = 2.0,
-                 timeout: int = 40, avoid: set[str] | None = None):
+                 timeout: int = 30, avoid: set[str] | None = None):
         routes = [r for r in NET.load_proxies(pool_path(target))
                   if r not in (avoid or set())]
         if not routes and not on_runner():
@@ -535,17 +541,23 @@ class Session:
         req = urllib.request.Request(url, data=data,
                                      headers={**NET.DEFAULT_HEADERS, **(headers or {})},
                                      method="POST" if data is not None else "GET")
-        for chain_checked in (False, True):
+        tries, chain_checked = 0, False
+        while True:
             try:
                 with self.opener.open(req, timeout=self.timeout) as r:
                     return r.status, r.read(), r.geturl()
             except urllib.error.HTTPError as e:
+                # An answer, refusals included: never asked again from here.
                 return e.code, e.read(), url
             except (OSError, http.client.HTTPException) as e:   # a body cut short is not an OSError
-                if (chain_checked or ISSUER_MISSING not in str(e)
-                        or ensure_chain(url, [self.proxy], recheck=True) != "completed"):
+                if (not chain_checked and ISSUER_MISSING in str(e)
+                        and ensure_chain(url, [self.proxy], recheck=True) == "completed"):
+                    chain_checked = True
+                    continue
+                if tries >= self.RETRIES:
                     raise SessionLost(f"{self.proxy}: {e}") from e
-        raise AssertionError("unreachable")
+                tries += 1
+                time.sleep(self.RETRY_PAUSE_S)
 
 
 def summary(pool: NET.Pool) -> str:

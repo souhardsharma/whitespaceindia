@@ -4,7 +4,7 @@ import StructuredData from "@/components/instruments/StructuredData";
 import { pageMeta, pageLd } from "@/lib/instruments/metadata";
 import { InstrumentFooter, InstrumentHeader } from "@/components/instruments/InstrumentChrome";
 import {
-  DayBars, FlagNotFinding, KindTag, SECTION_HEADING, SMALL_LABEL, Stat, TD, TH,
+  FlagNotFinding, KindTag, SECTION_HEADING, SMALL_LABEL, Stat, TD, TH,
 } from "@/components/instruments/meal/parts";
 import Roster from "@/components/instruments/meal/Roster";
 import SeriesChart from "@/components/instruments/meal/SeriesChart";
@@ -183,17 +183,13 @@ export default async function MealDistrict({ params }: Props) {
                 </p>
               </div>
               <div className="md:col-span-8">
-                {series.length >= 20 ? (
-                  <SeriesChart
-                    series={series}
-                    label={`Reports from schools in ${d.name} on each of the ${series.length} days read`}
-                    mealsLabel={M.meals.label}
-                    shareLabel={M.reported_pct.label}
-                    blanks={mealMeta().blank_ranges}
-                  />
-                ) : (
-                  <DayBars series={series} height={120} label={`Meals reported in ${d.name} on each of the ${series.length} days read`} />
-                )}
+                <SeriesChart
+                  series={series}
+                  label={`Reports from schools in ${d.name} on each of the ${series.length} days read`}
+                  mealsLabel={M.meals.label}
+                  shareLabel={M.reported_pct.label}
+                  blanks={mealMeta().blank_ranges}
+                />
               </div>
             </div>
           </section>
@@ -207,9 +203,9 @@ export default async function MealDistrict({ params }: Props) {
                 {count(d.schools_read)} schools in {count(d.clusters_read)} of
                 the {count(d.clusters)} clusters listed for the district so
                 far, each with the enrolment it had filed and the meals it
-                reported on the date its cluster was last read. The other
-                clusters have not been read yet. A flagged school&rsquo;s
-                name opens its page.
+                reported on the date its cluster was last read.
+                {d.clusters_read < d.clusters ? " The other clusters have not been read yet." : ""} A
+                flagged school&rsquo;s name opens its page.
               </p>
               <Roster
                 st={s.st}
