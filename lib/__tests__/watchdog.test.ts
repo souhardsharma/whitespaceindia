@@ -5,7 +5,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { monthWindow, project, renderHoursWorstCase, BUDGET } from "../../scripts/watchdog.mjs";
+import { monthWindow, project, renderHoursWorstCase, BUDGET, judgeVercel, SITE } from "../../scripts/watchdog.mjs";
 
 const at = (iso: string) => new Date(iso);
 
@@ -34,4 +34,31 @@ test("Render's worst case is a full month awake plus every deploy counted twice"
   assert.equal(renderHoursWorstCase(0, dec), 744);
   assert.equal(renderHoursWorstCase(60, dec), 744 + (60 * BUDGET.overlapMinutesPerDeploy) / 60);
   assert.ok(renderHoursWorstCase(100, dec) > BUDGET.renderHoursWarn, "a hundred deploys in December is worth a warning");
+});
+
+// Vercel stays redirect-only and its old full-app deployments stay behind a
+// login (Deployment Protection). Measured live on 2026-11-25 after the unpause.
+const healthy = {
+  parent: { status: 308, location: `${SITE}/instruments` },
+  csr: { status: 308, location: `${SITE}/csr` },
+  alias: { status: 302, location: "https://vercel.com/sso-api?url=x&nonce=y" },
+};
+
+test("Vercel as measured after the unpause passes", () => {
+  assert.deepEqual(judgeVercel(healthy), []);
+});
+
+test("a paused team, a full app or protection turned off each fail", () => {
+  const paused = judgeVercel({ ...healthy, parent: { status: 402, location: null } });
+  assert.match(paused.join(), /paused again/);
+  const full = judgeVercel({ ...healthy, csr: { status: 200, location: null } });
+  assert.match(full.join(), /full app/);
+  const open = judgeVercel({ ...healthy, alias: { status: 200, location: null } });
+  assert.match(open.join(), /Deployment Protection is off/);
+  const openRedirect = judgeVercel({ ...healthy, alias: { status: 308, location: `${SITE}/` } });
+  assert.equal(openRedirect.length, 1, "a deployment address that redirects is still unprotected");
+});
+
+test("a redirect anywhere but the same path on the live site fails", () => {
+  assert.equal(judgeVercel({ ...healthy, parent: { status: 308, location: "https://example.com/instruments" } }).length, 1);
 });

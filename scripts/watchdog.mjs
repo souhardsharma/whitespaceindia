@@ -322,18 +322,51 @@ async function checkCrawlPath() {
     bad.length ? bad.join("; ") : `robots.txt names both indexes; backend index lists ${children.length} sitemaps, all readable`);
 }
 
+// Vercel is redirect-only (vercel.json). Three probes say whether it stays so:
+// both public hosts answer 308 to the same path on the live site, and a
+// deployment's own address asks for a Vercel login. That last one is
+// Deployment Protection (Standard Protection, project settings), turned on
+// 2026-11-25 when the team was unpaused: without it every old deployment's
+// own URL serves the full app whose Fast Origin Transfer paused the team on
+// 2026-10-27, and the Hobby grace period that lifted the pause is one-time.
+// A 402 means the team is paused again.
+export const VERCEL_CSR = "https://whitespaceindia-csr.vercel.app";
+export const VERCEL_DEPLOYMENT_ALIAS = "https://whitespaceindia-git-main-souhard-sharmas-projects.vercel.app";
+
+export function judgeVercel({ parent, csr, alias }) {
+  const bad = [];
+  for (const [name, r, want] of [
+    ["whitespaceindia.vercel.app/instruments", parent, `${SITE}/instruments`],
+    ["whitespaceindia-csr.vercel.app/", csr, `${SITE}/csr`],
+  ]) {
+    if ([301, 308].includes(r.status) && r.location === want) continue;
+    if (r.status === 402) bad.push(`${name} 402: the Vercel team is paused again`);
+    else if (r.status === 200) bad.push(`${name} 200: Vercel serves a full app again, not the redirect build`);
+    else bad.push(`${name} answered ${r.status || r.error} ${r.location || ""}`.trim());
+  }
+  const gated = alias.status === 401 || (alias.status === 302 && (alias.location || "").startsWith("https://vercel.com/sso-api"));
+  if (!gated) {
+    bad.push(
+      `a deployment address answered ${alias.status || alias.error}, not a Vercel login: Deployment Protection is off, so old full-app deployments are public`,
+    );
+  }
+  return bad;
+}
+
 async function checkVercel() {
-  const r = await http(`${VERCEL}/instruments`);
-  const loc = r.headers.get("location") || "";
-  if (r.status === 402) return record("Vercel", true, "paused (402); the live site is Cloudflare Pages");
-  if ([301, 308].includes(r.status) && loc.startsWith(`${SITE}/instruments`))
-    return record("Vercel", true, `redirects to the live site (${r.status})`);
+  const probe = async (url) => {
+    const r = await http(url, {}, 30000);
+    return { status: r.status, location: r.headers.get("location"), error: r.error };
+  };
+  const bad = judgeVercel({
+    parent: await probe(`${VERCEL}/instruments`),
+    csr: await probe(`${VERCEL_CSR}/`),
+    alias: await probe(`${VERCEL_DEPLOYMENT_ALIAS}/`),
+  });
   record(
     "Vercel",
-    false,
-    r.status === 200
-      ? "Vercel is serving the old full app again: the next push to main deploys the redirect-only build; push one if none is due today"
-      : `answered ${r.status || r.error} ${loc}`,
+    bad.length === 0,
+    bad.length ? bad.join("; ") : "both hosts redirect to the live site; deployment addresses ask for a Vercel login",
   );
 }
 
