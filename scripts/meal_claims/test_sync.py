@@ -149,6 +149,8 @@ class PretendFinder:
 
 
 class FakeAnswer:
+    status = 200
+
     def __init__(self, body: str):
         self.body = body
 
@@ -463,6 +465,33 @@ def test_a_named_school_is_read() -> None:
     folder.cleanup()
 
 
+def test_a_silent_host_is_asked_by_another_route() -> None:
+    print("silence")
+    silent = [TimeoutError("no answer")] * RD.BREAKER_FAILS
+    other = FakeOpener(["<html>second route</html>"])
+    host = RD.Host(opener=FakeOpener(silent), sleep=lambda s: None, clock=lambda: 100.0, relay=lambda: other)
+    expect("the request that met the silence is owed", RD.Unreadable, lambda: host._send("/Home/StateWiseSummary/HP"))
+    expect("so is the one after it, on its last attempts", RD.Unreadable, lambda: host._send("/Home/StateWiseSummary/HP"))
+    check("the next request goes by the other route", host._send("/Home/StateWiseSummary/HP") == "<html>second route</html>"
+          and host.relayed == 1 and host._token is None)
+
+    host = RD.Host(opener=FakeOpener(silent * 2), sleep=lambda s: None, clock=lambda: 100.0)
+    expect("with no other route the request is owed", RD.Unreadable, lambda: host._send("/Home/StateWiseSummary/HP"))
+    expect("and the run then ends", RD.Refused, lambda: host._send("/Home/StateWiseSummary/HP"))
+
+    refusing = FakeOpener([urllib.error.HTTPError("u", 403, "Forbidden", {}, None)])
+    host = RD.Host(opener=refusing, sleep=lambda s: None, clock=lambda: 100.0, relay=lambda: other)
+    expect("a refusal is never taken round", RD.Refused, lambda: host._send("/Home/StateWiseSummary/HP"))
+    check("and no other route was asked for", host.relayed == 0)
+
+    errors = FakeOpener([urllib.error.HTTPError("u", 500, "Error", {}, None)] * RD.BREAKER_FAILS)
+    host = RD.Host(opener=errors, sleep=lambda s: None, clock=lambda: 100.0, relay=lambda: other)
+    expect("a host that answers with errors leaves the request owed", RD.Unreadable,
+           lambda: host._send("/Home/StateWiseSummary/HP"))
+    expect("and is not taken round either", RD.Refused, lambda: host._send("/Home/StateWiseSummary/HP"))
+    check("still no other route", host.relayed == 0)
+
+
 def test_store_round_trip() -> None:
     print("store")
     folder, db = fresh_store()
@@ -494,6 +523,7 @@ def main() -> int:
                test_a_shut_day_is_looked_into,
                test_a_corrected_figure_unsettles_its_flag,
                test_a_named_school_is_read,
+               test_a_silent_host_is_asked_by_another_route,
                test_store_round_trip,
                test_the_second_source_keeps_only_what_it_may):
         fn()

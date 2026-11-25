@@ -29,16 +29,29 @@
 # asked again after 120 days while its flag stands. A refusal there ends
 # that pass and leaves the night's meal data whole.
 #
-# THE NATIONAL SYSTEM. Before either, the Ministry's own daily system
+# THE NATIONAL SYSTEM. Beside both, the Ministry's own daily system
 # (pmposhan-ams.education.gov.in) is read for all 36 States and UTs and
 # their districts: yesterday first, then the earlier days its date box still
 # offers. It closes every connection from outside India, and this runner is
-# outside India, so the job first builds a pool of verified Indian routes
-# (scripts/education/refresh_pool.py) and reads through one of them at a
-# time, moving to another when a route dies. Every request is HTTPS with the
-# certificate verified, so a route cannot read or change an answer. These
-# steps may fail without stopping the night: what they did not read is
-# planned again tomorrow.
+# outside India, so the job first builds a pool of verified Indian routes and
+# reads through several of them at once, each flow on a route of its own and
+# all of them at one pace, moving a flow to another route when its route
+# dies. Every request is HTTPS with the certificate verified, so a route
+# cannot read or change an answer. The read works on a copy of the store
+# while the meal system is read into the store, and its tables are taken in
+# afterwards. These steps may fail without stopping the night: what they did
+# not read is planned again tomorrow.
+#
+# ONE POOL MECHANISM, NOT TWO. The routes are found, verified, spaced and
+# retired by Instrument 01's own code (scripts/instruments/net.py and
+# refresh_proxies.py), which scripts/education/ imports and does not copy.
+# Three things are added for this source: the probe asks the national system
+# itself; India-only SOCKS lists are added and addresses outside India are
+# not probed; and the routes Instrument 01 verified against PARIVESH on its
+# last run are entered as known routes, because both sources answer India
+# only. Its cache is restored here read-only and never saved. While the
+# night runs, a refresher re-verifies and widens the pool every ten minutes,
+# and the read takes new routes up as they appear.
 #
 # WHEN IT RUNS. GitHub's cron arrives hours late on this repository or not at
 # all, so the run is started by the completion of Instrument 01's sync, which
@@ -63,6 +76,10 @@ on:
         default: ""
       schools:
         description: "Schools to read tonight as well, space separated, each ST:DISTRICT:BLOCK:CODE:SHIFT."
+        type: string
+        default: ""
+      national_minutes:
+        description: "Minutes the national read may run. Leave empty for the nightly 150."
         type: string
         default: ""
 
@@ -122,6 +139,7 @@ jobs:
     env:
       PYTHONIOENCODING: utf-8
       STORE: ${{ github.workspace }}/.meal-store/store.sqlite
+      NATIONAL: ${{ github.workspace }}/.meal-store/national.sqlite
       PACKED: ${{ github.workspace }}/.meal-store/store.sqlite.gz
       STORE_RELEASE: meal-claims-store
       STORE_ASSET: store.sqlite.gz
@@ -186,32 +204,36 @@ jobs:
           restore-keys: |
             meal-routes-
 
+      - name: Restore Instrument 01's cache for its routes
+        # Read-only: restored under a key that is never saved, so nothing
+        # here can change what Instrument 01's own run finds tomorrow.
+        continue-on-error: true
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .instruments-cache
+          key: instruments-cache-routes-for-meal-claims
+          restore-keys: |
+            instruments-cache-
+
       - name: Build the pool of Indian routes
         # Bounded: the refresher leaves at its time limit whatever it found.
         continue-on-error: true
-        timeout-minutes: 16
+        timeout-minutes: 18
         run: |
           pip install --require-hashes -r requirements.txt
-          python -I -X utf8 scripts/education/refresh_pool.py ams --workers 3000 --max-minutes 10 --target 200 || true
+          # Only the route list is wanted from that cache; the rest is removed
+          # before anything is read or built.
+          cp .instruments-cache/proxies.txt "$RUNNER_TEMP/consent-routes.txt" 2>/dev/null || true
+          rm -rf .instruments-cache
+          python -I -X utf8 scripts/education/refresh_pool.py ams --seed "$RUNNER_TEMP/consent-routes.txt" \
+            --workers 1500 --max-minutes 12 --target 400 || true
           echo "pool: $(wc -l < "$EDUCATION_CACHE_DIR/pools/ams.txt" 2>/dev/null || echo 0) routes"
 
-      - name: Read the national system
-        continue-on-error: true
-        timeout-minutes: 45
-        run: python -I -X utf8 scripts/meal_claims/ams_sync.py --store "$STORE" --minutes 35
-
-      - name: Save the route pool
-        if: always()
-        continue-on-error: true
-        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-        with:
-          path: .education-cache
-          key: meal-routes-${{ github.run_id }}
-
-      - name: Read the source
+      - name: Read the sources
         env:
           BUDGET: ${{ inputs.budget }}
           SCHOOLS: ${{ inputs.schools }}
+          NATIONAL_MINUTES: ${{ inputs.national_minutes }}
         run: |
           # Inputs arrive through the environment, never interpolated into the
           # shell: this job holds a write token. Each is checked against the
@@ -225,7 +247,48 @@ jobs:
             [[ "$school" =~ ^[0-9]{2}:[0-9]+:[0-9]+:[0-9]+:[0-9]{1,2}$ ]] || { echo "::error::not a school: $school"; exit 1; }
             args+=(--school "$school")
           done
-          python -I -X utf8 scripts/meal_claims/sync.py --store "$STORE" --minutes 240 "${args[@]}"
+          minutes=150
+          if [ -n "$NATIONAL_MINUTES" ]; then
+            [[ "$NATIONAL_MINUTES" =~ ^[0-9]{1,3}$ ]] || { echo "::error::national_minutes must be a number"; exit 1; }
+            minutes=$NATIONAL_MINUTES
+          fi
+          # The national read works on a copy: two processes do not write one
+          # SQLite file. Its output and the refresher's go to files, because a
+          # background child holding the step's output keeps the step open.
+          cp "$STORE" "$NATIONAL"
+          (
+            while true; do
+              sleep 600
+              python -I -X utf8 scripts/education/refresh_pool.py ams --workers 800 --max-minutes 6 --target 400 || true
+              echo "[pool] $(date -u +%H:%M) refreshed: $(wc -l < "$EDUCATION_CACHE_DIR/pools/ams.txt") routes"
+            done
+          ) > "$RUNNER_TEMP/refresher.log" 2>&1 &
+          refresher=$!
+          timeout "$((minutes * 60 + 300))" python -I -X utf8 scripts/meal_claims/ams_sync.py \
+            --store "$NATIONAL" --minutes "$minutes" > "$RUNNER_TEMP/national.log" 2>&1 &
+          national=$!
+          status=0
+          python -I -X utf8 scripts/meal_claims/sync.py --store "$STORE" --minutes 240 "${args[@]}" || status=$?
+          # The national read ends at its own minutes; nothing is cut off here.
+          wait "$national" || echo "::warning::the national read ended with an error"
+          kill "$refresher" 2>/dev/null || true
+          pkill -f refresh_pool.py || true
+          echo "--- national read"
+          cat "$RUNNER_TEMP/national.log"
+          grep -a '^\[pool\]' "$RUNNER_TEMP/refresher.log" || echo "[pool] no refresh during the night"
+          # A copy that cannot be taken leaves the store as the meal read left it.
+          python -I -X utf8 scripts/meal_claims/ams_sync.py --store "$STORE" --absorb "$NATIONAL" \
+            || echo "::warning::the national tables were not taken into the store"
+          rm -f "$NATIONAL"
+          exit "$status"
+
+      - name: Save the route pool
+        if: always()
+        continue-on-error: true
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .education-cache
+          key: meal-routes-${{ github.run_id }}
 
       - name: Pack the store
         # EVERY outcome from here on keeps what the night read.

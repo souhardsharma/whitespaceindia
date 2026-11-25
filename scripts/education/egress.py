@@ -96,6 +96,8 @@ class Target:
     probe_url: str
     validate: Callable[[bytes], bool]
     note: str
+    india_only: bool = False     # the family answers Indian addresses only
+    probe_timeout: int = 12      # seconds a route has to deliver the probe
 
 
 def _json_list(min_len: int, *keys: str) -> Callable[[bytes], bool]:
@@ -120,7 +122,8 @@ TARGETS: dict[str, Target] = {
         "india",
         "https://spgi.udiseplus.gov.in/performance/yearMaster",
         _json_list(3, "year", "yr_code"),
-        "PGI / PRABANDH / PM POSHAN / School GIS: answer Indian addresses only"),
+        "PGI / PRABANDH / PM POSHAN / School GIS: answer Indian addresses only",
+        india_only=True),
     # The national PM POSHAN daily system closes every connection from
     # outside India (runner probe, 2026-11-25), so its routes are verified
     # against the host itself: its lightest page, which is an ASP.NET form.
@@ -128,7 +131,10 @@ TARGETS: dict[str, Target] = {
         "ams",
         "https://pmposhan-ams.education.gov.in/About_mdm.aspx",
         lambda body: b"__VIEWSTATE" in body and b"POSHAN" in body,
-        "the national PM POSHAN daily system: answers Indian addresses only"),
+        "the national PM POSHAN daily system: answers Indian addresses only",
+        # Its median answer through a verified route was 9 s (runner,
+        # 2026-11-25); at 12 s half the routes that work were thrown away.
+        india_only=True, probe_timeout=25),
     # Hosts that answer anyone; still read through the pool off a runner.
     "open": Target(
         "open",

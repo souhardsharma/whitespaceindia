@@ -35,12 +35,14 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import statistics
 import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
 
 import flags as FL  # noqa: E402
 import reader as RD  # noqa: E402
@@ -648,11 +650,36 @@ def run(db, host: RD.Host, yesterday: dt.date, stamp: str, say=print, named=(), 
     row = {"stamp": stamp, "day": ST.iso(yesterday), "budget": host.budget, "sent": health["sent"],
            "failed": health["failed"], "median_s": health["median_s"], "p90_s": health["p90_s"],
            "outcome": outcome, "notes": {**night.notes, "spent": night.spent}}
+    relayed = getattr(host, "relayed", 0)
+    if relayed:
+        row["notes"]["relayed"] = relayed
+        say(f"::warning::the host went silent {relayed} time(s) and was asked through an Indian route")
     db.execute("insert or replace into night values (?,?,?,?,?,?,?,?,?)",
                (row["stamp"], row["day"], row["budget"], row["sent"], row["failed"],
                 row["median_s"], row["p90_s"], row["outcome"], json.dumps(row["notes"], sort_keys=True)))
     db.commit()
     return row
+
+
+def indian_route():
+    """An opener on a verified Indian route with its own cookie jar, or None
+    when the night has no pool. The host has always answered the runner
+    directly; this is for a night on which it stops answering foreign
+    addresses, as the national system does."""
+    import http.cookiejar
+    import random
+    import urllib.request
+    if not os.environ.get("EDUCATION_CACHE_DIR"):
+        return None
+    sys.path.insert(0, str(HERE.parent / "education"))
+    import egress as EG
+    routes = EG.NET.load_proxies(EG.pool_path("ams"))
+    if not routes:
+        return None
+    # the faster half, as egress.Session chooses; TLS is verified as on every route
+    opener = EG.NET.Route(random.choice(routes[: max(1, len(routes) // 2)])).opener()
+    opener.add_handler(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    return opener
 
 
 def nights(db) -> list[dict]:
@@ -695,7 +722,7 @@ def main() -> int:
     budget = args.budget or next_budget(nights(db), now_utc()[:10])
     yesterday = args.day or yesterday_ist()
     print(f"reading for {yesterday}, budget {budget} requests")
-    host = RD.Host(budget=budget, deadline=time.time() + args.minutes * 60)
+    host = RD.Host(budget=budget, deadline=time.time() + args.minutes * 60, relay=indian_route)
     finder = UD.Finder(budget=UDISE_CAP, deadline=time.time() + (args.minutes + UDISE_MINUTES) * 60)
     row = run(db, host, yesterday, now_utc(), named=[tuple(v.split(":")) for v in args.school], finder=finder)
     print(json.dumps(row, indent=1))
