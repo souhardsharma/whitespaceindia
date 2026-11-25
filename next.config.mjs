@@ -148,6 +148,8 @@ const nextConfig = {
   async rewrites() {
     return [
       { source: "/instruments/consent/:proposalId(\\d{1,12})", destination: "/instruments/consent/view" },
+      // Instrument 02's schools, the same way: "<school code>-<shift>".
+      { source: "/instruments/meal-claims/school/:school(\\d{1,14}-\\d{1,2})", destination: "/instruments/meal-claims/view" },
     ];
   },
   // `next build` lints once ESLint is installed. Scoped to the instrument

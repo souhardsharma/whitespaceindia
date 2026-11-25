@@ -17,6 +17,7 @@ const WAYS = [
   { href: "/csr", label: "CSR Opportunity Index", note: "districts ranked by need against CSR spending" },
   { href: "/csr-spending", label: "CSR spending by State", note: "what companies reported, State by State" },
   { href: "/instruments/consent", label: "People & Consent", note: "search the environmental clearance register" },
+  { href: "/instruments/meal-claims", label: "Meal Claims Check", note: "midday meal reports a school's own filings contradict" },
 ];
 
 export default function NotFound() {

@@ -62,6 +62,9 @@ const consent = fs
 const redirects = [
   ...consent.map((n) => `/instruments/consent/${n} /instruments/consent/${n} 200`),
   ..."0123456789".split("").map((d) => `/instruments/consent/${d}* /instruments/consent/view 200`),
+  // Instrument 02's schools are one static page too. School codes start with
+  // a digit, so any other address under /school/ gets the site's real 404.
+  ..."0123456789".split("").map((d) => `/instruments/meal-claims/school/${d}* /instruments/meal-claims/view 200`),
   ...retiredCardRedirects(fs.readdirSync(path.join(root, "public/og"))),
 ];
 fs.writeFileSync(path.join(out, "_redirects"), redirects.join("\n") + "\n");
