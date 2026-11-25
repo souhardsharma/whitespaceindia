@@ -166,7 +166,8 @@ export function Spark({ series, label }: { series: DayRow[]; label: string }) {
   const days = calendar(series);
   const values = days.map((d) => valueOf(d.row, "share"));
   const runs = segments(values);
-  if (!runs.length) return <span className="opacity-60">not read</span>;
+  // read, but no school reported on any day: that is not the same as unread
+  if (!runs.length) return <span className="opacity-60">{series.length ? "none reported" : "not read"}</span>;
   const first = runs[0][0];
   const last = runs[runs.length - 1][1];
   const x = (i: number) => (days.length > 1 ? (i / (days.length - 1)) * SPARK_W : SPARK_W / 2);

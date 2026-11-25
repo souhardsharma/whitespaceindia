@@ -19,7 +19,8 @@ on a route of its own, and all of them together keep one pace. When a route
 dies its flow starts again on another, for as long as the night's minutes
 last; the pool file is read again each time, so routes a refresher verifies
 while the night runs are taken up. A refusal (401, 403, 429) is different:
-three in a row, on three routes, end the pass.
+it is the source's answer, and the pass ends at the first one rather than
+asking again from another address.
 
 The workflow runs this on a copy of the store while the meal system is read
 into the store itself, and `--absorb` then takes the copy's national tables.
@@ -54,7 +55,6 @@ REPORT_EVERY = 25         # tables between two progress lines
 SETTLED_AFTER_DAYS = 2    # a day's figures stop moving: a table read sooner is read again
 ATTEMPTS = 3              # routes tried for one table that will not parse
 REFUSALS = frozenset({401, 403, 407, 429})
-REFUSALS_END_AFTER = 3
 
 
 class Refused(Exception):
@@ -133,18 +133,22 @@ def run(db, new_flow, yesterday: dt.date, stamp: str, deadline: float,
     lanes = [Lane() for _ in range(flows)]
     idle = list(lanes)
     lock = threading.Lock()
-    count = {"sent": 0, "lost": 0, "refused": 0}
+    count = {"sent": 0, "lost": 0}
     outcome = ["complete"]
     unreadable: list[str] = []
 
     def spent() -> int:
-        return count["sent"] + sum(lane.flow.sent for lane in lanes if lane.flow is not None)
+        with lock:
+            return count["sent"] + sum(lane.flow.sent for lane in lanes if lane.flow is not None)
 
     def drop(lane: Lane) -> None:
         with lock:
-            if lane.flow is not None:
-                count["sent"] += lane.flow.sent
-            lane.flow = None
+            flow, lane.flow = lane.flow, None
+            if flow is not None:
+                count["sent"] += flow.sent
+        release = getattr(flow, "release", None)
+        if release:
+            release()     # the route is free for another flow
 
     def stop(why: str) -> None:
         with lock:
@@ -180,14 +184,9 @@ def run(db, new_flow, yesterday: dt.date, stamp: str, deadline: float,
                 continue
             except Refused as e:
                 drop(lane)
-                with lock:
-                    count["refused"] += 1
-                    ended = count["refused"] >= REFUSALS_END_AFTER
-                if ended:
-                    stop("refused")
-                    say(f"::warning::the national system refused {REFUSALS_END_AFTER} routes in a row; "
-                        f"the pass stops: {e}")
-                continue
+                stop("refused")
+                say(f"::warning::the national system refused a request; the pass stops: {e}")
+                break
             except AMS.Unreadable as e:
                 drop(lane)
                 misreads += 1
@@ -195,7 +194,6 @@ def run(db, new_flow, yesterday: dt.date, stamp: str, deadline: float,
                     not_read(what, str(e))
                     break
                 continue
-            count["refused"] = 0
             if page["total"] is not None:
                 return page
             # Every table ends in a TOTAL row. One without it was cut short,
@@ -218,20 +216,26 @@ def run(db, new_flow, yesterday: dt.date, stamp: str, deadline: float,
 
     tables, disagree = 0, []
     with ThreadPoolExecutor(max_workers=flows) as pool:
-        for items in stages(db, yesterday):
-            for page in pool.map(table, items):
-                if page is None:
-                    continue
-                wrong = AMS.disagreements(page)
-                if wrong:
-                    disagree.append(f"{page['state'] or 'all States'} {page['day']}: {'; '.join(wrong)}")
-                ST.put_ams(db, page, stamp, not wrong)
-                db.commit()
-                tables += 1
-                if tables % REPORT_EVERY == 0:
-                    say(f"  {tables} tables read, {spent()} requests, {count['lost']} routes lost")
-            if outcome[0] != "complete":
-                break
+        try:
+            for items in stages(db, yesterday):
+                for page in pool.map(table, items):
+                    if page is None:
+                        continue
+                    wrong = AMS.disagreements(page)
+                    if wrong:
+                        disagree.append(f"{page['state'] or 'all States'} {page['day']}: {'; '.join(wrong)}")
+                    ST.put_ams(db, page, stamp, not wrong)
+                    db.commit()
+                    tables += 1
+                    if tables % REPORT_EVERY == 0:
+                        say(f"  {tables} tables read, {spent()} requests, {count['lost']} routes lost")
+                if outcome[0] != "complete":
+                    break
+        except Exception as e:  # noqa: BLE001 - the outermost handler of the pass
+            # Queued tables see the outcome and send nothing more; what was
+            # stored is kept and the night is still recorded.
+            stop(f"error: {type(e).__name__}")
+            say(f"::warning::the national read stopped on an error: {type(e).__name__}: {e}")
     for lane in lanes:
         drop(lane)
     notes = {"unreadable": unreadable[:20], "total_disagrees": disagree[:20]}
@@ -281,6 +285,10 @@ def route_flows(say=print):
                 failed.add(session.proxy)
                 in_use.discard(session.proxy)
 
+        def release() -> None:
+            with lock:
+                in_use.discard(session.proxy)
+
         def request(url: str, data: bytes | None):
             headers = {"Accept": "text/html,application/xhtml+xml"}
             if data is not None:
@@ -297,7 +305,9 @@ def route_flows(say=print):
                 raise Refused(f"HTTP {status}")
             return status, body.decode("utf-8", "replace")
 
-        return AMS.Flow(request)
+        flow = AMS.Flow(request)
+        flow.release = release
+        return flow
 
     return new_flow
 

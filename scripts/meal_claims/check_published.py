@@ -205,10 +205,16 @@ def check_national(c: Checker, folder: Path, states: dict) -> None:
         if s["schools"] is not None and s["reported"] is not None and s["reported"] > s["schools"]:
             c.source(False, f"{where}: {s['reported']} schools reported of {s['schools']} listed")
         if s["districts"] and s["district_day"] == nat["day"]:
-            for key in ("schools", "reported", "meals"):
-                total = sum(d[key] or 0 for d in s["districts"])
-                if total != (s[key] or 0):
-                    c.source(False, f"{where}: districts sum to {total} {key}, the State row says {s[key]}")
+            sums = {key: sum(d[key] or 0 for d in s["districts"]) for key in ("schools", "reported", "meals")}
+            differs = any(sums[key] != (s[key] or 0) for key in sums)
+            # The page tells readers where the two disagree; it must name every such State and no other.
+            c.ok(s.get("district_sum") == (sums if differs else None),
+                 f"{where}: district_sum is {s.get('district_sum')}, its districts add to {sums}")
+            for key in sums:
+                if sums[key] != (s[key] or 0):
+                    c.source(False, f"{where}: districts sum to {sums[key]} {key}, the State row says {s[key]}")
+        else:
+            c.ok(s.get("district_sum") is None, f"{where}: district_sum for a district table of another day")
         for d in s["districts"]:
             c.ok(not contact_in(d["name"]), f"{where}: contact detail in district {d['name']}")
     for row in nat["compare"]:

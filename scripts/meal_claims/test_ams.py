@@ -232,12 +232,38 @@ def test_a_night_reads_in_order_and_survives_its_routes():
     check("the night with no route says so",
           AS.run(db, lambda: None, YESTERDAY, "x", deadline=float("inf"), clock=lambda: 0)["outcome"] == "no route")
 
+    asked = []
+
     def refusing():
+        asked.append(1)
+
         def request(url, data):
             raise AS.Refused("HTTP 403")
         return AMS.Flow(request)
-    row = AS.run(store(), refusing, YESTERDAY, "x", deadline=float("inf"), clock=lambda: 0)
-    check("three refusals in a row end the pass", row["outcome"] == "refused" and row["tables"] == 0, row)
+    row = AS.run(store(), refusing, YESTERDAY, "x", deadline=float("inf"), clock=lambda: 0, say=QUIET)
+    check("a refusal ends the pass", row["outcome"] == "refused" and row["tables"] == 0 and len(asked) == 1, row)
+
+    seen = []
+
+    def refused_on_one_route():
+        n = len(seen)
+        seen.append(n)
+        page = Page(today)
+
+        def request(url, data):
+            if n == 2:
+                raise AS.Refused("HTTP 429")
+            return page.request(url, data)
+        return AMS.Flow(request)
+    row = AS.run(store(), refused_on_one_route, YESTERDAY, "x", deadline=float("inf"), clock=lambda: 0,
+                 say=QUIET, flows=6)
+    check("with six flows, one refusal still ends the pass", row["outcome"] == "refused", row["outcome"])
+
+    def broken():
+        raise RuntimeError("a bug in a flow")
+    row = AS.run(store(), broken, YESTERDAY, "x", deadline=float("inf"), clock=lambda: 0, say=QUIET, flows=3)
+    check("an error in a flow ends the pass and the night is still recorded",
+          row["outcome"].startswith("error"), row["outcome"])
 
 
 def test_flows_side_by_side_read_the_same_night():
