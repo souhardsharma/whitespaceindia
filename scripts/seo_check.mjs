@@ -64,7 +64,8 @@ function headOf(html) {
     ogUrl: attr(html, /<meta[^>]+property="og:url"[^>]+content="([^"]+)"/),
     robots: attr(html, /<meta[^>]+name="robots"[^>]+content="([^"]+)"/) || "",
     title: (attr(html, /<title>([^<]*)<\/title>/) || "").trim(),
-    titles: (html.match(/<title>/g) || []).length,
+    // A <title> inside an <svg> is a chart's tooltip, not the document's title.
+    titles: (html.replace(/<svg[\s\S]*?<\/svg>/g, "").match(/<title>/g) || []).length,
     description: attr(html, /<meta[^>]+name="description"[^>]+content="([^"]*)"/),
     h1: (html.match(/<h1[\s>]/g) || []).length,
   };

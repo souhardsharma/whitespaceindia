@@ -87,6 +87,24 @@ jobs:
           PYTHONIOENCODING: utf-8
         run: python scripts/instruments/check_published.py
 
+      - name: Meal Claims Check pipeline
+        # Instrument 02: what a flag is, how a night spends its request
+        # budget, and that the builder publishes what the store holds. The
+        # pipeline is standard library only. Needs no network.
+        env:
+          PYTHONIOENCODING: utf-8
+        run: |
+          python scripts/meal_claims/test_flags.py
+          python scripts/meal_claims/test_sync.py
+          python scripts/meal_claims/test_build.py
+
+      - name: Meal Claims Check published data
+        # The pages draw these files as they are, so their shape, their sums
+        # and the absence of anything personal are asserted where they stand.
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python scripts/meal_claims/check_published.py
+
   app:
     name: Typecheck and build
     runs-on: ubuntu-latest

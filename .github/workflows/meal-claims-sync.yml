@@ -1,0 +1,259 @@
+# Keeps Instrument 02 (Meal Claims Check) current.
+#
+# Once a day it reads the PM POSHAN daily reporting system (mdmhp.nic.in) for
+# yesterday, inside a request budget that the run sets for itself, tests what
+# it read, rebuilds the published files into a candidate, checks the candidate
+# against the published-data contract, and only then replaces the files and
+# commits them. A failed build commits nothing: yesterday's files stay up.
+#
+# WHAT IT REMEMBERS. Everything read so far lives in one SQLite file, "the
+# store": which clusters were sampled and when, each flagged school's month,
+# every flag and the night it was first seen, and each night's request count
+# and answer times. It is kept as the asset `store.sqlite.gz` on the release
+# `meal-claims-store` and replaced after every run on the default branch. A
+# job that cannot fetch it STOPS: started from an empty store, a night would
+# publish a register with no history and then overwrite the real one.
+# Each run also leaves the store as a workflow artifact for 14 days, so a bad
+# upload can be put back by hand from any of the last fourteen nights.
+#
+# HOW HARD IT LEANS ON THE SOURCE. sync.py counts requests. The first night
+# sent 300; each clean night adds 150 up to 1,000; a refusal ends the run at
+# once and halves the next night's, and so does a night of failed or slow
+# answers. Nothing here goes round a refusal, and nothing is read from
+# anywhere but this runner.
+#
+# WHEN IT RUNS. GitHub's cron arrives hours late on this repository or not at
+# all, so the run is started by the completion of Instrument 01's sync, which
+# the keep-warm Worker dispatches at 07:00 IST; the schedule below is the
+# fallback. The gate lets one of them through a day.
+
+name: Sync Instrument 02 data
+
+on:
+  workflow_run:
+    workflows: ["Sync Instrument 01 data"]
+    types: [completed]
+  schedule:
+    # 05:30 UTC, 11:00 IST: by then Instrument 01's sync has normally ended
+    # and this run has already happened, and the gate stands this one down.
+    - cron: "30 5 * * *"
+  workflow_dispatch:
+    inputs:
+      budget:
+        description: "Requests this run may send. Leave empty to follow the ramp."
+        type: string
+        default: ""
+      schools:
+        description: "Schools to read tonight as well, space separated, each ST:DISTRICT:BLOCK:CODE:SHIFT."
+        type: string
+        default: ""
+
+concurrency:
+  group: meal-claims-sync
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  # One read of the source a day. Instrument 01's workflow completes several
+  # times a day (its late schedule stands down in seconds, a diagnostic is a
+  # run too), and each completion starts this one. A dispatch is someone
+  # asking and is never gated.
+  gate:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          go=true
+          if [ "$EVENT" != "workflow_dispatch" ]; then
+            today=$(date -u +%F)
+            ids=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow meal-claims-sync.yml \
+                    --branch "$GITHUB_REF_NAME" --created ">=$today" --status success \
+                    --json databaseId --jq '.[].databaseId') || ids=""
+            for id in $ids; do
+              [ "$id" = "$GITHUB_RUN_ID" ] && continue
+              # The sync job, not the run: a run the gate stood down succeeds too.
+              if gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs" \
+                   --jq '.jobs[] | select(.name == "sync" and .conclusion == "success") | .id' | grep -q .; then
+                echo "::notice::Run $id already read the source today; this run stands down."
+                go=false
+                break
+              fi
+            done
+          fi
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+
+  sync:
+    needs: gate
+    # Fails open: a gate that could not ask GitHub leaves `go` empty, and the
+    # day is read rather than lost.
+    if: ${{ !cancelled() && needs.gate.outputs.go != 'false' }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 150
+    permissions:
+      contents: write
+
+    env:
+      PYTHONIOENCODING: utf-8
+      STORE: ${{ github.workspace }}/.meal-store/store.sqlite
+      PACKED: ${{ github.workspace }}/.meal-store/store.sqlite.gz
+      STORE_RELEASE: meal-claims-store
+      STORE_ASSET: store.sqlite.gz
+      PUBLISHED: public/data/instruments/meal-claims
+      # Whether this run may publish and replace the store. A run dispatched
+      # from a feature branch is how a change here is proven: it reads, builds
+      # and checks everything, and leaves the result as an artifact.
+      PUBLISH: ${{ github.event_name != 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch }}
+
+    steps:
+      # The branch head, not the commit that triggered the run: a run queued
+      # behind another would otherwise build on the files before that run's
+      # commit and lose its push.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Flag rules, nightly run and builder
+        # GATING, before anything is asked of the source. The pipeline is
+        # standard library only, so there is nothing to install. No network.
+        run: |
+          python -I -X utf8 scripts/meal_claims/test_flags.py
+          python -I -X utf8 scripts/meal_claims/test_sync.py
+          python -I -X utf8 scripts/meal_claims/test_build.py
+
+      - name: Fetch the store
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$(dirname "$STORE")"
+          gh release download "$STORE_RELEASE" --repo "$GITHUB_REPOSITORY" \
+            --pattern "$STORE_ASSET" --dir "$(dirname "$PACKED")" --clobber
+          python -I -X utf8 - <<'EOF'
+          import os, sys
+          from pathlib import Path
+          sys.path.insert(0, "scripts/meal_claims")
+          import store
+          store.unpack(Path(os.environ["PACKED"]), Path(os.environ["STORE"]))
+          db = store.connect(Path(os.environ["STORE"]))
+          nights = db.execute("select count(*) from night").fetchone()[0]
+          if not nights:
+              sys.exit("the store holds no night; refusing to start from nothing")
+          print(f"store restored: {nights} runs recorded")
+          EOF
+          rm "$PACKED"
+
+      - name: Read the source
+        env:
+          BUDGET: ${{ inputs.budget }}
+          SCHOOLS: ${{ inputs.schools }}
+        run: |
+          # Inputs arrive through the environment, never interpolated into the
+          # shell: this job holds a write token. Each is checked against the
+          # only shape it may have before it becomes an argument.
+          args=()
+          if [ -n "$BUDGET" ]; then
+            [[ "$BUDGET" =~ ^[0-9]{1,4}$ ]] || { echo "::error::budget must be a number"; exit 1; }
+            args+=(--budget "$BUDGET")
+          fi
+          for school in $SCHOOLS; do
+            [[ "$school" =~ ^[0-9]{2}:[0-9]+:[0-9]+:[0-9]+:[0-9]{1,2}$ ]] || { echo "::error::not a school: $school"; exit 1; }
+            args+=(--school "$school")
+          done
+          python -I -X utf8 scripts/meal_claims/sync.py --store "$STORE" --minutes 100 "${args[@]}"
+
+      - name: Pack the store
+        # EVERY outcome from here on keeps what the night read.
+        if: always() && hashFiles('.meal-store/store.sqlite') != ''
+        run: |
+          python -I -X utf8 - <<'EOF'
+          import os, sys, tempfile
+          from pathlib import Path
+          sys.path.insert(0, "scripts/meal_claims")
+          import store
+          packed = Path(os.environ["PACKED"])
+          store.pack(Path(os.environ["STORE"]), packed)
+          # Proven to open before it may replace the copy every later night starts from.
+          with tempfile.TemporaryDirectory() as tmp:
+              store.unpack(packed, Path(tmp) / "check.sqlite")
+          print(f"packed {packed.stat().st_size:,} bytes")
+          EOF
+
+      - name: Keep the store as an artifact
+        if: always() && hashFiles('.meal-store/store.sqlite.gz') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: meal-claims-store
+          path: .meal-store/store.sqlite.gz
+          retention-days: 14
+          include-hidden-files: true
+
+      - name: Replace the stored copy
+        if: always() && env.PUBLISH == 'true' && hashFiles('.meal-store/store.sqlite.gz') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$STORE_RELEASE" "$PACKED" --repo "$GITHUB_REPOSITORY" --clobber
+
+      - name: Build and check the published files
+        # build_data.py writes a candidate beside the published folder, runs
+        # the contract over it, and swaps it in only if every assertion holds.
+        run: python -I -X utf8 scripts/meal_claims/build_data.py --store "$STORE" --out "$PUBLISHED"
+
+      - name: Published data contract
+        # Again, over what is now in place: the commit below is of files that
+        # passed where they stand.
+        run: python -I -X utf8 scripts/meal_claims/check_published.py "$PUBLISHED"
+
+      - name: Keep the built files (a branch run publishes nothing)
+        if: env.PUBLISH != 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: meal-claims-published
+          path: public/data/instruments/meal-claims
+          retention-days: 5
+
+      - name: Commit regenerated data
+        if: env.PUBLISH == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add "$PUBLISHED"
+          if git diff --staged --quiet; then
+            echo "No change in the published data."
+            exit 0
+          fi
+          SUMMARY=$(python -I -X utf8 -c "import json;m=json.load(open('$PUBLISHED/meta.json',encoding='utf-8'));c=m['counts'];print(f\"{m['day']}, {c['schools_flagged']} schools with a flag\")")
+          git commit -m "data(meal-claims): read for ${SUMMARY}"
+          # Instrument 01's job commits to the same branch on the same
+          # mornings. Its paths are not these, so a rebase always applies;
+          # the push is retried because the branch can move again in between.
+          for attempt in 1 2 3 4; do
+            git pull --rebase origin "$GITHUB_REF_NAME"
+            # This job holds a write token and runs scripts every night, so it
+            # pushes its own data and nothing else.
+            OUTSIDE=$(git diff --name-only "origin/$GITHUB_REF_NAME" HEAD | grep -v "^$PUBLISHED/" || true)
+            if [ -n "$OUTSIDE" ]; then
+              echo "::error::Refusing to push paths outside the published data:"; echo "$OUTSIDE"; exit 1
+            fi
+            git push && exit 0
+            sleep $((attempt * 20))
+          done
+          echo "::error::The data commit could not be pushed after four attempts."
+          exit 1
+
+      - name: Fail when the source is not being read
+        # Last, after the data is committed: a night that fell short still
+        # publishes what it read. Three in a row turn the job red, and a red
+        # job is what makes someone look.
+        run: python -I -X utf8 scripts/meal_claims/sync.py --store "$STORE" --check-streak
