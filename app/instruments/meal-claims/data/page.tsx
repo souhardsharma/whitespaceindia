@@ -25,18 +25,18 @@ const DESCRIPTION =
 export const metadata = pageMeta({ path: PATH, title: TITLE, description: DESCRIPTION, image: MEAL_OG });
 
 const FILES: [string, string][] = [
-  ["meta.json", "Counts, the thresholds of each test, the span of days read, the months published, and the measurements the thresholds were checked against."],
+  ["meta.json", "Counts, the thresholds of each test, the span of days read, the months published, and the sample the thresholds were set on."],
   ["freshness.json", "When the source was last read, the day it was read for, how many requests were sent and whether the read was complete."],
   ["measures.json", "The label, definition, formula and source of every figure shown."],
-  ["states.json", "One row per State: schools listed, reporting and filing enrolment, tables read, flags, and the daily series."],
+  ["states.json", "One row per State: schools listed, schools that reported, schools that filed enrolment, tables read, flags, and the daily series."],
   ["state/<code>.json", "One State: its daily series, every district with its blocks and flagged schools, and the days it was shut while some schools reported."],
   ["history/<code>/<year>.json", "One State and one year: for each district, a row for every day its table was read. A row is the day, schools listed, schools that filed enrolment, enrolment filed, schools that reported and meals reported. The years each State has are listed in states.json as `history_years`."],
   ["roster/<code>-<district>.json", "Every school read in one district. `schools` rows are the school's key (code and shift), its name, its cluster's code, the enrolment it filed (null when none) and the meals it reported (null when no report). `clusters` gives each cluster's name, block, the date its latest table is for and how many dates have been read."],
   ["flags/<yyyy-mm>.csv", "Every flag on a school-day of that month, standing or not. The columns are below."],
   ["flags/recent.json", "Flags first seen in recent nights, each with the figures it rests on. `seen` points into `stamps`, the list of builds."],
-  ["schools/<yyyy-mm>/<bucket>.json", "For each flagged school: the month day by day, the enrolment filed for each month of the year, its flags, and under `udise` its entry in UDISE+ where one has been read. The bucket is the school code modulo the `buckets` value in meta.json, two digits."],
+  ["schools/<yyyy-mm>/<bucket>.json", "For each flagged school: the month day by day once it has been read, the enrolment filed for each month of the year, its flags, and under `udise` its entry in UDISE+ where one has been read. The bucket is the school code modulo the `buckets` value in meta.json, two digits."],
   ["holidays.json", "Each State's holiday list as the system gives it: date and reason."],
-  ["national.json", "For each of the 36 States and Union Territories this holds the national system's totals day by day and the State's latest district table. For States on both systems, the same day from each system is set side by side. `read` is false until the national system has been read."],
+  ["national.json", "For each of the 36 States and Union Territories this holds the national system's totals day by day and, where it has been read, the State's latest district table. For States on both systems, the same day from each system is set side by side. `read` is false until the national system has been read."],
   ["national/states.csv", "Every State-day read from the national system. Columns: date, state, schools, schools_reported, schools_on_holiday, enrolment, children_approved, enrolment_in_reporting_schools, meals."],
   ["national/districts-<yyyy-mm>.csv", "Every district-day read from the national system in that month. The columns are those of states.csv with district added and children_approved left out; the source gives that figure for States only."],
 ];
@@ -176,7 +176,7 @@ export default function MealData() {
                 The meal counts, enrolments, holiday lists and school names in
                 these files come from the PM POSHAN daily reporting system at{" "}
                 <a href={MEAL_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">mdmhp.nic.in</a>,
-                where State education departments file them and anyone can
+                where they are filed for each school and anyone can
                 read them without a login. The entries under{" "}
                 <code className="font-label text-[13px]">udise</code> come
                 from the Ministry of Education&rsquo;s school report card at{" "}
@@ -185,17 +185,19 @@ export default function MealData() {
                 <code className="font-label text-[13px]">national</code> from
                 the Ministry&rsquo;s monitoring system at{" "}
                 <a href={AMS_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">pmposhan-ams.education.gov.in</a>.
-                None of the three sets out terms for reusing its figures. They are reproduced here as filed and credited to their source,
-                and this site claims no rights over them. If you reuse them, credit
-                the system they came from.
+                None of the three sets out terms for reusing its figures.
+                This site reproduces them as filed and claims no rights over
+                them. Anyone reusing them should credit the system they came
+                from, as this site does.
               </p>
               <p>
                 What this site adds is under{" "}
                 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer license" className="underline underline-offset-4">CC BY 4.0</a>:
                 the flags and the counts of how much was read, and the way the files are
-                put together. Credit Whitespace India and link to this page. A flag reused
-                elsewhere should be described as two filed figures that
-                disagree, since it passes no judgement on the school. The code that produces the files is under
+                put together. Reuse should credit Whitespace India and link
+                to this page. A flag passes no judgement on the school, so
+                describe it as a disagreement between a school&rsquo;s meal
+                report and another record on the meal system. The code that produces the files is under
                 AGPL-3.0-or-later.
               </p>
               <p>

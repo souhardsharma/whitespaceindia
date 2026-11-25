@@ -77,7 +77,7 @@ export default function LatestList({
             value={st}
             onChange={(e) => { setSt(e.target.value); setShown(PAGE); void loadAll(); }}
           >
-            <option value="">All States</option>
+            <option value="">All States and UTs</option>
             {states.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
           </select>
         </label>

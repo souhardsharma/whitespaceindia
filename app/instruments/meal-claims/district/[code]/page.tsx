@@ -38,7 +38,7 @@ function find(code: string) {
 function describe(district: string, state: string) {
   return {
     title: `${district}, ${state}: midday meal reports and flagged schools | Meal Claims Check`,
-    description: `Midday meal (PM POSHAN) reporting in ${district} district, ${state}: schools reporting block by block, and each school whose meal reports exceed the enrolment it filed or fall on a day it does not serve.`,
+    description: `Midday meal (PM POSHAN) reporting in ${district} district, ${state}: schools reporting block by block, and each flagged school with the figures behind its flags.`,
   };
 }
 
@@ -58,7 +58,7 @@ export default async function MealDistrict({ params }: Props) {
   const { state: s, district: d } = hit;
   const M = mealMeasures();
   const path = districtPath(s.st, d.dc);
-  const flags = d.flag_over + d.flag_closed + d.flag_spike;
+  
   const series = districtSeries(s, d.dc);
 
   return (
@@ -85,7 +85,7 @@ export default async function MealDistrict({ params }: Props) {
               {d.name}
             </h1>
             <p className="mt-4 font-headline italic text-[clamp(17px,2vw,23px)] leading-snug max-w-3xl opacity-90">
-              Midday meal reports as filed by the district&rsquo;s schools
+              Midday meal reports as filed for the district&rsquo;s schools
               {d.day ? `, read for ${dayLong(d.day)}` : ""}
             </p>
 
@@ -117,8 +117,8 @@ export default async function MealDistrict({ params }: Props) {
               <>
                 <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-5 max-w-3xl">
                   {count(d.flagged.length)} {d.flagged.length === 1 ? "school" : "schools"} in{" "}
-                  {d.name} {d.flagged.length === 1 ? "holds" : "hold"} a flag on the figures as last read,{" "}
-                  {count(flags)} school-days in all. A school&rsquo;s name
+                  {d.name} {d.flagged.length === 1 ? "holds" : "hold"} a flag from the last 120 days on the figures as last read,{" "}
+                  {count(d.flagged.reduce((n, f) => n + f.over + f.closed + f.spike, 0))} school-days in all. A school&rsquo;s name
                   opens its month as filed, with each flag and the figures
                   behind it.
                 </p>
@@ -162,7 +162,7 @@ export default async function MealDistrict({ params }: Props) {
               </>
             ) : (
               <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl">
-                No school in {d.name} holds a flag on the tables read so far
+                No school in {d.name} holds a flag on what has been read so far
                 ({count(d.tables_read)} school tables,{" "}
                 {count(d.school_days_tested)} school-days that could be
                 tested against enrolment). School tables are read as a
@@ -178,8 +178,9 @@ export default async function MealDistrict({ params }: Props) {
               <div className="md:col-span-4">
                 <h2 id="days-heading" className={`${SECTION_HEADING} mb-3`}>Meals reported, day by day</h2>
                 <p className="font-body text-[13.5px] leading-relaxed opacity-70">
-                  {M.meals.definition} A day with no report is left empty and
-                  is not flagged.
+                  {M.meals.definition} A day is left empty when it has not been
+                  read or no school reported on it, and an empty day raises
+                  no flag.
                 </p>
               </div>
               <div className="md:col-span-8">
@@ -200,11 +201,11 @@ export default async function MealDistrict({ params }: Props) {
             <div className="max-w-6xl mx-auto">
               <h2 id="schools-heading" className={`${SECTION_HEADING} mb-3`}>Schools read</h2>
               <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-6 max-w-3xl">
-                {count(d.schools_read)} schools have been read, in{" "}
-                {count(d.clusters_read)} of the {count(d.clusters)}
-                clusters listed for the district so far, each shown with the enrolment it had
-                filed and the meals it reported on the date its cluster was
-                last read.
+                {count(d.schools_read)} schools have been read so far, in{" "}
+                {count(d.clusters_read)} of the {count(d.clusters)} clusters
+                listed for the district up to now. Each school is shown with
+                the enrolment it had filed and the meals it reported on the
+                date its cluster was last read.
                 {d.clusters_read < d.clusters ? " The other clusters have not been read yet." : ""} A
                 flagged school&rsquo;s name opens its page.
               </p>

@@ -2,9 +2,9 @@
  * When the meal reporting system was last read, and for which day.
  *
  * Stated once, in the instrument's footer, beside every figure the pages
- * show. It names two dates because they differ by design: the read happens
- * in the morning and covers YESTERDAY, since schools file through the
- * afternoon and a same-day read shows a day that is still arriving.
+ * show. It names two dates because they differ by design: the nightly run
+ * covers YESTERDAY, since schools file through the afternoon and a same-day
+ * read shows a day that is still arriving.
  */
 import freshnessJson from "@/public/data/instruments/meal-claims/freshness.json";
 import { dayShort, nightNote, whenIST, type MealFreshness } from "@/lib/instruments/meal";

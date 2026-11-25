@@ -26,7 +26,7 @@ type Props = { params: Promise<{ slug: string }> };
 function describe(name: string) {
   return {
     title: `${name}: midday meal reports and flags by district | Meal Claims Check`,
-    description: `Midday meal (PM POSHAN) daily reporting in ${name}: the schools listed, the share that report, the share that filed enrolment, and the schools in each district whose meal reports their own filings contradict.`,
+    description: `Midday meal (PM POSHAN) daily reporting in ${name}: the schools listed, the share that report, the share that filed enrolment, and the schools in each district with a flag.`,
   };
 }
 
@@ -74,7 +74,7 @@ export default async function MealState({ params }: Props) {
               {s.name}
             </h1>
             <p className="mt-4 font-headline italic text-[clamp(17px,2vw,23px)] leading-snug max-w-3xl opacity-90">
-              Midday meal reports as filed by its schools
+              Midday meal reports as filed for its schools
               {s.day ? `, read for ${dayLong(s.day)}` : ""}
             </p>
 
@@ -96,7 +96,7 @@ export default async function MealState({ params }: Props) {
               <Stat
                 measure={M.schools_flagged}
                 value={count(s.schools_flagged)}
-                note={`${count(flags)} school-days, from ${count(s.tables_read)} school tables read`}
+                note={`${count(flags)} flagged school-days, from ${count(s.tables_read)} school tables and the months of the schools they named`}
               />
             </dl>
             <FlagNotFinding className="mt-9 max-w-3xl" />
@@ -108,10 +108,9 @@ export default async function MealState({ params }: Props) {
             <div className="md:col-span-4">
               <h2 id="days-heading" className={`${SECTION_HEADING} mb-3`}>Meals reported, day by day</h2>
               <p className="font-body text-[13.5px] leading-relaxed opacity-70">
-                {M.meals.definition} Where the chart has a gap, the system holds no
-                report for that day, and the gap is not flagged. Schools may have been
-                closed that day, or their reports may never have reached
-                the system.
+                {M.meals.definition} A day is left empty when it has not been
+                read or no school reported on it, and an empty day raises no
+                flag.
               </p>
             </div>
             <div className="md:col-span-8">
@@ -171,10 +170,10 @@ export default async function MealState({ params }: Props) {
               <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-6 max-w-3xl">
                 On these days almost none of the State&rsquo;s schools
                 reported, and the nightly run looked for the ones that did.
-                The last column counts the schools it traced, and few of them are
-                flagged, because a school is flagged only if its own
-                record shows it does not normally serve on that weekday
-                or the date is on the State&rsquo;s holiday list.
+                The last column counts the schools it traced. A traced
+                school is flagged if its own record shows it does not
+                normally serve on that weekday, or if the date is on the
+                State&rsquo;s holiday list.
               </p>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[520px] max-w-3xl border-collapse">
@@ -211,9 +210,9 @@ export default async function MealState({ params }: Props) {
                     vacationDates ? `; ${count(vacationDates)} of them are marked as vacations` : ", none of them marked as a vacation"}.`
                 : `The system's holiday list for ${s.name} has not been read.`}{" "}
               The list covers the whole State and gives no district or school
-              holidays, and some States list far more dates than others. A
-              date absent from the list is not taken as proof that schools
-              were open.
+              holidays, and some States list far more dates than others, so
+              a date missing from it is not taken as proof that schools were
+              open.
             </p>
           </div>
         </section>

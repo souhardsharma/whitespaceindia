@@ -84,17 +84,20 @@ function Register({ school, measures, filed }: { school: School; measures: Measu
   const held = school.udise;
   if (!held) return null;
   const r = held.record;
-  const asked = whenIST(held.read_at) ?? "an unknown date";
+  // "on 3 Nov 2026, 14:05 IST", or a plain statement when the time was not kept
+  const asked = whenIST(held.read_at) ? `on ${whenIST(held.read_at)} IST` : "at a time not recorded";
   if (!r) {
     return (
       <section className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby="udise-heading">
         <h2 id="udise-heading" className={`${SECTION_HEADING} mb-3`}>This school in UDISE+</h2>
         <p className="font-body text-[13.5px] leading-relaxed opacity-75 max-w-3xl">
           UDISE+, the Ministry of Education&rsquo;s register of schools, returned
-          no school for the code {udiseCode(school.code)} when asked on {asked} IST.
-          In Tripura and Himachal Pradesh, the two States checked by hand, the
-          meal system lists a school under its UDISE code. Elsewhere, and for
-          this school, the codes may differ.
+          no school for the code {udiseCode(school.code)} when asked {asked}.
+          In Tripura and Himachal Pradesh, the two States where codes were
+          compared by hand, the meal system lists a school under its UDISE
+          code. That has not been checked in the other States, where a
+          school&rsquo;s code on the meal system may differ from its UDISE
+          code.
         </p>
       </section>
     );
@@ -110,8 +113,8 @@ function Register({ school, measures, filed }: { school: School; measures: Measu
       <p className="font-body text-[13.5px] leading-relaxed opacity-75 mb-4 max-w-3xl">
         UDISE+ is the Ministry of Education&rsquo;s register of schools,
         where a school files its entry once a year, outside the meal system.
-        This entry is listed as {r.name ?? "this school"}, code{" "}
-        {udiseCode(school.code)}, and was read on {asked} IST. None of it is
+        This entry{r.name ? `, listed as ${r.name},` : ""} has the code{" "}
+        {udiseCode(school.code)} and was read {asked}. None of it is
         tested against the meal reports.
       </p>
       <dl className="max-w-4xl border-t border-[#1c1c19]/40">
@@ -170,7 +173,7 @@ export default function SchoolView() {
     const s = view.months[0].school;
     return applyHead({
       title: `${s.name}, ${s.district}: midday meal reports | Meal Claims Check`,
-      description: `The daily midday meal counts ${s.name} (${s.block}, ${s.district}) reported, set against the enrolment it filed, with each day on which the two disagree marked beside its figures.`,
+      description: `Daily midday meal counts reported by ${s.name} (${s.block}, ${s.district}) and the enrolment it filed, with each flagged day marked beside its figures.`,
       path: schoolPath(view.key),
       index: false,
     }, SITE_URL);
@@ -195,9 +198,9 @@ export default function SchoolView() {
         </h1>
         <p className="font-body text-[15px] leading-relaxed opacity-80 mt-5">
           A page is published only for a school that holds a flag in the
-          months published. A school without a page has no flag
-          on the tables read so far. School tables are read as a sample, so
-          the school may not have been read at all.
+          months published. School tables are read as a sample, so a school
+          without a page has either been read and not flagged or not been
+          read at all.
         </p>
         <Link href={`${MEAL_BASE}/states`} className="inline-block mt-6 font-label text-[11px] uppercase tracking-[0.18em] underline underline-offset-4">
           Browse by State and district &rarr;
@@ -248,7 +251,7 @@ export default function SchoolView() {
                   {filed != null ? count(filed) : school.enrolment ? "none filed" : inTable != null ? count(inTable) : "not read yet"}
                 </strong>
                 {inTable != null ? (
-                  <span className="opacity-75"> as the cluster table showed it; the school&rsquo;s own enrolment record has not been read yet</span>
+                  <span className="opacity-75">, as the cluster table showed it; the school&rsquo;s own enrolment record has not been read yet</span>
                 ) : null}
               </p>
             </div>
@@ -261,8 +264,8 @@ export default function SchoolView() {
                   label={`Meals ${school.name} reported on each day of ${monthLabel(month)}`}
                 />
                 <p className={`${SMALL_LABEL} mt-3 normal-case tracking-normal text-[12px] font-body`}>
-                  The bars show the meals reported each day, as read on{" "}
-                  {whenIST(school.meals_read_at) ?? "an unknown date"} IST.
+                  The bars show the meals reported each day
+                  {whenIST(school.meals_read_at) ? `, as read on ${whenIST(school.meals_read_at)} IST` : ""}.
                   Flagged days are dark, and a day with no bar has no report.
                 </p>
               </div>
@@ -284,8 +287,8 @@ export default function SchoolView() {
           <h2 id="enrolment-heading" className={`${SECTION_HEADING} mb-3`}>The enrolment this school filed, {year}</h2>
           <p className="font-body text-[13.5px] leading-relaxed opacity-70 max-w-3xl">
             The system holds no enrolment filing from this school for
-            any month of {year}, as read on{" "}
-            {whenIST(enrolment.enrolment_read_at) ?? "an unknown date"} IST, so
+            any month of {year}
+            {whenIST(enrolment.enrolment_read_at) ? `, as read on ${whenIST(enrolment.enrolment_read_at)} IST,` : ","} so
             its meal reports cannot be compared with enrolment.
           </p>
         </section>
@@ -293,11 +296,9 @@ export default function SchoolView() {
         <section className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby="enrolment-heading">
           <h2 id="enrolment-heading" className={`${SECTION_HEADING} mb-3`}>The enrolment this school filed, {year}</h2>
           <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-5 max-w-3xl">
-            A wrong enrolment filing can put a report above enrolment, so the
-            year&rsquo;s filings are listed here, as read on{" "}
-            {whenIST(enrolment.enrolment_read_at) ?? "an unknown date"} IST.
-            If the figure drops sharply from one month to the next while the
-            daily meals stay level, the filing is the likelier error.
+            The year&rsquo;s enrolment filings are listed here
+            {whenIST(enrolment.enrolment_read_at) ? `, as read on ${whenIST(enrolment.enrolment_read_at)} IST,` : ""}{" "}
+            because a wrong filing can put a report above enrolment.
           </p>
           <div className="overflow-x-auto">
             <table className="border-collapse min-w-[640px]">
@@ -323,16 +324,17 @@ export default function SchoolView() {
       <section className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby="check-heading">
         <h2 id="check-heading" className={`${SECTION_HEADING} mb-3`}>Checking this against the source</h2>
         <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl">
-          Every figure here is the school&rsquo;s own filing on the PM POSHAN
-          daily reporting system at{" "}
+          The meal counts and enrolment here are the returns filed for
+          this school on the PM POSHAN daily reporting system at{" "}
           <a href={MEAL_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">mdmhp.nic.in</a>.
-          To see it there, choose the State, then {s.district} district,{" "}
-          {s.block} block and cluster {s.cluster}, and pick the date. The
-          system shows a school&rsquo;s day-by-day month only for the current
-          month, so an earlier month has to be checked one date at a time.
-          A school may correct a figure after it was read, and when a later read
-          no longer supports a flag, the flag is marked above as no longer
-          standing.
+          To find them there, choose the State and the date, then{" "}
+          {s.district} district, {s.block} block and cluster {s.cluster}.
+          The system shows a school&rsquo;s day-by-day month for the current
+          month, and its date picker reaches back one month, so an older
+          day cannot be checked there.
+          A school may correct a figure after it was read; a flag that a
+          later read no longer supports stays on this page, marked as no
+          longer standing.
         </p>
       </section>
     </article>

@@ -6,7 +6,7 @@ const siteUrl = SITE_URL;
 const PAGE_URL = `${siteUrl}/instruments`;
 const TITLE = "Instruments: free tools on India's public data | Whitespace India";
 const DESCRIPTION =
-  "Free working tools for practitioners, built on the data India's government portals expose. People & Consent makes the environmental clearance register searchable by place and shows who lives where each project would be built. Meal Claims Check flags midday meal reports that a school's own filings contradict.";
+  "Free working tools for practitioners, built on the data India's government portals expose. People & Consent makes the environmental clearance register searchable by place and shows who lives where each project would be built. Meal Claims Check flags midday meal reports that disagree with another record on the same system.";
 const CARD_ALT =
   "Share card for Whitespace India Instruments with the line “Working tools, built on public data”, beside a print of a magnifying glass held over a row of objects";
 

@@ -17,7 +17,7 @@ export const metadata = pageMeta({
   path: PATH,
   title: "Midday meal reporting in every State and UT | Meal Claims Check",
   description:
-    "Daily PM POSHAN meal returns for all 36 States and Union Territories and their districts, as the Ministry of Education's national monitoring system holds them: schools listed, schools that reported, enrolment and meals.",
+    "Daily PM POSHAN meal returns for all 36 States and Union Territories, and for the districts of each State read so far, as the Ministry of Education's national monitoring system holds them: schools listed, schools that reported, enrolment and meals.",
   image: MEAL_OG,
 });
 
@@ -109,7 +109,7 @@ export default function MealNational() {
                     note={`${count(all.reported)} schools, for ${dayLong(nat.day)}${
                       filling ? ", read while that day's returns were still arriving" : ""}`}
                   />
-                  <Stat measure={M.nat_meals} value={count(all.meals)} note={`${per100(all)} per 100 children enrolled in the schools that reported`} />
+                  <Stat measure={M.nat_meals} value={count(all.meals)} note={/\d/.test(per100(all)) ? `${per100(all)} per 100 children enrolled in the schools that reported` : per100(all) === "not read" ? "Not read yet" : "No reporting school's enrolment to divide by"} />
                   <Stat measure={M.nat_enrolled} value={count(all.enrolled)} note={`${count(all.holiday)} schools marked by the system as on holiday`} />
                 </dl>
                 <p className="mt-7 font-body text-[13px] leading-relaxed opacity-70 max-w-3xl">
@@ -140,12 +140,13 @@ export default function MealNational() {
                   <h2 id="days-heading" className={`${SECTION_HEADING} mb-3`}>All India, day by day</h2>
                   <p className="font-body text-[13.5px] leading-relaxed opacity-70">
                     The chart shows {M.nat_meals.label.toLowerCase()} on each
-                    day, or {M.nat_reported_pct.label.toLowerCase()} when
-                    switched. The source shows the last{" "}
-                    {nat.window_days} days and nothing older. This chart
-                    starts on {nat.first_day ? dayShort(nat.first_day) : "the first day read"} and
-                    keeps each day after the source has dropped it. A day
-                    with no bar has not been read.
+                    day, and the buttons above it switch to{" "}
+                    {M.nat_reported_pct.label.toLowerCase()}. The source holds
+                    the last {nat.window_days} days. This chart starts on{" "}
+                    {nat.first_day ? dayShort(nat.first_day) : "the first day read"} and
+                    keeps each day after the source has dropped it. A day is
+                    left empty when it has not been read or when no school
+                    reported on it.
                   </p>
                 </div>
                 <div className="md:col-span-8">
@@ -220,9 +221,10 @@ export default function MealNational() {
                   <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl mb-5">
                     For these States the national system&rsquo;s own district
                     table for {dayShort(nat.day)} adds up to figures that
-                    differ from the State&rsquo;s row in the table above. Both
-                    are shown as the system printed them, and neither is
-                    corrected. Where the system marks a State as on holiday,
+                    differ from the State&rsquo;s row in the table above. The
+                    State row is shown as the system printed it, and the
+                    figures beside it are the district rows added up, with
+                    neither adjusted. Where the system marks a State as on holiday,
                     its row has so far shown no returns, while its district
                     table counts the schools that did file one.
                   </p>
@@ -264,13 +266,12 @@ export default function MealNational() {
                   <h2 id="compare-heading" className={`${SECTION_HEADING} mb-3`}>The same day in both systems</h2>
                   <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl mb-5">
                     These States appear in both systems, and both were read
-                    for {dayShort(nat.day)}. The two keep separate school
-                    lists and were read at different hours, so small
-                    differences are expected. A difference too large for either
-                    reason means the two systems hold different returns for
-                    the State.
+                    for {dayShort(nat.day)}. The two list slightly different
+                    numbers of schools and were read at different hours, which
+                    accounts for small differences. A larger one has no
+                    explanation on this page.
                     {selfDisagree.length
-                      ? " Where the national side shows no returns, the State's own row may be the empty figure; its district totals are in the table of States whose row and districts differ."
+                      ? " When the national system has marked a State as on holiday, it has so far printed the State's row with no returns, and that State's district totals are in the table of States whose row and districts differ."
                       : ""}
                   </p>
                   <div className="overflow-x-auto">
@@ -309,9 +310,9 @@ export default function MealNational() {
               <div className="max-w-6xl mx-auto">
                 <h2 id="districts-heading" className={`${SECTION_HEADING} mb-3`}>Districts</h2>
                 <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl mb-6">
-                  District tables are read one State at a time, so a
-                  State&rsquo;s table can be a day or two older than the
-                  table above. Each State&rsquo;s table states the day it is for.{" "}
+                  Every State&rsquo;s district table is asked for each night,
+                  and one whose read failed or ran out of time can be a day or
+                  two older than the table above. Each State&rsquo;s table states the day it is for.{" "}
                   {withDistricts.length < nat.states.length
                     ? `${count(withDistricts.length)} of ${count(nat.states.length)} States and Union Territories have been read at district level so far.`
                     : ""}
@@ -354,12 +355,11 @@ export default function MealNational() {
                 <h2 className={`${SECTION_HEADING} mb-3`}>Reading these tables</h2>
                 <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl">
                   The counts here are totals the national system printed,
-                  copied as they stood when read. The two shares are worked
-                  out from those counts. The instrument&rsquo;s tests are not
-                  run on these totals and no flag is raised from them,
-                  because the tests need a school&rsquo;s day-by-day record
-                  for the month and only State and district totals are read
-                  here.
+                  copied as they stood when read. The share reporting and the
+                  meals per 100 enrolled are worked out from those counts. The
+                  tests need each school&rsquo;s own figures, and this system
+                  is read only to district level, so no flag comes from this
+                  page.
                 </p>
                 <dl className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4 max-w-5xl">
                   {[M.nat_schools, M.nat_reported, M.nat_reported_pct, M.nat_holiday, M.nat_enrolled, M.nat_meals, M.nat_meals_pct].map((measure) => (

@@ -43,7 +43,7 @@ MEASURES: dict[str, dict] = {
         "unit": "%", "source": SOURCE,
     },
     "meals": {
-        "label": "Meals reported served",
+        "label": "Meals reported",
         "definition": "The total of the meal counts schools reported for the date. A school that did not report adds nothing.",
         "unit": "meals", "source": SOURCE,
     },
@@ -80,7 +80,7 @@ MEASURES: dict[str, dict] = {
     },
     "school_days_tested": {
         "label": "School-days tested against enrolment",
-        "definition": "Rows of those tables in which the school had filed an enrolment above zero and had reported that day. Only these rows can show meals above enrolment.",
+        "definition": "Rows of the school tables read in which the school had filed an enrolment above zero and had reported that day. The enrolment test also runs on the months of the schools these tables lead to, which are not counted here.",
         "unit": "school-days", "source": OURS,
     },
     "flag_over": {
@@ -90,14 +90,14 @@ MEASURES: dict[str, dict] = {
         "unit": "school-days", "source": OURS,
     },
     "flag_over_wide": {
-        "label": "Of those, by a wide margin",
+        "label": "Days above filed enrolment by a wide margin",
         "definition": f"School-days above filed enrolment where the meals are at least {_n(T['over_wide_ratio'])} times the enrolment and at least {_n(T['over_wide_min_excess'])} more than it.",
         "formula": f"meals >= {_n(T['over_wide_ratio'])} x enrolment filed and meals - enrolment filed >= {_n(T['over_wide_min_excess'])}",
         "unit": "school-days", "source": OURS,
     },
     "flag_closed": {
         "label": "Meals on a closed day",
-        "definition": f"School-days with meals reported on a weekday the school's own record shows it does not normally serve, or on a date its State's own list marks a holiday while under {_n(T['state_shut_share'] * 100)}% of the State's schools reported.",
+        "definition": f"School-days with meals reported on a weekday the school's own record shows it does not normally serve, or on a date its State's own list marks as a holiday when under {_n(T['state_shut_share'] * 100)}% of the State's schools reported that day.",
         "unit": "school-days", "source": OURS,
     },
     "flag_spike": {
@@ -113,11 +113,11 @@ MEASURES: dict[str, dict] = {
     },
     "udise_asked": {
         "label": "Flagged schools looked up in UDISE+",
-        "definition": "Schools with a flag whose code has been looked up in UDISE+, the Ministry of Education's yearly register of schools. UDISE+ is a separate system from the meal reporting system.",
+        "definition": "Schools whose code has been looked up in UDISE+, the Ministry of Education's yearly register of schools, after they were flagged on the meal reporting system.",
         "unit": "schools", "source": OURS,
     },
     "udise_found": {
-        "label": "Of those, found in UDISE+",
+        "label": "Flagged schools found in UDISE+",
         "definition": "Flagged schools for which UDISE+ holds a report card under the code the meal system lists the school by.",
         "unit": "schools", "source": OURS,
     },
@@ -138,7 +138,7 @@ MEASURES: dict[str, dict] = {
     },
     "udise_textbooks": {
         "label": "Children given free textbooks",
-        "definition": "Children in classes I to V (primary) and VI to VIII (upper primary) to whom the school says it gave free textbooks in the year shown. The school files this once a year for the textbook scheme, outside the meal system. It covers the same classes as the meal scheme but counts children given textbooks, so it can differ from enrolment.",
+        "definition": "Children in classes I to V (primary) and VI to VIII (upper primary) to whom the school says it gave free textbooks in the year shown. The school files this in its yearly UDISE+ return, outside the meal system. Because it counts the children who received textbooks, it can differ from enrolment.",
         "unit": "children", "source": UDISE,
     },
     "nat_schools": {

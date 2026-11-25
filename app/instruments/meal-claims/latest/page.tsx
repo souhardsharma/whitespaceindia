@@ -19,7 +19,7 @@ import { mealMeta, mealRecent, mealStates } from "@/lib/instruments/mealServer";
 const PATH = `${MEAL_BASE}/latest`;
 const TITLE = "Latest flags | Meal Claims Check";
 const DESCRIPTION =
-  "School midday meal reports flagged for the first time in recent nights of reading: meals above the enrolment a school filed, meals on a day it does not serve, and one-day spikes. Each is listed with its figures.";
+  "School midday meal reports flagged for the first time in recent nights of reading, each listed with the figures it rests on and the test that raised it.";
 
 export const metadata = pageMeta({ path: PATH, title: TITLE, description: DESCRIPTION, image: MEAL_OG });
 
@@ -51,13 +51,13 @@ export default function MealLatest() {
             Latest flags
           </h1>
           <p className="mt-5 font-body text-[15px] leading-relaxed opacity-80 max-w-3xl">
-            {count(recent.total)} school-days were flagged for the first time in the last{" "}
-            {count(recent.stamps.length)} {recent.stamps.length === 1 ? "night" : "nights"} of
-            reading{recent.stamps.length ? `, since ${dayShort(recent.stamps[0])}` : ""}.
+            {count(recent.total)} school-days were flagged for the first time in{" "}
+            {recent.stamps.length === 1 ? "the latest run" : `the last ${count(recent.stamps.length)} runs`} of
+            the nightly read{recent.stamps.length ? `, since ${dayShort(recent.stamps[0])}` : ""}.
             A table read for the first time can add a flag on an earlier date,
-            so flags are listed under the night they were first seen. Narrow
-            excesses over enrolment are listed after every other kind of
-            flag.
+            so each flag is listed under the run in which it was first seen, newest
+            run first. Excesses over enrolment that are not marked wide
+            come after every other flag in the list.
             {recent.rows.length < recent.total
               ? ` This list holds the first ${count(recent.rows.length)}. The monthly files have all of them.`
               : ""}

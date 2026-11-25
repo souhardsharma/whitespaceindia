@@ -7,7 +7,7 @@ import {
 } from "@/components/instruments/meal/parts";
 import SeriesChart from "@/components/instruments/meal/SeriesChart";
 import {
-  MEAL_BASE, MEAL_HOST, MEAL_OG, TEAL, UDISE_HOST, count, dayLong, dayShort, districtPath, flagFigures,
+  AMS_HOST, MEAL_BASE, MEAL_HOST, MEAL_OG, TEAL, UDISE_HOST, count, dayLong, dayShort, districtPath, flagFigures,
   lastOpenDay, schoolPath, share, statePath, whenIST, type DayRow,
 } from "@/lib/instruments/meal";
 import {
@@ -16,9 +16,9 @@ import {
 
 export const metadata = pageMeta({
   path: MEAL_BASE,
-  title: "Meal Claims Check: midday meal reports that a school's own filings contradict",
+  title: "Meal Claims Check: midday meal reports that disagree with other records on the same system",
   description:
-    "Meal Claims Check reads India's PM POSHAN daily reporting system school by school and flags midday meal counts above the enrolment the school filed, meals reported on a day it does not serve, and one-day spikes. Each flag is printed with the two figures behind it.",
+    "Meal Claims Check reads the PM POSHAN daily reporting system used by 17 States and Union Territories. Each night it samples school tables and flags a school-day when the meals reported exceed the enrolment the school filed for the month or fall on a day it does not serve. A count far above the school's usual one is flagged as a spike, and every flag is printed with the figures it rests on.",
   image: MEAL_OG,
 });
 
@@ -65,29 +65,31 @@ export default function MealClaimsCheck() {
               Meal Claims Check
             </h1>
             <p className="mt-5 font-headline italic text-[clamp(18px,2.2vw,27px)] leading-snug max-w-3xl opacity-90">
-              Which schools reported serving more midday meals than the
-              enrolment they filed, or reported meals on a day they do not
-              serve?
+              Which schools reported more midday meals than the enrolment
+              they filed, or reported meals on a day they do not serve?
             </p>
 
             <div className="mt-9 grid grid-cols-1 md:grid-cols-12 gap-8">
               <p className="md:col-span-7 font-body text-[15px] leading-relaxed opacity-80">
                 Children in classes I to VIII who enrol and attend school are
                 entitled by law to a midday meal (PM POSHAN). In{" "}
-                {count(c.states)} States and Union Territories, schools file
-                a daily return for it into one government system, kept by the
-                National Informatics Centre in Himachal Pradesh. The system shows the
-                meals a school reported for each day and the enrolment
-                it filed for the month, and leaves the two uncompared.
-                Meal Claims Check reads both every night and marks each
-                school-day on which they disagree.
+                {count(c.states)} States and Union Territories a daily return
+                is filed for each school into one government system, kept by
+                the National Informatics Centre in Himachal Pradesh, which
+                shows the meals reported for each day beside the enrolment
+                filed for the month. Each night Meal Claims Check reads a
+                sample of these school tables and flags every school-day in
+                them on which the meals exceed that enrolment. It also flags
+                meals reported on a day the school does not serve, and a day
+                whose count is far above the school&rsquo;s usual one.
               </p>
               <div className="md:col-span-5 md:border-l md:border-[#1c1c19]/20 md:pl-8">
                 <p className="font-body text-[14px] leading-relaxed opacity-70">
-                  A flag means that one school filed two figures on one system that
-                  disagree. Each flag is printed with the figures it rests on,
-                  so that the school and those who oversee it can work
-                  out what lies behind it.
+                  Each flag is printed with the figures it rests on. Once
+                  the run has read a flagged school&rsquo;s month, the
+                  school&rsquo;s page shows it day by day beside the
+                  enrolment filed for each month of the year, which is what
+                  its block office would need to trace the flag.
                 </p>
               </div>
             </div>
@@ -97,7 +99,7 @@ export default function MealClaimsCheck() {
               <Stat
                 measure={M.reported}
                 value={count(reported)}
-                note={`${share(reported, listed) ?? "no share"} of schools listed, ${dayShort(m.day)}, as read the next morning; returns filed later are not in it.${
+                note={`${share(reported, listed) ? `${share(reported, listed)} of schools listed had reported for ${dayShort(m.day)} when the nightly run read that day.` : `The reporting share for ${dayShort(m.day)} cannot be worked out.`} Returns filed after the read are not counted.${
                   shut ? ` In ${count(shut)} of the ${count(onDay.length)} States, fewer than ${m.thresholds.state_shut_share * 100}% of schools reported that day.` : ""}`}
               />
               <Stat measure={M.school_days_tested} value={count(c.school_days_tested)} />
@@ -112,18 +114,18 @@ export default function MealClaimsCheck() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-10">
               {([
                 ["over", M.flag_over, c.flag_over,
-                  `${count(c.flag_over_wide)} of these are above by a wide margin and many of the others by one or two meals. Because a wrong enrolment filing can put a report above enrolment, each school's page lists the enrolment it filed month by month.`],
+                  `${count(c.flag_over_wide)} of these are above by a wide margin. The thresholds were set on an earlier sample, in which ${count(m.calibration.over_by_one_or_two)} of the ${count(m.calibration.over)} excesses were of one or two meals. Because a wrong enrolment filing can put a report above enrolment, each school's page lists the enrolment it filed month by month.`],
                 ["closed", M.flag_closed, c.flag_closed,
-                  "The closed day is worked out for each school from its own record. A school that rests on Fridays and serves on Sundays is not flagged for a Sunday meal."],
+                  "The weekday rule finds each school's closed day from its own record, so a school that rests on Friday and serves on Sunday is not flagged for a Sunday meal. A Sunday on the State's holiday list can still be flagged."],
                 ["spike", M.flag_spike, c.flag_spike,
-                  "A count many times a school's usual one can be a typing slip. It is shown because the system accepted the figure, and the figure sits in the totals the system reports."],
+                  "A typing slip can produce a spike. The figure still stands in the system as filed, and in the one case checked by hand it had been added to the district's total."],
               ] as const).map(([kind, measure, n, note]) => (
                 <div key={kind} className="border-t-2 pt-5" style={{ borderColor: TEAL }}>
                   <KindTag kind={kind} />
                   <div className="font-label font-bold text-[30px] leading-none mt-4 tabular-nums" style={{ color: TEAL }}>
                     {count(n)}
                   </div>
-                  <div className={`${SMALL_LABEL} mt-1.5`}>{measure.label}, standing</div>
+                  <div className={`${SMALL_LABEL} mt-1.5`}>{measure.label}, still standing</div>
                   <p className="font-body text-[14px] leading-relaxed mt-4 opacity-85">{measure.definition}</p>
                   <p className="font-body text-[13px] leading-relaxed mt-3 opacity-70">{note}</p>
                 </div>
@@ -134,7 +136,7 @@ export default function MealClaimsCheck() {
               {[
                 [`${MEAL_BASE}/latest`, "Latest flags"],
                 [`${MEAL_BASE}/states`, "By State and district"],
-                [`${MEAL_BASE}/national`, "All 36 States and UTs"],
+                [`${MEAL_BASE}/national`, "All India"],
                 [`${MEAL_BASE}/methodology`, "How each test works"],
               ].map(([href, label]) => (
                 <Link
@@ -155,17 +157,16 @@ export default function MealClaimsCheck() {
             <div className="md:col-span-4">
               <h2 id="days-heading" className={`${SECTION_HEADING} mb-3`}>What schools reported, day by day</h2>
               <p className="font-body text-[13.5px] leading-relaxed opacity-70">
-                {M.meals.definition} On {dayLong(m.day)} schools reported{" "}
-                {count(meals)} meals. Where the chart has a gap, the system holds no
-                report for that day. Schools may have been closed that day, or their
-                reports may never have reached the system. A gap is not read as children going unfed and is
-                not flagged.
+                {M.meals.definition} On {dayLong(m.day)}, schools reported{" "}
+                {count(meals)} meals. A day is left empty when it has not been
+                read or no school reported on it, and an empty day raises no
+                flag.
               </p>
             </div>
             <div className="md:col-span-8">
               <SeriesChart
                 series={series}
-                label={`Reports from schools across all States on each of the last ${series.length} days read`}
+                label={`Reports from schools in the ${count(c.states)} States and Union Territories on this system, on each of the last ${series.length} days read`}
                 mealsLabel={M.meals.label}
                 shareLabel={M.reported_pct.label}
                 blanks={m.blank_ranges}
@@ -176,14 +177,14 @@ export default function MealClaimsCheck() {
 
         <section className="px-6 md:px-12 py-12 md:py-16 border-b border-[#1c1c19]" aria-labelledby="states-heading">
           <div className="max-w-6xl mx-auto">
-            <h2 id="states-heading" className={`${SECTION_HEADING} mb-3`}>Where each test can be run</h2>
+            <h2 id="states-heading" className={`${SECTION_HEADING} mb-3`}>Where the enrolment test can run</h2>
             <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-6 max-w-3xl">
-              Meals can be compared with enrolment only for a school that
-              has filed its enrolment for the month, and how many have
-              differs a great deal from State to State. A State with few
-              flags in this table may just have few schools that can be
-              tested. The reporting share is for each State&rsquo;s last
-              working day read, with the date shown where it is not{" "}
+              The enrolment test needs the school&rsquo;s enrolment for the
+              month. The share of schools that have filed one, in the fifth
+              column, varies widely between States, so a State with few
+              flags may have few schools the test can reach. The reporting
+              share in the third column is for each State&rsquo;s last
+              working day read, with its date shown where that is not{" "}
               {dayShort(m.day)}.
             </p>
             <div className="overflow-x-auto">
@@ -240,7 +241,7 @@ export default function MealClaimsCheck() {
           <section className="px-6 md:px-12 py-12 md:py-16 border-b border-[#1c1c19]" aria-labelledby="latest-heading">
             <div className="max-w-6xl mx-auto">
               <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-                <h2 id="latest-heading" className={SECTION_HEADING}>Most recently flagged</h2>
+                <h2 id="latest-heading" className={SECTION_HEADING}>Recent flags</h2>
                 <Link
                   href={`${MEAL_BASE}/latest`}
                   className="font-label text-[11px] uppercase tracking-[0.18em] hover:underline underline-offset-4"
@@ -279,44 +280,43 @@ export default function MealClaimsCheck() {
               <h2 className={`${SECTION_HEADING} mb-4`}>Limits of the data</h2>
               <ul className="font-body text-[14px] leading-relaxed opacity-80 space-y-3 list-disc pl-4">
                 <li>
-                  Because one system serves every State that files on it,
-                  the nightly run limits its requests ({count(fresh.sent)}{" "}
-                  last night) and reads school tables as a sample, working
-                  through the clusters in turn. A school with no flag may not
-                  have been read yet.
+                  All {count(c.states)} States and Union Territories file
+                  into this one system, so the nightly run limits its
+                  requests to it ({count(fresh.sent)} last night) and reads
+                  school tables as a sample, working through the clusters in
+                  turn. A school with no flag may not have been read yet.
                 </li>
                 <li>
-                  Every figure is what a school or its office filed. How
-                  many meals were cooked or eaten cannot be seen from here,
+                  Every figure is a filed return, so how many meals were
+                  cooked or eaten cannot be seen from here,
                   and the system has no attendance figures to compare with.
                 </li>
                 <li>
-                  Enrolment is filed by month, and many schools file late or never. A
+                  Enrolment is filed by month, many schools file it late, and in Rajasthan almost none file it. A
                   school that has not filed cannot be tested against
-                  enrolment, while one that filed a wrong figure will be
-                  flagged because of it.
+                  enrolment, and a school that filed too low a figure is
+                  flagged on every day its meals exceed it.
                 </li>
                 <li>
-                  The holiday lists on the system cover whole States and have gaps,
-                  because some include the State&rsquo;s vacations and
-                  others leave them out. A date absent from a list is
-                  therefore not taken as proof that schools were open,
-                  and a school&rsquo;s weekly holiday is worked out from
-                  its own record, independently of the State&rsquo;s
-                  list.
+                  The holiday lists on the system cover whole States, and
+                  several leave out the State&rsquo;s vacations, so a date
+                  missing from a list is not taken as proof that schools
+                  were open. The lists give no school&rsquo;s weekly rest,
+                  which is worked out from the school&rsquo;s own record.
                 </li>
                 <li>
-                  Neither government source states terms for reusing its
-                  figures. The flags and counts this site adds are under CC
-                  BY 4.0. See{" "}
-                  <Link href={`${MEAL_BASE}/data`} className="underline underline-offset-4">data and terms</Link>.
+                  None of the three government sources states terms for
+                  reusing its figures. This site&rsquo;s own work is under CC BY
+                  4.0, and the{" "}
+                  <Link href={`${MEAL_BASE}/data`} className="underline underline-offset-4">data page</Link>{" "}
+                  sets out what that covers.
                 </li>
               </ul>
             </div>
             <div className="md:col-span-5">
               <h2 className={`${SECTION_HEADING} mb-4`}>Sources</h2>
               <div className={SMALL_LABEL}>
-                Read {whenIST(fresh.checked_at) ?? "at an unknown time"} IST
+                {whenIST(fresh.checked_at) ? `Read ${whenIST(fresh.checked_at)} IST` : "Time of the last read not recorded"}
               </div>
               <div className="font-body text-[13.5px] leading-snug mt-1">
                 PM POSHAN daily meal reporting system (
@@ -326,8 +326,19 @@ export default function MealClaimsCheck() {
               <div className="font-body text-[12px] opacity-75 mt-1">
                 National Informatics Centre, Himachal Pradesh, for the
                 Department of School Education &amp; Literacy, Ministry of
-                Education. Returns are filed by the States&rsquo; education
-                departments.
+                Education. Daily returns are filed into it for each school.
+              </div>
+              <div className="font-body text-[13.5px] leading-snug mt-4">
+                PM POSHAN Automated Monitoring System (
+                <a href={AMS_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">pmposhan-ams.education.gov.in</a>
+                )
+              </div>
+              <div className="font-body text-[12px] opacity-75 mt-1">
+                Department of School Education &amp; Literacy, Ministry of
+                Education. It holds daily returns for schools in every State
+                and Union Territory. Its State totals are read for all 36,
+                and its district totals for each State whose district table
+                has been read.
               </div>
               <div className="font-body text-[13.5px] leading-snug mt-4">
                 UDISE+ school report card (

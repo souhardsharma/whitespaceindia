@@ -23,7 +23,7 @@ const INK = "#1c1c19";
 const BAR_DAYS = 120;
 const BOX = { width: 1000, base: 100, ceiling: 14 };
 const RANGE_LABELS: Record<ChartRange, string> = { "90d": "Last 90 days", "12m": "Last 12 months", all: "Everything" };
-const BLANK_LABEL = "no records on the system";
+const BLANK_LABEL = "no reports on the system";
 const BUTTON = "tap-target font-label text-[10px] uppercase tracking-[0.16em] border px-3 transition-colors";
 
 function Choice({ pressed, onPress, children }: { pressed: boolean; onPress: () => void; children: string }) {
@@ -129,12 +129,12 @@ export default function SeriesChart({
   return (
     <figure className="min-w-0">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 mb-4">
-        <div role="group" aria-label="Figure drawn" className="flex flex-wrap gap-2">
+        <div role="group" aria-label="Figure shown" className="flex flex-wrap gap-2">
           <Choice pressed={measure === "meals"} onPress={() => view(() => setMeasure("meals"))}>{mealsLabel}</Choice>
           <Choice pressed={measure === "share"} onPress={() => view(() => setMeasure("share"))}>{shareLabel}</Choice>
         </div>
         {ranges.length > 1 ? (
-          <div role="group" aria-label="Days drawn" className="flex flex-wrap gap-2">
+          <div role="group" aria-label="Span of days shown" className="flex flex-wrap gap-2">
             {ranges.map((r) => (
               <Choice key={r} pressed={range === r} onPress={() => view(() => setRange(r))}>{RANGE_LABELS[r]}</Choice>
             ))}
@@ -223,7 +223,7 @@ export default function SeriesChart({
         <div
           role="slider"
           tabIndex={0}
-          aria-label="Day read out under the chart"
+          aria-label="Day to read out below the chart"
           aria-orientation="horizontal"
           aria-valuemin={0}
           aria-valuemax={n - 1}

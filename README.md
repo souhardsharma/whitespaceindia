@@ -14,7 +14,7 @@ Whitespace India reads India's public records together to find places where a pr
 | [CSR Opportunity Index](https://whitespaceindia.pages.dev/csr) | Ranks 651 districts by the gap between multidimensional poverty and corporate social responsibility (CSR) spending | Live |
 | [CSR spending by State](https://whitespaceindia.pages.dev/csr-spending) | Reported CSR spending against poverty, district by district, for each of 36 States and Union Territories, and the [list of whitespace districts](https://whitespaceindia.pages.dev/csr-spending/whitespace-districts) | Live |
 | [Instrument 01: People & Consent](https://whitespaceindia.pages.dev/instruments/consent) | Takes an environmental clearance proposal and shows who lives where it would be built, what they live on, and which consent obligations attach | Live, refreshed nightly |
-| [Instrument 02: Meal Claims Check](https://whitespaceindia.pages.dev/instruments/meal-claims) | Reads the PM POSHAN daily meal reports of 17 States and Union Territories and flags school-days on which a school's report contradicts its own filings | Live, refreshed nightly |
+| [Instrument 02: Meal Claims Check](https://whitespaceindia.pages.dev/instruments/meal-claims) | Reads the PM POSHAN daily meal reports of the States and Union Territories that file on mdmhp.nic.in (17 in November 2026) and flags school-days on which a school's meal report disagrees with another record on the same system | Live, refreshed nightly |
 | Health, Education, Energy indexes | District indexes built on the same framework as CSR | In preview: placeholder data, not indexed |
 
 ## CSR Opportunity Index
@@ -61,22 +61,18 @@ Its files and endpoints are documented at [/instruments/consent/data](https://wh
 
 ## Instrument 02: Meal Claims Check
 
-Meal Claims Check reads the PM POSHAN (midday meal) daily reporting system at mdmhp.nic.in, kept by the National Informatics Centre, Himachal Pradesh, into which 17 States and Union Territories file a return for every school. It flags three things:
+Meal Claims Check reads the PM POSHAN (midday meal) daily reporting system at mdmhp.nic.in, kept by the National Informatics Centre, Himachal Pradesh, where a daily return is filed for each reporting school in the 17 States and Union Territories that use it (November 2026). It flags a school-day on which the meals reported exceed the enrolment the school filed for the month. Two further tests flag a day's count far above the school's usual one, and meals reported on a weekday the school's own record shows it does not normally serve or on a State-listed holiday while the State was shut. The thresholds of all three are published with the data in `meta.json`.
 
-- a school-day on which the meals reported exceed the enrolment the school filed for the month;
-- meals reported on a weekday the school's own record shows it does not normally serve, or on a State-listed holiday while the State was shut;
-- a one-day count several times the school's usual one.
-
-A flag is two filed figures that disagree, and each flag is printed with the figures behind it; the instrument neither scores nor ranks schools. When a later read no longer supports a flag, the flag is kept and marked as no longer standing.
+A flag is a disagreement between a school's meal report and another record on the same system, and it is printed with the figures behind it. Unlike the site's indexes, the instrument gives schools no score or rank. A flag that a later read no longer supports stays published, marked as no longer standing.
 
 A scheduled job reads the meal system once a day, counting its requests against a budget it sets for itself and stopping at the first refusal. It reads school tables a sample at a time, moving through the clusters of schools, so every count covers what has been read so far. For each flagged school it then asks UDISE+, the Ministry of Education's register of schools, for the school's report card, and keeps the classes taught, category, management, status and free-textbook counts. Files are published only if they pass the contract in `scripts/meal_claims/check_published.py`.
 
-The same job reads the Ministry's national monitoring system for the day's totals in all 36 States and Union Territories and their districts. Because that system answers only addresses in India, the job reads it through Indian relays it verifies each night, checking TLS on every request. The relays are found and paced by the same code that reaches PARIVESH for Instrument 01 (`scripts/instruments/net.py`, `refresh_proxies.py`), and `scripts/education/` adds the lists of relays in India and a probe that tests each relay against this source. It also completes a host's certificate chain when the host leaves out its intermediate certificate. The method and its limits are at [/instruments/meal-claims/methodology](https://whitespaceindia.pages.dev/instruments/meal-claims/methodology), and the files are documented at [/instruments/meal-claims/data](https://whitespaceindia.pages.dev/instruments/meal-claims/data).
+The same job reads the Ministry's national monitoring system for the day's totals in all 36 States and Union Territories, and in their districts as each State's table is read. Because that system answers only addresses in India, the job reads it through Indian relays it verifies each night, checking TLS on every request. The relays are found and paced by the same code that reaches PARIVESH for Instrument 01 (`scripts/instruments/net.py`, `refresh_proxies.py`), and `scripts/education/refresh_pool.py` adds the lists of relays in India and a probe that tests each relay against this source. `scripts/education/egress.py` completes a host's certificate chain when the host leaves out its intermediate certificate. The method and its limits are at [/instruments/meal-claims/methodology](https://whitespaceindia.pages.dev/instruments/meal-claims/methodology), and the files are documented at [/instruments/meal-claims/data](https://whitespaceindia.pages.dev/instruments/meal-claims/data).
 
 | Source | Publisher |
 |--------|-----------|
 | PM POSHAN daily meal reporting system (mdmhp.nic.in): daily reports, monthly enrolment filings, State holiday lists | National Informatics Centre, Himachal Pradesh, for the Department of School Education & Literacy, Ministry of Education; filed by State education departments |
-| PM POSHAN Automated Monitoring System (pmposhan-ams.education.gov.in): daily totals for all 36 States and Union Territories and their districts | Department of School Education & Literacy, Ministry of Education; sent daily by the States |
+| PM POSHAN Automated Monitoring System (pmposhan-ams.education.gov.in): daily totals for all 36 States and Union Territories, and for their districts as each is read | Department of School Education & Literacy, Ministry of Education |
 | UDISE+ school report card (kys.udiseplus.gov.in): classes taught, category, management, status and free-textbook counts, for flagged schools | Department of School Education & Literacy, Ministry of Education; filed yearly by schools |
 
 ## Tech stack

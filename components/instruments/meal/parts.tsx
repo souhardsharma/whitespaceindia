@@ -59,10 +59,13 @@ export function FlagNotFinding({ className = "" }: { className?: string }) {
   return (
     <p className={`font-body text-[13.5px] leading-relaxed border-y py-3 ${className}`} style={{ borderColor: TEAL }}>
       <strong className="font-semibold">A flag marks a school-day on which the
-      school filed two figures on one government system that disagree.</strong>{" "}
-      A wrong enrolment filing or a typing slip can be enough to cause one, as
-      can meals served to children enrolled at another school, so what
-      lies behind a flag is for the school&rsquo;s block office or an
+      meals a school reported disagree with another record on the same
+      government system, either the school&rsquo;s own or its
+      State&rsquo;s.</strong>{" "}
+      A wrong enrolment filing or a typing slip in the meal count can
+      produce a flag, and so can meals given to children enrolled at
+      another school. What lies behind
+      a particular flag is for the school&rsquo;s block office or an
       auditor to establish.
     </p>
   );

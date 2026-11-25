@@ -72,11 +72,18 @@ export function udiseCode(code: string): string {
   return code.padStart(11, "0");
 }
 
-/** "Class 1 to class 8"; a class below 1 is pre-primary. */
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+
+/** A class as the Rules write it: 8 is "VIII". */
+function classNumeral(n: number): string {
+  return ROMAN[n - 1] ?? String(n);
+}
+
+/** "Class I to class VIII"; a class below 1 is pre-primary. */
 export function classRange(low: number | null, high: number | null): string | null {
   if (low == null || high == null) return null;
-  const from = low < 1 ? "Pre-primary" : `Class ${low}`;
-  return low === high ? from : `${from} to class ${high}`;
+  const from = low < 1 ? "Pre-primary" : `Class ${classNumeral(low)}`;
+  return low === high ? from : `${from} to class ${classNumeral(high)}`;
 }
 
 export interface School {
@@ -319,7 +326,7 @@ export interface Measure {
 }
 
 export const FLAG_KINDS: Record<FlagKind, { label: string; short: string }> = {
-  over: { label: "Meals above filed enrolment", short: "Above enrolment" },
+  over: { label: "Days above filed enrolment", short: "Above enrolment" },
   closed: { label: "Meals on a closed day", short: "Closed day" },
   spike: { label: "One-day spike", short: "Spike" },
 };
@@ -416,20 +423,20 @@ export function flagSentence(f: Flag): string {
     return `The school reported ${meals} on a date its State's own list on this system marks as a holiday${why}, a day on which few of the State's schools reported. A school that keeps its own calendar may have been open.`;
   }
   const wd = weekday(f.day);
-  return `The school reported ${meals} on a ${wd}. Its own record shows meals on ${nf.format(f.same_served ?? 0)} of the ${times(f.same_days ?? 0, `other ${wd}`)} read outside holidays and breaks, and on ${nf.format(f.other_served ?? 0)} of ${times(f.other_days ?? 0, "other day")}.`;
+  return `The school reported ${meals} on a ${wd}. Its own record shows meals on ${nf.format(f.same_served ?? 0)} of the ${times(f.same_days ?? 0, `other ${wd}`)} read outside holidays and breaks, and on ${nf.format(f.other_served ?? 0)} of ${times(f.other_days ?? 0, "day")} on other weekdays.`;
 }
 
 /** What became of a flag whose day was read again and no longer supports it. */
 export function flagAfterword(f: Flag): string | null {
   if (f.standing) return null;
   return f.now == null
-    ? "The day has since been read again and no longer shows a report. The flag no longer stands and is kept as a record of what was first read."
-    : `The day has since been read again and now shows ${times(f.now, "meal")}. The flag no longer stands and is kept as a record of what was first read.`;
+    ? "The day has been read again and shows no report now, so the flag no longer stands; it is kept as a record of what was first read."
+    : `The day has been read again and now shows ${times(f.now, "meal")}, so the flag no longer stands; it is kept as a record of what was first read.`;
 }
 
 /** The figures of a flag as one short line, for a table cell. */
 export function flagFigures(f: Flag): string {
-  if (f.kind === "over") return `${nf.format(f.meals)} meals against ${nf.format(f.enrolled ?? 0)} enrolled`;
+  if (f.kind === "over") return `${nf.format(f.meals)} meals against a filed enrolment of ${nf.format(f.enrolled ?? 0)}`;
   if (f.kind === "spike") return `${nf.format(f.meals)} meals against a usual ${nf.format(f.usual ?? 0)}`;
   if (f.rule === "holiday") return `${nf.format(f.meals)} meals on a listed holiday`;
   return `${nf.format(f.meals)} meals on a ${weekday(f.day)}`;

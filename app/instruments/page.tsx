@@ -68,13 +68,13 @@ const INSTRUMENTS: Shelf[] = [
     status: "live",
     colour: TEAL,
     question:
-      "Which schools reported serving more midday meals than the enrolment they filed, or reported meals on a day they do not serve?",
+      "Which schools reported more midday meals than the enrolment they filed, or reported meals on a day they do not serve?",
     blurb:
-      "Meal Claims Check reads the PM POSHAN daily reporting system school by school. It compares the meals a school reported for a day with the enrolment the same school filed for the month, and with the days on which that school normally serves, and marks each school-day on which they disagree. Each flag is printed with the figures behind it, which show the school's record disagreeing with itself.",
+      "Each night Meal Claims Check reads a sample of school tables from the PM POSHAN daily reporting system and sets the meals a school reported for a day against the enrolment filed for it that month, the days it normally serves and its State's holiday list. A third test marks a single day's count far above the school's usual one. Each flag is printed with the figures it rests on.",
     inputs:
-      "Sources: PM POSHAN daily meal reporting system (mdmhp.nic.in), National Informatics Centre, Himachal Pradesh · daily meal reports, monthly enrolment filings and State holiday lists · UDISE+ school report card (kys.udiseplus.gov.in), Ministry of Education, for flagged schools",
+      "Sources: PM POSHAN daily meal reporting system (mdmhp.nic.in), National Informatics Centre, Himachal Pradesh · daily meal reports, monthly enrolment filings and State holiday lists · UDISE+ school report card (kys.udiseplus.gov.in), Ministry of Education, for flagged schools · PM POSHAN Automated Monitoring System (pmposhan-ams.education.gov.in), Ministry of Education, State totals for all 36 States and Union Territories, and district totals as each is read",
     stats: [
-      { label: "Schools on the system", value: nf.format(mealCounts.schools) },
+      { label: "Schools listed", value: nf.format(mealCounts.schools) },
       { label: "School-days tested against enrolment", value: nf.format(mealCounts.school_days_tested) },
       { label: "Schools with a flag", value: nf.format(mealCounts.schools_flagged) },
     ],
@@ -85,7 +85,7 @@ export default function InstrumentsShelf() {
   const mealRead = whenIST(mealFreshness().checked_at);
   return (
     <div className="min-h-screen bg-[#fcf9f4] text-[#1c1c19] flex flex-col">
-      <StructuredData data={pageLd({ path: "/instruments", name: "Instruments", description: "Free working tools for practitioners, built on the data India's government portals expose: the environmental clearance register searchable by place, and midday meal reports checked against each school's own filings.", type: "CollectionPage" })} />
+      <StructuredData data={pageLd({ path: "/instruments", name: "Instruments", description: "Free working tools for practitioners, built on the data India's government portals expose: the environmental clearance register searchable by place, and midday meal reports checked against the other records a school and its State keep on the same system.", type: "CollectionPage" })} />
       <InstrumentHeader />
 
       <main id="main-content" className="flex-1">
@@ -240,9 +240,11 @@ export default function InstrumentsShelf() {
               The socio-economic figures come from Census {CENSUS_YEAR}, the
               most recent census for which complete sub-district figures
               exist, and they describe the population as it was counted that
-              year. {nextCensusNote()} The clearance register and the meal
-              reporting system, by contrast, are read again every night, and
-              the date of each latest read is shown below.
+              year. {nextCensusNote()} The clearance register and the two meal
+              systems, by contrast, are read again every night, and the list
+              below says when each was last read or how often it is read.
+              UDISE+, the Ministry of Education&rsquo;s register of schools,
+              is asked only about schools the meal tests flag.
             </p>
             <ul className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
               {meta.sources.map((s) => (
@@ -263,6 +265,15 @@ export default function InstrumentsShelf() {
                 <div className="font-body text-[14px] leading-snug mt-1">PM POSHAN daily meal reporting system</div>
                 <div className="font-body text-[12px] leading-snug opacity-75 mt-1">
                   National Informatics Centre, Himachal Pradesh
+                </div>
+              </li>
+              <li>
+                <div className="font-label text-[9px] uppercase tracking-[0.2em] opacity-70">
+                  Read nightly
+                </div>
+                <div className="font-body text-[14px] leading-snug mt-1">PM POSHAN Automated Monitoring System</div>
+                <div className="font-body text-[12px] leading-snug opacity-75 mt-1">
+                  Department of School Education &amp; Literacy, Ministry of Education
                 </div>
               </li>
             </ul>

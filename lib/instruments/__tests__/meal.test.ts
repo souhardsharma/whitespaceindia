@@ -33,7 +33,7 @@ test("an above-enrolment flag names the enrolment the school FILED", () => {
   assert.match(s, /enrolment it filed for the month is 23/);
   assert.match(s, /47 above/);
   assert.doesNotMatch(s, /children/);
-  assert.equal(flagFigures(f), "70 meals against 23 enrolled");
+  assert.equal(flagFigures(f), "70 meals against a filed enrolment of 23");
 });
 
 test("a closed-day flag names the school's own weekday, whichever it is", () => {

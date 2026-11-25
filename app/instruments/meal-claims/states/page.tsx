@@ -14,7 +14,7 @@ export const metadata = pageMeta({
   path: PATH,
   title: "Midday meal reporting by State and district | Meal Claims Check",
   description:
-    "India's PM POSHAN daily meal reporting system, State by State and district by district: schools listed, the share reporting, the share that filed enrolment, and the schools whose meal reports their own filings contradict.",
+    "The PM POSHAN daily meal reporting system's 17 States and Union Territories, district by district: schools listed, the share reporting, the share that filed enrolment, and the schools with a flag.",
   image: MEAL_OG,
 });
 
@@ -42,11 +42,13 @@ export default function MealStates() {
             <p className="mt-5 font-body text-[15px] leading-relaxed opacity-80 max-w-3xl">
               {count(m.counts.states)} States and Union Territories file into
               the system, across {count(m.counts.districts)} districts.
-              Each State&rsquo;s reporting share is for its last working day
-              read. Its district rows show what the system held for the latest day
-              read ({dayShort(m.day)}), which may have been a holiday,
-              along with how much of each district has been tested so
-              far.
+              A State&rsquo;s reporting share is for its last working day
+              read, or, where no day reached{" "}
+              {m.thresholds.state_open_share * 100}% of its schools, for the
+              last day any school reported. Each State&rsquo;s district table shows what the system
+              held for the latest day read ({dayShort(m.day)}), which may
+              have been a holiday, and how much of each district has been
+              tested so far.
             </p>
             <FlagNotFinding className="mt-7 max-w-3xl" />
           </div>
@@ -54,7 +56,8 @@ export default function MealStates() {
 
         {states.map((s) => {
           const file = mealState(s.st);
-          const open = lastOpenDay(s.series, m.thresholds.state_open_share);
+                    const open = lastOpenDay(s.series, m.thresholds.state_open_share)
+            ?? [...s.series].reverse().find((r) => r[2] > 0) ?? null;
           return (
             <section key={s.st} id={s.slug} className="px-6 md:px-12 py-10 border-b border-[#1c1c19]/30" aria-labelledby={`${s.slug}-heading`}>
               <div className="max-w-6xl mx-auto">
