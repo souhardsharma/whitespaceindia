@@ -16,6 +16,11 @@ services:
     buildFilter:
       ignoredPaths:
         - scripts/instruments/crosscheck_report.json
+        # Instrument 02 is static: nothing the backend answers reads these
+        # files. Its sitemap entries are picked up by the build Instrument
+        # 01's data commit starts on the same morning.
+        - public/data/instruments/meal-claims/**
+        - scripts/meal_claims/**
         - "**/*.md"
         - ".github/**"
     # 512 MB instance; `next start` peaked at 468 MB in testing, so the heap

@@ -1,7 +1,7 @@
 # Shared limits: what every domain and tool lives inside
 
-Every part of the site (CSR, Instrument 01, and every domain or tool added
-later) is served by one Cloudflare Pages project, one Render free service and
+Every part of the site (CSR, Instrument 01, Instrument 02, and every domain
+or tool added later) is served by one Cloudflare Pages project, one Render free service and
 one GitHub repository, all on free plans. When one tool runs into a limit, the
 nightly update stops for all of them. These are the limits, what already
 enforces each one, and what a new tool has to do.
@@ -25,8 +25,10 @@ enforces each one, and what a new tool has to do.
    `preview-<something>` only when you want a Pages preview URL; each push to
    it is one of the month's 500 builds.
 2. **Files.** Pack data into grouped files (by state, by id modulo N), not one
-   file per entity. About 10,400 files are used today; Instrument 01's
-   per-proposal view files alone are 9,376.
+   file per entity. About 10,600 files are used today; Instrument 01's
+   per-proposal view files alone are 9,376. Instrument 02 (Meal Claims Check)
+   adds about 290 pages and at most 64 school files a month, for the twelve
+   months it keeps.
 3. **Live features** (search, downloads, anything per request) go into this
    Next app under `app/api/`. `functions/api/[[path]].js` already proxies them
    to the one Render service. Never create a second Render service: there are
@@ -37,9 +39,15 @@ enforces each one, and what a new tool has to do.
 5. **Nightly data.** Commit once a night. Each commit to `main` is one Pages
    build and one Render deploy (~2 build minutes and up to 3 minutes of
    overlap). A data path the backend never reads goes in `render.yaml`
-   `buildFilter.ignoredPaths`, so it does not redeploy Render.
+   `buildFilter.ignoredPaths`, so it does not redeploy Render. Instrument
+   02 is the example: its nightly commit (`meal-claims-sync.yml`) is one Pages
+   build and no Render deploy.
 6. **Scheduled workflows** join a concurrency group and check out the branch
    head (as `instruments-sync.yml` does), so two nightly jobs never race a push.
+   A second nightly job is started by the first one's completion
+   (`workflow_run`), not by its own cron, with a gate that lets one run
+   through a day: GitHub's cron is hours late here, and the Worker's GitHub
+   allowance is spent on starting Instrument 01.
 7. **Polling GitHub** from scripts or agents: 150 seconds apart or more, never
    several at once.
 8. **Vercel** is redirect-only and deploys `main` alone (`vercel.json`
