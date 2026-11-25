@@ -31,6 +31,8 @@ const FILES: [string, string][] = [
   ["measures.json", "The label, definition, formula and source of every figure shown."],
   ["states.json", "One row per State: schools listed, reporting and filing enrolment, tables read, flags, and the daily series."],
   ["state/<code>.json", "One State: its daily series, every district with its blocks and flagged schools, and the days it was shut while some schools reported."],
+  ["history/<code>/<year>.json", "One State and one year: for each district, a row for every day its table was read. A row is the day, schools listed, schools that filed enrolment, enrolment filed, schools that reported and meals reported. The years each State has are listed in states.json as `history_years`."],
+  ["roster/<code>-<district>.json", "Every school read in one district. `schools` rows are the school's key (code and shift), its name, its cluster's code, the enrolment it filed (null when none) and the meals it reported (null when no report). `clusters` gives each cluster's name, block, the date its latest table is for and how many dates have been read."],
   ["flags/<yyyy-mm>.csv", "Every flag on a school-day of that month, standing or not. The columns are below."],
   ["flags/recent.json", "Flags first seen in the last nights, each with the figures it rests on. `seen` points into `stamps`, the list of builds."],
   ["schools/<yyyy-mm>/<bucket>.json", "For each flagged school: the month day by day, the enrolment filed for each month of the year, and its flags. The bucket is the school code modulo the `buckets` value in meta.json, two digits."],

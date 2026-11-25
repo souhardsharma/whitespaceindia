@@ -3,8 +3,9 @@ import StructuredData from "@/components/instruments/StructuredData";
 import { pageMeta, pageLd } from "@/lib/instruments/metadata";
 import { InstrumentFooter, InstrumentHeader } from "@/components/instruments/InstrumentChrome";
 import {
-  Badge, DayBars, FlagNotFinding, KindTag, SECTION_HEADING, SMALL_LABEL, Stat, TD, TH,
+  Badge, FlagNotFinding, KindTag, SECTION_HEADING, SMALL_LABEL, Spark, Stat, TD, TH,
 } from "@/components/instruments/meal/parts";
+import SeriesChart from "@/components/instruments/meal/SeriesChart";
 import {
   MEAL_BASE, MEAL_HOST, MEAL_OG, TEAL, count, dayLong, dayShort, districtPath, flagFigures,
   lastOpenDay, schoolPath, share, statePath, whenIST, type DayRow,
@@ -23,7 +24,7 @@ export const metadata = pageMeta({
 
 const INSTRUMENTS_TRAIL = { name: "Instruments", path: "/instruments" };
 
-/** Meals reported across every State, day by day, for the bars. */
+/** What every State's schools reported, day by day, for the chart. */
 function allStates(series: DayRow[][]): DayRow[] {
   const days = new Map<string, DayRow>();
   for (const rows of series) {
@@ -164,10 +165,12 @@ export default function MealClaimsCheck() {
               </p>
             </div>
             <div className="md:col-span-8">
-              <DayBars
+              <SeriesChart
                 series={series}
-                label={`Meals reported across all States on each of the last ${series.length} days read`}
-                height={140}
+                label={`Reports from schools across all States on each of the last ${series.length} days read`}
+                mealsLabel={M.meals.label}
+                shareLabel={M.reported_pct.label}
+                blanks={m.blank_ranges}
               />
             </div>
           </div>
@@ -185,12 +188,13 @@ export default function MealClaimsCheck() {
               {dayShort(m.day)}.
             </p>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] border-collapse">
+              <table className="w-full min-w-[860px] border-collapse">
                 <thead>
                   <tr className="border-b border-[#1c1c19]">
                     <th className={TH}>State or Union Territory</th>
                     <th className={`${TH} text-right`}>{M.schools.label}</th>
                     <th className={`${TH} text-right`}>{M.reported_pct.label}</th>
+                    <th className={TH}>Over the days read<span className="sr-only">: {M.reported_pct.label}</span></th>
                     <th className={`${TH} text-right`}>{M.enr_filed_pct.label}</th>
                     <th className={`${TH} text-right`}>{M.tables_read.label}</th>
                     <th className={`${TH} text-right`}>{M.schools_flagged.label}</th>
@@ -212,6 +216,7 @@ export default function MealClaimsCheck() {
                         {open && open[0] !== m.day ? <span className="opacity-60"> ({dayShort(open[0])})</span> : null}
                         {!open && s.series.length ? <span className="opacity-60"> (no working day in {count(s.series.length)} read)</span> : null}
                       </td>
+                      <td className={TD}><Spark series={s.series} label={M.reported_pct.label} /></td>
                       <td className={`${TD} text-right`}>{share(s.enr_filed, s.enr_schools) ?? "not read"}</td>
                       <td className={`${TD} text-right`}>{count(s.tables_read)}</td>
                       <td className={`${TD} text-right`}>{count(s.schools_flagged)}</td>

@@ -19,7 +19,7 @@ export const TEAL_DEEP = "#12444a";
 
 export const MEAL_BASE = "/instruments/meal-claims";
 export const MEAL_DATA = "/data/instruments/meal-claims";
-export const MEAL_OG = "/og/meal-claims-1.jpg";
+export const MEAL_OG = "/og/meal-claims-2.jpg";
 export const MEAL_HOST = "https://mdmhp.nic.in";
 
 export type FlagKind = "over" | "closed" | "spike";
@@ -97,6 +97,10 @@ export interface StateRow extends Tally {
   holidays_listed: number;
   holidays_read_at: string | null;
   series: DayRow[];
+  /** Years for which `history/<st>/<year>.json` holds district tables. */
+  history_years: number[];
+  clusters_read: number;
+  schools_read: number;
 }
 
 export interface FlaggedSchool {
@@ -134,6 +138,28 @@ export interface District extends Tally {
   series: DayRow[];
   blocks: BlockRow[];
   flagged: FlaggedSchool[];
+  clusters: number;
+  clusters_read: number;
+  schools_read: number;
+}
+
+/** `history/<st>/<year>.json`: every district table read in one year.
+ *  A row is [day, schools, schools that filed enrolment, enrolment filed,
+ *  schools that reported, meals]. */
+export interface HistoryFile {
+  st: string;
+  year: number;
+  districts: Record<string, [string, number, number | null, number | null, number, number][]>;
+}
+
+/** `roster/<st>-<dc>.json`: every school read in one district, as its
+ *  cluster's latest table showed it. */
+export interface RosterFile {
+  st: string;
+  dc: string;
+  clusters: Record<string, { name: string; block: string; day: string; days: number }>;
+  /** [school key, name, cluster code, enrolment filed, meals reported] */
+  schools: [string, string, string, number | null, number | null][];
 }
 
 export interface ClosedDay {
@@ -209,7 +235,17 @@ export interface MealMeta {
   csv_months: string[];
   list_days: number;
   blank_ranges: [string, string][];
+  history: {
+    state_first_day: string | null;
+    /** True once enough blank days older than it were read to call it the first. */
+    state_floor_reached: boolean;
+    state_days: number;
+    district_first_day: string | null;
+    district_tables: number;
+  };
   counts: Tally & {
+    clusters_read: number;
+    schools_read: number;
     states: number;
     schools: number;
     districts: number;
@@ -369,6 +405,10 @@ export function districtCode(st: string, dc: string): string {
 
 export function districtPath(st: string, dc: string): string {
   return `${MEAL_BASE}/district/${districtCode(st, dc)}`;
+}
+
+export function rosterPath(st: string, dc: string): string {
+  return `${MEAL_DATA}/roster/${st}-${dc}.json`;
 }
 
 export function schoolPath(k: string): string {

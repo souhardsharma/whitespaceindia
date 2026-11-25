@@ -4,8 +4,9 @@ import StructuredData from "@/components/instruments/StructuredData";
 import { pageMeta, pageLd } from "@/lib/instruments/metadata";
 import { InstrumentFooter, InstrumentHeader } from "@/components/instruments/InstrumentChrome";
 import {
-  DayBars, FlagNotFinding, SECTION_HEADING, SMALL_LABEL, Stat, TD, TH,
+  FlagNotFinding, SECTION_HEADING, SMALL_LABEL, Stat, TD, TH,
 } from "@/components/instruments/meal/parts";
+import SeriesChart from "@/components/instruments/meal/SeriesChart";
 import {
   MEAL_BASE, MEAL_OG, count, dayLong, dayShort, districtPath, lastOpenDay, monthLabel, share, statePath,
   whenIST,
@@ -39,7 +40,8 @@ export default async function MealState({ params }: Props) {
   const s = stateBySlug((await params).slug);
   if (!s) notFound();
   const M = mealMeasures();
-  const open = lastOpenDay(s.series, mealMeta().thresholds.state_open_share);
+  const meta = mealMeta();
+  const open = lastOpenDay(s.series, meta.thresholds.state_open_share);
   const file = mealState(s.st);
   const holidays = mealHolidays()[s.st];
   const path = statePath(s.slug);
@@ -110,7 +112,13 @@ export default async function MealState({ params }: Props) {
               </p>
             </div>
             <div className="md:col-span-8">
-              <DayBars series={file.series} height={130} label={`Meals reported in ${s.name} on each of the last ${file.series.length} days read`} />
+              <SeriesChart
+                series={file.series}
+                label={`Reports from schools in ${s.name} on each of the last ${file.series.length} days read`}
+                mealsLabel={M.meals.label}
+                shareLabel={M.reported_pct.label}
+                blanks={meta.blank_ranges}
+              />
             </div>
           </div>
         </section>
