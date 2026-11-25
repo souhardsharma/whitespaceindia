@@ -65,6 +65,11 @@ def bucket_of(code: str) -> str:
     return f"{int(code) % BUCKETS:02d}"
 
 
+def calibration() -> dict:
+    """The one-off measurement the thresholds were checked against, as committed."""
+    return json.loads((Path(__file__).resolve().parent / "calibration.json").read_text(encoding="utf-8"))
+
+
 def pct(part: int | None, whole: int | None) -> float | None:
     return None if part is None or not whole else round(part / whole * 100, 1)
 
@@ -213,6 +218,7 @@ def build(db, out: Path, generated_at: str) -> dict:
         "first_night": nights[0]["stamp"] if nights else None,
         "nights": len(nights),
         "thresholds": FL.THRESHOLDS,
+        "calibration": calibration(),
         "buckets": BUCKETS,
         "months": months[-MONTHS_KEPT:],
         "csv_months": months,

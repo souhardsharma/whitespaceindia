@@ -294,6 +294,27 @@ class Night:
                 return
             cluster_list(b)
 
+    def named(self, schools: list[tuple[str, str, str, str, str]]) -> None:
+        """Schools named on the command line: find each in its block's school
+        tables, then queue its month. For a school a reader reports, or a case
+        being re-checked; the nightly run names none."""
+        for st, dc, bc, code, shift in schools:
+            day = sample_day(self.db, st, self.yesterday) or self.yesterday
+            blocks = self.read(self.host.blocks, st, dc, day)
+            clusters = self.read(self.host.clusters, st, dc, bc, day)
+            if blocks is None or clusters is None:
+                continue
+            ST.put_blocks(self.db, st, dc, day, blocks, now_utc())
+            ST.put_clusters(self.db, st, dc, bc, day, clusters, now_utc())
+            for c in clusters:
+                rows = self.school_table(st, dc, bc, c["code"], day) or []
+                row = next((r for r in rows if r["code"] == code and r["shift"] == shift), None)
+                if row:
+                    self.follow_up(st, row, dc, bc, c["code"])
+                    break
+            else:
+                self.say(f"::warning::school {code} was not found in block {bc}")
+
     def sample(self, reserve: int) -> None:
         """School tables, most overdue and most testable clusters first."""
         today = self.yesterday + dt.timedelta(days=1)
@@ -389,7 +410,7 @@ class Night:
         old = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=ENROL_REREAD_DAYS)).isoformat()
         got = self.db.execute("select read_at from school_enrol where st=? and code=? and shift=? and year=?",
                               (st, code, shift, month["year"])).fetchone()
-        if (got is None or got["read_at"] < old) and self.host.can_send():
+        if place and (got is None or got["read_at"] < old) and self.host.can_send():
             enrol = self.read(self.host.school_enrolment, st, place["dc"], place["bc"], place["cc"], code, shift)
             if enrol is not None:
                 ST.put_enrolment(self.db, st, code, shift, enrol, now_utc())
@@ -431,7 +452,7 @@ def judge(db, st: str, code: str, shift: str, year: int, month: int, upto: dt.da
                    (json.dumps(basis, sort_keys=True), stamp, st, code, shift, row["day"], row["kind"]))
 
 
-def run(db, host: RD.Host, yesterday: dt.date, stamp: str, say=print) -> dict:
+def run(db, host: RD.Host, yesterday: dt.date, stamp: str, say=print, named=()) -> dict:
     """One night. Returns the row recorded for it."""
     night = Night(db, host, yesterday, stamp, say)
     outcome = "complete"
@@ -439,6 +460,8 @@ def run(db, host: RD.Host, yesterday: dt.date, stamp: str, say=print) -> dict:
         night.run_pass("states", night.states)
         night.run_pass("districts", night.districts)
         night.run_pass("holidays", night.holidays)
+        if named:
+            night.run_pass("named", lambda: night.named(list(named)))
         night.run_pass("history", night.history)
         night.run_pass("closed", night.closed)
         night.run_pass("hierarchy", night.hierarchy)
@@ -475,6 +498,8 @@ def main() -> int:
     ap.add_argument("--budget", type=int, help="requests tonight; default follows the ramp")
     ap.add_argument("--minutes", type=int, default=100, help="stop sending after this long")
     ap.add_argument("--day", type=dt.date.fromisoformat, help="read this day as yesterday")
+    ap.add_argument("--school", action="append", default=[], metavar="ST:DISTRICT:BLOCK:CODE:SHIFT",
+                    help="also read this school's month tonight (repeatable)")
     args = ap.parse_args()
 
     db = ST.connect(args.store)
@@ -482,7 +507,7 @@ def main() -> int:
     yesterday = args.day or yesterday_ist()
     print(f"reading for {yesterday}, budget {budget} requests")
     host = RD.Host(budget=budget, deadline=time.time() + args.minutes * 60)
-    row = run(db, host, yesterday, now_utc())
+    row = run(db, host, yesterday, now_utc(), named=[tuple(v.split(":")) for v in args.school])
     print(json.dumps(row, indent=1))
     # A refusal is a result, not a crash: the store keeps what was read, the
     # pages are rebuilt from it, and the next night asks for half as much.
