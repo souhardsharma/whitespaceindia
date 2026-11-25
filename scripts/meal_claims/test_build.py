@@ -20,7 +20,7 @@ import build_data as BD  # noqa: E402
 import check_published as CP  # noqa: E402
 import store as ST  # noqa: E402
 import sync as SY  # noqa: E402
-from test_sync import PretendHost, YESTERDAY, quiet  # noqa: E402
+from test_sync import PretendFinder, PretendHost, YESTERDAY, quiet  # noqa: E402
 
 PASS = FAIL = 0
 
@@ -39,7 +39,8 @@ def built() -> tuple:
     folder = tempfile.TemporaryDirectory()
     base = Path(folder.name)
     db = ST.connect(base / "store.sqlite")
-    SY.run(db, PretendHost(budget=300), YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet)
+    SY.run(db, PretendHost(budget=300), YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet,
+           finder=PretendFinder())
     meta = BD.build(db, base / "out", "2026-11-20T02:00:00+00:00")
     db.close()
     return folder, base / "out", meta
@@ -58,6 +59,9 @@ def test_a_correct_build_passes() -> None:
     check("passes the contract", failures == [], failures[:5])
     check("counts the 17 days above enrolment", meta["counts"]["flag_over"] == 17, meta["counts"])
     check("one school flagged", meta["counts"]["schools_flagged"] == 1)
+    school = json.loads((out / "schools" / "2026-11" / f"{BD.bucket_of('1001')}.json").read_text(encoding="utf-8"))["1001-1"]
+    check("the flagged school carries its UDISE+ record",
+          school["udise"]["record"]["textbooks_primary"] == 19 and meta["counts"]["udise_found"] == 1, school["udise"])
     check("three school-days could be tested", meta["counts"]["school_days_tested"] == 3)
     state = json.loads((out / "state" / "16.json").read_text(encoding="utf-8"))
     district = state["districts"][0]
@@ -67,6 +71,14 @@ def test_a_correct_build_passes() -> None:
     school = json.loads(bucket.read_text(encoding="utf-8"))["1001-1"]
     check("the school's month is published beside its flags", school["meals"][0] == 70 and len(school["flags"]) == 17)
     check("and its enrolment history", school["enrolment"][10] == 23)
+    roster = json.loads((out / "roster" / "16-1605.json").read_text(encoding="utf-8"))
+    check("every school read is in the district's roster",
+          len(roster["schools"]) == 4 == meta["counts"]["schools_read"], len(roster["schools"]))
+    check("with what its cluster's latest table showed",
+          ["1003-1", "Unfiled School", "1605070006", None, 90] in roster["schools"], roster["schools"])
+    history = json.loads((out / "history" / "16" / "2026.json").read_text(encoding="utf-8"))
+    check("the district's days are in the year's history file",
+          history["districts"]["1605"][-1][:2] == ["2026-11-19", 4], history["districts"]["1605"][-1])
     csv_text = (out / "flags" / "2026-11.csv").read_text(encoding="utf-8")
     check("the CSV lists every flag", csv_text.count("\n") == 18, csv_text.count("\n"))
     folder.cleanup()
@@ -96,6 +108,14 @@ def test_damage_is_noticed() -> None:
         v["1001-1"]["name"] = "Over Jr. Madrassa 9876543210"
     damaged("a phone number in a school's name", bucket, phone_in_name)
 
+    def person_in_udise(v):
+        v["1001-1"]["udise"]["record"]["head"] = "A PERSON"
+    damaged("a field of the UDISE+ answer the instrument does not keep", bucket, person_in_udise)
+
+    def phone_in_udise(v):
+        v["1001-1"]["udise"]["record"]["name"] += " 9876543210"
+    damaged("a phone number in the UDISE+ name", bucket, phone_in_udise)
+
     def count_off(v):
         v["counts"]["flag_over"] += 1
     damaged("a count that disagrees with the rows", "meta.json", count_off)
@@ -115,6 +135,18 @@ def test_damage_is_noticed() -> None:
     def state_total_off(v):
         v["states"][0]["flag_over"] += 3
     damaged("a State total its districts do not sum to", "states.json", state_total_off)
+
+    def school_dropped(v):
+        v["schools"].pop()
+    damaged("a roster shorter than the count on the page", "roster/16-1605.json", school_dropped)
+
+    def history_edited(v):
+        v["districts"]["1605"][-1][5] += 1
+    damaged("a history whose last row is not the district's latest day", "history/16/2026.json", history_edited)
+
+    def history_out_of_order(v):
+        v["districts"]["1605"].reverse()
+    damaged("a history out of date order", "history/16/2026.json", history_out_of_order)
 
     def stale_flag_listed(v):
         v["rows"][0]["standing"] = False

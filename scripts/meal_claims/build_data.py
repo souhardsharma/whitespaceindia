@@ -127,6 +127,48 @@ def tally(rows: list[dict]) -> dict:
     }
 
 
+def read_tables(db) -> dict[tuple[str, str], dict]:
+    """(st, cc) -> the latest school table read for the cluster, and how many
+    dates it has been read for."""
+    # With max() SQLite takes the other columns from the row that holds it.
+    return {(r["st"], r["cc"]): {"day": r["day"], "days": r["n"], "rows": json.loads(r["rows"])}
+            for r in db.execute("select st, cc, max(day) day, count(*) n, rows from school_day group by st, cc")}
+
+
+def write_history(db, out: Path, st: str) -> list[int]:
+    """One file per State and year: every district table read, day by day.
+    A year that has ended is written the same every night."""
+    years: dict[int, dict[str, list]] = {}
+    for r in db.execute("select dc, day, schools, enr_filed, enrolled, reported, meals from district_day "
+                        "where st=? order by dc, day", (st,)):
+        years.setdefault(int(r["day"][:4]), {}).setdefault(r["dc"], []).append(
+            [r["day"], r["schools"], r["enr_filed"], r["enrolled"], r["reported"], r["meals"]])
+    for year, districts in years.items():
+        write_json(out / "history" / st / f"{year}.json", {"st": st, "year": year, "districts": districts})
+    return sorted(years)
+
+
+def write_roster(db, out: Path, st: str, dc: str, tables: dict) -> tuple[int, int]:
+    """Every school read in one district, as its cluster's latest table showed
+    it. Returns (clusters read, schools read)."""
+    clusters = {}
+    for c in db.execute("select c.cc, c.name, b.name block from cluster c left join block b "
+                        "on b.st=c.st and b.bc=c.bc where c.st=? and c.dc=?", (st, dc)):
+        table = tables.get((st, c["cc"]))
+        if table:
+            clusters[c["cc"]] = {"name": tidy(c["name"] or ""), "block": tidy(c["block"] or ""),
+                                 "day": table["day"], "days": table["days"]}
+    names = {(r["code"], r["shift"]): r["name"] for r in db.execute(
+        "select code, shift, name from roster where st=? and dc=?", (st, dc))}
+    schools = [[school_key(code, shift), names.get((code, shift), ""), cc, enrolled, meals]
+               for cc in clusters for code, shift, enrolled, meals in tables[(st, cc)]["rows"]]
+    if schools:
+        write_json(out / "roster" / f"{st}-{dc}.json", {
+            "st": st, "dc": dc, "clusters": clusters,
+            "schools": sorted(schools, key=lambda s: (s[1], s[0]))})
+    return len(clusters), len(schools)
+
+
 def write_json(path: Path, value) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True) + "\n",
@@ -154,6 +196,7 @@ def build(db, out: Path, generated_at: str) -> dict:
         "(select count(*) from cluster c where c.st=d.st) clusters, count(*) districts "
         "from district d group by st")}
 
+    read = read_tables(db)
     states = []
     for st, (name, _) in RD.STATES.items():
         day_row = db.execute("select * from state_day where st=? order by day desc limit 1", (st,)).fetchone()
@@ -188,9 +231,11 @@ def build(db, out: Path, generated_at: str) -> dict:
                                           (st,)).fetchone()[0],
             "holidays_read_at": hol["read_at"] if hol else None,
             "series": series[-STATE_SERIES_DAYS:],
+            "history_years": write_history(db, out, st),
         }
+        row["clusters_read"], row["schools_read"] = write_state(
+            db, out, row, series, by_state.get(st, []), latest_day, read)
         states.append(row)
-        write_state(db, out, row, series, by_state.get(st, []), latest_day)
 
     months = sorted({f["day"][:7] for f in flags})
     write_schools(db, out, flags, months[-MONTHS_KEPT:])
@@ -224,6 +269,7 @@ def build(db, out: Path, generated_at: str) -> dict:
         "csv_months": months,
         "list_days": LIST_DAYS,
         "blank_ranges": blank_ranges(db),
+        "history": history_note(db),
         "counts": {
             "states": len(states),
             "schools": sum(s["schools"] or 0 for s in states),
@@ -231,8 +277,12 @@ def build(db, out: Path, generated_at: str) -> dict:
             "blocks": sum(s["blocks"] for s in states),
             "clusters": sum(s["clusters"] for s in states),
             "tables_read": sum(s["tables_read"] for s in states),
+            "clusters_read": sum(s["clusters_read"] for s in states),
+            "schools_read": sum(s["schools_read"] for s in states),
             "school_days_tested": sum(s["school_days_tested"] for s in states),
             "over_in_tables": sum(s["over_in_tables"] for s in states),
+            "udise_asked": db.execute("select count(*) from udise").fetchone()[0],
+            "udise_found": db.execute("select count(*) from udise where record is not null").fetchone()[0],
             **tally(flags),
             "flags_no_longer_standing": sum(1 for f in flags if not f["standing"]),
         },
@@ -258,7 +308,24 @@ def build(db, out: Path, generated_at: str) -> dict:
     return meta
 
 
-def write_state(db, out: Path, state: dict, series: list, flags: list[dict], latest: dt.date) -> None:
+def history_note(db) -> dict:
+    """How far back the two dated tables have been read, and whether the
+    all-States table has been followed to the first day it holds."""
+    floor = db.execute("select value from info where key='history_floor'").fetchone()
+    return {
+        "state_first_day": db.execute("select min(day) from state_day where reported>0").fetchone()[0],
+        "state_floor_reached": bool(floor),
+        "state_days": db.execute("select count(distinct day) from state_day where reported>0").fetchone()[0],
+        "district_first_day": db.execute("select min(day) from district_day").fetchone()[0],
+        "district_tables": db.execute(
+            "select count(*) from table_read where kind='districts' and rows>0").fetchone()[0],
+    }
+
+
+def write_state(db, out: Path, state: dict, series: list, flags: list[dict], latest: dt.date,
+                read: dict) -> tuple[int, int]:
+    """Writes the State's file and each district's roster. Returns (clusters
+    read, schools read) across the State."""
     st = state["st"]
     since = ST.iso(latest - dt.timedelta(days=LIST_DAYS))
     by_district: dict[str, list[dict]] = {}
@@ -278,6 +345,7 @@ def write_state(db, out: Path, state: dict, series: list, flags: list[dict], lat
                    "enr_filed": b["enr_filed"], "enrolled": b["enrolled"],
                    "reported": b["reported"], "meals": b["meals"], "day": b["day"]}
                   for b in db.execute("select * from block where st=? and dc=? order by name", (st, d["dc"]))]
+        clusters_read, schools_read = write_roster(db, out, st, d["dc"], read)
         mine = by_district.get(d["dc"], [])
         schools: dict[str, dict] = {}
         for f in mine:
@@ -296,6 +364,9 @@ def write_state(db, out: Path, state: dict, series: list, flags: list[dict], lat
             "enrolled": day["enrolled"] if day else None, "reported": day["reported"] if day else None,
             "meals": day["meals"] if day else None,
             "series": recent, "blocks": blocks,
+            "clusters": db.execute("select count(*) from cluster where st=? and dc=?",
+                                   (st, d["dc"])).fetchone()[0],
+            "clusters_read": clusters_read, "schools_read": schools_read,
             "tables_read": tables.get(d["dc"], {}).get("tables_read", 0),
             "school_days_tested": tables.get(d["dc"], {}).get("school_days_tested") or 0,
             "over_in_tables": tables.get(d["dc"], {}).get("over_in_tables") or 0,
@@ -307,6 +378,7 @@ def write_state(db, out: Path, state: dict, series: list, flags: list[dict], lat
     write_json(out / "state" / f"{st}.json", {
         "st": st, "name": state["name"], "slug": state["slug"], "series": series,
         "districts": districts, "closed_days": closed})
+    return sum(d["clusters_read"] for d in districts), sum(d["schools_read"] for d in districts)
 
 
 def write_schools(db, out: Path, flags: list[dict], months: list[str]) -> None:
@@ -331,6 +403,7 @@ def write_schools(db, out: Path, flags: list[dict], months: list[str]) -> None:
                 "meals_read_at": held["read_at"] if held else None,
                 "enrolment": json.loads(enrol["months"]) if enrol else None,
                 "enrolment_read_at": enrol["read_at"] if enrol else None,
+                "udise": ST.udise(db, f["st"], f["code"]),
                 "flags": []}
         school["flags"].append(public_flag(f))
     for (month, bucket), schools in files.items():

@@ -10,7 +10,9 @@ real host, which is the thing being protected. Offline, no network.
 from __future__ import annotations
 
 import datetime as dt
+import json
 import sys
+import urllib.error
 import tempfile
 from pathlib import Path
 
@@ -20,6 +22,7 @@ import flags as FL  # noqa: E402
 import reader as RD  # noqa: E402
 import store as ST  # noqa: E402
 import sync as SY  # noqa: E402
+import udise as UD  # noqa: E402
 
 PASS = FAIL = 0
 YESTERDAY = dt.date(2026, 11, 19)   # a Thursday
@@ -116,6 +119,118 @@ class PretendHost:
         return [{"date": "2026-11-04", "reason": "Deepawali"}]
 
 
+CARD = {"udiseschCode": "00000001001", "yearDesc": "2025-26", "schoolName": "OVER JR. MADRASSA",
+        "schCategoryDesc": "2-Primary with Upper Primary", "schTypeDesc": "3-Co-educational",
+        "schMgmtStateDesc": "Madarsa Recognized (by Wakf board/Madarsa Board)",
+        "schMgmtNationalDesc": "Madarsa", "schLocDesc": "1-Rural", "schStatusName": "Operational",
+        "lowClass": 1, "highClass": 8, "ftbPr": 19, "ftbUpr": 6,
+        # what the answer also carries and the instrument must not keep
+        "totalTeacher": 4, "headMasterName": "A PERSON", "mobile": "9876543210", "email": "x@y.in"}
+
+
+class PretendFinder:
+    """UDISE+ as the run sees it: a record for school 1001, none for others."""
+
+    def __init__(self, budget: int = 50, refuse: bool = False, next_year: bool = False):
+        self.budget, self.sent, self.refuse, self.next_year = budget, 0, refuse, next_year
+        self.asked: list[tuple[str, int]] = []
+
+    def report_card(self, code, year_id):
+        if self.sent >= self.budget:
+            raise RD.OutOfBudget()
+        self.sent += 1
+        if self.refuse:
+            raise RD.Refused("UDISE+ answered 403")
+        self.asked.append((code, year_id))
+        if code != "1001" or (year_id > UD.FIRST_YEAR_ID and not self.next_year):
+            return None
+        card = dict(CARD, yearDesc="2026-27") if year_id > UD.FIRST_YEAR_ID else CARD
+        return UD.extract(json.dumps({"status": True, "data": card}), code)
+
+
+class FakeAnswer:
+    def __init__(self, body: str):
+        self.body = body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_a):
+        return False
+
+    def read(self) -> bytes:
+        return self.body.encode()
+
+
+class FakeOpener:
+    def __init__(self, answers: list):
+        self.answers, self.urls = list(answers), []
+
+    def open(self, req, timeout=None):
+        self.urls.append(req.full_url)
+        answer = self.answers.pop(0)
+        if isinstance(answer, Exception):
+            raise answer
+        return FakeAnswer(answer)
+
+
+def expect(name: str, error, fn) -> None:
+    try:
+        fn()
+        check(name, False, "nothing was raised")
+    except error:
+        check(name, True)
+
+
+def test_the_second_source_keeps_only_what_it_may() -> None:
+    print("UDISE+")
+    record = UD.extract(json.dumps({"data": CARD}), "1001")
+    check("the kept fields and no others", tuple(record) == UD.FIELDS, sorted(record))
+    check("no person, phone or address survives",
+          not any(w in json.dumps(record) for w in ("PERSON", "9876543210", "x@y.in")))
+    check("a coded label loses its number", record["type"] == "Co-educational" and record["location"] == "Rural")
+    check("counts are numbers", record["textbooks_primary"] == 19 and record["high_class"] == 8)
+    check("the year is kept whole", record["year"] == "2025-26", record["year"])
+    check("no school under the code is an answer, not an error",
+          UD.extract(json.dumps({"data": None}), "1001") is None)
+    expect("another school's record is refused", RD.Unreadable,
+           lambda: UD.extract(json.dumps({"data": dict(CARD, udiseschCode="16051100120")}), "1001"))
+    check("a ten-digit code is written as eleven", UD.udise_code("2010100101") == "02010100101")
+
+    opener = FakeOpener([json.dumps({"data": CARD}), urllib.error.HTTPError("u", 403, "Forbidden", {}, None)])
+    waits: list[float] = []
+    finder = UD.Finder(budget=3, opener=opener, sleep=waits.append, clock=lambda: 100.0)
+    finder.report_card("1001", 12)
+    check("one path, with the code and the year",
+          opener.urls == [f"{UD.ORIGIN}{UD.PATH}?udiseSchCode=00000001001&yearId=12"], opener.urls)
+    expect("a 403 is a refusal", RD.Refused, lambda: finder.report_card("1001", 12))
+    check("the second request waited its turn", waits == [UD.PACE_S], waits)
+    expect("nothing is sent past the budget", RD.OutOfBudget,
+           lambda: UD.Finder(budget=0, opener=FakeOpener([])).report_card("1001", 12))
+
+    folder, db = fresh_store()
+    finder = PretendFinder()
+    row = SY.run(db, PretendHost(budget=300), YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet, finder=finder)
+    held = ST.udise(db, "16", "1001")
+    check("the flagged school's record is stored", held and held["record"]["name"] == "OVER JR. MADRASSA", held)
+    check("a school with no flag is not asked", {c for c, _ in finder.asked} == {"1001"}, finder.asked)
+    check("the night notes what it asked",
+          row["notes"]["udise"]["read"] == 1 and row["outcome"] == "complete", row["notes"])
+    again = PretendFinder()
+    SY.run(db, PretendHost(budget=300), YESTERDAY, "2026-11-21T01:00:00+00:00", say=quiet, finder=again)
+    check("a record held is not asked for again within its term", again.asked == [], again.asked)
+    later = PretendFinder(next_year=True)
+    SY.run(db, PretendHost(budget=300), YESTERDAY, "2027-06-21T01:00:00+00:00", say=quiet, finder=later)
+    check("a new academic year is taken up when UDISE+ answers for it",
+          ST.udise(db, "16", "1001")["record"]["year"] == "2026-27", later.asked)
+    refused = PretendFinder(refuse=True)
+    row = SY.run(db, PretendHost(budget=300), YESTERDAY, "2028-01-21T01:00:00+00:00", say=quiet, finder=refused)
+    check("a refusal there stops it after one request and leaves the night whole",
+          refused.sent == 1 and row["outcome"] == "complete" and "refused" in row["notes"]["udise"], row["notes"])
+    db.close()
+    folder.cleanup()
+
+
 def fresh_store() -> tuple:
     folder = tempfile.TemporaryDirectory()
     return folder, ST.connect(Path(folder.name) / "store.sqlite")
@@ -134,7 +249,10 @@ def test_budget_rises_slowly_and_falls_fast() -> None:
     check("the first night starts small", SY.next_budget([]) == SY.BUDGET_START)
     check("one step up after a clean night",
           SY.next_budget([night_row(300, 300)]) == 300 + SY.BUDGET_STEP)
-    check("never past the cap", SY.next_budget([night_row(1000, 1000)]) == SY.BUDGET_CAP)
+    check("by half once that is more than a step",
+          SY.next_budget([night_row(1000, 1000)]) == 1500)
+    check("never past the cap",
+          SY.next_budget([night_row(SY.BUDGET_CAP - 10, SY.BUDGET_CAP - 10)]) == SY.BUDGET_CAP)
     check("halved after a refusal",
           SY.next_budget([night_row(600, 80, outcome="refused")]) == 300)
     check("halved when attempts fail",
@@ -155,7 +273,8 @@ def test_budget_rises_slowly_and_falls_fast() -> None:
     check("a whole night ends the count",
           SY.faulty_streak([night_row(300, 9, outcome="refused"), night_row(150, 150)]) == 0)
     check("a night that sent nothing teaches nothing",
-          SY.next_budget([night_row(450, 450), night_row(600, 0, outcome="partial")]) == 600)
+          SY.next_budget([night_row(450, 450), night_row(600, 0, outcome="partial")])
+          == SY.next_budget([night_row(450, 450)]))
 
 
 def test_a_night_stays_inside_its_budget() -> None:
@@ -207,6 +326,78 @@ def test_cluster_lists_do_not_wait_for_every_district() -> None:
     check("and cluster lists were read all the same", host.asked.count("clusters") >= 5,
           host.asked.count("clusters"))
     check("so the sample had clusters to open", host.asked.count("schools") >= 5, host.asked.count("schools"))
+    db.close()
+    folder.cleanup()
+
+
+class ShortRecord(PretendHost):
+    """A host whose record begins on 1 October 2026: nothing before it."""
+
+    BEGINS = dt.date(2026, 10, 1)
+
+    def state_table(self, day):
+        if day < self.BEGINS:
+            self._count("states", 2)
+            raise RD.Empty("the all-States table came back empty twice")
+        return super().state_table(day)
+
+
+def test_history_is_read_to_where_the_record_begins() -> None:
+    print("history")
+    folder, db = fresh_store()
+    SY.HISTORY_ENDS_AFTER_BLANK_DAYS, kept = 10, SY.HISTORY_ENDS_AFTER_BLANK_DAYS
+    try:
+        for night in range(1, 4):
+            host = ShortRecord(budget=3000)
+            SY.run(db, host, YESTERDAY, f"2026-11-2{night}T01:00:00+00:00", say=quiet)
+    finally:
+        SY.HISTORY_ENDS_AFTER_BLANK_DAYS = kept
+    first = db.execute("select min(day) from state_day where reported>0").fetchone()[0]
+    check("the oldest day with a report is the record's first", first == "2026-10-01", first)
+    floor = db.execute("select value from info where key='history_floor'").fetchone()
+    check("and it is recorded as the floor", floor and floor["value"] == "2026-10-01", floor and floor["value"])
+    blank = db.execute("select count(*) from table_read where kind='states' and rows=0").fetchone()[0]
+    check("ten blank days older than it were asked, once", blank == 10, blank)
+    check("the last night asked for no earlier date",
+          host.asked.count("states") == 3, host.asked.count("states"))
+    days = db.execute("select count(*) from table_read where kind='districts' and st='16'").fetchone()[0]
+    open_days = db.execute("select count(*) from state_day where st='16' and reported>0").fetchone()[0]
+    check("the district table is held for every day the State reported",
+          days >= open_days - 1 and open_days > 30, (days, open_days))
+    check("and no district table was asked for a day before the record",
+          db.execute("select count(*) from table_read where kind='districts' and day<'2026-10-01'").fetchone()[0] == 0)
+    db.close()
+    folder.cleanup()
+
+
+def test_every_school_row_read_is_kept() -> None:
+    print("school rows")
+    folder, db = fresh_store()
+    SY.run(db, PretendHost(budget=300), YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet)
+    check("four schools are on the roster",
+          db.execute("select count(*) from roster").fetchone()[0] == 4)
+    rows = db.execute("select rows from school_day where cc='1605070006'").fetchone()
+    check("an unfiled enrolment is kept as none, not as zero",
+          rows and '["1003","1",null,90]' in rows["rows"], rows and rows["rows"])
+    db.close()
+    folder.cleanup()
+
+
+def test_an_older_store_is_brought_forward() -> None:
+    print("upgrade")
+    folder, db = fresh_store()
+    ST.put_state_day(db, YESTERDAY, [{"st": "16", "schools": 4, "reported": 4, "meals": 300}], "r")
+    ST.put_districts(db, "16", YESTERDAY, [{"code": "1605", "name": "SEPAHIJALA", "schools": 4,
+                                            "enr_filed": 3, "enrolled": 120, "reported": 4, "meals": 300}])
+    db.execute("update info set value='1' where key='schema'")
+    db.commit()
+    path = Path(db.execute("pragma database_list").fetchone()[2])
+    db.close()
+    db = ST.connect(path)
+    check("the store now reads as the current version",
+          db.execute("select value from info where key='schema'").fetchone()[0] == str(ST.SCHEMA_VERSION))
+    check("tables read before are in the ledger",
+          ST.days_read(db, "states") == {ST.iso(YESTERDAY)} and ST.days_read(db, "districts", "16") == {ST.iso(YESTERDAY)})
     db.close()
     folder.cleanup()
 
@@ -297,11 +488,14 @@ def test_store_round_trip() -> None:
 def main() -> int:
     for fn in (test_budget_rises_slowly_and_falls_fast,
                test_a_night_stays_inside_its_budget, test_cluster_lists_do_not_wait_for_every_district,
+               test_history_is_read_to_where_the_record_begins,
+               test_every_school_row_read_is_kept, test_an_older_store_is_brought_forward,
                test_a_refusal_ends_the_run_and_keeps_what_was_read,
                test_a_shut_day_is_looked_into,
                test_a_corrected_figure_unsettles_its_flag,
                test_a_named_school_is_read,
-               test_store_round_trip):
+               test_store_round_trip,
+               test_the_second_source_keeps_only_what_it_may):
         fn()
     print()
     if FAIL:
