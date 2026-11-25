@@ -23,6 +23,23 @@
 # answers. Nothing here goes round a refusal, and nothing is read from
 # anywhere but this runner.
 #
+# THE SECOND SOURCE. After the meal system is read, each flagged school is
+# looked up in UDISE+ (kys.udiseplus.gov.in), at most 300 schools a night,
+# for the classes it teaches, its kind and its free-textbook counts, and
+# asked again after 120 days while its flag stands. A refusal there ends
+# that pass and leaves the night's meal data whole.
+#
+# THE NATIONAL SYSTEM. Before either, the Ministry's own daily system
+# (pmposhan-ams.education.gov.in) is read for all 36 States and UTs and
+# their districts: yesterday first, then the earlier days its date box still
+# offers. It closes every connection from outside India, and this runner is
+# outside India, so the job first builds a pool of verified Indian routes
+# (scripts/education/refresh_pool.py) and reads through one of them at a
+# time, moving to another when a route dies. Every request is HTTPS with the
+# certificate verified, so a route cannot read or change an answer. These
+# steps may fail without stopping the night: what they did not read is
+# planned again tomorrow.
+#
 # WHEN IT RUNS. GitHub's cron arrives hours late on this repository or not at
 # all, so the run is started by the completion of Instrument 01's sync, which
 # the keep-warm Worker dispatches at 07:00 IST; the schedule below is the
@@ -98,7 +115,7 @@ jobs:
     # day is read rather than lost.
     if: ${{ !cancelled() && needs.gate.outputs.go != 'false' }}
     runs-on: ubuntu-26.04
-    timeout-minutes: 300
+    timeout-minutes: 345
     permissions:
       contents: write
 
@@ -109,6 +126,7 @@ jobs:
       STORE_RELEASE: meal-claims-store
       STORE_ASSET: store.sqlite.gz
       PUBLISHED: public/data/instruments/meal-claims
+      EDUCATION_CACHE_DIR: ${{ github.workspace }}/.education-cache
       # Whether this run may publish and replace the store. A run dispatched
       # from a feature branch is how a change here is proven: it reads, builds
       # and checks everything, and leaves the result as an artifact.
@@ -130,6 +148,7 @@ jobs:
         # GATING, before anything is asked of the source. The pipeline is
         # standard library only, so there is nothing to install. No network.
         run: |
+          python -I -X utf8 scripts/meal_claims/test_ams.py
           python -I -X utf8 scripts/meal_claims/test_flags.py
           python -I -X utf8 scripts/meal_claims/test_sync.py
           python -I -X utf8 scripts/meal_claims/test_build.py
@@ -154,6 +173,40 @@ jobs:
           print(f"store restored: {nights} runs recorded")
           EOF
           rm "$PACKED"
+
+      - name: Restore the route pool
+        # Last night's verified routes are re-checked first, which finds a
+        # working pool sooner than starting from the public lists. The run id
+        # is in the key, so the newest is always found and a new one saved.
+        continue-on-error: true
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .education-cache
+          key: meal-routes-${{ github.run_id }}
+          restore-keys: |
+            meal-routes-
+
+      - name: Build the pool of Indian routes
+        # Bounded: the refresher leaves at its time limit whatever it found.
+        continue-on-error: true
+        timeout-minutes: 16
+        run: |
+          pip install --require-hashes -r requirements.txt
+          python -I -X utf8 scripts/education/refresh_pool.py ams --workers 3000 --max-minutes 10 --target 200 || true
+          echo "pool: $(wc -l < "$EDUCATION_CACHE_DIR/pools/ams.txt" 2>/dev/null || echo 0) routes"
+
+      - name: Read the national system
+        continue-on-error: true
+        timeout-minutes: 45
+        run: python -I -X utf8 scripts/meal_claims/ams_sync.py --store "$STORE" --minutes 35
+
+      - name: Save the route pool
+        if: always()
+        continue-on-error: true
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .education-cache
+          key: meal-routes-${{ github.run_id }}
 
       - name: Read the source
         env:
