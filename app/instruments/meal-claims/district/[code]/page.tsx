@@ -6,11 +6,13 @@ import { InstrumentFooter, InstrumentHeader } from "@/components/instruments/Ins
 import {
   DayBars, FlagNotFinding, KindTag, SECTION_HEADING, SMALL_LABEL, Stat, TD, TH,
 } from "@/components/instruments/meal/parts";
+import Roster from "@/components/instruments/meal/Roster";
+import SeriesChart from "@/components/instruments/meal/SeriesChart";
 import {
   MEAL_BASE, MEAL_OG, count, dayLong, dayShort, districtCode, districtPath, flagFigures,
   schoolPath, share, statePath,
 } from "@/lib/instruments/meal";
-import { allDistricts, mealMeasures } from "@/lib/instruments/mealServer";
+import { allDistricts, districtSeries, mealMeasures, mealMeta } from "@/lib/instruments/mealServer";
 
 /**
  * One district: what its schools reported, block by block, and every school
@@ -57,6 +59,7 @@ export default async function MealDistrict({ params }: Props) {
   const M = mealMeasures();
   const path = districtPath(s.st, d.dc);
   const flags = d.flag_over + d.flag_closed + d.flag_spike;
+  const series = districtSeries(s, d.dc);
 
   return (
     <div className="min-h-screen bg-[#fcf9f4] text-[#1c1c19] flex flex-col">
@@ -170,7 +173,7 @@ export default async function MealDistrict({ params }: Props) {
           </div>
         </section>
 
-        {d.series.length > 1 ? (
+        {series.length > 1 ? (
           <section className="px-6 md:px-12 py-12 border-b border-[#1c1c19]" aria-labelledby="days-heading">
             <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
               <div className="md:col-span-4">
@@ -181,8 +184,41 @@ export default async function MealDistrict({ params }: Props) {
                 </p>
               </div>
               <div className="md:col-span-8">
-                <DayBars series={d.series} height={120} label={`Meals reported in ${d.name} on each of the last ${d.series.length} days read`} />
+                {series.length >= 20 ? (
+                  <SeriesChart
+                    series={series}
+                    label={`Reports from schools in ${d.name} on each of the ${series.length} days read`}
+                    mealsLabel={M.meals.label}
+                    shareLabel={M.reported_pct.label}
+                    blanks={mealMeta().blank_ranges}
+                  />
+                ) : (
+                  <DayBars series={series} height={120} label={`Meals reported in ${d.name} on each of the ${series.length} days read`} />
+                )}
               </div>
+            </div>
+          </section>
+        ) : null}
+
+        {d.schools_read ? (
+          <section className="px-6 md:px-12 py-12 border-b border-[#1c1c19]" aria-labelledby="schools-heading">
+            <div className="max-w-6xl mx-auto">
+              <h2 id="schools-heading" className={`${SECTION_HEADING} mb-3`}>Schools read</h2>
+              <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-6 max-w-3xl">
+                {count(d.schools_read)} schools in {count(d.clusters_read)} of
+                the district&rsquo;s {count(d.clusters)} clusters, each with
+                the enrolment it had filed and the meals it reported on the
+                date its cluster was last read. The other clusters have not
+                been read yet. A school with a flag opens its own page.
+              </p>
+              <Roster
+                st={s.st}
+                dc={d.dc}
+                total={d.schools_read}
+                flagged={d.flagged.map((f) => f.k)}
+                enrolledLabel={M.enrolled.label}
+                mealsLabel={M.meals.label}
+              />
             </div>
           </section>
         ) : null}
