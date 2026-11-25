@@ -28,7 +28,7 @@ function cardsNamedIn(file: string): string[] {
 
 test("every share card named in app/ or lib/ exists in public/og", () => {
   const named = new Set([...sources("app"), ...sources("lib")].flatMap(cardsNamedIn));
-  assert.ok(named.size >= 7, `found only ${named.size} cards; is the pattern stale?`);
+  assert.ok(named.size >= 8, `found only ${named.size} cards; is the pattern stale?`);
   const missing = Array.from(named).filter((url) => !existsSync(join("public", url)));
   assert.deepEqual(missing, []);
 });
@@ -39,6 +39,7 @@ test("each section previews with its own card", () => {
     "app/csr/layout.tsx": "/og/csr-index-4.jpg",
     "app/instruments/layout.tsx": "/og/instruments-5.jpg",
     "lib/instruments/metadata.ts": "/og/consent-4.jpg",
+    "lib/instruments/meal.ts": "/og/meal-claims-1.jpg",
     "app/health/layout.tsx": "/og/health-4.jpg",
     "app/energy/layout.tsx": "/og/energy-4.jpg",
     "app/education/layout.tsx": "/og/education-4.jpg",

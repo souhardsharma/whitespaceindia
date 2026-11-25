@@ -85,6 +85,7 @@ class Card:
 
 CLAY = (189, 64, 44)
 PLUM = (122, 59, 107)  # Instrument 01 only
+TEAL = (29, 92, 99)  # Instrument 02 only
 GRAPHITE = (61, 58, 52)  # the shelf: its own ink, so no instrument owns it
 CARDS = [
     Card("whitespace-india-4.jpg", "brand.webp", (140, 140, 1200, 1200), CLAY,
@@ -103,6 +104,11 @@ CARDS = [
          "PEOPLE & CONSENT",
          "Who lives where\nit would be built,", "and which consent\nrules apply.",
          "Instrument 01 · Clearance filings"),
+    # The schoolhouse and its open book, re-inked teal with scripts/og/reink.py.
+    Card("meal-claims-1.jpg", "meal-claims.webp", (130, 100, 1230, 1200), TEAL,
+         "MEAL CLAIMS CHECK",
+         "Meals reported,", "against each\nschool’s own\nfilings.",
+         "Instrument 02 · PM POSHAN reports"),
     Card("health-4.jpg", "health.webp", (130, 100, 1230, 1200), (52, 62, 150),
          "HEALTH INDEX",
          "Where care\nis thin,", "district by\ndistrict.",
