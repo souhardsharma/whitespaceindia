@@ -35,6 +35,8 @@ export interface PageMetaInput {
   description: string;
   /** False for per-proposal pages, which are generated on demand. */
   index?: boolean;
+  /** The instrument's own share card; Instrument 01's when not given. */
+  image?: string;
 }
 
 export function pageMeta({
@@ -42,6 +44,7 @@ export function pageMeta({
   title,
   description,
   index = true,
+  image = OG_IMAGE,
 }: PageMetaInput) {
   const url = `${SITE_URL}${path}`;
   return {
@@ -55,13 +58,13 @@ export function pageMeta({
       type: "website" as const,
       siteName: "Whitespace India",
       locale: "en_IN",
-      images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: title }],
+      images: [{ url: image, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: "summary_large_image" as const,
       title,
       description,
-      images: [{ url: OG_IMAGE, alt: title }],
+      images: [{ url: image, alt: title }],
     },
     // A page generated on demand for any of 89,817 proposals is not something
     // to put in an index; it stays followable so the register still leads a
