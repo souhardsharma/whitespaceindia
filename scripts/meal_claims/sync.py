@@ -51,6 +51,7 @@ HOLIDAY_EVERY_DAYS = 7
 MONTH_REREAD_DAYS = 7       # a followed school's month is read again after this long
 ENROL_REREAD_DAYS = 30
 OWED_KEEP_DAYS = 20         # a month not read within this long is no longer that month
+FAULTY_FAIL_AFTER = 3       # this many nights running not read whole, and the job goes red
 
 # Shares of the night's budget. `closed` and `detail` are ceilings; what they
 # do not use goes to the sample.
@@ -59,6 +60,11 @@ SHARE_CLOSED = 0.25
 SHARE_HIERARCHY = 0.20
 SHARE_HIERARCHY_BUILDING = 0.50   # while most blocks have no cluster list yet
 SHARE_DETAIL = 0.25
+# What the earlier passes must leave for the sample. On the first night
+# (run 45557273187) the closed days and the hierarchy took their full shares
+# of the budget, which was everything left: no school table was sampled and
+# no school's month was read.
+SHARE_SAMPLE_KEPT = 0.15
 
 # A school-table row far above its neighbours is looked at even where no
 # enrolment is filed: the month it opens is where a spike is judged.
@@ -75,12 +81,14 @@ def yesterday_ist(now: dt.datetime | None = None) -> dt.date:
     return (now.astimezone(IST) - dt.timedelta(days=1)).date()
 
 
-def next_budget(nights: list[dict]) -> int:
+def next_budget(nights: list[dict], today: str | None = None) -> int:
     """Tonight's request budget, from the nights before it (oldest first).
 
     Up one step after a clean night, halved after a refusal or a night of
     failures or slow answers, otherwise held. A run that never reached the
-    host (no request answered) teaches nothing and changes nothing.
+    host (no request answered) teaches nothing and changes nothing. A second
+    run on one date (`today`, UTC) never steps up: the ramp is per night, so
+    a run dispatched by hand cannot hurry it.
     """
     told = [n for n in nights if n["sent"]]
     if not told:
@@ -92,7 +100,7 @@ def next_budget(nights: list[dict]) -> int:
     failing = last["failed"] / last["sent"] > CLEAN_FAIL_SHARE
     if last["outcome"] == "refused" or slow or failing:
         return max(BUDGET_FLOOR, last["budget"] // 2)
-    if last["outcome"] == "complete":
+    if last["outcome"] == "complete" and last.get("stamp", "")[:10] != today:
         return min(BUDGET_CAP, last["budget"] + BUDGET_STEP)
     return last["budget"]
 
@@ -148,8 +156,12 @@ class Night:
         self.spent: dict[str, int] = {}
 
     # -- plumbing
-    def allowance(self, share: float) -> int:
-        return self.host.sent + int((self.host.budget or 0) * share)
+    def allowance(self, share: float, keep: float = 0.0) -> int:
+        """Where a pass stops: at its share of the budget, and never inside
+        the part of it kept for the passes that come after."""
+        budget = self.host.budget or 0
+        room = max(0, (self.host.left() or 0) - int(budget * keep))
+        return self.host.sent + min(int(budget * share), room)
 
     def read(self, fn, *args):
         """One read; None when the host could not be read this time."""
@@ -218,7 +230,7 @@ class Night:
 
     def closed(self) -> None:
         """Schools that reported meals on a day their State was shut."""
-        stop_at = self.allowance(SHARE_CLOSED)
+        stop_at = self.allowance(SHARE_CLOSED, keep=SHARE_HIERARCHY + SHARE_SAMPLE_KEPT + SHARE_DETAIL)
         day = self.yesterday
         for st in closed_states(self.db, day):
             total = self.db.execute("select reported, meals from state_day where st=? and day=?",
@@ -257,7 +269,8 @@ class Night:
             "select count(*) n, sum(clusters_read_at is null) unread from block").fetchone()
         building = (not blocks["n"] or blocks["unread"] / blocks["n"] > 0.2 or bool(self.db.execute(
             "select 1 from district where blocks_read_at is null").fetchone()))
-        stop_at = self.allowance(SHARE_HIERARCHY_BUILDING if building else SHARE_HIERARCHY)
+        stop_at = self.allowance(SHARE_HIERARCHY_BUILDING if building else SHARE_HIERARCHY,
+                                 keep=SHARE_SAMPLE_KEPT + SHARE_DETAIL)
         days = {st: sample_day(self.db, st, self.yesterday) or self.yesterday for st in RD.STATES}
         filing = {r["st"]: r["share"] for r in self.db.execute(
             "select st, 1.0*sum(enr_filed)/max(1, sum(schools)) share from district_day "
@@ -296,24 +309,33 @@ class Night:
 
     def named(self, schools: list[tuple[str, str, str, str, str]]) -> None:
         """Schools named on the command line: find each in its block's school
-        tables, then queue its month. For a school a reader reports, or a case
+        tables, then read its month. For a school a reader reports, or a case
         being re-checked; the nightly run names none."""
         for st, dc, bc, code, shift in schools:
-            day = sample_day(self.db, st, self.yesterday) or self.yesterday
-            blocks = self.read(self.host.blocks, st, dc, day)
-            clusters = self.read(self.host.clusters, st, dc, bc, day)
-            if blocks is None or clusters is None:
+            known = self.db.execute("select 1 from school where st=? and code=? and shift=?",
+                                    (st, code, shift)).fetchone()
+            if not known and not self.find(st, dc, bc, code, shift):
                 continue
-            ST.put_blocks(self.db, st, dc, day, blocks, now_utc())
-            ST.put_clusters(self.db, st, dc, bc, day, clusters, now_utc())
-            for c in clusters:
-                rows = self.school_table(st, dc, bc, c["code"], day) or []
-                row = next((r for r in rows if r["code"] == code and r["shift"] == shift), None)
-                if row:
-                    self.follow_up(st, row, dc, bc, c["code"])
-                    break
-            else:
-                self.say(f"::warning::school {code} was not found in block {bc}")
+            if self.school_detail(st, code, shift):
+                self.db.execute("delete from owed where st=? and code=? and shift=?", (st, code, shift))
+
+    def find(self, st: str, dc: str, bc: str, code: str, shift: str) -> bool:
+        """Look for one school in its block's school tables and follow it."""
+        day = sample_day(self.db, st, self.yesterday) or self.yesterday
+        blocks = self.read(self.host.blocks, st, dc, day)
+        clusters = self.read(self.host.clusters, st, dc, bc, day)
+        if blocks is None or clusters is None:
+            return False
+        ST.put_blocks(self.db, st, dc, day, blocks, now_utc())
+        ST.put_clusters(self.db, st, dc, bc, day, clusters, now_utc())
+        for c in clusters:
+            rows = self.school_table(st, dc, bc, c["code"], day) or []
+            row = next((r for r in rows if r["code"] == code and r["shift"] == shift), None)
+            if row:
+                self.follow_up(st, row, dc, bc, c["code"])
+                return True
+        self.say(f"::warning::school {code} was not found in block {bc}")
+        return False
 
     def sample(self, reserve: int) -> None:
         """School tables, most overdue and most testable clusters first."""
@@ -345,6 +367,10 @@ class Night:
         rows = self.read(self.host.schools, st, dc, bc, cc, day)
         if rows is None:
             return None
+        # A table can be read before its block's cluster list is (a closed
+        # day, a named school). The cluster is recorded here so the table is
+        # counted under its district; the list fills in the rest later.
+        self.db.execute("insert or ignore into cluster (st, dc, bc, cc) values (?,?,?,?)", (st, dc, bc, cc))
         over = 0
         for r in rows:
             basis = FL.over_enrolment(r["meals"], r["enrolled"])
@@ -381,7 +407,8 @@ class Night:
         stale = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=MONTH_REREAD_DAYS)).isoformat()
         month_start = self.yesterday.replace(day=1)
         owed = [(r["st"], r["code"], r["shift"]) for r in self.db.execute(
-            "select st, code, shift from owed order by since")]
+            "select st, code, shift from owed o order by since, not exists (select 1 from flag f "
+            "where f.st=o.st and f.code=o.code and f.shift=o.shift)")]   # a flag's own school first
         due = [(r["st"], r["code"], r["shift"]) for r in self.db.execute(
             "select s.st, s.code, s.shift from school s left join school_month m "
             "on m.st=s.st and m.code=s.code and m.shift=s.shift and m.year=? and m.month=? "
@@ -492,6 +519,17 @@ def nights(db) -> list[dict]:
     return [dict(r) for r in db.execute("select * from night order by stamp")]
 
 
+def faulty_streak(nights: list[dict]) -> int:
+    """How many of the latest runs, counted back from the last, were refused
+    or did not read the State and district tables."""
+    streak = 0
+    for night in reversed(nights):
+        if night["outcome"] == "complete":
+            break
+        streak += 1
+    return streak
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--store", required=True, type=Path)
@@ -500,10 +538,21 @@ def main() -> int:
     ap.add_argument("--day", type=dt.date.fromisoformat, help="read this day as yesterday")
     ap.add_argument("--school", action="append", default=[], metavar="ST:DISTRICT:BLOCK:CODE:SHIFT",
                     help="also read this school's month tonight (repeatable)")
+    ap.add_argument("--check-streak", action="store_true",
+                    help=f"exit 4 if the last {FAULTY_FAIL_AFTER} runs were refused or fell short; no network")
     args = ap.parse_args()
 
     db = ST.connect(args.store)
-    budget = args.budget or next_budget(nights(db))
+    if args.check_streak:
+        streak = faulty_streak(nights(db))
+        print(f"runs in a row not read whole: {streak}")
+        if streak >= FAULTY_FAIL_AFTER:
+            # An annotation, because "exit code 4" is all the run page would say.
+            print(f"::error title=Meal Claims Check is not being refreshed::the last {streak} runs were "
+                  "refused by the source or did not read its State and district tables")
+            return 4
+        return 0
+    budget = args.budget or next_budget(nights(db), now_utc()[:10])
     yesterday = args.day or yesterday_ist()
     print(f"reading for {yesterday}, budget {budget} requests")
     host = RD.Host(budget=budget, deadline=time.time() + args.minutes * 60)

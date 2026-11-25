@@ -27,10 +27,15 @@ THRESHOLDS = {
     "spike_min_excess": 30,
     "spike_min_other_days": 5,
     # closed, weekday rule: the school serves on most other weekdays, and on
-    # at most this share of the other dates falling on this weekday.
+    # at most this share of the other dates falling on this weekday. A fifth
+    # means one served date is tolerated only among five: at a third, two
+    # reports on one weekday in a month each made an off-day of the other.
     "offday_min_same_weekdays": 2,
-    "offday_max_served_share": 1 / 3,
+    "offday_max_served_share": 0.2,
     "offday_min_other_weekday_rate": 0.5,
+    # a run of at least this many days without a report is a break, and a
+    # break says nothing about which weekday the school rests on.
+    "break_min_days": 3,
     # closed, holiday rule: the State counts as shut when under this share of
     # its schools reported that day.
     "state_shut_share": 0.05,
@@ -81,15 +86,49 @@ def weekday_pattern(series: dict[dt.date, int], upto: dt.date) -> list[list[int]
     return out
 
 
-def off_day(series: dict[dt.date, int], day: dt.date, upto: dt.date) -> dict | None:
+def breaks(series: dict[dt.date, int], upto: dt.date) -> set[dt.date]:
+    """The dates inside a run of days without a report: a vacation or a festival week."""
+    out: set[dt.date] = set()
+    run: list[dt.date] = []
+    for day in sorted(d for d in series if d <= upto) + [None]:
+        if day is not None and series[day] <= 0 and (not run or (day - run[-1]).days == 1):
+            run.append(day)
+            continue
+        if len(run) >= THRESHOLDS["break_min_days"]:
+            out.update(run)
+        run = [day] if day is not None and series[day] <= 0 else []
+    return out
+
+
+def one_off_shut(shut_days: dict[dt.date, bool], upto: dt.date) -> set[dt.date]:
+    """Dates the State was shut on a weekday it is usually open: a holiday.
+
+    A Sunday is shut every week and is not one of these. A shut date with no
+    other date of its weekday read is counted as one, because nothing shows it
+    to be the weekly rest.
+    """
+    out = set()
+    for day, shut in shut_days.items():
+        if not shut or day > upto:
+            continue
+        same = [s for d, s in shut_days.items() if d != day and d <= upto and d.weekday() == day.weekday()]
+        if sum(1 for s in same if s) * 2 <= len(same):
+            out.add(day)
+    return out
+
+
+def off_day(series: dict[dt.date, int], day: dt.date, upto: dt.date,
+            set_aside: frozenset[dt.date] | set[dt.date] = frozenset()) -> dict | None:
     """Is `day` a day this school does not normally serve, by its own record?
 
     Judged from the school's other dates only: `day` itself is left out, so a
-    report cannot vouch for itself. Returns the counts the judgement rests on,
-    or None when the record does not show an off-day (including when it shows
-    too little to say).
+    report cannot vouch for itself. `set_aside` are dates that say nothing
+    about a weekly rest (holidays and breaks): counted, a festival week made
+    an off-day of every weekday it covered. Returns the counts the judgement
+    rests on, or None when the record does not show an off-day (including
+    when it shows too little to say).
     """
-    others = {d: m for d, m in series.items() if d != day and d <= upto}
+    others = {d: m for d, m in series.items() if d != day and d <= upto and d not in set_aside}
     same = [m for d, m in others.items() if d.weekday() == day.weekday()]
     rest = [m for d, m in others.items() if d.weekday() != day.weekday()]
     if len(same) < THRESHOLDS["offday_min_same_weekdays"] or not rest:
@@ -123,6 +162,7 @@ def month_flags(series: dict[dt.date, int], upto: dt.date,
     shut_days          date -> whether the State was shut (absent: not read)
     """
     out = []
+    set_aside = breaks(series, upto) | one_off_shut(shut_days, upto) | set(holidays)
     for day in sorted(series):
         meals = series[day]
         if day > upto or meals <= 0:
@@ -133,7 +173,7 @@ def month_flags(series: dict[dt.date, int], upto: dt.date,
         basis = spike(meals, [m for d, m in series.items() if d != day and d <= upto])
         if basis:
             out.append({"kind": "spike", "date": day, **basis})
-        basis = off_day(series, day, upto)
+        basis = off_day(series, day, upto, set_aside)
         if basis:
             out.append({"kind": "closed", "date": day, "meals": meals, "rule": "weekday", **basis})
         elif day in holidays and shut_days.get(day) is True:
