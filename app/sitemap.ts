@@ -185,6 +185,7 @@ function mealPages(): MetadataRoute.Sitemap {
     page(MEAL_BASE, 0.9),
     page(`${MEAL_BASE}/latest`, 0.8),
     page(`${MEAL_BASE}/states`, 0.8),
+    page(`${MEAL_BASE}/national`, 0.8),
     page(`${MEAL_BASE}/methodology`, 0.7, "monthly"),
     page(`${MEAL_BASE}/data`, 0.7),
     ...mealStates().map((s) => page(statePath(s.slug), 0.7)),

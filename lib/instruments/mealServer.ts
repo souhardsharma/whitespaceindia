@@ -9,7 +9,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type {
-  DayRow, District, HistoryFile, MealFreshness, MealMeta, Measure, Recent, StateFile, StateRow,
+  DayRow, District, HistoryFile, MealFreshness, MealMeta, Measure, NationalFile, Recent, StateFile, StateRow,
 } from "@/lib/instruments/meal";
 
 const DIR = join(process.cwd(), "public", "data", "instruments", "meal-claims");
@@ -27,6 +27,7 @@ export const mealFreshness = () => read<MealFreshness>("freshness.json");
 export const mealMeasures = () => read<Record<string, Measure>>("measures.json");
 export const mealStates = () => read<{ day: string; states: StateRow[] }>("states.json").states;
 export const mealRecent = () => read<Recent>("flags/recent.json");
+export const mealNational = () => read<NationalFile>("national.json");
 export const mealState = (st: string) => read<StateFile>(`state/${st}.json`);
 
 export type HolidayLists = Record<string, { days: { date: string; reason: string }[]; read_at: string | null }>;

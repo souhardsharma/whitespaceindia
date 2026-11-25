@@ -48,6 +48,7 @@ const SURFACES = {
       ["/instruments/meal-claims", "Overview"],
       ["/instruments/meal-claims/latest", "Latest flags"],
       ["/instruments/meal-claims/states", "By State and district"],
+      ["/instruments/meal-claims/national", "All India"],
       ["/instruments/meal-claims/data", "Data and terms"],
       ["/instruments/meal-claims/methodology", "Methodology"],
     ],

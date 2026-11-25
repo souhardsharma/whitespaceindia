@@ -482,3 +482,61 @@ export function nightNote(f: MealFreshness): string | null {
   if (f.complete === false) return "read incompletely";
   return null;
 }
+
+/** The national PM POSHAN daily system, read at State and district level. */
+export const AMS_HOST = "https://pmposhan-ams.education.gov.in";
+
+export interface NationalFigures {
+  schools: number | null;
+  reported: number | null;
+  holiday: number | null;
+  enrolled: number | null;
+  rep_enrolled: number | null;
+  meals: number | null;
+}
+
+export interface NationalDistrict extends NationalFigures {
+  name: string;
+}
+
+export interface NationalState extends NationalFigures {
+  name: string;
+  slug: string;
+  /** The State's code on the meal reporting system, when it files there too. */
+  st: string | null;
+  approved: number | null;
+  series: DayRow[];
+  /** The latest day its district table was read for. */
+  district_day: string | null;
+  districts: NationalDistrict[];
+}
+
+/** One State on one day, as each of the two systems holds it: schools, reported, meals. */
+export interface NationalCompare {
+  st: string;
+  name: string;
+  day: string;
+  here: [number | null, number | null, number | null];
+  national: [number | null, number | null, number | null];
+}
+
+export interface NationalFile {
+  /** False until a night has read the national system. */
+  read: boolean;
+  day: string | null;
+  first_day: string | null;
+  days: number;
+  night: { stamp: string; outcome: string; sent: number; tables: number } | null;
+  /** How many days back the source's own date box goes. */
+  window_days: number;
+  read_at?: string | null;
+  series: DayRow[];
+  states: NationalState[];
+  compare: NationalCompare[];
+  district_months: string[];
+}
+
+export function sumOf(rows: NationalFigures[], key: keyof NationalFigures): number | null {
+  const held = rows.map((r) => r[key]).filter((v): v is number => v != null);
+  return held.length ? held.reduce((a, b) => a + b, 0) : null;
+}

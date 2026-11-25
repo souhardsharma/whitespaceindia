@@ -3,7 +3,7 @@ import StructuredData from "@/components/instruments/StructuredData";
 import { pageMeta, pageLd } from "@/lib/instruments/metadata";
 import { InstrumentFooter, InstrumentHeader } from "@/components/instruments/InstrumentChrome";
 import { SECTION_HEADING, SMALL_LABEL, TD, TH } from "@/components/instruments/meal/parts";
-import { MEAL_BASE, MEAL_DATA, MEAL_HOST, MEAL_OG, UDISE_HOST, count, monthLabel } from "@/lib/instruments/meal";
+import { AMS_HOST, MEAL_BASE, MEAL_DATA, MEAL_HOST, MEAL_OG, UDISE_HOST, count, monthLabel } from "@/lib/instruments/meal";
 import { mealMeasures, mealMeta, mealStates } from "@/lib/instruments/mealServer";
 
 /**
@@ -36,6 +36,9 @@ const FILES: [string, string][] = [
   ["flags/recent.json", "Flags first seen in recent nights, each with the figures it rests on. `seen` points into `stamps`, the list of builds."],
   ["schools/<yyyy-mm>/<bucket>.json", "For each flagged school: the month day by day, the enrolment filed for each month of the year, its flags, and under `udise` its entry in UDISE+ where one has been read. The bucket is the school code modulo the `buckets` value in meta.json, two digits."],
   ["holidays.json", "Each State's holiday list as the system gives it: date and reason."],
+  ["national.json", "The national system's totals: for each of the 36 States and Union Territories the latest day read, its daily series and its latest district table, and for States on both systems the same day side by side. `read` is false until the national system has been read."],
+  ["national/states.csv", "Every State-day read from the national system. Columns: date, state, schools, schools_reported, schools_on_holiday, enrolment, children_approved, enrolment_in_reporting_schools, meals."],
+  ["national/districts-<yyyy-mm>.csv", "Every district-day read from the national system in that month. The same columns with district added and without children_approved, which the source gives for States only."],
 ];
 
 const COLUMNS: [string, string][] = [
@@ -177,7 +180,11 @@ export default function MealData() {
                 <code className="font-label text-[13px]">udise</code> come
                 from the Ministry of Education&rsquo;s school report card at{" "}
                 <a href={UDISE_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">kys.udiseplus.gov.in</a>.
-                Neither publisher states terms for reusing its figures. They
+                The files under{" "}
+                <code className="font-label text-[13px]">national</code> come
+                from the Ministry&rsquo;s monitoring system at{" "}
+                <a href={AMS_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">pmposhan-ams.education.gov.in</a>.
+                None of the three states terms for reusing its figures. They
                 are reproduced here as filed, with the source named, and this
                 site claims no rights over them. If you reuse them, credit
                 the system they came from.
