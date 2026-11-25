@@ -17,11 +17,14 @@ const RENDERED_PER_QUERY = ["/instruments/consent/latest?", "/instruments/consen
 
 const EVERYONE_DISALLOWED = ["/api/", "/_next/image", "/*?_rsc=", "/*&_rsc=", ...RENDERED_PER_QUERY,
   // The static file every proposal is served from, under its own name.
-  "/instruments/consent/view"];
+  "/instruments/consent/view", "/instruments/meal-claims/view"];
 
 // Every proposal page, /instruments/consent/<digits>, and the files it is
 // assembled from. robots.txt has no character classes, so one prefix a digit.
-const PROPOSAL_PAGES = [..."0123456789"].map((d) => `/instruments/consent/${d}`).concat("/view/");
+const PROPOSAL_PAGES = [..."0123456789"].map((d) => `/instruments/consent/${d}`).concat("/view/",
+  // Instrument 02's school pages and the bucket files they are assembled
+  // from. The pages are noindex for everyone; these crawlers need not walk them.
+  "/instruments/meal-claims/school/", "/data/instruments/meal-claims/schools/");
 
 /**
  * Crawlers that feed no search result and walk every URL they find. A static

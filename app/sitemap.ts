@@ -2,6 +2,8 @@ import { execSync } from "node:child_process";
 import { MetadataRoute } from "next";
 import registerDistricts from "@/public/data/instruments/consent/register/districts.json";
 import freshness from "@/public/data/instruments/consent/freshness.json";
+import { MEAL_BASE, districtPath, statePath } from "@/lib/instruments/meal";
+import { allDistricts, mealFreshness, mealStates } from "@/lib/instruments/mealServer";
 import { SITE_URL } from "@/lib/site";
 import { healthConfig } from "@/lib/health/config";
 import { energyConfig } from "@/lib/energy/config";
@@ -162,6 +164,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     ...verticalPages(),
     ...districtPages(),
+    ...mealPages(),
+  ];
+}
+
+/**
+ * Instrument 02's pages: its own surfaces, each State and each district.
+ *
+ * Built from the files `generateStaticParams` reads, so the sitemap lists
+ * exactly the pages the build made. School pages are left out on purpose:
+ * they are noindex (a search result naming one school beside the word "flag"
+ * would say more than a flag does).
+ */
+function mealPages(): MetadataRoute.Sitemap {
+  const readAt = new Date(mealFreshness().checked_at ?? LAST_MODIFIED);
+  const page = (path: string, priority: number, changeFrequency: "daily" | "monthly" = "daily") => ({
+    url: `${BASE_URL}${path}`, lastModified: readAt, changeFrequency, priority,
+  });
+  return [
+    page(MEAL_BASE, 0.9),
+    page(`${MEAL_BASE}/latest`, 0.8),
+    page(`${MEAL_BASE}/states`, 0.8),
+    page(`${MEAL_BASE}/methodology`, 0.7, "monthly"),
+    page(`${MEAL_BASE}/data`, 0.7),
+    ...mealStates().map((s) => page(statePath(s.slug), 0.7)),
+    ...allDistricts().map(({ state, district }) => page(districtPath(state.st, district.dc), 0.6)),
   ];
 }
 

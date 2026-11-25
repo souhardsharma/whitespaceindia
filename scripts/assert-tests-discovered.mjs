@@ -27,6 +27,7 @@ const REQUIRED = [
   "lib/instruments/__tests__/place.test.ts",
   "lib/instruments/__tests__/links.test.ts",
   "lib/instruments/__tests__/csv.test.ts",
+  "lib/instruments/__tests__/meal.test.ts",
 ];
 
 /** Must stay in step with the `test` script in package.json. */

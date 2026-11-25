@@ -10,17 +10,21 @@ import {
 import meta from "@/public/data/instruments/consent/meta.json";
 import freshness from "@/public/data/instruments/consent/freshness.json";
 import { CENSUS_YEAR, nextCensusNote, sourceVintageLabel } from "@/lib/instruments/vintage";
+import { MEAL_BASE, TEAL, whenIST } from "@/lib/instruments/meal";
+import { mealFreshness, mealMeta } from "@/lib/instruments/mealServer";
 
 /**
  * The instruments shelf.
  *
  * Container page. It says what an instrument is, who it serves, and lists what
- * is on the shelf. Static — it reads only the
+ * is on the shelf. Static — it reads only each
  * instrument's meta.json for headline counts, so the numbers on this page are
  * the ones the pipeline actually produced rather than figures typed into prose.
  */
 
 const nf = new Intl.NumberFormat("en-IN");
+
+const mealCounts = mealMeta().counts;
 
 type Shelf = {
   num: string;
@@ -57,12 +61,31 @@ const INSTRUMENTS: Shelf[] = [
       },
     ],
   },
+  {
+    num: "02",
+    name: "Meal Claims Check",
+    href: MEAL_BASE,
+    status: "live",
+    colour: TEAL,
+    question:
+      "Which schools reported serving more midday meals than the enrolment they filed, or reported meals on a day they do not serve?",
+    blurb:
+      "Meal Claims Check reads the PM POSHAN daily reporting system school by school. It sets the meals each school reported for a day against the enrolment the same school filed for the month and against the school's own pattern of serving days, and marks the school-days on which they disagree. Each flag shows the figures it rests on. A flag is a contradiction in the record, not a finding about a school.",
+    inputs:
+      "Source: PM POSHAN daily meal reporting system (mdmhp.nic.in), National Informatics Centre, Himachal Pradesh · daily meal reports, monthly enrolment filings and State holiday lists",
+    stats: [
+      { label: "Schools on the system", value: nf.format(mealCounts.schools) },
+      { label: "School-days tested against enrolment", value: nf.format(mealCounts.school_days_tested) },
+      { label: "Schools with a flag", value: nf.format(mealCounts.schools_flagged) },
+    ],
+  },
 ];
 
 export default function InstrumentsShelf() {
+  const mealRead = whenIST(mealFreshness().checked_at);
   return (
     <div className="min-h-screen bg-[#fcf9f4] text-[#1c1c19] flex flex-col">
-      <StructuredData data={pageLd({ path: "/instruments", name: "Instruments", description: "Free working tools for practitioners, built on the data India's government portals expose. The first makes the environmental clearance register searchable by place.", type: "CollectionPage" })} />
+      <StructuredData data={pageLd({ path: "/instruments", name: "Instruments", description: "Free working tools for practitioners, built on the data India's government portals expose: the environmental clearance register searchable by place, and midday meal reports checked against each school's own filings.", type: "CollectionPage" })} />
       <InstrumentHeader />
 
       <main id="main-content" className="flex-1">
@@ -217,9 +240,9 @@ export default function InstrumentsShelf() {
               The socio-economic figures come from Census {CENSUS_YEAR}, the
               most recent census for which complete sub-district figures
               exist, and they describe the population as it was counted that
-              year. {nextCensusNote()} The register, by contrast, is read
-              again every night, and the date of the latest read is shown
-              below.
+              year. {nextCensusNote()} The clearance register and the meal
+              reporting system, by contrast, are read again every night, and
+              the date of each latest read is shown below.
             </p>
             <ul className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
               {meta.sources.map((s) => (
@@ -233,6 +256,15 @@ export default function InstrumentsShelf() {
                   </div>
                 </li>
               ))}
+              <li>
+                <div className="font-label text-[9px] uppercase tracking-[0.2em] opacity-70">
+                  {mealRead ? `Read ${mealRead} IST` : "Read nightly"}
+                </div>
+                <div className="font-body text-[14px] leading-snug mt-1">PM POSHAN daily meal reporting system</div>
+                <div className="font-body text-[12px] leading-snug opacity-75 mt-1">
+                  National Informatics Centre, Himachal Pradesh
+                </div>
+              </li>
             </ul>
           </div>
         </section>

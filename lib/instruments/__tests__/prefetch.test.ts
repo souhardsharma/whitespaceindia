@@ -12,7 +12,9 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-const ENTITY_HREF = /href=\{`\/instruments\/consent\/(district\/)?\$\{/;
+// Instrument 02 builds its per-entity addresses with schoolPath() and
+// districtPath(); its State pages are few and are left to prefetch.
+const ENTITY_HREF = /href=\{(`\/instruments\/consent\/(district\/)?\$\{|schoolPath\(|districtPath\()/;
 
 function sources(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -33,6 +35,6 @@ test("every Link to a proposal or district page sets prefetch={false}", () => {
       if (!tag.includes("prefetch={false}")) offenders.push(file);
     }
   }
-  assert.ok(checked >= 10, `found only ${checked} entity links; is the pattern stale?`);
+  assert.ok(checked >= 16, `found only ${checked} entity links; is the pattern stale?`);
   assert.deepEqual(offenders, []);
 });

@@ -18,6 +18,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Wordmark from "@/components/Wordmark";
 import RegisterCurrency from "@/components/instruments/RegisterCurrency";
+import MealCurrency from "@/components/instruments/meal/MealCurrency";
 
 // Instrument 01's colour. The shelf is not an instrument and must not wear
 // one's colour, or the first instrument reads as the whole shelf: the shelf
@@ -25,6 +26,35 @@ import RegisterCurrency from "@/components/instruments/RegisterCurrency";
 export const PLUM = "#7a3b6b";
 export const PLUM_DEEP = "#5f2c53";
 export const GRAPHITE = "#3d3a34";
+// Instrument 02's colour lives with its own library, which server pages read.
+export { TEAL, TEAL_DEEP } from "@/lib/instruments/meal";
+
+/** Every surface of an instrument, listed once so each links to all the others. */
+const SURFACES = {
+  consent: {
+    name: "People & Consent",
+    links: [
+      ["/instruments/consent", "Search proposals"],
+      ["/instruments/consent/latest", "Recent changes"],
+      ["/instruments/consent/register", "By district"],
+      ["/instruments/consent/appraisal", "How long clearance takes"],
+      ["/instruments/consent/data", "Data and API"],
+      ["/instruments/consent/methodology", "Methodology"],
+    ],
+  },
+  "meal-claims": {
+    name: "Meal Claims Check",
+    links: [
+      ["/instruments/meal-claims", "Overview"],
+      ["/instruments/meal-claims/latest", "Latest flags"],
+      ["/instruments/meal-claims/states", "By State and district"],
+      ["/instruments/meal-claims/data", "Data and terms"],
+      ["/instruments/meal-claims/methodology", "Methodology"],
+    ],
+  },
+} as const;
+
+export type InstrumentKey = keyof typeof SURFACES;
 
 export function InstrumentHeader({
   crumb,
@@ -97,7 +127,13 @@ export function InstrumentHeader({
   );
 }
 
-export function InstrumentFooter() {
+export function InstrumentFooter({
+  instrument = "consent",
+}: {
+  /** Whose surfaces and whose read date the footer states. */
+  instrument?: InstrumentKey;
+}) {
+  const surfaces = SURFACES[instrument];
   // Which of the four surfaces we are on, so the nav below does not offer the
   // page you are already reading as somewhere to go.
   const pathname = usePathname();
@@ -120,7 +156,11 @@ export function InstrumentFooter() {
               four places is one that eventually disagrees with itself. The
               clearance register is live, so "when was this read" is part of
               reading any number on it. */}
-          <RegisterCurrency className="mt-4 text-[#1c1c19]" />
+          {instrument === "meal-claims" ? (
+            <MealCurrency className="mt-4 text-[#1c1c19]" />
+          ) : (
+            <RegisterCurrency className="mt-4 text-[#1c1c19]" />
+          )}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -156,21 +196,14 @@ export function InstrumentFooter() {
           links it from all the others, instead of from whichever pages someone
           remembered to edit. */}
       <nav
-        aria-label="People & Consent"
+        aria-label={surfaces.name}
         className="max-w-6xl mx-auto mt-10 pt-6 border-t border-[#1c1c19]/15"
       >
         <span className="font-label text-[10px] uppercase tracking-[0.24em] text-[#1c1c19] opacity-65 block mb-3">
-          People &amp; Consent
+          {surfaces.name}
         </span>
         <ul className="flex flex-wrap gap-x-7 gap-y-2">
-          {[
-            ["/instruments/consent", "Search proposals"],
-            ["/instruments/consent/latest", "Recent changes"],
-            ["/instruments/consent/register", "By district"],
-            ["/instruments/consent/appraisal", "How long clearance takes"],
-            ["/instruments/consent/data", "Data and API"],
-            ["/instruments/consent/methodology", "Methodology"],
-          ].map(([href, label]) => {
+          {surfaces.links.map(([href, label]) => {
             // The current page is named but NOT a link. A screen-reader user
             // pulling the links list heard "By district" as somewhere to go,
             // activated it on /register, and nothing happened - the standard
