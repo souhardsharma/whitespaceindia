@@ -56,7 +56,7 @@ export function Stat({
 /** The sentence that travels with every list of flags. */
 export function FlagNotFinding({ className = "" }: { className?: string }) {
   return (
-    <p className={`font-body text-[13.5px] leading-relaxed border-l-4 pl-4 py-1 ${className}`} style={{ borderColor: TEAL }}>
+    <p className={`font-body text-[13.5px] leading-relaxed border-y py-3 ${className}`} style={{ borderColor: TEAL }}>
       <strong className="font-semibold">A flag, not a finding.</strong>{" "}
       A flag marks two figures a school filed on the same government system
       that do not agree. A wrong enrolment filing, a typing slip or a meal
