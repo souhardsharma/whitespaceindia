@@ -264,6 +264,11 @@ class Night:
         What has never been read comes first; after that the oldest block
         tables and the oldest cluster lists share what is left, so the block
         figures on a district page and the list of clusters both stay recent.
+
+        Unread districts take no more than half the pass once a block is
+        waiting for its cluster list. The sample can only open clusters it
+        knows of: with every district read first, it re-read the same 64
+        tables for nights while 1,200 blocks waited.
         """
         blocks = self.db.execute(
             "select count(*) n, sum(clusters_read_at is null) unread from block").fetchone()
@@ -286,9 +291,13 @@ class Night:
             if rows is not None:
                 ST.put_clusters(self.db, b["st"], b["dc"], b["bc"], days[b["st"]], rows, now_utc())
 
+        half = self.host.sent + (stop_at - self.host.sent) // 2
         for d in self.db.execute("select st, dc from district where blocks_read_at is null").fetchall():
             if self.host.sent >= stop_at:
                 return
+            if self.host.sent >= half and self.db.execute(
+                    "select 1 from block where clusters_read_at is null").fetchone():
+                break
             block_table(d)
         # The States that file the most enrolment first: their clusters are
         # the ones the enrolment test can be run on.

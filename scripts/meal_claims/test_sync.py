@@ -183,6 +183,34 @@ def test_a_night_stays_inside_its_budget() -> None:
     folder.cleanup()
 
 
+class ManyDistricts(PretendHost):
+    """Two hundred districts: more block tables than one night's hierarchy pass can read."""
+
+    def districts(self, st, day):
+        rows = super().districts(st, day)
+        return [{**rows[0], "code": f"16{n:03d}", "name": f"DISTRICT {n}"} for n in range(1, 201)] if rows else []
+
+    def blocks(self, st, dc, day):
+        return [{**row, "code": dc + "07"} for row in super().blocks(st, dc, day)]
+
+    def clusters(self, st, dc, bc, day):
+        return [{**row, "code": bc + row["code"][-4:]} for row in super().clusters(st, dc, bc, day)]
+
+
+def test_cluster_lists_do_not_wait_for_every_district() -> None:
+    print("hierarchy")
+    folder, db = fresh_store()
+    host = ManyDistricts(budget=300)
+    SY.run(db, host, YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet)
+    unread = db.execute("select count(*) from district where blocks_read_at is null").fetchone()[0]
+    check("districts are still unread after the night", unread > 0, unread)
+    check("and cluster lists were read all the same", host.asked.count("clusters") >= 5,
+          host.asked.count("clusters"))
+    check("so the sample had clusters to open", host.asked.count("schools") >= 5, host.asked.count("schools"))
+    db.close()
+    folder.cleanup()
+
+
 def test_a_refusal_ends_the_run_and_keeps_what_was_read() -> None:
     print("refusal")
     folder, db = fresh_store()
@@ -268,7 +296,7 @@ def test_store_round_trip() -> None:
 
 def main() -> int:
     for fn in (test_budget_rises_slowly_and_falls_fast,
-               test_a_night_stays_inside_its_budget,
+               test_a_night_stays_inside_its_budget, test_cluster_lists_do_not_wait_for_every_district,
                test_a_refusal_ends_the_run_and_keeps_what_was_read,
                test_a_shut_day_is_looked_into,
                test_a_corrected_figure_unsettles_its_flag,
