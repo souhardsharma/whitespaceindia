@@ -148,7 +148,7 @@ def build(db, out: Path, generated_at: str) -> dict:
 
     tables = {r["st"]: dict(r) for r in db.execute(
         "select st, count(*) tables_read, sum(tested) school_days_tested, sum(over) over_in_tables "
-        "from cluster_read group by st")}
+        "from cluster_read group by st")}   # every table has its cluster row (sync.school_table)
     counts_known = {r["st"]: dict(r) for r in db.execute(
         "select st, (select count(*) from block b where b.st=d.st) blocks, "
         "(select count(*) from cluster c where c.st=d.st) clusters, count(*) districts "
@@ -250,7 +250,9 @@ def build(db, out: Path, generated_at: str) -> dict:
         "sent": last_night["sent"] if last_night else None,
         "failed": last_night["failed"] if last_night else None,
         "median_s": last_night["median_s"] if last_night else None,
-        "detail_owed": notes.get("detail_owed", 0),
+        # Counted, not taken from the night's notes: a night that ends
+        # before its detail pass writes no note, and owes the most.
+        "detail_owed": db.execute("select count(*) from owed").fetchone()[0],
         "next_budget": SY.next_budget(nights),
     })
     return meta

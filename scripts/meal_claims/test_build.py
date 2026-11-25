@@ -39,7 +39,7 @@ def built() -> tuple:
     folder = tempfile.TemporaryDirectory()
     base = Path(folder.name)
     db = ST.connect(base / "store.sqlite")
-    SY.run(db, PretendHost(budget=80), YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet)
+    SY.run(db, PretendHost(budget=300), YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet)
     meta = BD.build(db, base / "out", "2026-11-20T02:00:00+00:00")
     db.close()
     return folder, base / "out", meta

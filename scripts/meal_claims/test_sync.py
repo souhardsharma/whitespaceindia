@@ -145,6 +145,15 @@ def test_budget_rises_slowly_and_falls_fast() -> None:
           SY.next_budget([night_row(450, 450, outcome="partial")]) == 450)
     check("never under the floor",
           SY.next_budget([night_row(150, 20, outcome="refused")]) == SY.BUDGET_FLOOR)
+    check("a second run on the same date does not step up",
+          SY.next_budget([{**night_row(300, 300), "stamp": "2026-11-25T05:59:10+00:00"}], "2026-11-25") == 300)
+    check("the next date does",
+          SY.next_budget([{**night_row(300, 300), "stamp": "2026-11-25T05:59:10+00:00"}], "2026-11-26") == 450)
+    check("three runs short in a row are counted",
+          SY.faulty_streak([night_row(300, 300), night_row(300, 9, outcome="refused"),
+                            night_row(150, 150, outcome="partial"), night_row(150, 4, outcome="refused")]) == 3)
+    check("a whole night ends the count",
+          SY.faulty_streak([night_row(300, 9, outcome="refused"), night_row(150, 150)]) == 0)
     check("a night that sent nothing teaches nothing",
           SY.next_budget([night_row(450, 450), night_row(600, 0, outcome="partial")]) == 600)
 
@@ -152,9 +161,9 @@ def test_budget_rises_slowly_and_falls_fast() -> None:
 def test_a_night_stays_inside_its_budget() -> None:
     print("one night")
     folder, db = fresh_store()
-    host = PretendHost(budget=80)
+    host = PretendHost(budget=300)
     row = SY.run(db, host, YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet)
-    check("never one request past the budget", host.sent <= 80, host.sent)
+    check("never one request past the budget", host.sent <= host.budget, host.sent)
     check("the night is complete", row["outcome"] == "complete", row)
     check("the State table is held for three days",
           db.execute("select count(*) from state_day where st='16' and day>=?",
@@ -192,7 +201,7 @@ def test_a_shut_day_is_looked_into() -> None:
     print("closed day")
     folder, db = fresh_store()
     shut = dt.date(2026, 11, 19)
-    host = PretendHost(budget=120, shut={shut})
+    host = PretendHost(budget=400, shut={shut})
     SY.run(db, host, YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet)
     check("the State counted as shut with meals reported",
           SY.closed_states(db, YESTERDAY) == ["16"])
@@ -224,7 +233,7 @@ def test_a_corrected_figure_unsettles_its_flag() -> None:
 def test_a_named_school_is_read() -> None:
     print("a named school")
     folder, db = fresh_store()
-    host = PretendHost(budget=120)
+    host = PretendHost(budget=400)
     SY.run(db, host, YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet,
            named=[("16", "1605", "160507", "1004", "1")])
     check("its month is held, though no table flagged it",

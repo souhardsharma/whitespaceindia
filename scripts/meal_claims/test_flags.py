@@ -119,8 +119,14 @@ def test_the_one_day_spike() -> None:
     check("on 1 November, 8,674 meals",
           spikes and spikes[0]["date"] == dt.date(2026, 11, 1) and spikes[0]["meals"] == 8674)
     check("against a usual count near 25", spikes and 20 <= spikes[0]["usual"] <= 30, spikes)
-    closed = [f for f in found if f["kind"] == "closed"]
-    check("that Sunday is also a day it does not normally serve",
+    check("too early to call that Sunday an off-day: one other Sunday lies in a break",
+          [f for f in found if f["kind"] == "closed"] == [])
+    later = dt.date(2026, 11, 23)
+    series[dt.date(2026, 11, 22)] = 0
+    for day in (16, 17, 18, 19, 20, 21, 23):
+        series[dt.date(2026, 11, day)] = 20
+    closed = [f for f in FL.month_flags(series, later, {}, {}, {}) if f["kind"] == "closed"]
+    check("after two ordinary empty Sundays it is a day the school does not normally serve",
           [f["date"].day for f in closed] == [1] and closed[0]["rule"] == "weekday", closed)
     check("an ordinary day is not a spike", FL.spike(30, [30, 26, 23, 9, 25, 24, 22]) is None)
     check("too little history says nothing", FL.spike(900, [30, 26]) is None)
@@ -144,6 +150,36 @@ def test_a_report_cannot_vouch_for_itself() -> None:
           FL.off_day({d: (m if d == sunday else 0) for d, m in series.items()}, sunday, upto) is None)
     check("days after `upto` are not read as empty days",
           FL.off_day(series, dt.date(2026, 11, 3), dt.date(2026, 11, 4)) is None)
+
+
+def test_a_break_or_a_holiday_is_not_a_weekly_rest() -> None:
+    print("breaks and holidays")
+    start = dt.date(2026, 10, 26)
+    days = [start + dt.timedelta(days=i) for i in range(30)]
+    # Monday to Saturday, with a festival week (7 to 11 November) and one
+    # holiday Tuesday (24 November) on which the whole State was shut.
+    series = {d: (0 if d.weekday() == 6 or 7 <= d.day <= 11 or d.day == 24 else 60) for d in days}
+    upto = dt.date(2026, 11, 24)
+    check("the festival week is a break",
+          FL.breaks(series, upto) == {dt.date(2026, 11, d) for d in (7, 8, 9, 10, 11)}, FL.breaks(series, upto))
+    check("a lone Sunday is not a break", dt.date(2026, 11, 15) not in FL.breaks(series, upto))
+    shut = {d: d.weekday() == 6 or d.day == 24 for d in days}
+    check("the holiday Tuesday is a one-off; Sundays are not",
+          FL.one_off_shut(shut, upto) == {dt.date(2026, 11, 24)}, FL.one_off_shut(shut, upto))
+    november = {d: (0 if d.day == 17 else m) for d, m in series.items() if d.month == 11}
+    check("counted plainly, a break, a holiday and one missed report made Tuesday an off-day",
+          FL.off_day(november, dt.date(2026, 11, 3), upto) is not None)
+    check("set aside, they do not",
+          FL.off_day(november, dt.date(2026, 11, 3), upto,
+                     FL.breaks(november, upto) | FL.one_off_shut(shut, upto)) is None)
+    found = FL.month_flags(series, upto, {}, {}, shut)
+    check("set aside, no Tuesday is flagged", found == [], found)
+    series[dt.date(2026, 11, 22)] = 55
+    found = FL.month_flags(series, upto, {}, {}, shut)
+    check("a Sunday report is still flagged",
+          [(f["kind"], f["date"].day) for f in found] == [("closed", 22)], found)
+    check("a listed holiday is set aside too",
+          FL.off_day(series, dt.date(2026, 11, 3), upto, {dt.date(2026, 11, 10), dt.date(2026, 11, 24)}) is None)
 
 
 def test_holiday_rule_needs_the_state_shut() -> None:
@@ -173,6 +209,7 @@ def main() -> int:
                test_the_friday_off_madrassa,
                test_the_one_day_spike,
                test_a_report_cannot_vouch_for_itself,
+               test_a_break_or_a_holiday_is_not_a_weekly_rest,
                test_holiday_rule_needs_the_state_shut):
         fn()
     print()
