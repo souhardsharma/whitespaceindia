@@ -1,0 +1,19 @@
+{
+  "measured_on": "2026-11-25",
+  "requests_sent": 448,
+  "requests_failed": 0,
+  "median_seconds": 1.06,
+  "states": ["05", "16"],
+  "dates": ["2026-09-15", "2026-10-30", "2026-11-18", "2026-11-23"],
+  "tables_read": 191,
+  "school_days_tested": 2516,
+  "over": 53,
+  "over_wide": 11,
+  "over_by_one_or_two": 27,
+  "by_state": {
+    "05": {"school_days_tested": 1886, "over": 28, "over_wide": 4},
+    "16": {"school_days_tested": 630, "over": 25, "over_wide": 7}
+  },
+  "school_history_from": "2024-07-15",
+  "school_history_empty_at": "2024-03-15"
+}

@@ -122,6 +122,7 @@ def check(folder: Path) -> list[str]:
     # -- the registry and the thresholds are the code's own
     c.ok(load(folder, "measures.json") == ME.MEASURES, "measures.json differs from measures.py")
     c.ok(meta["thresholds"] == FL.THRESHOLDS, "meta.thresholds differs from flags.THRESHOLDS")
+    c.ok(meta.get("calibration") == load(Path(__file__).resolve().parent, "calibration.json"), "meta.calibration differs from calibration.json")
     for key in ("flag_over", "flag_over_wide", "flag_closed", "flag_spike", "schools_flagged",
                 "tables_read", "school_days_tested", "schools"):
         c.ok(isinstance(meta["counts"].get(key), int), f"meta.counts.{key} is not a number")

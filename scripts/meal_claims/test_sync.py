@@ -221,6 +221,20 @@ def test_a_corrected_figure_unsettles_its_flag() -> None:
     folder.cleanup()
 
 
+def test_a_named_school_is_read() -> None:
+    print("a named school")
+    folder, db = fresh_store()
+    host = PretendHost(budget=120)
+    SY.run(db, host, YESTERDAY, "2026-11-20T01:00:00+00:00", say=quiet,
+           named=[("16", "1605", "160507", "1004", "1")])
+    check("its month is held, though no table flagged it",
+          db.execute("select count(*) from school_month where code='1004'").fetchone()[0] == 1)
+    check("and it is filed under its block",
+          db.execute("select bc from school where code='1004'").fetchone()["bc"] == "160507")
+    db.close()
+    folder.cleanup()
+
+
 def test_store_round_trip() -> None:
     print("store")
     folder, db = fresh_store()
@@ -249,6 +263,7 @@ def main() -> int:
                test_a_refusal_ends_the_run_and_keeps_what_was_read,
                test_a_shut_day_is_looked_into,
                test_a_corrected_figure_unsettles_its_flag,
+               test_a_named_school_is_read,
                test_store_round_trip):
         fn()
     print()
