@@ -17,7 +17,7 @@
  */
 
 import ScrollRegion from "./ScrollRegion";
-import { titleCase } from "@/lib/instruments/place";
+import { censusStateName, presentState, titleCase } from "@/lib/instruments/place";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PLUM } from "./InstrumentChrome";
@@ -135,7 +135,7 @@ export default function RegisterExplorer({
           >
             <option value="">All states</option>
             {states.map((s) => (
-              <option key={s} value={s}>{titleCase(s)}</option>
+              <option key={s} value={s}>{titleCase(censusStateName(s))}</option>
             ))}
           </select>
         </label>
@@ -292,7 +292,7 @@ export default function RegisterExplorer({
                         className="font-body text-[14px] hover:underline underline-offset-2"
                       >
                         {titleCase(r.district)}
-                        <span className="opacity-70"> · {titleCase(r.state)}</span>
+                        <span className="opacity-70"> · {titleCase(presentState(r.code, r.state))}</span>
                       </Link>
                     </td>
                     <td className="py-2.5 pr-4 text-right font-label text-[13px] tabular-nums">

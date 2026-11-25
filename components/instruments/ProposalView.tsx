@@ -25,7 +25,7 @@ import StructuredData from "./StructuredData";
 import { loadProposal, type ProposalView as View, type ReadJson } from "@/lib/instruments/bundle";
 import { pageLd } from "@/lib/instruments/metadata";
 import { stageLabel } from "@/lib/instruments/projects";
-import { presentState } from "@/lib/instruments/place";
+import { presentState, titleCase } from "@/lib/instruments/place";
 import { applyHead, type Head } from "@/lib/instruments/head";
 import { SITE_URL } from "@/lib/site";
 import meta from "@/public/data/instruments/consent/meta.json";
@@ -72,10 +72,12 @@ function headFor(view: View): Head {
     p.agency,
     p.sector,
     p.no,
-    where ? `${where.district_name}, ${presentState(where.censuscode, where.state_name)}` : null,
+    where ? `${titleCase(where.district_name)}, ${titleCase(presentState(where.censuscode, where.state_name))}` : null,
     stage,
   ].filter(Boolean).join(" · ") +
-    ". The page reports who lives where this project would be built and which duties of consultation and consent apply there.";
+    (where
+      ? ". The page reports who lives where this project would be built and which duties of consultation and consent apply there."
+      : ". The filing names no district this instrument can place, so the page gives the proposal's record and its appraisal without a population profile.");
   return {
     path: `/instruments/consent/${p.id}`,
     title: `${shortName(p.name || `Proposal ${p.no}`)} | People & Consent`,

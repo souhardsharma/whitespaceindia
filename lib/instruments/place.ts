@@ -28,9 +28,25 @@ const PRESENT_STATE: Record<number, string> = {
   496: "Dadra and Nagar Haveli and Daman and Diu",
 };
 
+/** Census spellings that are simply wrong. SHRUG carries the Census 2011
+ *  tables' "Arunanchal Pradesh"; the State's own name is Arunachal Pradesh. */
+const SPELLING: Record<string, string> = {
+  "arunanchal pradesh": "Arunachal Pradesh",
+};
+
+/** A Census 2011 State name, spelt correctly. */
+export function censusStateName(censusState: string): string {
+  return SPELLING[(censusState || "").trim().toLowerCase()] ?? censusState;
+}
+
+/** Whether the district's State today differs from its Census 2011 State. */
+export function stateMoved(code: number | null | undefined): boolean {
+  return code != null && Boolean(PRESENT_STATE[code]);
+}
+
 export function presentState(code: number | null | undefined, censusState: string): string {
   if (code != null && PRESENT_STATE[code]) return PRESENT_STATE[code];
-  return censusState;
+  return censusStateName(censusState);
 }
 
 /**
@@ -41,6 +57,8 @@ export function presentState(code: number | null | undefined, censusState: strin
  * once disagreed: three printed "Leh (ladakh)" and "And Daman And Diu".
  */
 const LOWER = new Set(["and", "of"]);
+/** Written in capitals: "NCT of Delhi". */
+const ACRONYMS = new Set(["nct"]);
 
 export function titleCase(s: string): string {
   return (s || "")
@@ -50,9 +68,11 @@ export function titleCase(s: string): string {
     .trim()
     .replace(/[a-z]+/g, (word, at: number, all: string) => {
       const prev = all[at - 1];
-      const startsWord = at === 0 || /[\s(\-/&]/.test(prev);
+      // After a full stop too, so initials read "Y.S.R." and not "Y.s.r.".
+      const startsWord = at === 0 || /[\s(\-/&.]/.test(prev);
       if (!startsWord) return word;
       if (at > 0 && prev === " " && LOWER.has(word)) return word;
+      if (ACRONYMS.has(word)) return word.toUpperCase();
       return word[0].toUpperCase() + word.slice(1);
     });
 }
@@ -63,5 +83,5 @@ export function titleCase(s: string): string {
  */
 export function stateLabel(code: number | null | undefined, censusState: string): string {
   const now = presentState(code, censusState);
-  return now === censusState ? censusState : `${now} (${censusState} in Census 2011)`;
+  return stateMoved(code) ? `${now} (${censusState} in Census 2011)` : now;
 }

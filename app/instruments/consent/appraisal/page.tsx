@@ -217,6 +217,16 @@ export default function AppraisalPage() {
               out, while an environmental clearance is the final decision on
               the project. The two involve different work and take different
               lengths of time, so each is measured separately.
+              {(() => {
+                // A kind of decision with fewer than minGroup proposals is not
+                // published, so the rows below can sum to less than the
+                // decided total above (11 fewer on 2026-11-25).
+                const shown = byDecision.reduce((n, r) => n + r.d.n, 0);
+                const left = a.coverage.with_duration - shown;
+                return left > 0
+                  ? ` ${nf.format(left)} decided ${left === 1 ? "proposal falls" : "proposals fall"} in kinds of decision with fewer than ${a.minGroup} proposals each, which are not shown.`
+                  : null;
+              })()}
             </p>
             <DurationDistribution
               rows={byDecision}

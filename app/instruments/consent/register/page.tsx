@@ -19,6 +19,7 @@ import measuresFile from "@/public/data/instruments/consent/measures.json";
 import legal from "@/public/data/instruments/consent/legal_reference.json";
 import facets from "@/public/data/instruments/consent/register/facets.json";
 import instrumentMeta from "@/public/data/instruments/consent/meta.json";
+import { shardOnce, stateSlugs } from "@/lib/instruments/server";
 
 export const metadata = pageMeta({
   path: "/instruments/consent/register",
@@ -100,32 +101,42 @@ const DISTRICTS_WITH_A_PAGE = (rows as unknown as { code: number; n: number }[])
   .map((r) => r.code);
 
 /**
- * Proposals in WHOLLY Scheduled districts, and in partly Scheduled ones.
+ * Proposals naming a WHOLLY Scheduled district, and proposals naming a partly
+ * Scheduled one and no wholly Scheduled one.
  *
- * `facets.totals.proposals_in_scheduled_districts` lumps the two together at
- * 22,598, and it was published under the label "In districts that are
- * Scheduled Areas". 19,555 of those - 86.5% - are in districts only PARTLY
- * scheduled, where the Presidential Order names some blocks or villages and
- * not others, so the district's status settles nothing about the site.
+ * `facets.totals.proposals_in_scheduled_districts` lumps the two together,
+ * and most of that total is in districts only PARTLY scheduled, where the
+ * Presidential Order names some blocks or villages and not others, so the
+ * district's status settles nothing about the site.
  *
- * The distinction is the whole legal point. Inside a Fifth Schedule Scheduled
- * Area, consultation with the Gram Sabha is a precondition of acquisition; a
- * reader given one number under that label would fairly report that 22,598
- * clearance proposals sit in Scheduled Areas, and for seven in eight of them
- * that is not something this instrument knows.
+ * Counted by proposal, over every district each one names. Summing the
+ * register's per-district counts instead counted a proposal once for each
+ * scheduled district it names, and a proposal naming one wholly and one
+ * partly Scheduled district in both figures (3,588 against 3,506 distinct
+ * proposals on 2026-11-25). The page is static, so the shards are read once,
+ * at build.
  */
-const scheduledSplit = (rows as unknown as { code: number; n: number }[]).reduce(
-  (acc, r) => {
-    const status = SCHEDULED_BY_CODE[String(r.code)];
-    if (status === "within") acc.wholly += r.n;
-    else if (status === "partial") acc.partly += r.n;
-    return acc;
-  },
-  { wholly: 0, partly: 0 },
-);
+function scheduledSplit(): { wholly: number; partly: number } {
+  const out = { wholly: 0, partly: 0 };
+  for (const slug of stateSlugs()) {
+    const shard = shardOnce(slug);
+    if (!shard) continue;
+    const dc = shard.fields.indexOf("dc");
+    const dall = shard.fields.indexOf("dall");
+    for (const r of shard.rows) {
+      const codes = new Set<number>((r[dall] as number[] | null) ?? []);
+      if (r[dc] != null) codes.add(r[dc] as number);
+      const statuses = [...codes].map((c) => SCHEDULED_BY_CODE[String(c)]);
+      if (statuses.includes("within")) out.wholly += 1;
+      else if (statuses.includes("partial")) out.partly += 1;
+    }
+  }
+  return out;
+}
 
 export default function RegisterPage() {
   const t = facets.totals;
+  const scheduled = scheduledSplit();
 
   return (
     <div className="min-h-screen bg-[#fcf9f4] text-[#1c1c19] flex flex-col">
@@ -173,9 +184,9 @@ export default function RegisterPage() {
                 value={`${nf.format(t.districts_with_proposals)} of ${nf.format(t.districts_total)}`}
               />
               <Stat
-                label="In wholly Scheduled districts"
-                value={nf.format(scheduledSplit.wholly)}
-                note={`A further ${nf.format(scheduledSplit.partly)} are in partly Scheduled districts, where only the Order's named blocks or villages are scheduled and a site's own status depends on where in the district it lies.`}
+                label="Proposals naming a wholly Scheduled district"
+                value={nf.format(scheduled.wholly)}
+                note={`A further ${nf.format(scheduled.partly)} name a partly Scheduled district and no wholly Scheduled one. In a partly Scheduled district only the Order's named blocks or villages are scheduled, so a site's own status depends on where in the district it lies.`}
               />
               <Stat
                 label="Families declared displaced"

@@ -57,6 +57,10 @@ export interface ProposalBundle {
   /** The reference cut to the determinations this proposal's districts need. */
   legal: (LegalReference & { available: true }) | { available: false };
   districtNames: Record<string, string>;
+  /** Census 2011 State of each district in `districtNames`, by code. */
+  districtStates?: Record<string, string>;
+  /** The State the register files this proposal under (its shard's State). */
+  filingState?: string | null;
   nearby: { items: NearbyProposal[]; total: number; radiusKm: number };
   /** The forest register's record of the forest proposal this form names. */
   forestRegister?: ForestRegisterEntry | null;
@@ -254,9 +258,13 @@ export async function loadProposal(id: string, read: ReadJson, stages: StagesFil
 
   const byCode = new Map(unique.map((c, i) => [c, districtFiles[i]]));
   const districtNames: Record<string, string> = {};
+  const districtStates: Record<string, string> = {};
   for (const c of codes) {
     const rec = byCode.get(c)?.record;
-    if (rec) districtNames[String(c)] = rec.district_name;
+    if (rec) {
+      districtNames[String(c)] = rec.district_name;
+      districtStates[String(c)] = rec.state_name;
+    }
   }
   const subs: Record<string, SubdistrictRecord> = Object.assign({}, ...subBuckets);
 
@@ -284,6 +292,8 @@ export async function loadProposal(id: string, read: ReadJson, stages: StagesFil
       registry,
       legal,
       districtNames,
+      districtStates,
+      filingState: header.state ?? null,
       nearby: nearbyFrom(cells.flatMap((c) => c ?? []), project),
       geo,
       forestRegister: forestEntry(project, forest),

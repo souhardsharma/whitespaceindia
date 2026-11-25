@@ -169,6 +169,10 @@ export type ResolutionMethod =
   /** A town code spanning districts placed it; the coordinates or the
    *  declared district chose which. */
   | "town_settled"
+  /** The place codes named the same number of places in several districts;
+   *  the coordinates or the declared district chose among them, or the first
+   *  by Census code stands provisionally. */
+  | "tie_settled"
   | "unresolved";
 
 /** A proposal as shipped in a per-state shard, after unpacking. */
@@ -354,6 +358,10 @@ export interface InstrumentMeta {
   site_geometry?: {
     verdicts?: Record<string, number>;
     corroboration_pct?: number;
+    /** present | absent | filed_but_all_discarded, and block counts. */
+    coordinates?: Record<string, number>;
+    /** Filings with coordinates but no district named to test them against. */
+    not_testable_no_district_filed?: number;
   };
   sources: {
     name: string;
@@ -392,6 +400,9 @@ export type ProjectSummary = Omit<Project, "appraisal" | "site"> & {
    * Everything that filters or counts by stage must go through this key.
    */
   statusKey: string | null;
+  /** `dsk`: the decision a position held after one follows (rule 13), else
+   *  null. Absent from summaries built before the column existed. */
+  decisionStage?: string | null;
   /** The decision date (`don`), for the watchlist's status endpoint, which
    *  otherwise had to read a whole shard per watched proposal. */
   decidedOn: string | null;

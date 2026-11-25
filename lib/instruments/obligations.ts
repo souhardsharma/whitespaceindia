@@ -18,6 +18,7 @@
  */
 
 import type { Project } from "./types";
+import { forestReading } from "./links.ts";
 
 /**
  * What the obligation logic actually reads from a proposal, and nothing more.
@@ -153,8 +154,12 @@ export function evaluateTrigger(
       // and so is a form that left the forest-clearance question BLANK
       // (`u` holds "f"): half the forms read leave it blank, and reading
       // that as "no" told readers the rules did not apply.
+      // A form whose land table records forest land while its answers declare
+      // none disagrees with itself (forestReading in links.ts); which is
+      // right is not on the record, so neither "yes" nor "no" is said.
       const forest = declared.forestLandHa;
       const links = (project as ObligationSubject).links;
+      if (forestReading(forest, links) === "disagrees") return "not_determined";
       const fcInvolved = links != null && links !== 0 &&
         (links.f != null || (links.a ?? 0) > 0);
       if ((forest ?? 0) > 0 || fcInvolved) return "yes";

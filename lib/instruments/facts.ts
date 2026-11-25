@@ -20,6 +20,7 @@ import type {
   MeasureRegistry,
   SubdistrictRecord,
 } from "./types";
+import { censusStateName, titleCase } from "./place.ts";
 
 export type Scope = "india" | "state";
 
@@ -218,14 +219,6 @@ export function compareToBenchmark(fact: Fact): {
   return { delta, ratio, direction, text };
 }
 
-function titleCase(s: string): string {
-  return s
-    .toLowerCase()
-    .split(/\s+/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}
-
 /** A district or sub-district record, whichever the profile is showing. */
 export type PlaceRecord = DistrictRecord | SubdistrictRecord;
 
@@ -238,5 +231,5 @@ export function placeName(place: PlaceRecord): string {
 }
 
 export function placeStateName(place: PlaceRecord): string {
-  return titleCase(place.state_name || "");
+  return titleCase(censusStateName(place.state_name || ""));
 }

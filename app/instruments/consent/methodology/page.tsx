@@ -41,6 +41,9 @@ export default function Methodology() {
   const m = meta as unknown as InstrumentMeta;
   const reg = measures as unknown as MeasureRegistry;
   const c = m.counts;
+  // Placements no evidence in the filing chose; counted as low confidence.
+  const townProvisional = m.resolution.adjudication?.town_unsettled ?? 0;
+  const tieProvisional = m.resolution.adjudication?.tie_unsettled ?? 0;
 
   // The census this instrument reports, and how old it is at build time. The
   // page is rebuilt on every sync deploy, so this stays true on its own.
@@ -118,11 +121,6 @@ export default function Methodology() {
 
           <Section n="02" title="Establishing where a project is">
             <P>
-              Every population figure on a profile depends on where the
-              project is placed, so this section sets out the method in
-              detail.
-            </P>
-            <P>
               The finest location the register&rsquo;s search API returns is
               a project&rsquo;s state. It has no district field, so the
               district is read from the application form each proponent
@@ -148,7 +146,17 @@ export default function Methodology() {
                 ["Sub-district named in the filing", m.resolution.method?.subdistrict, "high"],
                 ["District named in the filing", m.resolution.method?.lgd_district, "medium"],
                 ["Declared district and site coordinates agreeing, against the place codes or between districts the codes name", m.resolution.method?.adjudicated, "high"],
-                ["A town spanning districts, settled by the site coordinates or declared district", m.resolution.method?.town_settled, "high"],
+                ["A town spanning districts, settled by the site coordinates or declared district", (m.resolution.method?.town_settled ?? 0) - townProvisional, "high"],
+                ...(townProvisional
+                  ? [["A town spanning districts, with the first of them used provisionally", townProvisional, "low"]]
+                  : []),
+                // Published from the first build that settles ties; absent before.
+                ...(m.resolution.method?.tie_settled != null
+                  ? [["Places named equally in several districts, settled by the site coordinates or declared district", m.resolution.method.tie_settled - tieProvisional, "high"]]
+                  : []),
+                ...(tieProvisional
+                  ? [["Places named equally in several districts, with the first by Census code used provisionally", tieProvisional, "low"]]
+                  : []),
                 ["Inferred from the project name", m.resolution.method?.project_name, "low"],
                 ["Not determined", m.resolution.method?.unresolved, "not applicable"],
               ].map(([label, n, conf]) => [
@@ -159,21 +167,14 @@ export default function Methodology() {
               ])}
             />
             <P>
-              Two features of the form produce answers that look plausible
-              and are wrong, which makes them harder to catch than an outright
-              failure.
-            </P>
-            <P>
-              <strong>The wrong district field.</strong> A Common Application
-              Form carries three districts: the project&rsquo;s, the
+              A Common Application Form carries three districts: the project&rsquo;s, the
               proponent&rsquo;s registered office, and the applicant&rsquo;s
               address. The last two are often a large city hundreds of
               kilometres from the site, so only the project&rsquo;s district is
               used here.
             </P>
             <P>
-              <strong>Two code systems in one record.</strong> Within a single
-              filing the village and sub-district codes are Census 2011
+              Within a single filing the village and sub-district codes are Census 2011
               identifiers while the district code is a Local Government Directory
               code. The two numbering systems differ, and treating them as one
               would join every record to the wrong place. The village code is
@@ -189,10 +190,23 @@ export default function Methodology() {
               describes the primary district, the one named by the most plots
               unless the reconciliation described next moves it, and states
               that the project spans other districts too.
+              {m.resolution.method?.tie_settled != null ? (
+                <>
+                  {" "}Where the plots name the same number of places in two or
+                  more districts, the coordinates of the site choose among
+                  them, then the district the form declares, and failing both
+                  the first by Census code is used provisionally. The
+                  coordinates settled{" "}
+                  {nf.format(m.resolution.adjudication?.tie_by_coordinates ?? 0)}, the
+                  declared district{" "}
+                  {nf.format(m.resolution.adjudication?.tie_by_declaration ?? 0)}, and{" "}
+                  {nf.format(tieProvisional)} stand provisionally. The
+                  profile says which of these decided it.
+                </>
+              ) : null}
             </P>
             <P>
-              <strong>Three statements of place, reconciled.</strong> A filing
-              states where a project is in three ways: the place codes on its
+              A filing states where a project is in three ways: the place codes on its
               plots, the district it declares and the coordinates of its site.
               The codes are preferred because they are the most specific, but a
               code can be wrong in a way the other two reveal. Where the
@@ -300,8 +314,8 @@ export default function Methodology() {
             </P>
             <ul className="font-body text-[14.5px] leading-relaxed opacity-85 space-y-3 list-disc pl-5">
               <li>
-                <strong>Primary Health Centre counts.</strong> The Village
-                Directory column sums to roughly 58,800 nationally against about
+                The Village Directory&rsquo;s count of Primary Health Centres
+                sums to roughly 58,800 nationally against about
                 24,000 actual centres in 2011, with 30,000 in a single
                 sub-district, which shows the column is corrupt at this level
                 of aggregation. The doctor vacancy rate, a ratio of two columns
@@ -309,16 +323,15 @@ export default function Methodology() {
                 whatever unit the counts were recorded in.
               </li>
               <li>
-                <strong>Electricity, water and bus coverage.</strong> At
-                sub-district level these are yes-or-no flags recording whether
-                any village has the service, and 5,590 of 5,834 sub-districts
+                Electricity, water and bus coverage are recorded at
+                sub-district level as yes-or-no flags saying whether any
+                village has the service, and 5,590 of 5,834 sub-districts
                 read 1. With 96% answering yes nationally, the flag says nothing
                 about how many people are covered, so it is left off the
                 profiles.
               </li>
               <li>
-                <strong>Counts that are zero across an entire state.</strong>{" "}
-                Every one of Gujarat&rsquo;s 26 districts reports zero government
+                Some counts are zero across an entire state. Every one of Gujarat&rsquo;s 26 districts reports zero government
                 middle schools while Jamnagar alone reports 1,217 primary
                 schools. Gujarat&rsquo;s primary schools run to standard 8, so
                 the state has no separate middle schools to count. Where a count
@@ -327,7 +340,6 @@ export default function Methodology() {
                 schools do not exist.
               </li>
               <li>
-                <strong>Doctor vacancy where the source contradicts itself.</strong>{" "}
                 In some districts the Village Directory records more doctors in
                 post than posts sanctioned, which yields impossible rates such
                 as −466%. The rate is withheld in those districts and both raw
@@ -391,8 +403,7 @@ export default function Methodology() {
               as not determined, for the reason given below.
             </P>
             <P>
-              <strong>Districts drawn after an Order.</strong> Every Order
-              defines its area by the territorial divisions that existed on its
+              Every Order defines its area by the territorial divisions that existed on its
               date, and drawing a new district later leaves the scheduled
               ground unchanged. A later district&rsquo;s status therefore
               follows from where its ground lay on that date. A district carved
@@ -406,7 +417,7 @@ export default function Methodology() {
               to be inside and none decided to be outside.
             </P>
             <P>
-              <strong>Andhra Pradesh and Telangana</strong> are governed by
+              Andhra Pradesh and Telangana are governed by
               the 1950 Orders C.O. 9 and C.O. 26, which schedule the agency
               tracts of the old Madras districts and villages of the old
               Hyderabad State, district by district. The districts they reach
@@ -429,8 +440,7 @@ export default function Methodology() {
               settle the question, and the page says so.
             </P>
             <P>
-              Two claims that circulate widely are corrected here. C.O. 192 of
-              2003 is titled for Chhattisgarh, Jharkhand and Madhya Pradesh,
+              C.O. 192 of 2003 is titled for Chhattisgarh, Jharkhand and Madhya Pradesh,
               and its schedule lists thirty areas in Chhattisgarh and Madhya
               Pradesh, while Jharkhand&rsquo;s areas are scheduled by C.O. 229
               of 2007. Odisha lies outside C.O. 192 and remains under C.O. 109
@@ -443,15 +453,16 @@ export default function Methodology() {
               Sixth Schedule areas in Assam, Meghalaya, Tripura and Mizoram
               fall under a separate constitutional regime, administered through
               Autonomous District Councils, and the Panchayats (Extension to
-              Scheduled Areas) Act, 1996 (PESA) does not apply to them. They
-              carry their own label, distinct from both scheduled and
-              unscheduled.
+              Scheduled Areas) Act, 1996 (PESA) does not apply to them. This
+              instrument records every district of those four States as
+              outside the Fifth Schedule. The note on each of their pages says
+              whether the Sixth Schedule reaches that district, and names the
+              arrangement where it does.
             </P>
           </Section>
 
           <Section n="07" title="Verification">
             <P>
-              <strong>The location is checked against a second document.</strong>{" "}
               Everything on this instrument depends on knowing where each
               project is, and that knowledge comes from a single source, the
               form the proponent filled in. The placement is therefore tested
@@ -483,18 +494,25 @@ export default function Methodology() {
               would mistake that city for the site.
             </P>
             <P>
-              <strong>The site coordinates check every location.</strong> Each
-              filing&rsquo;s mapped blocks are tested against the Census 2011
-              district boundaries: {nf.format(m.site_geometry?.verdicts?.inside ?? 0)}{" "}
-              fall inside a district the proposal is placed in and{" "}
-              {nf.format(m.site_geometry?.verdicts?.boundary ?? 0)} on its edge;{" "}
+              The site coordinates are a second check. Each filing&rsquo;s
+              mapped blocks are tested against the Census 2011 district
+              boundaries: {nf.format(m.site_geometry?.verdicts?.inside ?? 0)}{" "}
+              filings have a block inside a district the filing names and{" "}
+              {nf.format(m.site_geometry?.verdicts?.boundary ?? 0)} on the edge of
+              one;{" "}
               {nf.format(m.site_geometry?.verdicts?.elsewhere ?? 0)} fall elsewhere,
               and each of those pages says where the coordinates fall and which
-              statements of place the profile follows instead.
+              statements of place the profile follows instead. A block inside
+              a named district may lie in a district other than the one
+              profiled, and the page then says so.{" "}
+              {nf.format(m.site_geometry?.coordinates?.absent ?? 0)} filings give
+              no coordinates and{" "}
+              {nf.format(m.site_geometry?.coordinates?.filed_but_all_discarded ?? 0)}{" "}
+              give only blocks too malformed to test.
             </P>
             <P>
-              <strong>A rebuild that fails its checks publishes nothing.</strong>{" "}
-              Every measure declares the range it can plausibly fall in, and a
+              A rebuild that fails its checks publishes nothing. Every measure
+              declares the range it can plausibly fall in, and a
               value outside that range stops the rebuild. Figures that must add
               up are checked, so the cultivator and agricultural labourer
               shares have to sum to the land-dependent share. A sample of the
@@ -564,11 +582,16 @@ export default function Methodology() {
                     Ministry&rsquo;s portal serves no Common Application Form
                     at all, and {nf.format(cafPend)}{" "}
                     {cafPend === 1 ? "has" : "have"} not been read yet. The
-                    rest were read and record no village, sub-district or
+                    rest were read and name no village, sub-district or
                     district, and their project names contain no district that
-                    matches the Census gazetteer. They are reported as
-                    undetermined, and their profiles show no state averages in
-                    place of district figures.
+                    matches the Census gazetteer.{" "}
+                    {nf.format(m.site_geometry?.not_testable_no_district_filed ?? 0)}{" "}
+                    of the unplaced proposals filed site coordinates, and each
+                    of their pages names the Census 2011 district the
+                    coordinates fall in. The instrument uses coordinates to
+                    check a placement and places no proposal by them, so these
+                    are reported as undetermined too, and their pages show no
+                    state averages in place of district figures.
                   </>
                 ) : (
                   <>Every published proposal resolved to at least a district.</>

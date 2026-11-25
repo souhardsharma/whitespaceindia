@@ -38,7 +38,7 @@ export const metadata = pageMeta({
   path: "/instruments/consent/latest",
   title: "Recent changes in the register | People & Consent",
   description:
-    "A day-by-day log of environmental clearance proposals filed, decided, closed or sent back for more details across India over the last sixty days, dated by the regulator's own appraisal history.",
+    "A day-by-day log of environmental clearance proposals filed, decided, closed or sent back for more details across India, dated by the regulator's own appraisal history. It opens on the last thirty days and reaches back sixty.",
 });
 
 const STAGE_LABELS: Record<string, string> = Object.fromEntries(

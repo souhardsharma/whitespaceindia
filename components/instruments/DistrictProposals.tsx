@@ -21,9 +21,30 @@ import Link from "next/link";
 import { PLUM } from "./InstrumentChrome";
 import WakeNote from "./WakeNote";
 import { BackendAsleep, wakeLink, wakeOrigin } from "@/lib/instruments/wake";
+import { stageLabel } from "@/lib/instruments/projects";
+import stagesFile from "@/public/data/instruments/consent/stages.json";
 
 const nf = new Intl.NumberFormat("en-IN");
 const PAGE = 100;
+
+/** Canonical stage key to its label, from the one stage registry (rule 5:
+ *  the register writes one stage several ways). */
+const STAGE_LABELS: Record<string, string> = Object.fromEntries(
+  Object.entries(
+    (stagesFile as { statuses?: Record<string, { label?: string }> }).statuses ?? {},
+  ).map(([k, v]) => [k, String(v?.label ?? k)]),
+);
+
+/**
+ * The position, as the canonical stage, and the decision it follows where the
+ * register shows a position held after one (`dsk`, rule 13: "Forwarded to the
+ * pollution control board" after a Terms of Reference grant).
+ */
+function positionText(p: DistrictProposal): string {
+  const now = stageLabel(p.sk, p.status, STAGE_LABELS);
+  const after = p.dsk ? STAGE_LABELS[p.dsk] : null;
+  return after ? `${now}, after: ${after}` : now;
+}
 
 export interface DistrictProposal {
   id: string;
@@ -32,7 +53,12 @@ export interface DistrictProposal {
   agency: string;
   sector: string;
   cat: string | null;
+  /** The register's raw status text, kept for a key the registry lacks. */
   status: string;
+  /** Canonical stage key (`sk`). Absent from rows read before it was carried. */
+  sk?: string | null;
+  /** The decision a post-decision position follows (`dsk`), else null. */
+  dsk?: string | null;
   date: string;
   af: number | null;
   df: number | null;
@@ -108,7 +134,8 @@ export default function DistrictProposals({
         const page = (await res.json()) as {
           items: {
             id: string; no: string; name: string; agency: string; sector: string;
-            category: string | null; status: string; date: string;
+            category: string | null; status: string; statusKey?: string | null;
+            decisionStage?: string | null; date: string;
             district: number | null; stateSlug: string;
             declared: { affectedFamilies: number | null; displacedFamilies: number | null;
                         rnrInvolved: string | null };
@@ -121,7 +148,8 @@ export default function DistrictProposals({
           seen.add(r.id);
           got.push({
             id: r.id, no: r.no, name: r.name, agency: r.agency, sector: r.sector,
-            cat: r.category, status: r.status, date: r.date,
+            cat: r.category, status: r.status, sk: r.statusKey ?? null,
+            dsk: r.decisionStage ?? null, date: r.date,
             af: r.declared.affectedFamilies, df: r.declared.displacedFamilies,
             rnr: r.declared.rnrInvolved, dc: r.district, state: r.stateSlug,
           });
@@ -157,7 +185,7 @@ export default function DistrictProposals({
                   {p.cat ? `Category ${p.cat}` : "No category"}
                 </span>
                 <span className="font-label text-[10px] uppercase tracking-[0.13em] opacity-70">
-                  {p.status}
+                  {positionText(p)}
                 </span>
                 <span className="font-label text-[10px] tracking-[0.08em] opacity-65">
                   {p.date}

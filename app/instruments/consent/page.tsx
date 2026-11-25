@@ -224,9 +224,14 @@ export default function ConsentInstrument() {
                         m.counts.proposals_published -
                           m.counts.proposals_district_resolved
                       )}{" "}
-                      proposals could not be placed in any district. Their
-                      location is shown as undetermined, and no district is
-                      assumed for them.
+                      proposals could not be placed in any district, because
+                      neither the application form, where the portal serves
+                      one, nor the project&rsquo;s title names one.{" "}
+                      {nf.format(m.site_geometry?.not_testable_no_district_filed ?? 0)}{" "}
+                      of them filed site coordinates, and each of their pages
+                      names the district those fall in. The instrument uses
+                      coordinates to check a placement and draws no district
+                      profile from them.
                     </>
                   ) : (
                     <>

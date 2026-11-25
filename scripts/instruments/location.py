@@ -80,6 +80,10 @@ CONFIDENCE = {
     # A town code spanning districts placed the primary; the coordinates or
     # the declared district chose among its districts. See adjudicate().
     "town_settled": "high",
+    # The place codes name the same number of places in several districts;
+    # the coordinates or the declared district chose among them. See
+    # adjudicate() and _settle_tie().
+    "tie_settled": "high",
     "lgd_district": "medium",
     "project_name": "low",
 }
@@ -259,6 +263,14 @@ def resolve_from_caf(caf: dict, index: LocationIndex) -> dict | None:
     # cite is a town spanning several districts: district -> its candidates.
     provisional: Counter = Counter()
     candidates_of: dict[str, set[int]] = {}
+    # The PLACES named in each district, for ranking: villages, and
+    # sub-districts named with no village in them. A plot that names only the
+    # sub-district a named village already lies in is the same place said less
+    # precisely (115284072 names Dhurki and a village in Dhurki, in Garhwa, and
+    # one village in Surguja: one place in each, though Garhwa has two plots).
+    village_places: dict[str, set[str]] = {}
+    village_subdistricts: dict[str, set[str]] = {}
+    subdistrict_places: dict[str, set[str]] = {}
     method = None
 
     for plot in caf.get("plots") or []:
@@ -277,6 +289,8 @@ def resolve_from_caf(caf: dict, index: LocationIndex) -> dict | None:
                     candidates_of.setdefault(hit[0], set()).update(
                         int(d) for d in spans)
                 districts[hit[0]] += 1
+                village_places.setdefault(hit[0], set()).add(key)
+                village_subdistricts.setdefault(hit[0], set()).add(hit[1])
                 # The village still places the DISTRICT - that part is real.
                 # It just has no sub-district to name, and saying so is the
                 # honest answer. Counting the sentinel here is what put 1,855
@@ -294,6 +308,7 @@ def resolve_from_caf(caf: dict, index: LocationIndex) -> dict | None:
             dt = index.subdistrict.get(key)
             if dt:
                 districts[dt] += 1
+                subdistrict_places.setdefault(dt, set()).add(key)
                 subdistricts[key] += 1
                 method = method or "subdistrict"
 
@@ -306,7 +321,23 @@ def resolve_from_caf(caf: dict, index: LocationIndex) -> dict | None:
     if not districts:
         return None
 
-    ordered = [d for d, _ in districts.most_common()]
+    places = Counter({
+        d: len(village_places.get(d, ()))
+        + len(subdistrict_places.get(d, set()) - village_subdistricts.get(d, set()))
+        for d in districts})
+    if not any(places.values()):
+        places = Counter(districts)
+    ordered = [d for d, _ in places.most_common()]
+    # A tie for the most places is no majority. Counter breaks it by the order
+    # the plots arrived in, which says nothing about the site; the tied
+    # districts are recorded, put in Census-code order so an unsettled tie is
+    # at least reproducible, and adjudicate() lets the coordinates or the
+    # declaration choose (115284072: one place in Garhwa, one in Surguja, its
+    # site in Surguja, was profiled as Garhwa "where it names the most places").
+    top = places[ordered[0]]
+    tied = sorted((d for d in ordered if places[d] == top), key=int)
+    if len(tied) > 1:
+        ordered = tied + [d for d in ordered if d not in tied]
     primary = ordered[0]
     # The primary is in doubt only if EVERY plot counted under it cited an
     # ambiguous town. A Thane project with one Greater Mumbai plot among its
@@ -321,6 +352,7 @@ def resolve_from_caf(caf: dict, index: LocationIndex) -> dict | None:
         "ambiguous_candidates": ambiguous,
         "districts": [int(d) for d in ordered],
         "primary_district": int(primary),
+        "tied": [int(d) for d in tied] if len(tied) > 1 else None,
         "subdistricts": sorted({int(s) for s in subdistricts}),
         "villages": sorted({int(v) for v in villages}),
         "village_count": len(set(villages)),
@@ -395,7 +427,15 @@ def adjudicate(loc: dict, verdict: str | None, falls_in: int | None,
 
     Returns the (possibly new) location and one of: kept | adjudicated |
     adjudicated_within_named | town_by_coordinates | town_by_declaration |
-    town_unsettled | contested
+    town_unsettled | contested | tie_by_coordinates | tie_by_declaration |
+    tie_unsettled
+
+    A TIE. When the codes name the same number of places in two or more
+    districts, they have no majority to rank first. The coordinates choose
+    among the tied districts, then the declared district; failing both the
+    first by Census code stands, provisionally. Method `tie_settled`. It runs
+    after the rules above, so a filing the declaration and coordinates move
+    as a whole is moved by them.
     """
     primary = loc.get("primary_district")
     if primary is None:
@@ -422,11 +462,11 @@ def adjudicate(loc: dict, verdict: str | None, falls_in: int | None,
                 return split
             target, outcome = primary, "town_unsettled"
         districts = [target] + [d for d in named if d not in (primary, target)]
-        return _moved(loc, target, districts, "town_settled", primary,
-                      index), outcome
+        return _provisional(_moved(loc, target, districts, "town_settled", primary,
+                                   index), outcome), outcome
 
     if falls_in is None and not under:
-        return loc, "kept"
+        return _settle_tie(loc, falls_in, under, index) or (loc, "kept")
     if verdict == "elsewhere" and declared is not None and declared not in named:
         if declared in under:
             return _moved(loc, declared, [declared], "adjudicated", primary,
@@ -444,7 +484,47 @@ def adjudicate(loc: dict, verdict: str | None, falls_in: int | None,
     split = _split_codes(loc, verdict, under, index)
     if split is not None:
         return split
-    return loc, "kept"
+    return _settle_tie(loc, falls_in, under, index) or (loc, "kept")
+
+
+def _settle_tie(loc: dict, falls_in: int | None, under: set,
+                index: LocationIndex | None) -> tuple[dict, str] | None:
+    """Choose among districts the codes name equally, or None if no tie.
+
+    The coordinates choose first: the district the published block falls in,
+    else any tied district a block falls in (the declared one if it is among
+    them, else the first by code). Then the declared district. Failing both,
+    the first by Census code stands and the outcome says it is unsettled.
+    Every district the codes name stays named.
+    """
+    tied = [d for d in (loc.get("tied") or [])]
+    primary = loc.get("primary_district")
+    if len(tied) < 2 or primary not in tied or loc.get("method") not in (
+            "village", "subdistrict"):
+        return None
+    declared = loc.get("declared_district")
+    mapped = sorted(d for d in under if d in tied)
+    if falls_in is not None and falls_in in tied:
+        target, outcome = falls_in, "tie_by_coordinates"
+    elif mapped:
+        target = declared if declared in mapped else mapped[0]
+        outcome = "tie_by_coordinates"
+    elif declared is not None and declared in tied:
+        target, outcome = declared, "tie_by_declaration"
+    else:
+        target, outcome = primary, "tie_unsettled"
+    named = list(loc.get("districts") or [primary])
+    districts = [target] + [d for d in named if d != target]
+    return _provisional(_moved(loc, target, districts, "tie_settled", primary,
+                               index), outcome), outcome
+
+
+def _provisional(loc: dict, outcome: str) -> dict:
+    """An unsettled outcome keeps its method's code but not its confidence:
+    nothing in the filing chose that district, so it is counted as low."""
+    if outcome in ("town_unsettled", "tie_unsettled"):
+        loc["confidence"] = "low"
+    return loc
 
 
 def _split_codes(loc: dict, verdict: str | None, under: set,

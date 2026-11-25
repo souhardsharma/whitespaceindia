@@ -20,6 +20,7 @@ import type {
   StateSummary,
 } from "@/lib/instruments/types";
 import { stageLabel } from "@/lib/instruments/projects";
+import { censusStateName, titleCase } from "@/lib/instruments/place";
 import { BackendAsleep, wakeLink, wakeOrigin } from "@/lib/instruments/wake";
 import { PLUM } from "./InstrumentChrome";
 
@@ -202,7 +203,7 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
             <option value="">All of India</option>
             {states.map((s) => (
               <option key={s.slug} value={s.slug}>
-                {titleCase(s.name)} ({nf.format(s.total)})
+                {titleCase(censusStateName(s.name))} ({nf.format(s.total)})
               </option>
             ))}
           </select>
@@ -328,7 +329,7 @@ export default function ProjectSearch({ index }: { index: InstrumentIndex }) {
                   <span className="opacity-75">
                     {" "}
                     of {nf.format(current ? current.total : registerTotal)}{" "}
-                    {current ? `filed in ${titleCase(current.name)}` : "in the register"}
+                    {current ? `filed in ${titleCase(censusStateName(current.name))}` : "in the register"}
                   </span>
                 </>
               )}
@@ -443,6 +444,8 @@ function LocationBadge({ project: p }: { project: ProjectSummary }) {
       ? "declared district, confirmed by site"
       : p.resolution === "town_settled"
       ? "town in several districts, settled by site or form"
+      : p.resolution === "tie_settled"
+      ? "places named equally in several districts"
       : "inferred from project title";
   return (
     <span className="font-label text-[10px] uppercase tracking-[0.14em] opacity-70">
@@ -467,10 +470,3 @@ function EmptyState({ title, body }: { title: string; body: string }) {
   );
 }
 
-function titleCase(s: string): string {
-  return s
-    .toLowerCase()
-    .split(/\s+/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}

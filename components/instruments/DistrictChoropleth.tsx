@@ -31,6 +31,7 @@ import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 // The shared record type. A private copy here was structurally identical, so
 // the caller could only pass its own (also private) copy through a cast.
 import type { DistrictRecord } from "@/lib/instruments/types";
+import { presentState, titleCase } from "@/lib/instruments/place";
 
 /** One feature as react-simple-maps hands it back: the GeoJSON feature plus
  *  the stable key the library adds. */
@@ -145,7 +146,7 @@ export default function DistrictChoropleth({
         .map((d) => ({
           code: Number(d.censuscode),
           name: d.district_name,
-          state: d.state_name,
+          state: titleCase(presentState(Number(d.censuscode), d.state_name)),
           value: (d.values?.[measureKey] ?? null) as number | null,
           sa: scheduled[String(d.censuscode)] ?? "unknown",
         }))
@@ -295,7 +296,7 @@ export default function DistrictChoropleth({
                       role="img"
                       tabIndex={-1}
                       aria-label={
-                        `${rec?.district_name ?? code}, ${rec?.state_name ?? ""}. ` +
+                        `${rec?.district_name ?? code}, ${titleCase(presentState(code, rec?.state_name ?? ""))}. ` +
                         `${spec?.label ?? measureKey}: ${formatValue(value, spec?.unit)}` +
                         // Only when the overlay is on. role="img" names the
                         // GRAPHIC, and announcing an outline that is not drawn
@@ -308,7 +309,7 @@ export default function DistrictChoropleth({
                         const b = wrap.current?.getBoundingClientRect();
                         setHover({
                           name: rec?.district_name ?? String(code),
-                          state: rec?.state_name ?? "",
+                          state: titleCase(presentState(code, rec?.state_name ?? "")),
                           value,
                           x: e.clientX - (b?.left ?? 0),
                           y: e.clientY - (b?.top ?? 0),
@@ -318,7 +319,7 @@ export default function DistrictChoropleth({
                       onFocus={() =>
                         setHover({
                           name: rec?.district_name ?? String(code),
-                          state: rec?.state_name ?? "",
+                          state: titleCase(presentState(code, rec?.state_name ?? "")),
                           value,
                           x: 12,
                           y: 12,

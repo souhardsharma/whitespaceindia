@@ -55,7 +55,7 @@ export default function ActivityList({
         >
           {forProposal ? "Recent steps in this proposal" : "Recent activity"}
         </h2>
-        {!forProposal && district != null ? (
+        {!forProposal && district != null && total > 0 ? (
           <Link
             href={`/instruments/consent/latest?district=${district}&days=60`}
             className="font-label text-[10px] uppercase tracking-[0.16em] underline underline-offset-2"

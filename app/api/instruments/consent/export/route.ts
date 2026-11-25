@@ -11,6 +11,8 @@ import type { Determination } from '@/lib/instruments/determination';
 import { locationEvidence } from '@/lib/instruments/location';
 import { LINKS_BLANK, LINKS_NONE, LINKS_UNREAD, linkedClearanceLines } from '@/lib/instruments/links';
 import { forestRecord, proposalRow, stateSlugs } from '@/lib/instruments/server';
+import { censusStateName, presentState, titleCase } from '@/lib/instruments/place';
+import { stageLabel } from '@/lib/instruments/projects';
 import React from 'react';
 import fs from 'fs';
 import path from 'path';
@@ -203,7 +205,14 @@ export async function POST(req: NextRequest) {
     agency: (row[F('agency')] as string || '').trim(),
     sector: shard.sectors[row[F('sector')] as number],
     category: row[F('cat')] as string,
-    status: shard.statuses[row[F('status')] as number],
+    // The canonical stage (rule 5), the raw text only for a key the registry lacks.
+    status: stageLabel(
+      (row[F('sk')] as string) ?? null,
+      shard.statuses[row[F('status')] as number] ?? '',
+      Object.fromEntries(Object.entries(
+        (readJson('stages.json') as { statuses?: Record<string, { label?: string }> }).statuses ?? {},
+      ).map(([k, v]) => [k, String(v?.label ?? k)])),
+    ),
     date: row[F('date')] as string,
     authority: row[F('auth')] !== null ? shard.authorities[row[F('auth')] as number] : null,
     land: row[F('land')] as number | null,
@@ -220,7 +229,7 @@ export async function POST(req: NextRequest) {
   // same three statements of place. See lib/instruments/location.ts.
   const RESOLUTION_BY_CODE: Record<string, string> = {
     v: 'village', s: 'subdistrict', d: 'lgd_district', n: 'project_name',
-    a: 'adjudicated', c: 'town_settled', x: 'unresolved',
+    a: 'adjudicated', c: 'town_settled', t: 'tie_settled', x: 'unresolved',
   };
   const evidenceNames: Record<string, string> = {};
   for (const c of [districtCode, ...((row[F('dall')] as number[]) ?? []),
@@ -270,6 +279,19 @@ export async function POST(req: NextRequest) {
   );
 
 
+  // An unplaced proposal's coordinates, where it filed any, and its filing
+  // State: the screen says both (lib: ProjectProfile UnresolvedLocation).
+  const siteCode = row[F('gd')] as number | null;
+  const siteRecord = siteCode != null ? districts[String(siteCode)] : null;
+  const unplacedSite =
+    (siteRecord
+      ? ` The coordinates filed for its site fall in ${titleCase(siteRecord.district_name)}, ` +
+        `${titleCase(presentState(siteCode, siteRecord.state_name))}, on the Census 2011 district map. ` +
+        'This instrument places a proposal by the places its form or title names and uses coordinates ' +
+        'to check that placement, so with no place named, no district is profiled.'
+      : '') +
+    (shard.state ? ` The register lists the proposal under ${titleCase(censusStateName(shard.state))}.` : '');
+
   const groups = ['population', 'livelihood', 'infrastructure', 'circumstances'] as const;
   const factsByGroup = groups.map((g) => ({
     group: g,
@@ -314,7 +336,7 @@ export async function POST(req: NextRequest) {
         `${project.no} · ${project.category ? `Category ${project.category}` : 'No category recorded'} · ${project.status}` +
         (project.authority ? ` · ${project.authority}` : '')),
       React.createElement(Text, { style: s.meta },
-        `${project.agency || 'Applicant not recorded'} · ${project.sector} · submitted ${project.date}`),
+        `${project.agency || 'Applicant not recorded'} · ${project.sector} · latest submission ${project.date}`),
       React.createElement(View, { style: s.rule }),
 
       // location
@@ -322,7 +344,7 @@ export async function POST(req: NextRequest) {
       district
         ? React.createElement(React.Fragment, null,
             React.createElement(Text, { style: s.body },
-              `${district.district_name}, ${district.state_name}`),
+              `${titleCase(district.district_name)}, ${titleCase(presentState(Number(district.censuscode), district.state_name))}`),
             React.createElement(Text, { style: s.small },
               (evidence.contested ? 'The location is uncertain. ' : '') +
                 evidence.sentences.join(' ')))
@@ -337,7 +359,7 @@ export async function POST(req: NextRequest) {
         // proposals where no such omission is known - in the document a
         // reader downloads and cites. The screen was fixed; this was not.
         : React.createElement(Text, { style: s.body },
-            project.formStatus === 'none'
+            (project.formStatus === 'none'
               ? 'The location of this project could not be determined. The PARIVESH ' +
                 'portal of the Ministry of Environment, Forest and Climate Change serves ' +
                 'no Common Application Form for this proposal, so we could read no filed ' +
@@ -354,10 +376,10 @@ export async function POST(req: NextRequest) {
                 'Common Application Form records no village, sub-district or district, ' +
                 'and the project’s title names no district we can match to the Census ' +
                 '2011 list. No population profile is shown, because a state average would ' +
-                'describe a far larger area than the site.'),
+                'describe a far larger area than the site.') + unplacedSite),
 
       // declared
-      (project.land || project.affected || project.displaced || project.rnr === 'YES')
+      (project.land || project.forest || project.affected || project.displaced || project.rnr === 'YES')
         ? React.createElement(React.Fragment, null,
             React.createElement(Text, { style: s.h2 }, 'Declared by the applicant'),
             React.createElement(Text, { style: s.small },
@@ -366,7 +388,7 @@ export async function POST(req: NextRequest) {
                   ? `The project uses land recorded as ${nf.format(project.land)}, and the filing gives no unit for that figure.`
                   : null,
                 project.forest
-                  ? `It involves forest land recorded as ${nf.format(project.forest)}, again with no unit given.`
+                  ? `Its table of land use records ${nf.format(project.forest)} of existing forest land, again with no unit given.`
                   : null,
                 project.displaced ? `${nf.format(project.displaced)} families will be displaced.` : null,
                 project.affected ? `${nf.format(project.affected)} families will be affected.` : null,
@@ -381,7 +403,7 @@ export async function POST(req: NextRequest) {
       ...(() => {
         const links = F('lk') >= 0 ? ((row[F('lk')] as ObligationSubject['links']) ?? null) : null;
         const fr = forestRecord({ links } as never);
-        const { state, lines } = linkedClearanceLines(links ?? null, fr);
+        const { state, lines } = linkedClearanceLines(links ?? null, fr, project.forest);
         if (state === 'unread') return [React.createElement(Text, { style: s.small }, LINKS_UNREAD)];
         if (state === 'none') return [React.createElement(Text, { style: s.small }, LINKS_NONE)];
         if (state === 'blank') return [React.createElement(Text, { style: s.small }, LINKS_BLANK)];

@@ -31,8 +31,9 @@ DISTINCTIONS THAT ARE EASY TO GET WRONG, AND MATTER
    Panchayati Raj Act and State PESA Rules. Treat it as a floor state law must
    meet, not a directly enforceable project consent gate.
 
-5. There is NO section 10A in the central RFCTLARR Act. Andhra Pradesh and
-   Maharashtra each inserted a state section 10A that exempts listed project
+5. There is NO section 10A in the central RFCTLARR Act. Gujarat, Telangana,
+   Jharkhand, Andhra Pradesh and Maharashtra (at least) each inserted a state
+   section 10A that exempts listed project
    categories from the Social Impact Assessment chapter AND removes the 70/80%
    consent requirement for them in those states. Citing "s.10A" as central law
    is an error.
@@ -63,6 +64,10 @@ REVIEWED = "2026-08-21"
 #               the RFCTLARR Second Schedule trigger.
 # The reference's top-level `last_reviewed` is the latest of all of these.
 REVIEWED_2026_09_25 = "2026-09-25"
+#   2026-11-26  the RFCTLARR section 2(2) note (the State section 10A list,
+#               read from the State Acts) and the section 41(3) note (its
+#               reach beside section 105); the Ladakh determinations.
+REVIEWED_2026_11_26 = "2026-11-26"
 STATE_REVIEWED = {"Andhra Pradesh": REVIEWED_2026_09_25}
 
 
@@ -124,12 +129,23 @@ OBLIGATIONS: list[dict] = [
                    "Does not apply to land bought through private negotiation.",
         "trigger_key": "acquisition_private_or_ppp",
         "source_url": INDIACODE_RFCTLARR,
-        "last_reviewed": REVIEWED,
+        "last_reviewed": REVIEWED_2026_11_26,
         "verified": True,
-        "note": "Andhra Pradesh (Act 22 of 2018) and Maharashtra (Act 37 of 2018) "
-                "each inserted a state section 10A removing this consent "
-                "requirement for listed project categories. There is no section "
-                "10A in the central Act.",
+        # The States are those whose amending Act was read on 2026-11-26:
+        # Gujarat Act 12 of 2016 (FAOLEX copy of the Gujarat text), Telangana
+        # Act 21 of 2017 (Telangana Gazette Part IV-B Extraordinary No. 22,
+        # 17 May 2017), Jharkhand Act 7 of 2018 (Jharkhand Gazette, through
+        # PRS), and the Andhra Pradesh and Maharashtra Acts read on 2026-08-21.
+        # Other States may have done the same, hence "among them".
+        "note": "The central Act has no section 10A. Several States have "
+                "inserted one by State amendment, among them Gujarat (Act 12 "
+                "of 2016), Telangana (Act 21 of 2017), Jharkhand (Act 7 of "
+                "2018), Andhra Pradesh (Act 22 of 2018) and Maharashtra (Act "
+                "37 of 2018). Each lets the State government exempt listed "
+                "kinds of project, by notification, from Chapters II and III, "
+                "which hold the Social Impact Assessment and the food security "
+                "safeguards, and the same amendments exempt those projects "
+                "from this consent requirement.",
     },
     {
         "instrument": "RFCTLARR 2013",
@@ -137,21 +153,38 @@ OBLIGATIONS: list[dict] = [
         "kind": "statutory",
         "requirement": (
             "In a Scheduled Area, the prior consent of the Gram Sabha, Panchayat "
-            "or Autonomous District Council must be obtained in ALL cases of land "
-            "acquisition, including cases of urgency, before any notification "
-            "issues under this or any other Act."
+            "or Autonomous District Council must be obtained in all cases of land "
+            "acquisition, including cases of urgency, before a notification "
+            "issues under this Act or any other Central or State Act in force."
         ),
         "trigger": "Any acquisition or alienation of land in a Fifth Schedule "
                    "Scheduled Area.",
         "trigger_key": "scheduled_area",
         "source_url": INDIACODE_RFCTLARR,
-        "last_reviewed": REVIEWED,
+        "last_reviewed": REVIEWED_2026_11_26,
         "verified": True,
-        "note": "This is consent, not consultation, and it is the strongest "
-                "consent provision in the Indian land acquisition regime. "
-                "Sections 41(1) and 41(2) additionally direct that acquisition in "
-                "Scheduled Areas be avoided as far as possible and undertaken only "
-                "as a demonstrable last resort.",
+        # Section 105(1): "the provisions of this Act shall not apply to the
+        # enactments relating to land acquisition specified in the Fourth
+        # Schedule", subject to 105(3), which extends the First, Second and
+        # Third Schedules to them. Section 41(3) names notifications "under
+        # this Act, or any other Central Act or a State Act". Read together
+        # they point different ways for a Fourth Schedule acquisition, and no
+        # judgment settling it is held here, so the note states both texts.
+        "note": "The section requires consent, where PESA asks for "
+                "consultation. Sections 41(1) and 41(2) also direct that "
+                "acquisition in Scheduled Areas be avoided as far as possible "
+                "and used only as a demonstrable last resort. Section 105(1) "
+                "says the Act's provisions do not apply to the land "
+                "acquisition enactments in its Fourth Schedule, among them the "
+                "Coal Bearing Areas (Acquisition and Development) Act, 1957, "
+                "the National Highways Act, 1956 and the Railways Act, 1989, "
+                "and section 105(3) extends to them only the Act's terms on "
+                "compensation, rehabilitation and resettlement, and "
+                "infrastructure in resettlement areas (its First, Second and "
+                "Third Schedules). Section 41(3) itself names notifications "
+                "under any other Central Act, so for an acquisition under one "
+                "of those enactments the two sections point different ways, "
+                "and this reference does not settle which governs.",
     },
     {
         "instrument": "RFCTLARR 2013",
@@ -211,7 +244,7 @@ OBLIGATIONS: list[dict] = [
         "kind": "statutory",
         "requirement": (
             "The Gram Sabha or Panchayat at the appropriate level shall be "
-            "CONSULTED before land is acquired in a Scheduled Area for a "
+            "consulted before land is acquired in a Scheduled Area for a "
             "development project, and before affected persons are resettled or "
             "rehabilitated."
         ),
@@ -220,11 +253,11 @@ OBLIGATIONS: list[dict] = [
         "source_url": PESA_PDF,
         "last_reviewed": REVIEWED,
         "verified": True,
-        "note": "Consultation, not consent. The word 'consent' does not appear in "
-                "PESA. PESA binds state legislatures rather than proponents "
-                "directly, so its project-level effect runs through the State "
-                "Panchayati Raj Act and State PESA Rules. Nine of the ten PESA "
-                "states have notified Rules; Odisha has not.",
+        "note": "PESA asks for consultation, and the word 'consent' does not "
+                "appear in it. It binds State legislatures, so its effect on a "
+                "project runs through the State Panchayati Raj Act and the "
+                "State's PESA Rules. Nine of the ten PESA States have notified "
+                "Rules; Odisha has not.",
     },
     {
         "instrument": "PESA 1996",
@@ -232,29 +265,29 @@ OBLIGATIONS: list[dict] = [
         "kind": "statutory",
         "requirement": (
             "The recommendation of the Gram Sabha or Panchayat is mandatory "
-            "before the grant of a prospecting licence or mining lease for MINOR "
+            "before the grant of a prospecting licence or mining lease for minor "
             "minerals in a Scheduled Area, and before any concession for "
             "exploiting minor minerals by auction."
         ),
-        "trigger": "Mining of MINOR minerals in a Fifth Schedule Scheduled Area. "
-                   "Major minerals - coal, iron ore, bauxite, limestone - are not "
-                   "covered by these clauses.",
+        "trigger": "Mining of minor minerals in a Fifth Schedule Scheduled Area. "
+                   "These clauses do not cover major minerals such as coal, iron "
+                   "ore, bauxite and limestone.",
         "trigger_key": "scheduled_area_minor_minerals",
         "source_url": PESA_PDF,
         "last_reviewed": REVIEWED,
         "verified": True,
-        "note": "What is mandatory is obtaining the recommendation, not complying "
-                "with it. The Act does not provide that an adverse recommendation "
-                "defeats the grant.",
+        "note": "The Act makes obtaining the recommendation mandatory. It does "
+                "not provide that an adverse recommendation defeats the grant.",
     },
     {
         "instrument": "Forest Rights Act 2006",
         "provision": "Section 3(1)(i) and section 2(a)",
         "kind": "statutory",
         "requirement": (
-            "Community Forest Resource rights - to protect, regenerate, conserve "
-            "or manage customary common forest land - vest in the Gram Sabha and "
-            "must be recognised before that land is treated as unencumbered."
+            "Community Forest Resource rights, the rights to protect, "
+            "regenerate, conserve or manage customary common forest land, vest "
+            "in the Gram Sabha and must be recognised before that land is "
+            "treated as unencumbered."
         ),
         "trigger": "Any project on or affecting forest land where forest rights "
                    "have been claimed or are capable of being claimed.",
@@ -270,12 +303,13 @@ OBLIGATIONS: list[dict] = [
         "requirement": (
             "Free informed consent of the Gram Sabhas concerned, obtained in "
             "writing, to any proposed resettlement and to the resettlement "
-            "package. One of six cumulative conditions that must ALL be satisfied."
+            "package. It is one of six conditions, and all six must be met."
         ),
         "trigger": "Resettlement of forest rights holders from a critical wildlife "
                    "habitat in a National Park or Sanctuary, to create an inviolate "
-                   "area for wildlife conservation. This is NOT a general consent "
-                   "requirement for every forest diversion.",
+                   "area for wildlife conservation. The consent attaches to that "
+                   "resettlement only; consent to forest diversion in general rests "
+                   "on the 2009 circular under the Forest (Conservation) Act.",
         "trigger_key": "critical_wildlife_habitat",
         "source_url": FRA_PDF,
         "last_reviewed": REVIEWED,
@@ -309,8 +343,8 @@ OBLIGATIONS: list[dict] = [
         "source_url": "https://tribal.nic.in/FRA/data/MoEFCircular30-07-2009.pdf",
         "last_reviewed": REVIEWED,
         "verified": True,
-        "note": "This is an ADMINISTRATIVE circular, a different source of "
-                "obligation from the Act itself. Its current force is affected by "
+        "note": "The duty rests on an administrative circular issued under "
+                "the Act, and on no section of the Act itself. Its current force is affected by "
                 "the Van (Sanrakshan Evam Samvardhan) Adhiniyam 2023 and the 2023 "
                 "Rules made under it, and by Ashok Kumar Sharma v. Union of India "
                 "in the Supreme Court. Treat the position as contested and verify "
@@ -327,12 +361,13 @@ OBLIGATIONS: list[dict] = [
         "provision": "Paragraphs 13 to 17, read with paragraph 11",
         "kind": "standard",
         "requirement": (
-            "Free, Prior and Informed Consent of affected Indigenous Peoples, not "
-            "merely consultation, in defined circumstances: impacts on lands and "
-            "natural resources subject to traditional ownership or customary use "
-            "(paras 13-14); relocation from such lands (para 15); significant "
-            "impacts on critical cultural heritage (para 16); and commercial use "
-            "of cultural heritage or traditional knowledge (para 17)."
+            "Free, Prior and Informed Consent of affected Indigenous Peoples in "
+            "defined circumstances: impacts on lands and natural resources "
+            "subject to traditional ownership or customary use (paragraphs 13 "
+            "and 14); relocation from such lands (paragraph 15); significant "
+            "impacts on critical cultural heritage (paragraph 16); and "
+            "commercial use of cultural heritage or traditional knowledge "
+            "(paragraph 17)."
         ),
         "trigger": "A project affecting Indigenous Peoples, where the client is "
                    "financed by IFC or by a lender applying the Performance "
@@ -343,14 +378,14 @@ OBLIGATIONS: list[dict] = [
         "last_reviewed": REVIEWED,
         "verified": True,
         "note": "The 2012 edition remains in force; a joint IFC/MIGA update launched "
-                "in April 2025 has not been adopted. Two framings of the FPIC "
-                "circumstances circulate: PS7 groups paragraphs 16-17 under one "
-                "heading, giving THREE, while IFC's own Guidance Note 7 at GN27 "
-                "enumerates FOUR. Both trace to paragraphs 13-17. Guidance Note 5 "
-                "is the key point for India: applicability turns on the four "
-                "characteristics in paragraph 5, and domestic legal recognition is "
-                "expressly NOT a determining factor - so a group may engage PS7 "
-                "whether or not Indian law calls it anything in particular.",
+                "in April 2025 has not been adopted. Two counts of the FPIC "
+                "circumstances circulate: PS7 groups paragraphs 16 and 17 under "
+                "one heading, which gives three, and IFC's own Guidance Note 7 "
+                "at GN27 enumerates four. Both trace to paragraphs 13 to 17. "
+                "Applicability turns on the four characteristics in paragraph "
+                "5, and the Guidance Note says domestic legal recognition does "
+                "not determine it, so a group may engage PS7 whatever Indian "
+                "law calls it.",
     },
     {
         "instrument": "IFC Performance Standard 5 (Land Acquisition and Involuntary Resettlement), 2012",
@@ -359,12 +394,12 @@ OBLIGATIONS: list[dict] = [
         "requirement": (
             "Compensation at full replacement cost, with possession taken only "
             "after compensation is made available. A Resettlement Action Plan is "
-            "required for physical displacement REGARDLESS OF THE NUMBER OF PEOPLE "
-            "AFFECTED; a Livelihood Restoration Plan is required for economic "
+            "required for physical displacement whatever the number of people "
+            "affected; a Livelihood Restoration Plan is required for economic "
             "displacement alone."
         ),
         "trigger": "Physical or economic displacement where affected people do not "
-                   "have the right to refuse - including negotiated settlements "
+                   "have the right to refuse, including negotiated settlements "
                    "reached in the shadow of expropriation. Genuinely voluntary "
                    "market transactions are outside PS5.",
         "trigger_key": "ifc_standards",
@@ -374,7 +409,7 @@ OBLIGATIONS: list[dict] = [
         "note": "Paragraph 17 recognises three categories of displaced person, "
                 "including those with no recognisable legal right or claim. That "
                 "reaches people Indian land acquisition law does not compensate, "
-                "notably agricultural labourers who hold no land right.",
+                "such as agricultural labourers who hold no land right.",
     },
     {
         "instrument": "Equator Principles EP4 (July 2020)",
@@ -382,11 +417,12 @@ OBLIGATIONS: list[dict] = [
         "kind": "standard",
         "requirement": (
             "For a project in a Non-Designated Country, compliance with the IFC "
-            "Performance Standards in full, not merely with host country law. "
+            "Performance Standards in full, in addition to host country law. "
             "Principle 5 requires effective, culturally appropriate stakeholder "
             "engagement, Informed Consultation and Participation where impacts may "
-            "be significant, and FPIC in the PS7 paragraph 13-17 circumstances - "
-            "with a qualified independent consultant evaluating the process."
+            "be significant, and FPIC in the circumstances of PS7 paragraphs 13 "
+            "to 17, with a qualified independent consultant evaluating the "
+            "process."
         ),
         "trigger": "Project finance from US$10 million total capital cost, or "
                    "project-related corporate loans where the aggregate loan and "
@@ -399,9 +435,10 @@ OBLIGATIONS: list[dict] = [
         "verified": True,
         "note": "India is neither an OECD member nor on the World Bank high-income "
                 "list, so it is a Non-Designated Country and the IFC Performance "
-                "Standards apply in full rather than host-country law alone. "
-                "DECISIVE FOR APPLICABILITY: of the 126 current signatories there "
-                "is NO Indian institution. IDFC FIRST Bank was the only Indian "
+                "Standards apply in full alongside host-country law. Whether the "
+                "Principles reach a project turns on its lenders, and none of "
+                "the 126 current signatories is an Indian institution. IDFC FIRST "
+                "Bank was the only Indian "
                 "signatory ever, from 2013 until it de-listed voluntarily in 2023. "
                 "The Equator Principles therefore reach an Indian project only "
                 "through a foreign lender. Note also that 'SBI Shinsei Bank' on the "
@@ -428,7 +465,7 @@ OBLIGATIONS: list[dict] = [
                        "NO::P11200_COUNTRY_ID:102691"),
         "last_reviewed": "2026-08-22",
         "verified": True,
-        "note": "INDIA HAS NOT RATIFIED ILO CONVENTION 169, the 1989 Indigenous and "
+        "note": "India has not ratified ILO Convention 169, the 1989 Indigenous and "
                 "Tribal Peoples Convention that revised C107 and introduced the "
                 "consultation and consent standards most often cited in this field. "
                 "Verified directly against the ILO NORMLEX ratification table for "
@@ -772,8 +809,8 @@ SCHEDULED_DISTRICTS: list[tuple[str, str, str, str, str]] = [
     #    Administration of Scheduled Areas. No district is wholly scheduled.
     ("Maharashtra", "Thane", "CO123", "partial",
      "Shahapur taluka wholly, and parts of Bhiwandi and Murbad. The talukas now "
-     "forming Palghar district - Dahanu, Talasari, Mokhada, Jawhar, Wada and "
-     "Vikramgad wholly, with parts of Palghar and Vasai - were in Thane district "
+     "forming Palghar district (Dahanu, Talasari, Mokhada, Jawhar, Wada and "
+     "Vikramgad wholly, with parts of Palghar and Vasai) were in Thane district "
      "when the Order was made"),
     ("Maharashtra", "Nashik", "CO123", "partial",
      "Peth, Surgana and Kalwan talukas wholly; parts of Dindori, Igatpuri, Nashik, "
@@ -840,7 +877,7 @@ SUCCESSOR_DISTRICTS: list[tuple[str, str, str, str, str, str]] = [
      "carved from Koraput in 1992"),
     ("Madhya Pradesh", "Anuppur", "Shahdol", "CO192", "partial",
      "carved from Shahdol in 2003, taking four of the seven Shahdol tahsils "
-     "the Order names - Pushparajgarh, Anuppur, Jaithari and Kotma"),
+     "the Order names: Pushparajgarh, Anuppur, Jaithari and Kotma"),
     ("Madhya Pradesh", "Burhanpur", "Khandwa", "CO192", "partial",
      "carved from East Nimar (Khandwa) in 2003, taking the Khaknar tribal "
      "development block the Order names"),
@@ -1119,11 +1156,11 @@ OTHER_REGIMES = {
     "Manipur": ("Article 371C and the Hill Areas Committee of the "
                 "Legislative Assembly"),
     "Sikkim": "Article 371F",
+    # Keyed by the Census 2011 spelling, which is how the gazetteer names
+    # the State; the note prints DISPLAY_STATE's spelling.
     "Arunanchal Pradesh": ("the Bengal Eastern Frontier Regulation 1873 "
                            "(Inner Line) and State land law; the Fifth "
                            "Schedule has never been extended to it"),
-    "Jammu & Kashmir": ("State land and forest-rights law; no Presidential "
-                        "Order under the Fifth Schedule extends here"),
     "Andaman & Nicobar Island": ("the Andaman and Nicobar Islands "
                                  "(Protection of Aboriginal Tribes) "
                                  "Regulation 1956, which reserves areas for "
@@ -1136,15 +1173,41 @@ OTHER_REGIMES = {
                     "applies to States"),
 }
 
+# The Census 2011 frame names some States in a way a reader would take for
+# a misprint ("Arunanchal Pradesh") or in a form the page never uses
+# elsewhere. Matching stays on the Census spelling; notes print these.
+DISPLAY_STATE = {
+    "Arunanchal Pradesh": "Arunachal Pradesh",
+    "Jammu & Kashmir": "Jammu and Kashmir",
+    "Andaman & Nicobar Island": "the Andaman and Nicobar Islands",
+    "Dadara & Nagar Havelli": "Dadra and Nagar Haveli",
+    "Daman & Diu": "Daman and Diu",
+}
+
+# Jammu and Kashmir and Ladakh, Union Territories since 31 October 2019, the
+# appointed day under the Jammu and Kashmir Reorganisation Act, 2019. Section
+# 3 forms Ladakh from Kargil and Leh districts; section 95(1) applies the
+# central laws in Table 1 of its Fifth Schedule to both territories, and
+# that Table lists the 2013 land acquisition Act (item 94) and the Forest
+# Rights Act (item 97). Read on indiankanoon.org/doc/11729445, 2026-11-26.
+JK_REORGANISATION = (
+    "the Forest Rights Act, 2006 and the Right to Fair Compensation and "
+    "Transparency in Land Acquisition, Rehabilitation and Resettlement Act, "
+    "2013 apply here, both extended by section 95(1) of the Jammu and "
+    "Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule"
+)
+LADAKH_CODES = {"3", "4"}  # Leh (Ladakh) and Kargil, Census 2011
+JK_NORM = "Jammu & Kashmir"
+
 NOTES = {
     "scheduled_areas_status": (
         "Fifth Schedule Scheduled Areas are declared by Presidential Order under "
         "paragraph 6 of the Fifth Schedule. There is no machine-readable "
         "authoritative list. Until each Order has been read and its districts, "
-        "blocks and villages transcribed, this instrument reports Scheduled Area "
-        "status as not determined rather than inferring it. A high Scheduled "
-        "Tribe population share is not a Scheduled Area and the two do not "
-        "coincide."
+        "blocks and villages transcribed, this instrument reports its Scheduled "
+        "Area status as not determined. A high Scheduled Tribe population "
+        "share does not make a place a Scheduled Area, and the two often "
+        "differ."
     ),
     "pesa_states": [
         "Andhra Pradesh", "Chhattisgarh", "Gujarat", "Himachal Pradesh",
@@ -1531,9 +1594,9 @@ def build_determinations() -> tuple[dict[str, dict], list[str], dict]:
             "The Order names these sub-divisions of this district in whole. A "
             "site inside one of them is inside the Scheduled Area; a site "
             "elsewhere in the district is not settled by this, because the "
-            "Order may reach it through a unit - a revenue circle, a "
-            "panchayat, a village - that the Census sub-district frame does "
-            "not carry. The match is by NAME against Census 2011 "
+            "Order may reach it through a unit, such as a revenue circle, a "
+            "panchayat or a village, that the Census sub-district frame does "
+            "not carry. The match is by name against Census 2011 "
             "sub-districts, and a Census sub-district is not the same "
             "administrative unit in every State: a tehsil in Madhya Pradesh, "
             "a taluka in Gujarat and Maharashtra, a tahsil or police station "
@@ -1580,12 +1643,12 @@ def build_determinations() -> tuple[dict[str, dict], list[str], dict]:
                 "lastReviewed": REVIEWED,
                 "note": (
                     f"The Presidential Order for {state} schedules areas below "
-                    "district level - by taluka and by individual village - and "
+                    "district level, by taluka and by individual village, and "
                     "names no district as a whole. It does not name this "
-                    "district in the list transcribed here, but that list is a "
-                    "State compilation rather than the Order's own text, so its "
-                    "silence cannot settle whether a village in this district "
-                    "is scheduled. Read the Order."
+                    "district in the list transcribed here, but that list comes "
+                    "from a State compilation of the Order, so its silence "
+                    "cannot settle whether a village in this district is "
+                    "scheduled. Read the Order."
                 ),
             }
         elif st_norm in transcribed:
@@ -1606,13 +1669,13 @@ def build_determinations() -> tuple[dict[str, dict], list[str], dict]:
                      "Scheduled Area under that Order."
                      if len(orders) == 1 else
                      f"Two Presidential Orders declare the Scheduled Areas in "
-                     f"what was {state} in 2011 - {' and '.join(orders)}. The "
-                     "districts they reach - as the first Order's text names "
-                     "them, as the Andhra Pradesh High Court recited them in "
-                     "Gundla Venkateswara Rao (1983), and as the Ministry of "
-                     "Panchayati Raj lists notified Fifth Schedule Areas - do "
-                     "not include this one, so no part of it is a Scheduled "
-                     "Area under them.")
+                     f"what was {state} in 2011: {' and '.join(orders)}. The "
+                     "first Order's text, the Andhra Pradesh High Court's "
+                     "recital of it in Gundla Venkateswara Rao (1983) and the "
+                     "Ministry of Panchayati Raj's list of notified Fifth "
+                     "Schedule Areas each name the districts these Orders "
+                     "reach, and none names this one, so no part of it is a "
+                     "Scheduled Area under them.")
                     + " A later Order could add one; this reference states the "
                     f"position as transcribed and reviewed on {reviewed_for(state)}."
                 ),
@@ -1623,6 +1686,32 @@ def build_determinations() -> tuple[dict[str, dict], list[str], dict]:
             # future State added to one of those lists cannot fall through to
             # the affirmative branch below.
             continue
+        elif state == JK_NORM:
+            # Two Union Territories since 2019, one Census 2011 State. Leh and
+            # Kargil were published as "Jammu & Kashmir" under "State land
+            # law", for a territory that has been neither a State nor part of
+            # Jammu and Kashmir since 31 October 2019.
+            ladakh = code in LADAKH_CODES
+            out[code] = {
+                "status": "outside",
+                "instrument": FIFTH_SCHEDULE_SOURCE,
+                "sourceUrl": FIFTH_SCHEDULE_URL,
+                "lastReviewed": REVIEWED_2026_11_26,
+                "note": (
+                    ("Leh and Kargil have formed the Union Territory of "
+                     "Ladakh since 31 October 2019, under section 3 of the "
+                     "Jammu and Kashmir Reorganisation Act, 2019. No "
+                     "Presidential Order under paragraph 6 of the Fifth "
+                     "Schedule declares any Scheduled Area in Ladakh, so no "
+                     "part of this district is one and PESA does not apply. "
+                     if ladakh else
+                     "No Presidential Order under paragraph 6 of the Fifth "
+                     "Schedule declares any Scheduled Area in Jammu and "
+                     "Kashmir, a Union Territory since 31 October 2019, so no "
+                     "part of this district is one and PESA does not apply. ")
+                    + JK_REORGANISATION[0].upper() + JK_REORGANISATION[1:] + "."
+                ),
+            }
         else:
             regime = other_regimes.get(st_norm)
             unused_regimes.discard(st_norm)
@@ -1633,8 +1722,9 @@ def build_determinations() -> tuple[dict[str, dict], list[str], dict]:
                 "lastReviewed": REVIEWED,
                 "note": (
                     f"No Presidential Order under paragraph 6 of the Fifth "
-                    f"Schedule declares any Scheduled Area in {state}, so no "
-                    "part of this district is one and PESA does not apply."
+                    f"Schedule declares any Scheduled Area in "
+                    f"{DISPLAY_STATE.get(state, state)}, so no part of this "
+                    "district is one and PESA does not apply."
                     + (f" A different protection does apply here: {regime}."
                        if regime else "")
                 ),
@@ -1657,11 +1747,11 @@ def build_determinations() -> tuple[dict[str, dict], list[str], dict]:
                 f"The Presidential Order for {sname} as transcribed here does "
                 f"not name {dname}, but {because}. Those two cannot both be "
                 "current, and this reference does not hold whatever reached "
-                "the district after the Order. The position is therefore "
-                "recorded as undetermined rather than as a denial: consent "
-                "may well be a legal precondition here, and it should be "
-                "checked against the Order in force before anything is "
-                "concluded from this page."
+                "the district after the Order. This reference therefore "
+                "records the position as not determined. Consent may well be "
+                "a legal precondition here, and it should be checked against "
+                "the Order in force before anything is concluded from this "
+                "page."
             ),
         }
 

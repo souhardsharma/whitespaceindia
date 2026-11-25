@@ -324,6 +324,10 @@ RESOLUTION_CODES = {
     # a town code spanning districts placed it; the coordinates or the
     # declared district chose which (see location.adjudicate)
     "town_settled": "c",
+    # the codes named the same number of places in several districts; the
+    # coordinates or the declared district chose among them, or the first by
+    # Census code stands provisionally (see location._settle_tie)
+    "tie_settled": "t",
 }
 
 USER_AGENT = "Mozilla/5.0 (compatible; whitespaceindia-instruments/1.0)"
@@ -1447,7 +1451,8 @@ def main() -> None:
                   "unresolved_by_form_status": {},
                   # the outcome of location.adjudicate() for every row it
                   # examined: kept | adjudicated | contested |
-                  # town_by_coordinates | town_by_declaration | town_unsettled
+                  # town_by_coordinates | town_by_declaration | town_unsettled |
+                  # tie_by_coordinates | tie_by_declaration | tie_unsettled
                   "adjudication": {}, "adjudication_moves": []}
     by_state: dict[str, list[dict]] = {}
     lookup: dict[str, str] = {}
@@ -2332,11 +2337,14 @@ def main() -> None:
                     "Filters and counts resolve through the canonical key so "
                     "they cannot disagree; stages.json carries the mapping.",
         },
+        # Where the next census stands is said by the pages, from
+        # nextCensusNote() in lib/instruments/vintage.ts, which reads the date:
+        # typed here it said "the 2021 Census has not been conducted" on every
+        # proposal page while Census 2027 was under way.
         "vintage_warning": (
-            "The socio-economic profile is Census 2011. It is the most recent "
-            "complete sub-district enumeration of India; the 2021 Census has not "
-            "been conducted. Every figure describes the population as it was "
-            "enumerated in 2011 and is presented on that basis."
+            "The socio-economic profile is Census 2011, the most recent census "
+            "published at sub-district level. Every figure describes the "
+            "population as it was enumerated in 2011."
         ),
         "invariants": {
             "violations": len(violations),

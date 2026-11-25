@@ -33,7 +33,7 @@ import AppraisalTimeline from "./AppraisalTimeline";
 import SiteLocator, { type GeoFeature } from "./SiteLocator";
 import stagesFile from "@/public/data/instruments/consent/stages.json";
 import freshness from "@/public/data/instruments/consent/freshness.json";
-import { sourceVintageLabel } from "@/lib/instruments/vintage";
+import { CENSUS_YEAR, nextCensusNote, sourceVintageLabel } from "@/lib/instruments/vintage";
 import { stageLabel } from "@/lib/instruments/projects";
 import type { ProposalBundle } from "@/lib/instruments/bundle";
 import {
@@ -52,11 +52,21 @@ import {
 } from "./ConsentScreen";
 import { PLUM } from "./InstrumentChrome";
 import { locationEvidence, profiledDistrictPhrase } from "@/lib/instruments/location";
-import { presentState, titleCase } from "@/lib/instruments/place";
+import { censusStateName, presentState, stateMoved, titleCase } from "@/lib/instruments/place";
 import { FollowButton } from "./Watchlist";
 import LinkedClearances from "./LinkedClearances";
+import { forestReading } from "@/lib/instruments/links";
 
 const nf = new Intl.NumberFormat("en-IN");
+
+/** An ISO date as the appraisal timeline writes it, "30 Aug 2025". */
+function dayMonthYear(iso: string): string {
+  const d = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
+  }).format(d);
+}
 
 /** Canonical stage key to its label, from the ONE stage registry. The register
  *  writes 83 spellings of 73 stages; a label typed here would be an 84th. */
@@ -160,6 +170,30 @@ export default function ProjectProfile({
     .map((sd) => (sd as { name: string | null }).name)
     .filter((n): n is string => Boolean(n));
 
+  // How long this has been with the authority. It does not depend on where the
+  // project is, so an unplaced proposal shows it too.
+  const timeline = (
+    <AppraisalTimeline
+      filedOn={project?.appraisal?.filedOn ?? null}
+      decidedOn={project?.appraisal?.decidedOn ?? null}
+      daysToDecision={project?.appraisal?.daysToDecision ?? null}
+      daysPending={project?.appraisal?.daysPending ?? null}
+      daysSuspended={project?.appraisal?.daysSuspended ?? null}
+      queryRounds={project?.appraisal?.queryRounds ?? null}
+      currentStage={project?.appraisal?.currentStage ?? null}
+      currentStageLabel={
+        project?.appraisal?.currentStage
+          ? STAGE_LABELS[project.appraisal.currentStage] ?? null
+          : null
+      }
+      decisionLabel={
+        project?.appraisal?.decisionStage
+          ? STAGE_LABELS[project.appraisal.decisionStage] ?? null
+          : null
+      }
+    />
+  );
+
   return (
     <div>
       <ProjectHeader project={project} />
@@ -176,7 +210,15 @@ export default function ProjectProfile({
       </div>
 
       {project.district === null ? (
-        <UnresolvedLocation project={project} />
+        <>
+          <UnresolvedLocation
+            project={project}
+            names={districtNames}
+            states={bundle.districtStates ?? {}}
+            filingState={bundle.filingState ?? null}
+          />
+          {timeline}
+        </>
       ) : !district ? (
         <Notice
           title="No Census record for this district"
@@ -224,27 +266,7 @@ export default function ProjectProfile({
             features={bundle.geo as GeoFeature[]}
           />
 
-          {/* How long this has been with the authority. Published since
-              Phase 1 and, until now, read by nothing. */}
-          <AppraisalTimeline
-            filedOn={project?.appraisal?.filedOn ?? null}
-            decidedOn={project?.appraisal?.decidedOn ?? null}
-            daysToDecision={project?.appraisal?.daysToDecision ?? null}
-            daysPending={project?.appraisal?.daysPending ?? null}
-            daysSuspended={project?.appraisal?.daysSuspended ?? null}
-            queryRounds={project?.appraisal?.queryRounds ?? null}
-            currentStage={project?.appraisal?.currentStage ?? null}
-            currentStageLabel={
-              project?.appraisal?.currentStage
-                ? STAGE_LABELS[project.appraisal.currentStage] ?? null
-                : null
-            }
-            decisionLabel={
-              project?.appraisal?.decisionStage
-                ? STAGE_LABELS[project.appraisal.decisionStage] ?? null
-                : null
-            }
-          />
+          {timeline}
 
           {bundle.appraisalContext ? (
             <AppraisalComparison c={bundle.appraisalContext} />
@@ -258,7 +280,11 @@ export default function ProjectProfile({
             placeLabel={place ? placeName(place) : ""}
           />
 
-          <LinkedClearances links={project.links} forestRegister={bundle.forestRegister ?? null} />
+          <LinkedClearances
+            links={project.links}
+            forestRegister={bundle.forestRegister ?? null}
+            forestHa={project.declared.forestLandHa}
+          />
 
           <ObligationPanel
             obligations={sortObligations(
@@ -312,7 +338,7 @@ export default function ProjectProfile({
         </>
       )}
 
-      <DataCurrency meta={meta} />
+      <DataCurrency meta={meta} profiled={district != null} />
     </div>
   );
 }
@@ -348,7 +374,17 @@ function ProjectHeader({ project: p }: { project: Project }) {
       <dl className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-5">
         <Meta label="Applicant" value={p.agency || "Not recorded"} />
         <Meta label="Sector" value={p.sector} />
-        <Meta label="Submitted" value={p.date || "Not recorded"} />
+        <Meta
+          label="Latest submission"
+          value={p.date ? dayMonthYear(p.date) : "Not recorded"}
+          hint={
+            p.date && p.appraisal?.filedOn && p.appraisal.filedOn !== p.date
+              ? `The register's date, which moves forward when a proposal is submitted again. The proposal was first filed on ${dayMonthYear(p.appraisal.filedOn)}.`
+              : p.date
+                ? "The register's date for the proposal."
+                : undefined
+          }
+        />
         <Meta
           label="Land declared"
           value={d.totalLandHa != null ? nf.format(d.totalLandHa) : "Not declared"}
@@ -364,7 +400,8 @@ function ProjectHeader({ project: p }: { project: Project }) {
       (d.displacedFamilies ?? 0) > 0 ||
       d.rnrInvolved === "YES" ||
       d.litigationPending === "YES" ||
-      d.violationInvolved === "YES" ? (
+      d.violationInvolved === "YES" ||
+      (d.forestLandHa ?? 0) > 0 ? (
         <div
           className="mt-6 p-4 border-l-2"
           style={{ borderColor: PLUM, background: "rgba(122,59,107,0.04)" }}
@@ -388,9 +425,12 @@ function ProjectHeader({ project: p }: { project: Project }) {
             ) : null}
             {(d.forestLandHa ?? 0) > 0 ? (
               <li>
-                The project involves forest land, recorded as{" "}
-                {nf.format(d.forestLandHa!)}
-                <span className="opacity-75"> with no unit given.</span>
+                The form&rsquo;s table of land use records{" "}
+                {nf.format(d.forestLandHa!)} of existing forest land
+                <span className="opacity-75">, with no unit given.</span>
+                {forestReading(d.forestLandHa, p.links) === "disagrees" ? (
+                  <> Its other answers say otherwise, as the section on other clearances sets out.</>
+                ) : null}
               </li>
             ) : null}
           </ul>
@@ -454,7 +494,7 @@ function LocationPanel({
           <h2 className="font-headline font-bold text-[clamp(22px,2.8vw,34px)] tracking-[-0.02em]">
             {titleCase(district.district_name)}
             <span className="opacity-65">, {titleCase(presentState(district.censuscode, district.state_name))}</span>
-            {presentState(district.censuscode, district.state_name) !== district.state_name ? (
+            {stateMoved(district.censuscode) ? (
               <span className="block font-label text-[10px] uppercase tracking-[0.16em] opacity-80 mt-1">
                 {titleCase(district.state_name)} in Census 2011
               </span>
@@ -529,45 +569,50 @@ function LocationPanel({
   );
 }
 
-function UnresolvedLocation({ project: p }: { project: Project }) {
+function UnresolvedLocation({
+  project: p,
+  names,
+  states,
+  filingState,
+}: {
+  project: Project;
+  names: Record<string, string>;
+  states: Record<string, string>;
+  filingState: string | null;
+}) {
+  const filedIn = filingState ? titleCase(censusStateName(filingState)) : null;
+  // Where the site coordinates fall, when the form gave any. 270 of the 277
+  // unplaced proposals filed coordinates inside a Census district; the page
+  // said "the state is the most precise location available" beside a list of
+  // the proposals within 10 km of those same coordinates.
+  const at = p.site?.fallsIn ?? null;
+  const siteDistrict =
+    at != null && names[String(at)]
+      ? `${titleCase(names[String(at)])}, ${titleCase(presentState(at, states[String(at)] ?? ""))}`
+      : null;
+  const hasCoordinates = p.site?.lat != null && p.site?.lon != null;
+  const title = "the project’s title names no district we can match to the Census 2011 list";
   return (
     <section className="mb-10 border border-dashed border-[#1c1c19]/35 p-6">
       <h2 className="font-headline font-bold text-[clamp(20px,2.4vw,28px)] tracking-[-0.02em] mb-3">
         Location not determined
       </h2>
-      {/* Branch on whether a form was served at all.
-          456 proposals reach this screen and only 266 of them were read and
-          found to name no place. For 189 the Ministry's portal answers that it
-          serves NO application form, and for 1 this instrument has not read
-          the form yet. Saying "the applicant's form does not record a
-          location" about all of them attributes an omission in a public
-          regulatory filing to a named company for 190 proposals where no such
-          omission is known. Not-yet-read, not-served and read-but-silent are
-          three different facts. */}
+      {/* Branch on whether a form was served at all. Not-yet-read, not-served
+          and read-but-silent are three different facts: saying "the
+          applicant's form does not record a location" where the portal serves
+          no form charges a named company with an omission no one has shown. */}
       <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl">
-        {p.formStatus === "none" ? (
-          <>
-            The PARIVESH portal of the Ministry of Environment, Forest and
-            Climate Change serves no Common Application Form for this proposal,
-            so we could read no filed location. The project&rsquo;s title names
-            no district we can match to the Census 2011 list either, so the
-            state is the most precise location available.
-          </>
-        ) : p.formStatus === "pend" ? (
-          <>
-            We have not yet read the Common Application Form for this
-            proposal, and the project&rsquo;s title names no district we can
-            match to the Census 2011 list, so for now the state is the most
-            precise location available.
-          </>
-        ) : (
-          <>
-            This proposal&rsquo;s Common Application Form records no village,
-            sub-district or district for the project site, and the
-            project&rsquo;s title names no district we can match to the Census
-            2011 list, so the state is the most precise location available.
-          </>
-        )}
+        {p.formStatus === "none"
+          ? `The PARIVESH portal of the Ministry of Environment, Forest and Climate Change serves no Common Application Form for this proposal, so we could read no filed location, and ${title}.`
+          : p.formStatus === "pend"
+            ? `We have not yet read the Common Application Form for this proposal, and ${title}.`
+            : `This proposal’s Common Application Form names no village, sub-district or district for the project site, and ${title}.`}
+        {siteDistrict
+          ? ` The coordinates filed for its site fall in ${siteDistrict}, on the Census 2011 district map. This instrument places a proposal by the places its form or title names and uses coordinates to check that placement, so with no place named, no district is profiled here.`
+          : hasCoordinates
+            ? " The coordinates filed for its site fall in no Census 2011 district."
+            : ""}
+        {filedIn ? ` The register lists the proposal under ${filedIn}.` : ""}
       </p>
       <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl mt-3">
         No population profile is shown, because a state average would describe
@@ -584,15 +629,20 @@ function UnresolvedLocation({ project: p }: { project: Project }) {
   );
 }
 
-function DataCurrency({ meta }: { meta: InstrumentMeta }) {
+function DataCurrency({ meta, profiled }: { meta: InstrumentMeta; profiled: boolean }) {
   return (
     <section className="mt-14 pt-8 border-t border-[#1c1c19]">
       <h2 className="font-label text-[10px] uppercase tracking-[0.22em] opacity-70 mb-4">
         How current the data is
       </h2>
-      <p className="font-body text-[13.5px] leading-relaxed opacity-75 max-w-3xl mb-5">
-        {meta.vintage_warning}
-      </p>
+      {profiled ? (
+        <p className="font-body text-[13.5px] leading-relaxed opacity-75 max-w-3xl mb-5">
+          Population and work figures come from Census {CENSUS_YEAR}, the most
+          recent census published at sub-district level, and describe people
+          as they were counted then. Household circumstances come from the
+          Socio Economic and Caste Census 2011. {nextCensusNote()}
+        </p>
+      ) : null}
       <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
         {meta.sources.map((s) => (
           <li key={s.name}>

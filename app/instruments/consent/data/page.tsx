@@ -8,6 +8,7 @@ import {
 import StructuredData from "@/components/instruments/StructuredData";
 import { pageLd, pageMeta } from "@/lib/instruments/metadata";
 import meta from "@/public/data/instruments/consent/meta.json";
+import legal from "@/public/data/instruments/consent/legal_reference.json";
 import { SITE_URL } from "@/lib/site";
 
 /**
@@ -28,16 +29,18 @@ export const metadata = pageMeta({
     "The files People & Consent publishes and what each column means, with the endpoints for search, the change feed and CSV downloads.",
 });
 
+const nf = new Intl.NumberFormat("en-IN");
+
 const FILES: [string, string][] = [
   ["meta.json", "Counts, resolution rates, coverage of each source, the register's submission span and the checks the build ran."],
   ["freshness.json", "When the register was last read, and whether that read covered all of it."],
   ["index.json", "The states, sectors, categories and status spellings the shards index into, and the location-method legend."],
   ["lookup.json", "Proposal id to the state shard that holds it."],
   ["projects/<state>.json", "The published proposals filed in one state, as a header named fields followed by one array per proposal. The columns are described below."],
-  ["districts.json", "Census 2011 values for all 640 districts, keyed by census code. Their definitions are in measures.json."],
-  ["subdistricts.json", "The same values for 5,899 sub-districts."],
+  ["districts.json", `Census 2011 values for all ${nf.format(meta.counts.districts)} districts, keyed by census code. Their definitions are in measures.json.`],
+  ["subdistricts.json", `The same values for ${nf.format(meta.counts.subdistricts)} sub-districts.`],
   ["measures.json", "The meaning of every value, with its definition, formula, denominator, source and year, and the India and State benchmarks together with the formula used for each."],
-  ["legal_reference.json", "The Scheduled Area determination for every district with the Presidential Order and citation it rests on, and the fifteen obligations drawn from statutes and international standards."],
+  ["legal_reference.json", `The Scheduled Area determination for every district with the Presidential Order and citation it rests on, and the ${legal.counts.obligations} obligations drawn from statutes and international standards.`],
   ["stages.json", "The standard stages to which every spelling of a status is mapped, with their phases and decision outcomes."],
   ["appraisal.json", "How long clearance takes, by sector, State, authority, category and outcome."],
   ["register/districts.json", "Per-district counts from the register, and every shard that holds a district's proposals."],
@@ -63,7 +66,7 @@ const FIELDS: [string, string][] = [
   ["dall", "Every district the filing names, when more than one."],
   ["sd", "Census 2011 sub-districts the filing names."],
   ["nv", "Number of villages or towns the filing names."],
-  ["dm", "How the proposal was placed, as a code listed under resolutionCodes in index.json. The methods are by village, by sub-district, by declared district, by reconciling conflicting statements, by settling a town that spans districts and by project name, and a further code marks a proposal left unresolved."],
+  ["dm", "How the proposal was placed, as a code listed under resolutionCodes in index.json. The methods are by village, by sub-district, by declared district, by reconciling conflicting statements, by settling a town that spans districts, by settling a tie between districts the filing names equally, and by project name, and a further code marks a proposal left unresolved."],
   ["af", "Families affected, as declared by the proponent."],
   ["df", "Families displaced, as declared."],
   ["rnr", "Rehabilitation and resettlement involved, as declared: YES or NO."],

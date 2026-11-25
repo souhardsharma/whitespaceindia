@@ -2711,7 +2711,7 @@ def test_meta_resolution_block(shards: list) -> None:
     counts = meta.get("counts") or {}
     METHOD = {"v": "village", "s": "subdistrict", "d": "lgd_district",
               "n": "project_name", "a": "adjudicated", "c": "town_settled",
-              "x": "unresolved"}
+              "t": "tie_settled", "x": "unresolved"}
 
     sub = vill = multi = 0
     method: dict = {}

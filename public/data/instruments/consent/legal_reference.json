@@ -1,5 +1,5 @@
 {
- "last_reviewed": "2026-09-25",
+ "last_reviewed": "2026-11-26",
  "subdivision_coverage": {
   "districtsPartial": 67,
   "districtsTranscribed": 39,
@@ -28,21 +28,21 @@
    "triggerKey": "acquisition_private_or_ppp",
    "kind": "statutory",
    "sourceUrl": "https://www.indiacode.nic.in/bitstream/123456789/19895/1/the_right_to_fair_compensation_and_transparency_in_land_acquisition,_rehabilitation_and_resettlement_act,_2013..pdf",
-   "lastReviewed": "2026-08-21",
+   "lastReviewed": "2026-11-26",
    "verified": true,
-   "note": "Andhra Pradesh (Act 22 of 2018) and Maharashtra (Act 37 of 2018) each inserted a state section 10A removing this consent requirement for listed project categories. There is no section 10A in the central Act."
+   "note": "The central Act has no section 10A. Several States have inserted one by State amendment, among them Gujarat (Act 12 of 2016), Telangana (Act 21 of 2017), Jharkhand (Act 7 of 2018), Andhra Pradesh (Act 22 of 2018) and Maharashtra (Act 37 of 2018). Each lets the State government exempt listed kinds of project, by notification, from Chapters II and III, which hold the Social Impact Assessment and the food security safeguards, and the same amendments exempt those projects from this consent requirement."
   },
   {
    "instrument": "RFCTLARR 2013",
    "provision": "Section 41(3)",
-   "requirement": "In a Scheduled Area, the prior consent of the Gram Sabha, Panchayat or Autonomous District Council must be obtained in ALL cases of land acquisition, including cases of urgency, before any notification issues under this or any other Act.",
+   "requirement": "In a Scheduled Area, the prior consent of the Gram Sabha, Panchayat or Autonomous District Council must be obtained in all cases of land acquisition, including cases of urgency, before a notification issues under this Act or any other Central or State Act in force.",
    "trigger": "Any acquisition or alienation of land in a Fifth Schedule Scheduled Area.",
    "triggerKey": "scheduled_area",
    "kind": "statutory",
    "sourceUrl": "https://www.indiacode.nic.in/bitstream/123456789/19895/1/the_right_to_fair_compensation_and_transparency_in_land_acquisition,_rehabilitation_and_resettlement_act,_2013..pdf",
-   "lastReviewed": "2026-08-21",
+   "lastReviewed": "2026-11-26",
    "verified": true,
-   "note": "This is consent, not consultation, and it is the strongest consent provision in the Indian land acquisition regime. Sections 41(1) and 41(2) additionally direct that acquisition in Scheduled Areas be avoided as far as possible and undertaken only as a demonstrable last resort."
+   "note": "The section requires consent, where PESA asks for consultation. Sections 41(1) and 41(2) also direct that acquisition in Scheduled Areas be avoided as far as possible and used only as a demonstrable last resort. Section 105(1) says the Act's provisions do not apply to the land acquisition enactments in its Fourth Schedule, among them the Coal Bearing Areas (Acquisition and Development) Act, 1957, the National Highways Act, 1956 and the Railways Act, 1989, and section 105(3) extends to them only the Act's terms on compensation, rehabilitation and resettlement, and infrastructure in resettlement areas (its First, Second and Third Schedules). Section 41(3) itself names notifications under any other Central Act, so for an acquisition under one of those enactments the two sections point different ways, and this reference does not settle which governs."
   },
   {
    "instrument": "RFCTLARR 2013",
@@ -71,31 +71,31 @@
   {
    "instrument": "PESA 1996",
    "provision": "Section 4(i)",
-   "requirement": "The Gram Sabha or Panchayat at the appropriate level shall be CONSULTED before land is acquired in a Scheduled Area for a development project, and before affected persons are resettled or rehabilitated.",
+   "requirement": "The Gram Sabha or Panchayat at the appropriate level shall be consulted before land is acquired in a Scheduled Area for a development project, and before affected persons are resettled or rehabilitated.",
    "trigger": "Land acquisition or resettlement in a Fifth Schedule Scheduled Area.",
    "triggerKey": "scheduled_area",
    "kind": "statutory",
    "sourceUrl": "https://tribal.nic.in/actRules/PESA.pdf",
    "lastReviewed": "2026-08-21",
    "verified": true,
-   "note": "Consultation, not consent. The word 'consent' does not appear in PESA. PESA binds state legislatures rather than proponents directly, so its project-level effect runs through the State Panchayati Raj Act and State PESA Rules. Nine of the ten PESA states have notified Rules; Odisha has not."
+   "note": "PESA asks for consultation, and the word 'consent' does not appear in it. It binds State legislatures, so its effect on a project runs through the State Panchayati Raj Act and the State's PESA Rules. Nine of the ten PESA States have notified Rules; Odisha has not."
   },
   {
    "instrument": "PESA 1996",
    "provision": "Sections 4(k) and 4(l)",
-   "requirement": "The recommendation of the Gram Sabha or Panchayat is mandatory before the grant of a prospecting licence or mining lease for MINOR minerals in a Scheduled Area, and before any concession for exploiting minor minerals by auction.",
-   "trigger": "Mining of MINOR minerals in a Fifth Schedule Scheduled Area. Major minerals - coal, iron ore, bauxite, limestone - are not covered by these clauses.",
+   "requirement": "The recommendation of the Gram Sabha or Panchayat is mandatory before the grant of a prospecting licence or mining lease for minor minerals in a Scheduled Area, and before any concession for exploiting minor minerals by auction.",
+   "trigger": "Mining of minor minerals in a Fifth Schedule Scheduled Area. These clauses do not cover major minerals such as coal, iron ore, bauxite and limestone.",
    "triggerKey": "scheduled_area_minor_minerals",
    "kind": "statutory",
    "sourceUrl": "https://tribal.nic.in/actRules/PESA.pdf",
    "lastReviewed": "2026-08-21",
    "verified": true,
-   "note": "What is mandatory is obtaining the recommendation, not complying with it. The Act does not provide that an adverse recommendation defeats the grant."
+   "note": "The Act makes obtaining the recommendation mandatory. It does not provide that an adverse recommendation defeats the grant."
   },
   {
    "instrument": "Forest Rights Act 2006",
    "provision": "Section 3(1)(i) and section 2(a)",
-   "requirement": "Community Forest Resource rights - to protect, regenerate, conserve or manage customary common forest land - vest in the Gram Sabha and must be recognised before that land is treated as unencumbered.",
+   "requirement": "Community Forest Resource rights, the rights to protect, regenerate, conserve or manage customary common forest land, vest in the Gram Sabha and must be recognised before that land is treated as unencumbered.",
    "trigger": "Any project on or affecting forest land where forest rights have been claimed or are capable of being claimed.",
    "triggerKey": "forest_land",
    "kind": "statutory",
@@ -107,8 +107,8 @@
   {
    "instrument": "Forest Rights Act 2006",
    "provision": "Section 4(2)(e)",
-   "requirement": "Free informed consent of the Gram Sabhas concerned, obtained in writing, to any proposed resettlement and to the resettlement package. One of six cumulative conditions that must ALL be satisfied.",
-   "trigger": "Resettlement of forest rights holders from a critical wildlife habitat in a National Park or Sanctuary, to create an inviolate area for wildlife conservation. This is NOT a general consent requirement for every forest diversion.",
+   "requirement": "Free informed consent of the Gram Sabhas concerned, obtained in writing, to any proposed resettlement and to the resettlement package. It is one of six conditions, and all six must be met.",
+   "trigger": "Resettlement of forest rights holders from a critical wildlife habitat in a National Park or Sanctuary, to create an inviolate area for wildlife conservation. The consent attaches to that resettlement only; consent to forest diversion in general rests on the 2009 circular under the Forest (Conservation) Act.",
    "triggerKey": "critical_wildlife_habitat",
    "kind": "statutory",
    "sourceUrl": "https://faolex.fao.org/docs/pdf/ind77867.pdf",
@@ -138,43 +138,43 @@
    "sourceUrl": "https://tribal.nic.in/FRA/data/MoEFCircular30-07-2009.pdf",
    "lastReviewed": "2026-08-21",
    "verified": true,
-   "note": "This is an ADMINISTRATIVE circular, a different source of obligation from the Act itself. Its current force is affected by the Van (Sanrakshan Evam Samvardhan) Adhiniyam 2023 and the 2023 Rules made under it, and by Ashok Kumar Sharma v. Union of India in the Supreme Court. Treat the position as contested and verify before relying on it."
+   "note": "The duty rests on an administrative circular issued under the Act, and on no section of the Act itself. Its current force is affected by the Van (Sanrakshan Evam Samvardhan) Adhiniyam 2023 and the 2023 Rules made under it, and by Ashok Kumar Sharma v. Union of India in the Supreme Court. Treat the position as contested and verify before relying on it."
   },
   {
    "instrument": "IFC Performance Standard 7 (Indigenous Peoples), 2012 edition",
    "provision": "Paragraphs 13 to 17, read with paragraph 11",
-   "requirement": "Free, Prior and Informed Consent of affected Indigenous Peoples, not merely consultation, in defined circumstances: impacts on lands and natural resources subject to traditional ownership or customary use (paras 13-14); relocation from such lands (para 15); significant impacts on critical cultural heritage (para 16); and commercial use of cultural heritage or traditional knowledge (para 17).",
+   "requirement": "Free, Prior and Informed Consent of affected Indigenous Peoples in defined circumstances: impacts on lands and natural resources subject to traditional ownership or customary use (paragraphs 13 and 14); relocation from such lands (paragraph 15); significant impacts on critical cultural heritage (paragraph 16); and commercial use of cultural heritage or traditional knowledge (paragraph 17).",
    "trigger": "A project affecting Indigenous Peoples, where the client is financed by IFC or by a lender applying the Performance Standards. PS7 paragraph 4 lists 'scheduled tribes' among the terms that may identify Indigenous Peoples.",
    "triggerKey": "ifc_standards",
    "kind": "standard",
    "sourceUrl": "https://www.ifc.org/content/dam/ifc/doc/mgrt/ifc-performance-standards.pdf",
    "lastReviewed": "2026-08-21",
    "verified": true,
-   "note": "The 2012 edition remains in force; a joint IFC/MIGA update launched in April 2025 has not been adopted. Two framings of the FPIC circumstances circulate: PS7 groups paragraphs 16-17 under one heading, giving THREE, while IFC's own Guidance Note 7 at GN27 enumerates FOUR. Both trace to paragraphs 13-17. Guidance Note 5 is the key point for India: applicability turns on the four characteristics in paragraph 5, and domestic legal recognition is expressly NOT a determining factor - so a group may engage PS7 whether or not Indian law calls it anything in particular."
+   "note": "The 2012 edition remains in force; a joint IFC/MIGA update launched in April 2025 has not been adopted. Two counts of the FPIC circumstances circulate: PS7 groups paragraphs 16 and 17 under one heading, which gives three, and IFC's own Guidance Note 7 at GN27 enumerates four. Both trace to paragraphs 13 to 17. Applicability turns on the four characteristics in paragraph 5, and the Guidance Note says domestic legal recognition does not determine it, so a group may engage PS7 whatever Indian law calls it."
   },
   {
    "instrument": "IFC Performance Standard 5 (Land Acquisition and Involuntary Resettlement), 2012",
    "provision": "Paragraphs 9, 19 and 25",
-   "requirement": "Compensation at full replacement cost, with possession taken only after compensation is made available. A Resettlement Action Plan is required for physical displacement REGARDLESS OF THE NUMBER OF PEOPLE AFFECTED; a Livelihood Restoration Plan is required for economic displacement alone.",
-   "trigger": "Physical or economic displacement where affected people do not have the right to refuse - including negotiated settlements reached in the shadow of expropriation. Genuinely voluntary market transactions are outside PS5.",
+   "requirement": "Compensation at full replacement cost, with possession taken only after compensation is made available. A Resettlement Action Plan is required for physical displacement whatever the number of people affected; a Livelihood Restoration Plan is required for economic displacement alone.",
+   "trigger": "Physical or economic displacement where affected people do not have the right to refuse, including negotiated settlements reached in the shadow of expropriation. Genuinely voluntary market transactions are outside PS5.",
    "triggerKey": "ifc_standards",
    "kind": "standard",
    "sourceUrl": "https://www.ifc.org/content/dam/ifc/doc/mgrt/ifc-performance-standards.pdf",
    "lastReviewed": "2026-08-21",
    "verified": true,
-   "note": "Paragraph 17 recognises three categories of displaced person, including those with no recognisable legal right or claim. That reaches people Indian land acquisition law does not compensate, notably agricultural labourers who hold no land right."
+   "note": "Paragraph 17 recognises three categories of displaced person, including those with no recognisable legal right or claim. That reaches people Indian land acquisition law does not compensate, such as agricultural labourers who hold no land right."
   },
   {
    "instrument": "Equator Principles EP4 (July 2020)",
    "provision": "Principle 3, Principle 5, and the Scope section",
-   "requirement": "For a project in a Non-Designated Country, compliance with the IFC Performance Standards in full, not merely with host country law. Principle 5 requires effective, culturally appropriate stakeholder engagement, Informed Consultation and Participation where impacts may be significant, and FPIC in the PS7 paragraph 13-17 circumstances - with a qualified independent consultant evaluating the process.",
+   "requirement": "For a project in a Non-Designated Country, compliance with the IFC Performance Standards in full, in addition to host country law. Principle 5 requires effective, culturally appropriate stakeholder engagement, Informed Consultation and Participation where impacts may be significant, and FPIC in the circumstances of PS7 paragraphs 13 to 17, with a qualified independent consultant evaluating the process.",
    "trigger": "Project finance from US$10 million total capital cost, or project-related corporate loans where the aggregate loan and the individual lender's commitment are each at least US$50 million with a tenor of two years or more, provided a signatory institution is in the syndicate.",
    "triggerKey": "equator_principles",
    "kind": "standard",
    "sourceUrl": "https://equator-principles.com/app/uploads/The-Equator-Principles_EP4_July2020.pdf",
    "lastReviewed": "2026-08-21",
    "verified": true,
-   "note": "India is neither an OECD member nor on the World Bank high-income list, so it is a Non-Designated Country and the IFC Performance Standards apply in full rather than host-country law alone. DECISIVE FOR APPLICABILITY: of the 126 current signatories there is NO Indian institution. IDFC FIRST Bank was the only Indian signatory ever, from 2013 until it de-listed voluntarily in 2023. The Equator Principles therefore reach an Indian project only through a foreign lender. Note also that 'SBI Shinsei Bank' on the signatory list is Japanese and is not State Bank of India."
+   "note": "India is neither an OECD member nor on the World Bank high-income list, so it is a Non-Designated Country and the IFC Performance Standards apply in full alongside host-country law. Whether the Principles reach a project turns on its lenders, and none of the 126 current signatories is an Indian institution. IDFC FIRST Bank was the only Indian signatory ever, from 2013 until it de-listed voluntarily in 2023. The Equator Principles therefore reach an Indian project only through a foreign lender. Note also that 'SBI Shinsei Bank' on the signatory list is Japanese and is not State Bank of India."
   },
   {
    "instrument": "ILO Convention 107 (Indigenous and Tribal Populations, 1957)",
@@ -186,7 +186,7 @@
    "sourceUrl": "https://normlex.ilo.org/dyn/normlex/en/f?p=NORMLEXPUB:11200:0::NO::P11200_COUNTRY_ID:102691",
    "lastReviewed": "2026-08-22",
    "verified": true,
-   "note": "INDIA HAS NOT RATIFIED ILO CONVENTION 169, the 1989 Indigenous and Tribal Peoples Convention that revised C107 and introduced the consultation and consent standards most often cited in this field. Verified directly against the ILO NORMLEX ratification table for India on 2026-08-22: C107 appears, ratified 29 September 1958 and in force; C169 does not appear at all. This is frequently reported wrongly. C107 was closed to further ratification once C169 entered force, so India remains bound by the older instrument, whose integrationist premise C169 was written to replace."
+   "note": "India has not ratified ILO Convention 169, the 1989 Indigenous and Tribal Peoples Convention that revised C107 and introduced the consultation and consent standards most often cited in this field. Verified directly against the ILO NORMLEX ratification table for India on 2026-08-22: C107 appears, ratified 29 September 1958 and in force; C169 does not appear at all. This is frequently reported wrongly. C107 was closed to further ratification once C169 entered force, so India remains bound by the older instrument, whose integrationist premise C169 was written to replace."
   }
  ],
  "determinations": {
@@ -272,7 +272,7 @@
     "Gorella-1",
     "Gorella-2"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "403": {
    "status": "partial",
@@ -296,7 +296,7 @@
     "Lailunga",
     "Kharsia"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "409": {
    "status": "partial",
@@ -312,7 +312,7 @@
    "namedWholly": [
     "Dondi"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "408": {
    "status": "partial",
@@ -334,7 +334,7 @@
    "unmatchedNames": [
     "Chauki"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "410": {
    "status": "partial",
@@ -354,7 +354,7 @@
     "Mainpur",
     "Chhura"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "412": {
    "status": "partial",
@@ -370,7 +370,7 @@
    "namedWholly": [
     "Nagri"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "464": {
    "status": "within",
@@ -432,7 +432,7 @@
     "Gandhwani",
     "Manawar"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "440": {
    "status": "partial",
@@ -458,7 +458,7 @@
     "Khargone",
     "Meheshwar"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "466": {
    "status": "partial",
@@ -485,7 +485,7 @@
     "Sailana",
     "Bajna"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "447": {
    "status": "partial",
@@ -503,7 +503,7 @@
     "Bhainsdehi",
     "Shahpur"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "456": {
    "status": "partial",
@@ -523,7 +523,7 @@
     "Ghansaur",
     "Kurai"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "457": {
    "status": "partial",
@@ -539,7 +539,7 @@
    "namedWholly": [
     "Baihar"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "449": {
    "status": "partial",
@@ -578,7 +578,7 @@
     "Jaithari",
     "Kotma"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "431": {
    "status": "partial",
@@ -623,7 +623,7 @@
     "Tamia",
     "Jamai"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "364": {
    "status": "within",
@@ -758,7 +758,7 @@
     "Sunderpahari",
     "Boarijor"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "125": {
    "status": "within",
@@ -815,7 +815,7 @@
     "Rishabhdeo",
     "Gogunda"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "123": {
    "status": "partial",
@@ -858,7 +858,7 @@
    "namedWholly": [
     "Abu Road"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "489": {
    "status": "within",
@@ -901,7 +901,7 @@
     "Songadh",
     "Valod"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "488": {
    "status": "partial",
@@ -927,7 +927,7 @@
     "Sagbara",
     "Nandod"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "491": {
    "status": "partial",
@@ -953,7 +953,7 @@
     "Bansda",
     "Chikhli"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "484": {
    "status": "partial",
@@ -979,7 +979,7 @@
     "Limkheda",
     "Deogarh Baria"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "486": {
    "status": "partial",
@@ -1001,7 +1001,7 @@
    "foundInSuccessorDistrict": [
     "Tilakvada"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "472": {
    "status": "partial",
@@ -1023,7 +1023,7 @@
     "Meghraj",
     "Vijaynagar"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "376": {
    "status": "within",
@@ -1066,7 +1066,7 @@
    "namedWholly": [
     "Kuchinda"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "375": {
    "status": "partial",
@@ -1088,7 +1088,7 @@
     "Champua",
     "Barbil"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "390": {
    "status": "partial",
@@ -1108,7 +1108,7 @@
     "Balliguda",
     "G. Udayagiri"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "388": {
    "status": "partial",
@@ -1125,7 +1125,7 @@
    "foundInSuccessorDistrict": [
     "R. Udayagiri"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "395": {
    "status": "partial",
@@ -1179,7 +1179,7 @@
     "Pangi",
     "Bharmour"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "545": {
    "status": "partial",
@@ -1239,7 +1239,7 @@
    "status": "partial",
    "instrument": "The Scheduled Areas (Maharashtra) Order, 1985",
    "provision": "C.O. 123, notified 1985-12-02",
-   "citation": "G.S.R. 876(E), Gazette of India Extraordinary Part II Section 3 Sub-section (i), No. 521. Covers: Shahapur taluka wholly, and parts of Bhiwandi and Murbad. The talukas now forming Palghar district - Dahanu, Talasari, Mokhada, Jawhar, Wada and Vikramgad wholly, with parts of Palghar and Vasai - were in Thane district when the Order was made.",
+   "citation": "G.S.R. 876(E), Gazette of India Extraordinary Part II Section 3 Sub-section (i), No. 521. Covers: Shahapur taluka wholly, and parts of Bhiwandi and Murbad. The talukas now forming Palghar district (Dahanu, Talasari, Mokhada, Jawhar, Wada and Vikramgad wholly, with parts of Palghar and Vasai) were in Thane district when the Order was made.",
    "sourceUrl": "https://tribal.nic.in/downloads/CLM/CLM_Declare/1.pdf",
    "lastReviewed": "2026-08-21",
    "note": "The Order fixes the area by reference to territorial divisions as existing at 2 December 1985. It names only part of this district, so district-level status cannot settle whether a particular site is inside it.",
@@ -1249,7 +1249,7 @@
    "namedWholly": [
     "Shahapur"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "516": {
    "status": "partial",
@@ -1269,7 +1269,7 @@
     "Surgana",
     "Kalwan"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "498": {
    "status": "partial",
@@ -1300,7 +1300,7 @@
     "Akkalkuwa",
     "Akrani"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "499": {
    "status": "partial",
@@ -1363,7 +1363,7 @@
     "Chikhaldara",
     "Dharni"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "508": {
    "status": "partial",
@@ -1391,7 +1391,7 @@
     "Bhamragad",
     "Korchi"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "509": {
    "status": "partial",
@@ -1480,7 +1480,7 @@
    "sourceUrl": "https://tribal.nic.in/downloads/CLM/CLM_Declare/3.pdf",
    "lastReviewed": "2026-09-25",
    "successorOf": "Shahdol",
-   "note": "This district was carved from Shahdol in 2003, taking four of the seven Shahdol tahsils the Order names - Pushparajgarh, Anuppur, Jaithari and Kotma. C.O. 192 fixes its area by reference to territorial divisions as existing at 20 February 2003, and a district drawn later does not change the ground the Order scheduled. The Order names part of Shahdol, and part of what it names now lies in this district, so district-level status cannot settle whether a particular site is inside it. The Ministry of Panchayati Raj lists this district among notified Fifth Schedule Areas.",
+   "note": "This district was carved from Shahdol in 2003, taking four of the seven Shahdol tahsils the Order names: Pushparajgarh, Anuppur, Jaithari and Kotma. C.O. 192 fixes its area by reference to territorial divisions as existing at 20 February 2003, and a district drawn later does not change the ground the Order scheduled. The Order names part of Shahdol, and part of what it names now lies in this district, so district-level status cannot settle whether a particular site is inside it. The Ministry of Panchayati Raj lists this district among notified Fifth Schedule Areas.",
    "scheduledSubdistricts": [
     3693,
     3694,
@@ -1493,7 +1493,7 @@
     "Jaithari",
     "Kotma"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "467": {
    "status": "partial",
@@ -1520,7 +1520,7 @@
    "namedWholly": [
     "R. Udayagiri"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "487": {
    "status": "partial",
@@ -1543,7 +1543,7 @@
     "Nandod",
     "Tilakvada"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "493": {
    "status": "partial",
@@ -1568,7 +1568,7 @@
     "Songadh",
     "Valod"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "490": {
    "status": "partial",
@@ -1587,7 +1587,7 @@
     "Bansda",
     "Chikhli"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "485": {
    "status": "partial",
@@ -1610,7 +1610,7 @@
     "Limkheda",
     "Deogarh Baria"
    ],
-   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit - a revenue circle, a panchayat, a village - that the Census sub-district frame does not carry. The match is by NAME against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
+   "subdivisionNote": "The Order names these sub-divisions of this district in whole. A site inside one of them is inside the Scheduled Area; a site elsewhere in the district is not settled by this, because the Order may reach it through a unit, such as a revenue circle, a panchayat or a village, that the Census sub-district frame does not carry. The match is by name against Census 2011 sub-districts, and a Census sub-district is not the same administrative unit in every State: a tehsil in Madhya Pradesh, a taluka in Gujarat and Maharashtra, a tahsil or police station in Odisha, a community development block in parts of the east. Where the Order's unit and the Census unit share a name they are usually the same ground, but the identity is a name match and is published as one."
   },
   "542": {
    "status": "partial",
@@ -2110,21 +2110,21 @@
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "14": {
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "260": {
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "384": {
    "status": "outside",
@@ -2183,8 +2183,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "556": {
    "status": "outside",
@@ -2251,8 +2251,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "583": {
    "status": "outside",
@@ -2299,8 +2299,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "128": {
    "status": "outside",
@@ -2579,7 +2579,7 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "347": {
    "status": "outside",
@@ -2632,7 +2632,7 @@
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "274": {
    "status": "outside",
@@ -2665,7 +2665,7 @@
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "381": {
    "status": "outside",
@@ -2678,7 +2678,7 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Dadara & Nagar Havelli, so no part of this district is one and PESA does not apply. A different protection does apply here: Union Territory administration; the Fifth Schedule applies to States."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Dadra and Nagar Haveli, so no part of this district is one and PESA does not apply. A different protection does apply here: Union Territory administration; the Fifth Schedule applies to States."
   },
   "331": {
    "status": "outside",
@@ -2699,7 +2699,7 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Daman & Diu, so no part of this district is one and PESA does not apply. A different protection does apply here: Union Territory administration; the Fifth Schedule applies to States."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Daman and Diu, so no part of this district is one and PESA does not apply. A different protection does apply here: Union Territory administration; the Fifth Schedule applies to States."
   },
   "428": {
    "status": "outside",
@@ -2797,7 +2797,7 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "612": {
    "status": "outside",
@@ -2811,14 +2811,14 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Daman & Diu, so no part of this district is one and PESA does not apply. A different protection does apply here: Union Territory administration; the Fifth Schedule applies to States."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Daman and Diu, so no part of this district is one and PESA does not apply. A different protection does apply here: Union Territory administration; the Fifth Schedule applies to States."
   },
   "16": {
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "265": {
    "status": "outside",
@@ -2846,14 +2846,14 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "251": {
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "595": {
    "status": "outside",
@@ -2957,8 +2957,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "473": {
    "status": "outside",
@@ -2977,7 +2977,7 @@
    "instrument": "The Scheduled Areas (State of Jharkhand) Order, 2007",
    "sourceUrl": null,
    "lastReviewed": "2026-08-21",
-   "note": "The Presidential Order for Jharkhand as transcribed here does not name Garhwa, but the Ministry of Panchayati Raj lists Garhwa among Jharkhand's notified Fifth Schedule Areas, and the State's PESA rules notified in January 2026 are applied partially in Garhwa. The Scheduled Areas (States of Bihar, Gujarat, Madhya Pradesh and Orissa) Order, 1977 scheduled the Bhandaria block of Garhwa sub-division, then part of Palamau district; the Jharkhand Order of 2007, which now governs the State, does not name it. Those two cannot both be current, and this reference does not hold whatever reached the district after the Order. The position is therefore recorded as undetermined rather than as a denial: consent may well be a legal precondition here, and it should be checked against the Order in force before anything is concluded from this page."
+   "note": "The Presidential Order for Jharkhand as transcribed here does not name Garhwa, but the Ministry of Panchayati Raj lists Garhwa among Jharkhand's notified Fifth Schedule Areas, and the State's PESA rules notified in January 2026 are applied partially in Garhwa. The Scheduled Areas (States of Bihar, Gujarat, Madhya Pradesh and Orissa) Order, 1977 scheduled the Bhandaria block of Garhwa sub-division, then part of Palamau district; the Jharkhand Order of 2007, which now governs the State, does not name it. Those two cannot both be current, and this reference does not hold whatever reached the district after the Order. This reference therefore records the position as not determined. Consent may well be a legal precondition here, and it should be checked against the Order in force before anything is concluded from this page."
   },
   "61": {
    "status": "outside",
@@ -3064,7 +3064,7 @@
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "35": {
    "status": "outside",
@@ -3190,7 +3190,7 @@
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "596": {
    "status": "outside",
@@ -3286,8 +3286,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "477": {
    "status": "outside",
@@ -3452,14 +3452,14 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "Leh and Kargil have formed the Union Territory of Ladakh since 31 October 2019, under section 3 of the Jammu and Kashmir Reorganisation Act, 2019. No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Ladakh, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "534": {
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "74": {
    "status": "outside",
@@ -3486,8 +3486,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "212": {
    "status": "outside",
@@ -3559,8 +3559,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "329": {
    "status": "outside",
@@ -3647,7 +3647,7 @@
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "631": {
    "status": "outside",
@@ -3660,8 +3660,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "26": {
    "status": "outside",
@@ -3673,14 +3673,14 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "552": {
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "72": {
    "status": "outside",
@@ -3694,7 +3694,7 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "189": {
    "status": "outside",
@@ -3727,15 +3727,15 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "Leh and Kargil have formed the Union Territory of Ladakh since 31 October 2019, under section 3 of the Jammu and Kashmir Reorganisation Act, 2019. No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Ladakh, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "259": {
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "268": {
    "status": "outside",
@@ -3749,14 +3749,14 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "255": {
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "157": {
    "status": "outside",
@@ -3898,7 +3898,7 @@
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "138": {
    "status": "outside",
@@ -4046,7 +4046,7 @@
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "609": {
    "status": "outside",
@@ -4084,7 +4084,7 @@
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "94": {
    "status": "outside",
@@ -4097,7 +4097,7 @@
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "91": {
    "status": "outside",
@@ -4186,7 +4186,7 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "513": {
    "status": "outside",
@@ -4280,7 +4280,7 @@
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "173": {
    "status": "outside",
@@ -4300,15 +4300,15 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "5": {
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "204": {
    "status": "outside",
@@ -4374,8 +4374,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "442": {
    "status": "outside",
@@ -4407,8 +4407,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "136": {
    "status": "outside",
@@ -4421,7 +4421,7 @@
    "status": "outside",
    "instrument": "The Scheduled Areas (Part A States) Order, 1950; The Scheduled Areas (Part B States) Order, 1950",
    "lastReviewed": "2026-09-25",
-   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011 - The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The districts they reach - as the first Order's text names them, as the Andhra Pradesh High Court recited them in Gundla Venkateswara Rao (1983), and as the Ministry of Panchayati Raj lists notified Fifth Schedule Areas - do not include this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
+   "note": "Two Presidential Orders declare the Scheduled Areas in what was Andhra Pradesh in 2011: The Scheduled Areas (Part A States) Order, 1950 and The Scheduled Areas (Part B States) Order, 1950. The first Order's text, the Andhra Pradesh High Court's recital of it in Gundla Venkateswara Rao (1983) and the Ministry of Panchayati Raj's list of notified Fifth Schedule Areas each name the districts these Orders reach, and none names this one, so no part of it is a Scheduled Area under them. A later Order could add one; this reference states the position as transcribed and reviewed on 2026-09-25."
   },
   "528": {
    "status": "outside",
@@ -4433,8 +4433,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "430": {
    "status": "outside",
@@ -4522,8 +4522,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "531": {
    "status": "outside",
@@ -4648,8 +4648,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "184": {
    "status": "outside",
@@ -4782,8 +4782,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "179": {
    "status": "outside",
@@ -4824,7 +4824,7 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "59": {
    "status": "outside",
@@ -4907,7 +4907,7 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "614": {
    "status": "outside",
@@ -4961,8 +4961,8 @@
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
-   "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu & Kashmir, so no part of this district is one and PESA does not apply. A different protection does apply here: State land and forest-rights law; no Presidential Order under the Fifth Schedule extends here."
+   "lastReviewed": "2026-11-26",
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Jammu and Kashmir, a Union Territory since 31 October 2019, so no part of this district is one and PESA does not apply. The Forest Rights Act, 2006 and the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 apply here, both extended by section 95(1) of the Jammu and Kashmir Reorganisation Act, 2019 and Table 1 of its Fifth Schedule."
   },
   "67": {
    "status": "outside",
@@ -5009,14 +5009,14 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "249": {
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "330": {
    "status": "outside",
@@ -5118,14 +5118,14 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "250": {
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunanchal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Arunachal Pradesh, so no part of this district is one and PESA does not apply. A different protection does apply here: the Bengal Eastern Frontier Regulation 1873 (Inner Line) and State land law; the Fifth Schedule has never been extended to it."
   },
   "264": {
    "status": "outside",
@@ -5233,21 +5233,21 @@
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Andaman & Nicobar Island, so no part of this district is one and PESA does not apply. A different protection does apply here: the Andaman and Nicobar Islands (Protection of Aboriginal Tribes) Regulation 1956, which reserves areas for the islands' tribal communities."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in the Andaman and Nicobar Islands, so no part of this district is one and PESA does not apply. A different protection does apply here: the Andaman and Nicobar Islands (Protection of Aboriginal Tribes) Regulation 1956, which reserves areas for the islands' tribal communities."
   },
   "640": {
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Andaman & Nicobar Island, so no part of this district is one and PESA does not apply. A different protection does apply here: the Andaman and Nicobar Islands (Protection of Aboriginal Tribes) Regulation 1956, which reserves areas for the islands' tribal communities."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in the Andaman and Nicobar Islands, so no part of this district is one and PESA does not apply. A different protection does apply here: the Andaman and Nicobar Islands (Protection of Aboriginal Tribes) Regulation 1956, which reserves areas for the islands' tribal communities."
   },
   "639": {
    "status": "outside",
    "instrument": "Ministry of Tribal Affairs, Scheduled Areas declared under paragraph 6 of the Fifth Schedule to the Constitution",
    "sourceUrl": "https://tribal.nic.in/Clm.aspx",
    "lastReviewed": "2026-08-21",
-   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in Andaman & Nicobar Island, so no part of this district is one and PESA does not apply. A different protection does apply here: the Andaman and Nicobar Islands (Protection of Aboriginal Tribes) Regulation 1956, which reserves areas for the islands' tribal communities."
+   "note": "No Presidential Order under paragraph 6 of the Fifth Schedule declares any Scheduled Area in the Andaman and Nicobar Islands, so no part of this district is one and PESA does not apply. A different protection does apply here: the Andaman and Nicobar Islands (Protection of Aboriginal Tribes) Regulation 1956, which reserves areas for the islands' tribal communities."
   },
   "587": {
    "status": "outside",
@@ -5258,7 +5258,7 @@
   }
  },
  "notes": {
-  "scheduled_areas_status": "Fifth Schedule Scheduled Areas are declared by Presidential Order under paragraph 6 of the Fifth Schedule. There is no machine-readable authoritative list. Until each Order has been read and its districts, blocks and villages transcribed, this instrument reports Scheduled Area status as not determined rather than inferring it. A high Scheduled Tribe population share is not a Scheduled Area and the two do not coincide.",
+  "scheduled_areas_status": "Fifth Schedule Scheduled Areas are declared by Presidential Order under paragraph 6 of the Fifth Schedule. There is no machine-readable authoritative list. Until each Order has been read and its districts, blocks and villages transcribed, this instrument reports its Scheduled Area status as not determined. A high Scheduled Tribe population share does not make a place a Scheduled Area, and the two often differ.",
   "pesa_states": [
    "Andhra Pradesh",
    "Chhattisgarh",

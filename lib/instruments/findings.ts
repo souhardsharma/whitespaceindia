@@ -22,6 +22,7 @@
  */
 
 import type { DistrictRecord, Project } from "./types";
+import { forestDisagreement, forestReading } from "./links.ts";
 import { profiledDistrictPhrase } from "./location.ts";
 import type { LegalDetermination } from "@/components/instruments/ConsentScreen";
 // Relative, not the @/ alias: this module is imported by node --test, which
@@ -92,6 +93,69 @@ const INDIA = {
 };
 
 const nf = new Intl.NumberFormat("en-IN");
+
+/**
+ * The Gram Sabha consent duty of RFCTLARR s.41(3), with its reach as the Act
+ * states it. Section 41(3) names notifications under the Act "or any other
+ * Central Act or a State Act", while s.105(1) takes the enactments in the
+ * Fourth Schedule (the Coal Bearing Areas Act among them) outside the Act's
+ * provisions and s.105(3) extends only its First to Third Schedules to them.
+ * No judgment found settles how the two meet, so the sentence names both and
+ * leaves it there, as legal_reference.json's note on s.41(3) does.
+ */
+function consent413(land: string): string {
+  return `Section 41(3) of the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 (RFCTLARR) requires the prior consent of the Gram Sabha before a notification to acquire ${land} issues under that Act or under any other Central or State Act, including when the acquisition is urgent. Section 105(1) of the same Act takes the land acquisition laws in its Fourth Schedule, such as the Coal Bearing Areas (Acquisition and Development) Act, 1957, outside its provisions, so for an acquisition under one of those laws the two sections point different ways.`;
+}
+
+const FOREST_APPROVAL =
+  "needs the central government's prior approval under the Forest (Conservation) Act, 1980, renamed the Van (Sanrakshan Evam Samvardhan) Adhiniyam in 2023, and settling forest rights under the Forest Rights Act, 2006 is one of the steps in that approval.";
+const FOREST_LAW = `Diverting forest land ${FOREST_APPROVAL}`;
+
+/**
+ * What the form says about forest land, read from both of its statements
+ * (see forestReading in links.ts). The sentence used to say "the filing does
+ * not record whether either has been sought" on 499 pages that print the
+ * forest proposal number and its status, and "this project involves forest
+ * land" on 181 whose form answers that no forest clearance is involved.
+ */
+function forestFinding(project: Project): Finding | null {
+  const ha = project.declared.forestLandHa;
+  const links = project.links;
+  const reading = forestReading(ha, links);
+  const base = {
+    id: "project.forest",
+    basis: ["declared.forestLandHa", "links.f"],
+    rule: "Shown when the form's table of land use records forest land, or the form says forest clearance is needed.",
+    kind: "declared" as const,
+  };
+  if (reading === "proposal" && links) {
+    const [no, status] = links.f!;
+    return {
+      ...base,
+      text: `The applicant's form says this project needs forest clearance${no ? `, under forest proposal ${no}` : ", but names no forest proposal"}${status ? `, and gives its status as "${status}"` : ""}. ${FOREST_LAW} The section on other clearances below sets out what the form records about it.`,
+    };
+  }
+  if (reading === "table") {
+    // "table" also covers a form that answered the forest question and listed
+    // additional forest land in its land breakup; that answer is not a blank.
+    const silence = links == null
+      ? "we have not yet read its answers on other clearances"
+      : links !== 0 && (links.u ?? "").includes("f")
+        ? "the form leaves blank the question whether forest clearance is involved"
+        : "the form answers that no forest clearance is involved, although its land breakup lists additional forest land";
+    return {
+      ...base,
+      text: `The table of land use on the applicant's form records forest land, and ${silence}. ${FOREST_LAW} The filing does not say whether that approval has been sought.`,
+    };
+  }
+  if (reading === "disagrees" && links != null) {
+    return {
+      ...base,
+      text: `${forestDisagreement(ha as number, links)} If the project does take forest land, diverting it ${FOREST_APPROVAL}`,
+    };
+  }
+  return null;
+}
 
 export function findingsForDistrict(
   district: DistrictRecord,
@@ -168,7 +232,7 @@ export function findingsForDistrict(
   if (determination?.status === "within") {
     out.push({
       id: "legal.scheduled",
-      text: `This district is a Fifth Schedule Scheduled Area. Under section 41(3) of the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 (RFCTLARR), land here can be acquired only with the prior consent of the Gram Sabha, and the requirement holds even when an acquisition is urgent.`,
+      text: `This district is a Fifth Schedule Scheduled Area. ${consent413("land here")}`,
       basis: ["legal_reference.determinations"],
       rule: "Shown where a Presidential Order names the whole district as a Scheduled Area.",
       kind: "legal",
@@ -176,7 +240,7 @@ export function findingsForDistrict(
   } else if (determination?.status === "partial") {
     out.push({
       id: "legal.partial",
-      text: `Part of this district is a Fifth Schedule Scheduled Area. Acquiring land for a project sited in that part needs the Gram Sabha's prior consent under section 41(3) of RFCTLARR, and the district-level record cannot settle whether a particular site lies there.`,
+      text: `Part of this district is a Fifth Schedule Scheduled Area, and the district-level record cannot settle whether a particular site lies there. ${consent413("land in that part")}`,
       basis: ["legal_reference.determinations"],
       rule: "Shown where a Presidential Order names only some blocks, tehsils or villages in the district.",
       kind: "legal",
@@ -233,28 +297,15 @@ export function findingsForProject(
       // the area the State prescribes. The form records neither the route nor
       // the area test, so the sentence states both routes and says the filing
       // settles neither.
-      text: `The applicant has declared that ${nf.format(d.displacedFamilies!)} families will be displaced by this project. Those families are owed the rehabilitation and resettlement entitlements in the Second Schedule of RFCTLARR if the land is acquired under that Act, or if a private company buys it by negotiation above an area the State government sets (section 2(3)). The filing does not say how the land is being obtained.`,
+      text: `The applicant has declared that ${nf.format(d.displacedFamilies!)} families will be displaced by this project. Those families are owed the rehabilitation and resettlement entitlements in the Second Schedule of RFCTLARR if the land is acquired under that Act, or if a private company buys it by negotiation above an area the State government sets (section 2(3)). The filing does not say whether the land is being acquired under the 2013 Act or bought by negotiation.`,
       basis: ["declared.displacedFamilies"],
       rule: "Shown when the application declares more than zero displaced families.",
       kind: "declared",
     });
   }
 
-  if ((d.forestLandHa ?? 0) > 0) {
-    out.push({
-      id: "project.forest",
-      // "apply" was doing the work of a determination here too. Diversion of
-      // forest land requires prior approval under the Forest (Conservation)
-      // Act 1980, and the 2009 circular under it requires the Forest Rights
-      // Act 2006 rights-recognition and Gram Sabha consent step first - but
-      // whether either has been sought or completed is not on this form, and
-      // the instrument does not know it.
-      text: `The applicant has declared that this project involves forest land. Diverting forest land needs the central government's prior approval under the Forest (Conservation) Act, 1980, renamed the Van (Sanrakshan Evam Samvardhan) Adhiniyam in 2023, and settling forest rights under the Forest Rights Act, 2006 is one of the steps in that approval. The filing does not record whether either has been sought.`,
-      basis: ["declared.forestLandHa"],
-      rule: "Shown when the application declares any forest land.",
-      kind: "declared",
-    });
-  }
+  const forest = forestFinding(project);
+  if (forest) out.push(forest);
 
   if (d.litigationPending === "YES") {
     out.push({
@@ -289,7 +340,7 @@ export function findingsForProject(
   if (district && determination?.status === "within") {
     out.push({
       id: "project.scheduled",
-      text: `The site is in a Fifth Schedule Scheduled Area, so acquiring land for it needs the prior consent of the Gram Sabha under section 41(3) of RFCTLARR.`,
+      text: `The site is in a Fifth Schedule Scheduled Area. ${consent413("land for it")} Section 4(i) of the Panchayats (Extension to the Scheduled Areas) Act, 1996 (PESA) requires State law to provide that the Gram Sabha or the Panchayat at the appropriate level is consulted before land in a Scheduled Area is acquired for a development project.`,
       basis: ["legal_reference.determinations"],
       rule: "Shown where a Presidential Order names the whole district as a Scheduled Area.",
       kind: "legal",

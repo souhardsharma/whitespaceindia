@@ -2,7 +2,7 @@ import { partsFor } from "@/lib/instruments/csv";
 import Link from "next/link";
 import { FollowButton } from "@/components/instruments/Watchlist";
 import RecentActivity from "@/components/instruments/RecentActivity";
-import { presentState, titleCase } from "@/lib/instruments/place";
+import { presentState, stateMoved, titleCase } from "@/lib/instruments/place";
 import { pageMeta, pageLd } from "@/lib/instruments/metadata";
 import StructuredData from "@/components/instruments/StructuredData";
 import { notFound } from "next/navigation";
@@ -203,6 +203,9 @@ export default async function DistrictPage(props: { params: Promise<{ code: stri
           sector: shard.sectors[r[F.sector] as number] ?? "",
           cat: (r[F.cat] as string) ?? null,
           status: shard.statuses[r[F.status] as number] ?? "",
+          sk: (r[F.sk] as string) ?? null,
+          // Tolerated absent: a shard written before `dsk` has no column.
+          dsk: F.dsk != null ? ((r[F.dsk] as string) ?? null) : null,
           date: (r[F.date] as string) || "",
           af: (r[F.af] as number) ?? null,
           df: (r[F.df] as number) ?? null,
@@ -290,7 +293,7 @@ export default async function DistrictPage(props: { params: Promise<{ code: stri
           <h1 className="mt-4 font-headline font-bold text-[clamp(28px,4.4vw,50px)] leading-[1.03] tracking-[-0.03em]">
             {titleCase(record.district_name)}
             <span className="opacity-65">, {titleCase(presentState(record.censuscode, record.state_name))}</span>
-            {presentState(record.censuscode, record.state_name) !== record.state_name ? (
+            {stateMoved(record.censuscode) ? (
               <span className="block font-label text-[11px] uppercase tracking-[0.16em] opacity-80 mt-2">
                 Counted as part of {titleCase(record.state_name)} in Census 2011, whose boundaries every figure here uses
               </span>
@@ -492,7 +495,11 @@ export default async function DistrictPage(props: { params: Promise<{ code: stri
               parts={SECTOR_PARTS(bundle.proposals)}
               total={bundle.proposals.length}
               unitLabel="proposals"
-              caption="The four largest sectors are shown by name and the rest are grouped as Other."
+              caption={
+                SECTOR_PARTS(bundle.proposals).length > 4
+                  ? "The four largest sectors are shown by name and the rest are grouped as Other."
+                  : undefined
+              }
             />
           </section>
 

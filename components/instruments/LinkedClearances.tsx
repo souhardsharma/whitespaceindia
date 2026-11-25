@@ -28,11 +28,14 @@ export type { ForestRegisterEntry };
 export default function LinkedClearances({
   links,
   forestRegister,
+  forestHa,
 }: {
   links: Links | 0 | null;
   forestRegister?: ForestRegisterEntry | null;
+  /** The existing forest land in the form's table of land use. */
+  forestHa?: number | null;
 }) {
-  const { state, lines } = linkedClearanceLines(links, forestRegister);
+  const { state, lines } = linkedClearanceLines(links, forestRegister, forestHa);
   return (
     <section className="mb-12" aria-labelledby="links-heading">
       <h2

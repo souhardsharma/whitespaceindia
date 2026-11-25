@@ -36,3 +36,14 @@ test("place names published in capitals read as a reader writes them", () => {
   assert.equal(titleCase("of course"), "Of Course");
   assert.equal(titleCase(""), "");
 });
+
+test("initials and the Census misspelling of Arunachal read correctly", () => {
+  assert.equal(titleCase("Y.S.R."), "Y.S.R.");
+  assert.equal(titleCase("y.s.r."), "Y.S.R.");
+  assert.equal(presentState(250, "Arunanchal Pradesh"), "Arunachal Pradesh");
+  assert.equal(stateLabel(250, "Arunanchal Pradesh"), "Arunachal Pradesh");
+});
+
+test("the National Capital Territory keeps its capitals", () => {
+  assert.equal(titleCase("NCT OF DELHI"), "NCT of Delhi");
+});

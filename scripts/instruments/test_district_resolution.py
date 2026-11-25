@@ -346,6 +346,32 @@ def test_adjudication() -> None:
     check("a declared candidate settles a town code with no coordinates",
           (how, moved["primary_district"]), ("town_by_declaration", 536))
 
+    # A tie: one place in Garhwa (346), one in Surguja (401), the site in
+    # Surguja, nothing declared (115284072). The codes have no majority, so
+    # the coordinates choose, and every district stays named.
+    def tie(primary, declared, tied):
+        t = loc(primary, declared, districts=list(tied))
+        t["tied"] = list(tied)
+        return t
+    moved, how = adjudicate(tie(346, None, [346, 401]), "inside", 401, None, [401])
+    check("coordinates break a tie between named districts", how,
+          "tie_by_coordinates")
+    check("  ...placing it where the site is", moved["primary_district"], 401)
+    check("  ...keeping both districts named", moved["districts"], [401, 346])
+    check("  ...recorded as a tie settled", moved["method"], "tie_settled")
+    moved, how = adjudicate(tie(346, 401, [346, 401]), None, None)
+    check("the declaration breaks a tie when there are no coordinates",
+          (how, moved["primary_district"]), ("tie_by_declaration", 401))
+    same, how = adjudicate(tie(346, None, [346, 401]), "elsewhere", 500, None, [500])
+    check("a tie nothing settles stays on the first by code", how, "tie_unsettled")
+    check("  ...which is the Census-code first", same["primary_district"], 346)
+    same, how = adjudicate(tie(346, None, [346, 401]), "inside", 346, None, [346])
+    check("coordinates in the first tied district keep it",
+          (how, same["primary_district"]), ("tie_by_coordinates", 346))
+    same, how = adjudicate(loc(346, None, districts=[346, 401]), "inside", 401,
+                           None, [401])
+    check("without a tie, coordinates alone still move nothing", how, "kept")
+
     # Only the PRIMARY district is replaced; the others the codes name stay.
     # Observed: a Thane creek project with one Greater Mumbai plot lost Thane.
     multi = loc(518, None, districts=[518, 517], ambiguous=[518, 519])

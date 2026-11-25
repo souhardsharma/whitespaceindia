@@ -30,6 +30,7 @@ const RESOLUTION_BY_CODE: Record<string, ResolutionMethod> = {
   n: "project_name",
   a: "adjudicated",
   c: "town_settled",
+  t: "tie_settled",
   x: "unresolved",
 };
 
@@ -79,6 +80,8 @@ function buildSummary(
     status: shard.statuses[r[I.status] as number] ?? "",
     // The canonical key beside the raw string. Filter and count through this.
     statusKey: (r[I.sk] as string) ?? null,
+    // The decision a post-decision position follows (rule 13), for lists.
+    decisionStage: I.dsk >= 0 ? ((r[I.dsk] as string) ?? null) : null,
     formStatus: (r[I.cf] as string) ?? null,
     date: (r[I.date] as string) || "",
     authority:

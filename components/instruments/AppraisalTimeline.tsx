@@ -120,10 +120,10 @@ export default function AppraisalTimeline({
   const label =
     `Filed ${fmtDate(filedOn)}. ` +
     (sameDay && decided
-      ? `Decided the same day, after 0 days with the appraising authority`
+      ? `Decided the same day it was first filed`
       : decided
-      ? `${decidedText}, after ${active} days with the appraising authority`
-      : `Open for ${active} days so far`) +
+      ? `${decidedText}, ${active} days after it was first filed`
+      : `Open for ${active} days since it was first filed`) +
     (suspended > 0 ? `, plus ${suspended} days when the portal had delisted it` : "") +
     (queryRounds
       ? `. The authority asked for more information ${queryRounds} time${queryRounds === 1 ? "" : "s"}.`
@@ -133,7 +133,7 @@ export default function AppraisalTimeline({
     <div className="mb-6">
       <div className="flex items-baseline justify-between gap-4 mb-2">
         <h3 className="font-label text-[10px] uppercase tracking-[0.18em] opacity-75">
-          Time with the appraising authority
+          {decided ? "Days from first filing to decision" : "Days open since first filing"}
         </h3>
         <span className="font-label text-[19px] font-bold tabular-nums leading-none">
           {active}
@@ -213,6 +213,14 @@ export default function AppraisalTimeline({
             : "Not yet decided"}
         </span>
       </div>
+
+      {/* The count runs from first filing, less the delisted days, so it
+          holds the weeks the applicant took to answer the authority's
+          queries as well as the authority's own time. */}
+      <p className="font-body text-[11.5px] leading-relaxed opacity-70 mt-2 max-w-3xl">
+        The count includes any time the applicant took to answer the
+        authority&rsquo;s requests for more information.
+      </p>
 
       <dl className="flex flex-wrap gap-x-8 gap-y-2 mt-3">
         {suspended > 0 ? (

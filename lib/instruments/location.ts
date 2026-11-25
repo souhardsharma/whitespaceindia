@@ -190,6 +190,33 @@ export function locationEvidence(
       return { sentences: out, contested: false, firm: false };
     }
 
+    case "tie_settled": {
+      // The codes name the same number of places in several districts, so
+      // they choose none of them (location.py _settle_tie). The coordinates
+      // chose, else the declaration, else the first by Census code.
+      out.push(
+        "Two or more of the districts the place codes on the application form name share the largest number of places, so the codes do not say which district the site is mainly in.",
+      );
+      const byCoords = p.fallsIn != null && p.fallsIn === p.district &&
+        (p.verdict === "inside" || p.verdict === "boundary");
+      const byDeclared = declared != null && declared === p.district;
+      if (byCoords) {
+        out.push(
+          `The coordinates of its site fall in ${here}, so this profile describes ${here}` +
+            (byDeclared ? ", which is also the district the form declares." : "."),
+        );
+        return { sentences: out, contested: false, firm: true };
+      }
+      if (byDeclared) {
+        out.push(`The form declares ${here}, so this profile describes ${here}. ${coords.text}`);
+        return { sentences: out, contested: false, firm: coords.agrees !== false };
+      }
+      out.push(
+        `Neither the coordinates of its site nor the district the form declares settles which of them it is, so this profile describes ${here}, the first of them by Census code, provisionally. ${coords.text}`,
+      );
+      return { sentences: out, contested: false, firm: false };
+    }
+
     case "lgd_district": {
       // The declaration IS the placement here; it cannot also corroborate it.
       out.push("The district comes from the one declared on the application form, which names no village or sub-district.");
@@ -284,6 +311,8 @@ export function profiledDistrictPhrase(resolution: ResolutionMethod | string): s
       return "the district where it names the most places";
     case "adjudicated":
       return "the district its declared district and site coordinates agree on";
+    case "tie_settled":
+      return "one of the districts where it names the most places, chosen as set out above";
     default:
       return "the district it is placed in, as set out above";
   }

@@ -251,3 +251,20 @@ test("no page or finding types 'the most places' itself", () => {
     assert.match(src, /profiledDistrictPhrase\(/, `${f} must word it through location.ts`);
   }
 });
+
+test("a tie between named districts is never called the district with the most places", () => {
+  // 115284072: one place in Garhwa (346), one in Surguja (401), the site in
+  // Surguja. The pipeline places it in Surguja and marks the method a tie.
+  const names = { "346": "Garhwa", "401": "Surguja" };
+  const tie = {
+    resolution: "tie_settled", district: 401, allDistricts: [401, 346],
+    declaredDistrict: null, villageCount: 2, verdict: "inside", fallsIn: 401,
+  };
+  const text = locationEvidence(tie, names).sentences.join(" ");
+  assert.match(text, /share the largest number of places/);
+  assert.match(text, /coordinates of its site fall in Surguja, so this profile describes Surguja/);
+  assert.doesNotMatch(text, /names the most places/);
+  const unsettled = locationEvidence({ ...tie, district: 346, fallsIn: 500, verdict: "elsewhere" }, names);
+  assert.equal(unsettled.firm, false);
+  assert.match(unsettled.sentences.join(" "), /first of them by Census code, provisionally/);
+});
