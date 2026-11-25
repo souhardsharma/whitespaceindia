@@ -13,7 +13,7 @@ The **data and written content** are licensed as follows.
 | --- | --- |
 | Everything under `public/data/` except the files in the two rows below: CSR index scores and rankings, the placed and staged clearance register, appraisal durations, the change log, Scheduled Area determinations, measure definitions | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | `public/data/instruments/consent/districts.json` and `subdistricts.json` (Census 2011, Village Directory and SECC figures taken from SHRUG) | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/), the licence SHRUG is published under |
-| `public/data/instruments/meal-claims/` (school meal counts, enrolment filings and holiday lists read from the PM POSHAN daily reporting system, and the flags computed from them) | No licence is granted by this site. The figures are the reporting system's, and its publisher states no terms of reuse. Credit the source system and Whitespace India if you use them |
+| `public/data/instruments/meal-claims/` (school meal counts, enrolment filings and holiday lists read from the PM POSHAN daily reporting system, flagged schools' entries read from UDISE+, and the flags computed from them) | The flags, the counts of what was read and the arrangement of the files: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The meal counts, enrolment filings, holiday lists and UDISE+ entries inside them are the government sources' figures. Their publishers state no terms of reuse and this site claims no rights over them; credit the source system if you use them |
 | Page text, methodology and reports | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 
 CC BY 4.0 allows any use, commercial use included, if you credit the source:

@@ -24,16 +24,17 @@ import {
   DayBars, FlagEntry, FlagNotFinding, SECTION_HEADING, SMALL_LABEL, TD, TH,
 } from "@/components/instruments/meal/parts";
 import {
-  MEAL_BASE, MEAL_DATA, MEAL_HOST, bucketOf, count, districtPath, monthLabel, schoolKey,
-  schoolPath, whenIST, type MealMeta, type School,
+  MEAL_BASE, MEAL_DATA, MEAL_HOST, UDISE_HOST, bucketOf, classRange, count, districtPath, monthLabel,
+  schoolKey, schoolPath, udiseCode, whenIST, type MealMeta, type Measure, type School,
 } from "@/lib/instruments/meal";
 
 type Month = { month: string; school: School };
+type Measures = Record<string, Measure>;
 type View =
   | { state: "loading" }
   | { state: "missing"; key: string | null }
   | { state: "failed" }
-  | { state: "ready"; key: string; months: Month[] };
+  | { state: "ready"; key: string; months: Month[]; measures: Measures };
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -44,16 +45,94 @@ async function json<T>(path: string): Promise<T | null> {
   return (await res.json()) as T;
 }
 
-/** Every published month that holds this school, newest first. */
-async function load(key: string): Promise<Month[]> {
-  const meta = await json<MealMeta>(`${MEAL_DATA}/meta.json`);
-  if (!meta) throw new Error("meta.json is missing");
+/** Every published month that holds this school, newest first, and the registry of what each figure means. */
+async function load(key: string): Promise<{ months: Month[]; measures: Measures }> {
+  const [meta, measures] = await Promise.all([
+    json<MealMeta>(`${MEAL_DATA}/meta.json`),
+    json<Measures>(`${MEAL_DATA}/measures.json`),
+  ]);
+  if (!meta || !measures) throw new Error("meta.json or measures.json is missing");
   const bucket = bucketOf(key.split("-")[0], meta.buckets);
   const files = await Promise.all(meta.months.map(async (month) => {
     const schools = await json<Record<string, School>>(`${MEAL_DATA}/schools/${month}/${bucket}.json`);
     return schools?.[key] ? { month, school: schools[key] } : null;
   }));
-  return files.filter((m): m is Month => m !== null).sort((a, b) => b.month.localeCompare(a.month));
+  const months = files.filter((m): m is Month => m !== null).sort((a, b) => b.month.localeCompare(a.month));
+  return { months, measures };
+}
+
+/** One line of the UDISE+ entry: the registry's label and definition beside the value. */
+function RegisterRow({ measure, children }: { measure: Measure; children: React.ReactNode }) {
+  return (
+    <div className="py-3.5 border-b border-[#1c1c19]/15 grid grid-cols-1 md:grid-cols-12 gap-x-6 gap-y-1">
+      <dt className="md:col-span-4 font-body text-[14px] font-semibold">{measure.label}</dt>
+      <dd className="md:col-span-8 font-body text-[14px] leading-relaxed">
+        <span className="tabular-nums">{children}</span>
+        <span className="block text-[12.5px] opacity-65 mt-1">{measure.definition}</span>
+      </dd>
+    </div>
+  );
+}
+
+/**
+ * What the Ministry's register of schools says about this school. It is a
+ * second filing, made once a year on a different system, and it is set
+ * beside the meal reports without being tested against them: the two count
+ * different things.
+ */
+function Register({ school, measures, filed }: { school: School; measures: Measures; filed: string | null }) {
+  const held = school.udise;
+  if (!held) return null;
+  const r = held.record;
+  const asked = whenIST(held.read_at) ?? "an unknown date";
+  if (!r) {
+    return (
+      <section className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby="udise-heading">
+        <h2 id="udise-heading" className={`${SECTION_HEADING} mb-3`}>This school in UDISE+</h2>
+        <p className="font-body text-[13.5px] leading-relaxed opacity-75 max-w-3xl">
+          UDISE+, the Ministry of Education&rsquo;s register of schools, returned
+          no school for the code {udiseCode(school.code)} when asked on {asked} IST.
+          In Tripura and Himachal Pradesh, the two States checked by hand, the
+          meal system lists a school under its UDISE code. Elsewhere, and for
+          this school, the codes may differ.
+        </p>
+      </section>
+    );
+  }
+  const kind = [r.category, r.type, r.management, r.location].filter(Boolean).join(" \u00b7 ");
+  const classes = classRange(r.low_class, r.high_class);
+  const books = r.textbooks_primary != null || r.textbooks_upper != null;
+  return (
+    <section className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby="udise-heading">
+      <h2 id="udise-heading" className={`${SECTION_HEADING} mb-3`}>
+        This school in UDISE+{r.year ? `, ${r.year}` : ""}
+      </h2>
+      <p className="font-body text-[13.5px] leading-relaxed opacity-75 mb-4 max-w-3xl">
+        UDISE+ is the Ministry of Education&rsquo;s register of schools. A
+        school files its entry there once a year, outside the meal system. This entry is listed as{" "}
+        {r.name ?? "this school"}, code {udiseCode(school.code)}, and was read
+        on {asked} IST. None of it is tested against the meal reports.
+      </p>
+      <dl className="max-w-4xl border-t border-[#1c1c19]/40">
+        {classes ? <RegisterRow measure={measures.udise_classes}>{classes}</RegisterRow> : null}
+        {kind ? <RegisterRow measure={measures.udise_category}>{kind}</RegisterRow> : null}
+        {r.status ? <RegisterRow measure={measures.udise_status}>{r.status}</RegisterRow> : null}
+        {books ? (
+          <RegisterRow measure={measures.udise_textbooks}>
+            {r.textbooks_primary != null ? `${count(r.textbooks_primary)} in classes I to V` : null}
+            {r.textbooks_primary != null && r.textbooks_upper != null ? ", " : null}
+            {r.textbooks_upper != null ? `${count(r.textbooks_upper)} in classes VI to VIII` : null}
+            {filed ? <span className="block mt-1">{filed}</span> : null}
+          </RegisterRow>
+        ) : null}
+      </dl>
+      <p className="font-body text-[12.5px] leading-relaxed opacity-65 mt-4 max-w-3xl">
+        The same entry can be opened at{" "}
+        <a href={UDISE_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">kys.udiseplus.gov.in</a>{" "}
+        by searching for the code.
+      </p>
+    </section>
+  );
 }
 
 function daySeries(month: string, meals: (number | null)[]): [string, number | null][] {
@@ -71,7 +150,7 @@ export default function SchoolView() {
     }
     let live = true;
     load(key).then(
-      (months) => live && setView(months.length ? { state: "ready", key, months } : { state: "missing", key }),
+      (got) => live && setView(got.months.length ? { state: "ready", key, ...got } : { state: "missing", key }),
       () => live && setView({ state: "failed" }),
     );
     return () => { live = false; };
@@ -114,11 +193,10 @@ export default function SchoolView() {
           No flagged school at this address
         </h1>
         <p className="font-body text-[15px] leading-relaxed opacity-80 mt-5">
-          This instrument publishes a page only for a school that holds a
-          flag in the last twelve months of its reading. A school with no
-          page has no flag on the tables read so far; school tables are read
-          as a sample, so that is not a statement that its reports are all
-          consistent.
+          A page is published only for a school that holds a flag in the
+          months published. A school without a page has no flag
+          on the tables read so far. School tables are read as a sample, so
+          the school may not have been read at all.
         </p>
         <Link href={`${MEAL_BASE}/states`} className="inline-block mt-6 font-label text-[11px] uppercase tracking-[0.18em] underline underline-offset-4">
           Browse by State and district &rarr;
@@ -130,6 +208,11 @@ export default function SchoolView() {
   const s = view.months[0].school;
   const enrolment = view.months.find((m) => m.school.enrolment)?.school;
   const year = view.months[0].month.slice(0, 4);
+  const registered = view.months.find((m) => m.school.udise)?.school ?? s;
+  const latestFiled = view.months[0].school.enrolment?.[Number(view.months[0].month.slice(5)) - 1];
+  const filedLine = latestFiled != null
+    ? `On the meal system the school filed an enrolment of ${count(latestFiled)} for ${monthLabel(view.months[0].month)}.`
+    : null;
 
   return (
     <article>
@@ -172,7 +255,7 @@ export default function SchoolView() {
                 />
                 <p className={`${SMALL_LABEL} mt-3 normal-case tracking-normal text-[12px] font-body`}>
                   Meals reported each day, as read on {whenIST(school.meals_read_at) ?? "an unknown date"} IST.
-                  Dark bars are flagged days; a missing bar is a day with no report.
+                  Dark bars are flagged days. A day with no bar has no report.
                 </p>
               </div>
             ) : (
@@ -195,17 +278,17 @@ export default function SchoolView() {
             None. The system holds no enrolment filing from this school for
             any month of {year}, as read on{" "}
             {whenIST(enrolment.enrolment_read_at) ?? "an unknown date"} IST, so
-            its meal reports cannot be set against enrolment.
+            its meal reports cannot be compared with enrolment.
           </p>
         </section>
       ) : enrolment?.enrolment ? (
         <section className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby="enrolment-heading">
           <h2 id="enrolment-heading" className={`${SECTION_HEADING} mb-3`}>The enrolment this school filed, {year}</h2>
           <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-5 max-w-3xl">
-            Shown because a wrong enrolment filing is a likely cause of a
-            report above enrolment: a figure that drops sharply from one
-            month to the next while the daily meals stay level points to the
-            filing, not to the meals. Read on{" "}
+            A wrong enrolment filing can put a report above enrolment, so the
+            year&rsquo;s filings are listed here. If the
+            figure drops sharply from one month to the next while the daily
+            meals stay level, the filing is the likelier error. Read on{" "}
             {whenIST(enrolment.enrolment_read_at) ?? "an unknown date"} IST.
           </p>
           <div className="overflow-x-auto">
@@ -227,6 +310,8 @@ export default function SchoolView() {
         </section>
       ) : null}
 
+      <Register school={registered} measures={view.measures} filed={filedLine} />
+
       <section className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby="check-heading">
         <h2 id="check-heading" className={`${SECTION_HEADING} mb-3`}>Checking this against the source</h2>
         <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl">
@@ -234,10 +319,10 @@ export default function SchoolView() {
           daily reporting system at{" "}
           <a href={MEAL_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">mdmhp.nic.in</a>.
           To see it there, choose the State, then {s.district} district,{" "}
-          {s.block} block and the cluster {s.cluster}, and pick the date. The
-          system keeps a school&rsquo;s day-by-day month only for the current
-          month, so an earlier month can be checked there one date at a time.
-          A school may correct a figure after it was read; when a later read
+          {s.block} block and cluster {s.cluster}, and pick the date. The
+          system shows a school&rsquo;s day-by-day month only for the current
+          month, so an earlier month has to be checked one date at a time.
+          A school may correct a figure after it was read. When a later read
           no longer supports a flag, the flag is marked above as no longer
           standing.
         </p>

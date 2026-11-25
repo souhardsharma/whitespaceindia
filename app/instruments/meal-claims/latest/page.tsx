@@ -19,7 +19,7 @@ import { mealMeta, mealRecent, mealStates } from "@/lib/instruments/mealServer";
 const PATH = `${MEAL_BASE}/latest`;
 const TITLE = "Latest flags | Meal Claims Check";
 const DESCRIPTION =
-  "Midday meal reports newly flagged in the last two weeks of nightly reading: meals above the enrolment a school filed, meals on a day it does not serve, and one-day spikes, each with its figures.";
+  "School midday meal reports flagged for the first time in recent nights of reading: meals above the enrolment a school filed, meals on a day it does not serve, and one-day spikes. Each is listed with its figures.";
 
 export const metadata = pageMeta({ path: PATH, title: TITLE, description: DESCRIPTION, image: MEAL_OG });
 
@@ -51,20 +51,20 @@ export default function MealLatest() {
             Latest flags
           </h1>
           <p className="mt-5 font-body text-[15px] leading-relaxed opacity-80 max-w-3xl">
-            {count(recent.total)} school-days were newly flagged in the last{" "}
+            {count(recent.total)} school-days were flagged for the first time in the last{" "}
             {count(recent.stamps.length)} {recent.stamps.length === 1 ? "night" : "nights"} of
-            reading{recent.stamps.length ? `, since ${dayShort(recent.stamps[0])}` : ""}. A
-            flag is listed by the night it was first seen, so a newly read
-            table can add a flag on an earlier date. Reports above enrolment
-            by a wide margin, closed-day reports and spikes come first.
+            reading{recent.stamps.length ? `, since ${dayShort(recent.stamps[0])}` : ""}.
+            A table read for the first time can add a flag on an earlier date,
+            so flags are listed under the night they were first seen. Reports far above enrolment, closed-day reports and spikes
+            are at the top.
             {recent.rows.length < recent.total
-              ? ` The list holds the first ${count(recent.rows.length)}; the monthly files hold every one.`
+              ? ` This list holds the first ${count(recent.rows.length)}. The monthly files have all of them.`
               : ""}
           </p>
           <FlagNotFinding className="mt-7 max-w-3xl" />
           {csv ? (
             <p className="mt-6 font-body text-[13.5px] opacity-80">
-              Every flag of a month, standing or not, as a file:{" "}
+              The latest month as one file, including flags that no longer stand:{" "}
               <a href={`${MEAL_DATA}/flags/${csv}.csv`} className="underline underline-offset-4">{csv}.csv</a>
               {" · "}
               <Link href={`${MEAL_BASE}/data`} className="underline underline-offset-4">all files and columns</Link>

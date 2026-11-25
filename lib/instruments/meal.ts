@@ -47,6 +47,38 @@ export interface Flag {
   reason?: string;
 }
 
+/** A school's entry in UDISE+, the Ministry of Education's yearly register. */
+export interface UdiseRecord {
+  /** The academic year the entry is for, as UDISE+ writes it: "2025-26". */
+  year: string | null;
+  name: string | null;
+  category: string | null;
+  type: string | null;
+  management: string | null;
+  management_group: string | null;
+  location: string | null;
+  status: string | null;
+  /** Below 1 is a pre-primary class. */
+  low_class: number | null;
+  high_class: number | null;
+  textbooks_primary: number | null;
+  textbooks_upper: number | null;
+}
+
+export const UDISE_HOST = "https://kys.udiseplus.gov.in";
+
+/** The school's code as UDISE+ writes it: eleven digits. */
+export function udiseCode(code: string): string {
+  return code.padStart(11, "0");
+}
+
+/** "Class 1 to class 8"; a class below 1 is pre-primary. */
+export function classRange(low: number | null, high: number | null): string | null {
+  if (low == null || high == null) return null;
+  const from = low < 1 ? "Pre-primary" : `Class ${low}`;
+  return low === high ? from : `${from} to class ${high}`;
+}
+
 export interface School {
   st: string;
   code: string;
@@ -62,6 +94,8 @@ export interface School {
   /** Twelve filed enrolments, January first, null where none was filed. */
   enrolment: (number | null)[] | null;
   enrolment_read_at: string | null;
+  /** Absent or null until UDISE+ has been asked; `record` null when it holds no school under the code. */
+  udise?: { read_at: string; record: UdiseRecord | null } | null;
   flags: Flag[];
 }
 
@@ -252,7 +286,14 @@ export interface MealMeta {
     blocks: number;
     clusters: number;
     flags_no_longer_standing: number;
+    /** Flagged schools looked up in UDISE+, and those it holds an entry for. */
+    udise_asked: number;
+    udise_found: number;
   };
+  /** The most requests a night may send to the meal system, however clean the nights before. */
+  budget_cap: number;
+  /** The least a clean night adds to the next night's allowance. */
+  budget_step: number;
 }
 
 export interface MealFreshness {
@@ -273,7 +314,7 @@ export interface Measure {
   label: string;
   definition: string;
   formula?: string;
-  unit: string;
+  unit?: string;
   source: string;
 }
 

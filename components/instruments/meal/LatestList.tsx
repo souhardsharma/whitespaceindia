@@ -128,7 +128,7 @@ export default function LatestList({
         <p className="font-body text-[14px] opacity-80 border-t border-[#1c1c19] pt-6">
           {filtered && !whole
             ? "Reading the full list…"
-            : "No flag in the last nights matches. That describes what was read, not every school: school tables are read as a sample."}
+            : "No flag from recent nights matches. School tables are read as a sample, so schools outside it are not covered."}
         </p>
       )}
 

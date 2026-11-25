@@ -64,7 +64,7 @@ MEASURES: dict[str, dict] = {
     },
     "tables_read": {
         "label": "School tables read",
-        "definition": "Cluster tables of schools this instrument has read, each for one date. A cluster is a group of neighbouring schools; one table lists every school in it for one day.",
+        "definition": "Cluster tables of schools read so far, each for one date. A cluster is a group of neighbouring schools, and one table lists every school in it for one day.",
         "unit": "tables", "source": OURS,
     },
     "clusters_read": {
@@ -112,7 +112,7 @@ MEASURES: dict[str, dict] = {
     },
     "udise_asked": {
         "label": "Flagged schools looked up in UDISE+",
-        "definition": "Schools with a flag whose code this instrument has asked UDISE+ for. UDISE+ is the Ministry of Education's yearly register of schools, kept apart from the meal reporting system.",
+        "definition": "Schools with a flag whose code has been looked up in UDISE+, the Ministry of Education's yearly register of schools. UDISE+ is a separate system from the meal reporting system.",
         "unit": "schools", "source": OURS,
     },
     "udise_found": {
@@ -122,7 +122,7 @@ MEASURES: dict[str, dict] = {
     },
     "udise_classes": {
         "label": "Classes taught",
-        "definition": "The lowest and highest class the school teaches, as it declared them to UDISE+ for the year shown. PM POSHAN meals are for pre-primary and classes I to VIII, so a school teaching up to class XII has children the scheme does not feed.",
+        "definition": "The lowest and highest class the school teaches, as it declared them to UDISE+ for the year shown. The Mid-Day Meal Rules, 2015 cover classes I to VIII, so a school teaching up to class XII has children the Rules do not cover.",
         "unit": "class", "source": UDISE,
     },
     "udise_category": {
@@ -137,7 +137,7 @@ MEASURES: dict[str, dict] = {
     },
     "udise_textbooks": {
         "label": "Children given free textbooks",
-        "definition": "Children in classes I to V (primary) and VI to VIII (upper primary) to whom the school says it gave free textbooks in the year shown. It is filed once a year for a different purpose and is not the school's enrolment, but it is a count of children in the classes the meal scheme covers, filed outside the meal system.",
+        "definition": "Children in classes I to V (primary) and VI to VIII (upper primary) to whom the school says it gave free textbooks in the year shown. The school files this once a year for the textbook scheme, outside the meal system. It is not an enrolment figure, though it covers the same classes as the meal scheme.",
         "unit": "children", "source": UDISE,
     },
 }
