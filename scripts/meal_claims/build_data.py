@@ -265,6 +265,8 @@ def build(db, out: Path, generated_at: str) -> dict:
         "thresholds": FL.THRESHOLDS,
         "calibration": calibration(),
         "buckets": BUCKETS,
+        "budget_cap": SY.BUDGET_CAP,
+        "budget_step": SY.BUDGET_STEP,
         "months": months[-MONTHS_KEPT:],
         "csv_months": months,
         "list_days": LIST_DAYS,

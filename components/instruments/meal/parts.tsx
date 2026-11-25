@@ -59,10 +59,10 @@ export function FlagNotFinding({ className = "" }: { className?: string }) {
   return (
     <p className={`font-body text-[13.5px] leading-relaxed border-y py-3 ${className}`} style={{ borderColor: TEAL }}>
       <strong className="font-semibold">A flag, not a finding.</strong>{" "}
-      A flag marks two figures a school filed on the same government system
-      that do not agree. A wrong enrolment filing, a typing slip or a meal
-      served to children from another school can each produce one. It does not
-      show that anything improper happened.
+      A flag marks two figures that one school filed on one government
+      system and that do not agree. A wrong enrolment filing can produce one.
+      So can a typing slip, or a meal served to children from another school.
+      A flag does not show that anything improper happened.
     </p>
   );
 }

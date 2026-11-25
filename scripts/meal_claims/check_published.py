@@ -23,6 +23,7 @@ import flags as FL  # noqa: E402
 import measures as ME  # noqa: E402
 import udise as UD  # noqa: E402
 import reader as RD  # noqa: E402
+import sync as SY  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 PUBLISHED = REPO / "public" / "data" / "instruments" / "meal-claims"
@@ -185,6 +186,8 @@ def check(folder: Path) -> list[str]:
     # -- the registry and the thresholds are the code's own
     c.ok(load(folder, "measures.json") == ME.MEASURES, "measures.json differs from measures.py")
     c.ok(meta["thresholds"] == FL.THRESHOLDS, "meta.thresholds differs from flags.THRESHOLDS")
+    c.ok(meta.get("budget_cap") == SY.BUDGET_CAP, "meta.budget_cap is not the nightly run's ceiling")
+    c.ok(meta.get("budget_step") == SY.BUDGET_STEP, "meta.budget_step is not the nightly run's step")
     c.ok(meta.get("calibration") == load(Path(__file__).resolve().parent, "calibration.json"), "meta.calibration differs from calibration.json")
     for key in ("flag_over", "flag_over_wide", "flag_closed", "flag_spike", "schools_flagged",
                 "tables_read", "school_days_tested", "schools", "clusters_read", "schools_read",

@@ -41,11 +41,11 @@ export default function MealStates() {
             </h1>
             <p className="mt-5 font-body text-[15px] leading-relaxed opacity-80 max-w-3xl">
               {count(m.counts.states)} States and Union Territories file into
-              the system, across {count(m.counts.districts)} districts. Each
+              the system, across {count(m.counts.districts)} districts. A
               State&rsquo;s reporting share is for its last working day
-              read; district rows show what the system held for the latest
-              day read ({dayShort(m.day)}), which may be a holiday, and how much of
-              the State this instrument has been able to test so far.
+              read. District rows show what the system held for the latest
+              day read ({dayShort(m.day)}), which may have been a holiday,
+              and how much of the State has been tested so far.
             </p>
             <FlagNotFinding className="mt-7 max-w-3xl" />
           </div>
@@ -108,8 +108,9 @@ export default function MealStates() {
             <h2 className={`${SECTION_HEADING} mb-3`}>Reading these tables</h2>
             <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl">
               {M.enr_filed_pct.definition} {M.school_days_tested.definition}{" "}
-              A district with no school flagged and few school-days tested has
-              not been cleared; it has not yet been read.
+              Where no school is flagged and few school-days have been tested,
+              the district has largely not been read, and the absence of a
+              flag says nothing about its schools.
             </p>
           </div>
         </section>

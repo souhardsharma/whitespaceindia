@@ -105,10 +105,10 @@ export default async function MealState({ params }: Props) {
             <div className="md:col-span-4">
               <h2 id="days-heading" className={`${SECTION_HEADING} mb-3`}>Meals reported, day by day</h2>
               <p className="font-body text-[13.5px] leading-relaxed opacity-70">
-                {M.meals.definition} A day with no bar holds no report. That
-                is the State&rsquo;s or the system&rsquo;s silence, on a
-                holiday, in a vacation or for a reason the record does not
-                give, and it is never flagged.
+                {M.meals.definition} Where the chart has a gap, the system
+                holds no report for that day. Schools may have been closed,
+                the State may not have filed, or the system may have been
+                down. Gaps are not flagged.
               </p>
             </div>
             <div className="md:col-span-8">
@@ -167,11 +167,11 @@ export default async function MealState({ params }: Props) {
               <h2 id="closed-heading" className={`${SECTION_HEADING} mb-3`}>Days the State was shut and some schools reported</h2>
               <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-6 max-w-3xl">
                 On these days almost none of the State&rsquo;s schools
-                reported, and the instrument looked for the ones that did.
-                The count is of schools, not of flags: a school is flagged
-                only if its own record shows it does not normally serve on
-                that weekday, or the date is on the State&rsquo;s holiday
-                list.
+                reported, and the nightly run looked for the ones that did.
+                The last column counts the schools it traced. Few of them
+                are flagged: a school is flagged only if its own record
+                shows it does not normally serve on that weekday, or if the
+                date is on the State&rsquo;s holiday list.
               </p>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[520px] max-w-3xl border-collapse">
@@ -206,9 +206,10 @@ export default async function MealState({ params }: Props) {
               {holidays?.read_at
                 ? `The system lists ${count(holidays.days.length)} holiday dates for ${s.name}, as read on ${whenIST(holidays.read_at)} IST.`
                 : `The system's holiday list for ${s.name} has not been read.`}{" "}
-              The lists are State-wide, give no district or school holidays
-              and no vacations, and differ greatly in how much they hold. A
-              date that is not on the list is never treated as a working day.
+              The list covers the whole State. It gives no district or school
+              holidays and no vacations, and some States list far more dates
+              than others. A date absent from the list is not taken as proof that schools
+              were open.
             </p>
           </div>
         </section>

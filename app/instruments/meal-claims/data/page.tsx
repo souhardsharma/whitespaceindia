@@ -3,25 +3,24 @@ import StructuredData from "@/components/instruments/StructuredData";
 import { pageMeta, pageLd } from "@/lib/instruments/metadata";
 import { InstrumentFooter, InstrumentHeader } from "@/components/instruments/InstrumentChrome";
 import { SECTION_HEADING, SMALL_LABEL, TD, TH } from "@/components/instruments/meal/parts";
-import { MEAL_BASE, MEAL_DATA, MEAL_HOST, MEAL_OG, count, monthLabel } from "@/lib/instruments/meal";
+import { MEAL_BASE, MEAL_DATA, MEAL_HOST, MEAL_OG, UDISE_HOST, count, monthLabel } from "@/lib/instruments/meal";
 import { mealMeasures, mealMeta, mealStates } from "@/lib/instruments/mealServer";
 
 /**
- * The files, for anyone who wants them rather than the pages.
+ * The files the pages are drawn from: static JSON and CSV, rebuilt nightly,
+ * no key.
  *
- * Every page of the instrument is drawn from these files as they are, so the
- * files are the interface: static JSON and CSV, rebuilt nightly, no key.
- *
- * No Dataset markup and no licence are published here. The figures are the
- * reporting system's, its publisher states no terms of reuse, and a licence
- * this site cannot grant would be worse than none (see LICENSE-DATA.md for
- * the files the site can license).
+ * The licence covers what this site adds (flags, counts of what was read,
+ * the arrangement). The figures inside are the government sources', whose
+ * publishers state no terms of reuse, so the page claims nothing over them
+ * and carries no Dataset markup, which would have to name one licence for
+ * the whole. LICENSE-DATA.md says the same.
  */
 
 const PATH = `${MEAL_BASE}/data`;
 const TITLE = "Data and terms | Meal Claims Check";
 const DESCRIPTION =
-  "The files Meal Claims Check publishes each night: every flag as CSV, State and district tables, flagged schools' months, the definitions of every figure, and what is known about the terms of reuse.";
+  "The files Meal Claims Check publishes each night: every flag as CSV, State and district tables, flagged schools' months, the definition of every figure, and the terms for reusing them.";
 
 export const metadata = pageMeta({ path: PATH, title: TITLE, description: DESCRIPTION, image: MEAL_OG });
 
@@ -34,8 +33,8 @@ const FILES: [string, string][] = [
   ["history/<code>/<year>.json", "One State and one year: for each district, a row for every day its table was read. A row is the day, schools listed, schools that filed enrolment, enrolment filed, schools that reported and meals reported. The years each State has are listed in states.json as `history_years`."],
   ["roster/<code>-<district>.json", "Every school read in one district. `schools` rows are the school's key (code and shift), its name, its cluster's code, the enrolment it filed (null when none) and the meals it reported (null when no report). `clusters` gives each cluster's name, block, the date its latest table is for and how many dates have been read."],
   ["flags/<yyyy-mm>.csv", "Every flag on a school-day of that month, standing or not. The columns are below."],
-  ["flags/recent.json", "Flags first seen in the last nights, each with the figures it rests on. `seen` points into `stamps`, the list of builds."],
-  ["schools/<yyyy-mm>/<bucket>.json", "For each flagged school: the month day by day, the enrolment filed for each month of the year, and its flags. The bucket is the school code modulo the `buckets` value in meta.json, two digits."],
+  ["flags/recent.json", "Flags first seen in recent nights, each with the figures it rests on. `seen` points into `stamps`, the list of builds."],
+  ["schools/<yyyy-mm>/<bucket>.json", "For each flagged school: the month day by day, the enrolment filed for each month of the year, its flags, and under `udise` its entry in UDISE+ where one has been read. The bucket is the school code modulo the `buckets` value in meta.json, two digits."],
   ["holidays.json", "Each State's holiday list as the system gives it: date and reason."],
 ];
 
@@ -79,9 +78,9 @@ export default function MealData() {
             Data and terms
           </h1>
           <p className="mt-5 font-body text-[15px] leading-relaxed opacity-80 max-w-3xl">
-            Everything the instrument shows is drawn from files it publishes
-            as they are, rebuilt once a night. They need no key. All paths
-            below are under <code className="font-label text-[13px]">{MEAL_DATA}/</code>.
+            Each page of the instrument is drawn from the files listed here.
+            They are rebuilt once a night and need no key. All paths below
+            are under <code className="font-label text-[13px]">{MEAL_DATA}/</code>.
           </p>
 
           <section className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby="csv-heading">
@@ -171,25 +170,31 @@ export default function MealData() {
             <div className="font-body text-[14.5px] leading-relaxed space-y-4 max-w-3xl">
               <p>
                 The meal counts, enrolments, holiday lists and school names in
-                these files are the figures of the PM POSHAN daily reporting
-                system at{" "}
+                these files come from the PM POSHAN daily reporting system at{" "}
                 <a href={MEAL_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">mdmhp.nic.in</a>,
-                filed by State education departments and published there
-                without a login. Its publisher states no terms for reusing
-                them, so this site does not put them under a licence of its
-                own. Anyone reusing the figures should credit the reporting
-                system as their source and satisfy themselves of the terms.
+                where State education departments file them and anyone can
+                read them without a login. The entries under{" "}
+                <code className="font-label text-[13px]">udise</code> come
+                from the Ministry of Education&rsquo;s school report card at{" "}
+                <a href={UDISE_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">kys.udiseplus.gov.in</a>.
+                Neither publisher states terms for reusing its figures. They
+                are reproduced here as filed, with the source named, and this
+                site claims no rights over them. If you reuse them, credit
+                the system they came from.
               </p>
               <p>
-                The flags, and the counts of what the instrument has read, are
-                this instrument&rsquo;s work. A flag reused elsewhere must
-                keep what it is: two filed figures that disagree, not a
-                finding about a school. The code that produces them is
-                published under AGPL-3.0-or-later.
+                What this site adds is under{" "}
+                <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer license" className="underline underline-offset-4">CC BY 4.0</a>:
+                the flags, the counts of what has been read, and the way the
+                files are put together. Credit Whitespace India and link to
+                this page. A flag reused elsewhere should be described as it
+                is here, as two filed figures that disagree. It is not a
+                finding about a school. The code that produces the files is
+                under AGPL-3.0-or-later.
               </p>
               <p>
-                The files hold no personal data: counts, codes, dates and the
-                names of institutions only. How they are made is on{" "}
+                The files hold no personal data. They contain counts, codes,
+                dates and the names of institutions. How they are made is on{" "}
                 <Link href={`${MEAL_BASE}/methodology`} className="underline underline-offset-4">the methodology page</Link>.
               </p>
             </div>
