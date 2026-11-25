@@ -61,6 +61,9 @@ export default function MealNational() {
   };
   const withDistricts = nat.states.filter((s) => s.districts.length);
   const selfDisagree = nat.states.flatMap((s) => (s.district_sum ? [{ s, sum: s.district_sum }] : []));
+  // Read before the day's late returns were in (ams_sync.SETTLED_AFTER_DAYS).
+  const filling = Boolean(nat.day && nat.read_at
+    && Date.parse(nat.read_at) < Date.parse(`${nat.day}T00:00:00+05:30`) + 3 * 86_400_000);
   const readAt = whenIST(nat.read_at);
 
   const figureHeads = (
@@ -89,8 +92,8 @@ export default function MealNational() {
               Each State sends its schools&rsquo; daily meal returns to the
               Ministry of Education&rsquo;s monitoring system at{" "}
               <a href={AMS_HOST} target="_blank" rel="noopener noreferrer" className={LINK}>pmposhan-ams.education.gov.in</a>.
-              This page shows that system&rsquo;s totals for each State and
-              each district. The school-by-school tests elsewhere in this
+              This page shows that system&rsquo;s totals for each State and,
+              as their tables are read, for each district. The school-by-school tests elsewhere in this
               instrument use a different system,{" "}
               <a href={MEAL_HOST} target="_blank" rel="noopener noreferrer" className={LINK}>mdmhp.nic.in</a>,
               which {count(pages.size)} States and Union Territories file
@@ -103,10 +106,11 @@ export default function MealNational() {
                   <Stat
                     measure={M.nat_reported_pct}
                     value={share(all.reported, all.schools) ?? "not read"}
-                    note={`${count(all.reported)} schools, for ${dayLong(nat.day)}`}
+                    note={`${count(all.reported)} schools, for ${dayLong(nat.day)}${
+                      filling ? ", read while that day's returns were still arriving" : ""}`}
                   />
                   <Stat measure={M.nat_meals} value={count(all.meals)} note={`${per100(all)} per 100 children enrolled in the schools that reported`} />
-                  <Stat measure={M.nat_enrolled} value={count(all.enrolled)} note={`${count(all.holiday)} schools were on holiday`} />
+                  <Stat measure={M.nat_enrolled} value={count(all.enrolled)} note={`${count(all.holiday)} schools marked by the system as on holiday`} />
                 </dl>
                 <p className="mt-7 font-body text-[13px] leading-relaxed opacity-70 max-w-3xl">
                   These are the figures for {dayLong(nat.day)}
@@ -120,9 +124,9 @@ export default function MealNational() {
               <p className="mt-7 font-body text-[15px] leading-relaxed max-w-3xl border-l-2 pl-4" style={{ borderColor: "#1d5c63" }}>
                 The national system has not been read yet. It answers only
                 addresses in India, and the nightly run reaches it through
-                Indian routes that have to be found afresh each night. The
+                relays in India that have to be checked afresh each night. The
                 tables appear here after the first night on which one of those
-                routes works.
+                relays works.
               </p>
             )}
           </div>
@@ -135,7 +139,9 @@ export default function MealNational() {
                 <div className="md:col-span-4">
                   <h2 id="days-heading" className={`${SECTION_HEADING} mb-3`}>All India, day by day</h2>
                   <p className="font-body text-[13.5px] leading-relaxed opacity-70">
-                    {M.nat_meals.definition} The source shows the last{" "}
+                    The chart shows {M.nat_meals.label.toLowerCase()} on each
+                    day, or {M.nat_reported_pct.label.toLowerCase()} when
+                    switched. The source shows the last{" "}
                     {nat.window_days} days and nothing older. This chart
                     starts on {nat.first_day ? dayShort(nat.first_day) : "the first day read"} and
                     keeps each day after the source has dropped it. A day
@@ -213,12 +219,12 @@ export default function MealNational() {
                   <h2 id="disagree-heading" className={`${SECTION_HEADING} mb-3`}>Where the State row and its districts differ</h2>
                   <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl mb-5">
                     For these States the national system&rsquo;s own district
-                    table for {dayShort(nat.day)} adds up to different figures
-                    from the State&rsquo;s row in the table above. Both are
-                    shown as the system printed them, and neither is
-                    corrected. Where a State is marked on holiday, its row has
-                    so far shown no returns while its districts counted the
-                    schools that sent one.
+                    table for {dayShort(nat.day)} adds up to figures that
+                    differ from the State&rsquo;s row in the table above. Both
+                    are shown as the system printed them, and neither is
+                    corrected. Where the system marks a State as on holiday,
+                    its row has so far shown no returns, while its district
+                    table counts the schools that did file one.
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[680px] border-collapse">
@@ -262,9 +268,10 @@ export default function MealNational() {
                     lists and were read at different hours, so small
                     differences are expected. A difference too large for either
                     reason means the two systems hold different returns for
-                    the State. Where the national side shows no returns, look
-                    at the table above: the State row may be the one that is
-                    empty.
+                    the State.
+                    {selfDisagree.length
+                      ? " Where the national side shows no returns, the State's own row may be the empty figure; its district totals are in the table of States whose row and districts differ."
+                      : ""}
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[680px] border-collapse">

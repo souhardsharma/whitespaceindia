@@ -189,8 +189,9 @@ export default function MealMethodology() {
               </p>
               <p>
                 A wrong enrolment filing can cause this, which is why each
-                school&rsquo;s page prints the enrolment it filed for all
-                twelve months beside the flag.
+                school&rsquo;s page prints the enrolment it filed for every
+                month of the year once its enrolment record has been read,
+                and until then the figure from the cluster table.
               </p>
             </Test>
             <Test measure={M.flag_closed}>
@@ -388,8 +389,9 @@ export default function MealMethodology() {
               </p>
             ) : null}
             <p>
-              Each State also stops reporting during its vacations, which the
-              system does not list. These gaps were measured in that year:
+              Each State also stops reporting during its vacations, which
+              several States leave out of their holiday lists. These gaps were
+              measured in that year:
             </p>
             <ul className="list-disc pl-5 space-y-1">
               {year.state_silences.map((s) => (
@@ -424,7 +426,8 @@ export default function MealMethodology() {
               their requests together, so more relays do not mean more
               requests for the system to answer. A relay that stops working
               is replaced by another, and the list is checked again every
-              quarter of an hour while the national read lasts. Every request is encrypted to
+              quarter of an hour while the national read lasts. A refusal
+              ends the national read for that night. Every request is encrypted to
               the Ministry&rsquo;s own certificate, so a relay carries the
               page without being able to read or change it. On a night when
               no relay works, the national tables keep their previous date
@@ -434,8 +437,9 @@ export default function MealMethodology() {
               The daily reporting system at mdmhp.nic.in, which the tests
               are run on, has so far answered the run directly. If it stops
               answering altogether, the run asks it through one of the same
-              relays, inside the same allowance of requests. A refusal
-              is different: the run does not go round one by any route.
+              relays, inside the same allowance of requests. After a
+              refusal it uses no relay; the refusal ends that night&rsquo;s
+              reading, as described above.
             </p>
             <p>
               The national figures are not put through the

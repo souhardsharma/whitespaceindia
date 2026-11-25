@@ -209,6 +209,12 @@ def build(db, out: Path, generated_at: str) -> dict:
             continue
         series = [[r["day"], r["schools"], r["reported"], r["meals"]] for r in db.execute(
             "select day, schools, reported, meals from state_day where st=? order by day", (st,))]
+        if day_row is None:
+            # the same sum of its district tables, day by day, so the State
+            # counts in the national chart as it does in the totals
+            series = [[r["day"], r["schools"], r["reported"], r["meals"]] for r in db.execute(
+                "select day, sum(schools) schools, sum(reported) reported, sum(meals) meals "
+                "from district_day where st=? group by day order by day", (st,))]
         hol = db.execute("select read_at from holiday_read where st=?", (st,)).fetchone()
         known = counts_known.get(st, {})
         # Rajasthan is not in the all-States table: its figures are the sum

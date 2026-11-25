@@ -19,12 +19,14 @@ Needs the `cryptography` package (to make the certificates, not to run egress).
 from __future__ import annotations
 
 import datetime
+import io
 import os
 import socket
 import ssl
 import sys
 import tempfile
 import threading
+import urllib.error
 from pathlib import Path
 
 from cryptography import x509
@@ -230,8 +232,70 @@ def main() -> int:
     check("it is reported unreached", set(states) == {"unreached"})
     check("and the asking stops", len(TUNNELS) == egress.CHAIN_TRIES * 3, str(len(TUNNELS)))
 
+    session_retries()
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
+
+
+class FakeOpener:
+    """Answers in turn: an exception is raised, anything else is the body."""
+
+    def __init__(self, answers: list):
+        self.answers, self.calls = list(answers), 0
+
+    def open(self, req, timeout=None):
+        self.calls += 1
+        answer = self.answers.pop(0)
+        if isinstance(answer, BaseException):
+            raise answer
+        return FakeAnswer(answer)
+
+
+class FakeAnswer:
+    status = 200
+
+    def __init__(self, body: bytes):
+        self.body = body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_a):
+        return False
+
+    def read(self) -> bytes:
+        return self.body
+
+    def geturl(self) -> str:
+        return "https://ams.test/"
+
+
+def session_retries() -> None:
+    print("\na session keeps its relay through one failure")
+    pool = egress.pool_path("ams")
+    pool.parent.mkdir(parents=True, exist_ok=True)
+    pool.write_text("socks5://10.9.8.7:1080 1 1\n", encoding="utf-8")
+    egress.ensure_chain = lambda *a, **k: "known"
+    egress.Session.RETRY_PAUSE_S = 0
+
+    def session(answers):
+        s = egress.Session("ams", spacing=0)
+        s.opener = FakeOpener(answers)
+        return s
+
+    s = session([TimeoutError("timed out"), b"page"])
+    check("one failure is asked again on the same relay", s.request("https://ams.test/")[1] == b"page"
+          and s.opener.calls == 2 and s.proxy == "socks5://10.9.8.7:1080")
+    s = session([TimeoutError("timed out"), ConnectionResetError("reset"), b"page"])
+    try:
+        s.request("https://ams.test/")
+        check("a second failure gives the relay up", False)
+    except egress.SessionLost:
+        check("a second failure gives the relay up", s.opener.calls == 2)
+    refusal = urllib.error.HTTPError("https://ams.test/", 403, "Forbidden", {}, io.BytesIO(b"no"))
+    s = session([refusal, b"page"])
+    status = s.request("https://ams.test/")[0]
+    check("a refusal is an answer and is not asked again", status == 403 and s.opener.calls == 1)
 
 
 if __name__ == "__main__":

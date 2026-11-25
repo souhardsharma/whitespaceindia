@@ -198,7 +198,7 @@ export default function SeriesChart({
           {axis.lines.map((v) => (
             <span
               key={v}
-              className="absolute left-0 -translate-y-full font-label text-[9px] tracking-[0.08em] tabular-nums opacity-70 pr-1 bg-[#fcf9f4]/80"
+              className="absolute left-0 -translate-y-full font-label text-[9px] tracking-[0.08em] tabular-nums pr-1 bg-[#fcf9f4] text-[#1c1c19]/70"
               style={{ top: `${yOf(v)}%` }}
             >
               {measure === "meals" ? formatValue(v, measure) : `${v}%`}
@@ -249,7 +249,7 @@ export default function SeriesChart({
       <figcaption>
         <p className={`${SMALL_LABEL} flex flex-wrap justify-between gap-x-4 gap-y-1 mt-1`}>
           <span>{dayShort(dates[0])}</span>
-          {bars ? <span>Paler bars are Sundays</span> : null}
+          {bars && dates.some((d, i) => values[i] !== null && weekday(d) === "Sunday") ? <span>Paler bars are Sundays</span> : null}
           <span>{dayShort(dates[n - 1])}</span>
         </p>
         <p className="font-body text-[13px] leading-normal tabular-nums mt-3 pt-3 border-t border-[#1c1c19]/20 min-h-[4.5rem] sm:min-h-[3.25rem]">
