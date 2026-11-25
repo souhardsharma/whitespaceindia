@@ -116,6 +116,23 @@ create table if not exists udise(
   st text, code text, year_id int, record text, read_at text,
   primary key (st, code));
 
+-- the national system (ams.py): one row per State or UT per day, one per
+-- district per day, and a ledger of every table read. A blank cell is null.
+create table if not exists ams_state_day(
+  day text, name text, schools int, reported int, holiday int, enrolled int,
+  approved int, rep_enrolled int, meals int,
+  primary key (day, name));
+create table if not exists ams_district_day(
+  day text, state text, name text, schools int, reported int, holiday int,
+  enrolled int, rep_enrolled int, meals int,
+  primary key (day, state, name));
+create table if not exists ams_read(
+  state text, day text, rows int, read_at text, total_agrees int,
+  primary key (state, day));
+create table if not exists ams_night(
+  stamp text primary key, day text, sent int, tables int, routes_lost int,
+  outcome text, notes text);
+
 create table if not exists night(
   stamp text primary key, day text, budget int, sent int, failed int,
   median_s real, p90_s real, outcome text, notes text);
@@ -330,3 +347,27 @@ def shut_days(db, st: str, shut) -> dict[dt.date, bool]:
         if verdict is not None:
             out[dt.date.fromisoformat(row["day"])] = verdict
     return out
+
+
+def put_ams(db, page: dict, read_at: str, total_agrees: bool) -> None:
+    """One table of the national system: `page` as ams.parse returns it.
+    The table replaces what was held for that State and day, so a district
+    the source has since dropped does not linger."""
+    day, state = iso(page["day"]), page["state"] or ""
+    if state:
+        db.execute("delete from ams_district_day where day=? and state=?", (day, state))
+        db.executemany("insert into ams_district_day values (?,?,?,?,?,?,?,?,?)", [
+            (day, state, r["name"], r["schools"], r["reported"], r["holiday"], r["enrolled"],
+             r["rep_enrolled"], r["meals"]) for r in page["rows"]])
+    else:
+        db.execute("delete from ams_state_day where day=?", (day,))
+        db.executemany("insert into ams_state_day values (?,?,?,?,?,?,?,?,?)", [
+            (day, r["name"], r["schools"], r["reported"], r["holiday"], r["enrolled"],
+             r["approved"], r["rep_enrolled"], r["meals"]) for r in page["rows"]])
+    db.execute("insert or replace into ams_read values (?,?,?,?,?)",
+               (state, day, len(page["rows"]), read_at, int(total_agrees)))
+
+
+def ams_read_at(db) -> dict[tuple[str, str], str]:
+    """(State name or '' for the all-States table, day) -> when it was last read."""
+    return {(r["state"], r["day"]): r["read_at"] for r in db.execute("select state, day, read_at from ams_read")}
