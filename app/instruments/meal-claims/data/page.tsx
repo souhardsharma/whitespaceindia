@@ -36,9 +36,9 @@ const FILES: [string, string][] = [
   ["flags/recent.json", "Flags first seen in recent nights, each with the figures it rests on. `seen` points into `stamps`, the list of builds."],
   ["schools/<yyyy-mm>/<bucket>.json", "For each flagged school: the month day by day, the enrolment filed for each month of the year, its flags, and under `udise` its entry in UDISE+ where one has been read. The bucket is the school code modulo the `buckets` value in meta.json, two digits."],
   ["holidays.json", "Each State's holiday list as the system gives it: date and reason."],
-  ["national.json", "The national system's totals: for each of the 36 States and Union Territories the latest day read, its daily series and its latest district table, and for States on both systems the same day side by side. `read` is false until the national system has been read."],
+  ["national.json", "The national system's totals. For each of the 36 States and Union Territories it holds the latest day read, the daily series and the latest district table. For States on both systems it sets the same day side by side. `read` is false until the national system has been read."],
   ["national/states.csv", "Every State-day read from the national system. Columns: date, state, schools, schools_reported, schools_on_holiday, enrolment, children_approved, enrolment_in_reporting_schools, meals."],
-  ["national/districts-<yyyy-mm>.csv", "Every district-day read from the national system in that month. The same columns with district added and without children_approved, which the source gives for States only."],
+  ["national/districts-<yyyy-mm>.csv", "Every district-day read from the national system in that month. The columns are those of states.csv with district added and children_approved left out; the source gives that figure for States only."],
 ];
 
 const COLUMNS: [string, string][] = [
@@ -184,7 +184,7 @@ export default function MealData() {
                 <code className="font-label text-[13px]">national</code> come
                 from the Ministry&rsquo;s monitoring system at{" "}
                 <a href={AMS_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">pmposhan-ams.education.gov.in</a>.
-                None of the three states terms for reusing its figures. They
+                None of the three sets out terms for reusing its figures. They
                 are reproduced here as filed, with the source named, and this
                 site claims no rights over them. If you reuse them, credit
                 the system they came from.

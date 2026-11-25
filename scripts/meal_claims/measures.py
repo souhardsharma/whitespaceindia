@@ -159,7 +159,7 @@ MEASURES: dict[str, dict] = {
     },
     "nat_holiday": {
         "label": "Schools on holiday",
-        "definition": "The national system's \"Holiday\" column for the date, as it prints it.",
+        "definition": "The figure in the national system's \"Holiday\" column for the date, copied as printed.",
         "unit": "schools", "source": NATIONAL,
     },
     "nat_enrolled": {
@@ -169,7 +169,7 @@ MEASURES: dict[str, dict] = {
     },
     "nat_approved": {
         "label": "Children approved",
-        "definition": "The national system's \"No. of Students approved by PAB\": the number of children the scheme's Programme Approval Board approved meals for in the State for the year. Shown for States only.",
+        "definition": "The national system's \"No. of Students approved by PAB\": the number of children in the State for whom the scheme's Programme Approval Board approved meals for the year. Shown for States only.",
         "unit": "children", "source": NATIONAL,
     },
     "nat_rep_enrolled": {
