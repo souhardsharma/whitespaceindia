@@ -53,6 +53,15 @@ const SURFACES = {
       ["/instruments/meal-claims/methodology", "Methodology"],
     ],
   },
+  // The shelf belongs to no instrument, so its footer lists each one's front
+  // page and states both read dates.
+  shelf: {
+    name: "Instruments",
+    links: [
+      ["/instruments/consent", "People & Consent"],
+      ["/instruments/meal-claims", "Meal Claims Check"],
+    ],
+  },
 } as const;
 
 export type InstrumentKey = keyof typeof SURFACES;
@@ -157,7 +166,12 @@ export function InstrumentFooter({
               four places is one that eventually disagrees with itself. The
               clearance register is live, so "when was this read" is part of
               reading any number on it. */}
-          {instrument === "meal-claims" ? (
+          {instrument === "shelf" ? (
+            <>
+              <RegisterCurrency className="mt-4 text-[#1c1c19]" />
+              <MealCurrency className="mt-1 text-[#1c1c19]" />
+            </>
+          ) : instrument === "meal-claims" ? (
             <MealCurrency className="mt-4 text-[#1c1c19]" />
           ) : (
             <RegisterCurrency className="mt-4 text-[#1c1c19]" />
@@ -165,12 +179,14 @@ export function InstrumentFooter({
         </div>
 
         <div className="flex flex-col gap-2">
+          {instrument !== "shelf" && (
           <Link
             href="/instruments"
             className="font-label text-[11px] uppercase tracking-[0.18em] text-[#1c1c19] opacity-70 hover:opacity-100 transition-opacity"
           >
             Instruments shelf
           </Link>
+          )}
           <Link
             href="/"
             className="font-label text-[11px] uppercase tracking-[0.18em] text-[#1c1c19] opacity-70 hover:opacity-100 transition-opacity"

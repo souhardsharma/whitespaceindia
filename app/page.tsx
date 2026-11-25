@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
 import Wordmark from "@/components/Wordmark";
 import csrMeta from "@/public/data/csr/meta.json";
+import mealMeta from "@/public/data/instruments/meal-claims/meta.json";
 
 
 /* Sticky compressed topbar — appears once the user scrolls past the
@@ -137,7 +138,7 @@ function Odometer({ to, duration = 1400 }: { to: number; duration?: number }) {
         started.current = true;
         const start = performance.now();
         const tick = (t: number) => {
-          const p = Math.min(1, (t - start) / duration);
+          const p = Math.max(0, Math.min(1, (t - start) / duration));
           /* cubic-bezier ease-out feel */
           const eased = 1 - Math.pow(1 - p, 3);
           if (p < 1) {
@@ -432,6 +433,7 @@ export default function Landing() {
             <Link href="/csr-spending" className={styles.faqFooterLink}>CSR spending by State</Link>
             <Link href="/csr-spending/whitespace-districts" className={styles.faqFooterLink}>Whitespace districts</Link>
             <Link href="/instruments/consent" className={styles.faqFooterLink}>Environmental clearance proposals</Link>
+            <Link href="/instruments/meal-claims" className={styles.faqFooterLink}>School meal reports</Link>
             <a href="https://github.com/souhardsharma/whitespaceindia" target="_blank" rel="noopener noreferrer" className={styles.faqFooterLink}>Source on GitHub</a>
             <a href="https://www.linkedin.com/in/souhardsharma/" target="_blank" rel="noopener noreferrer" className={styles.faqFooterLink}>Get in touch</a>
           </div>
@@ -461,7 +463,7 @@ const FAQS: Faq[] = [
   },
   {
     q: "What is a whitespace?",
-    a: `A place on the map where a problem is visible in the record and the response to it is not. The first search was for money: of the ${csrMeta.total_districts} districts we scored, ${csrMeta.whitespace_count} are among the poorest quarter in India and also among the bottom quarter for the CSR spending companies report per person. Finding one is a reason to look closer, and it is not a verdict. Money may arrive through channels the filings do not record, or conditions may have changed since the data was collected.`,
+    a: `A place on the map where a problem is visible in the record and the response to it is not. The first search was for money: of the ${csrMeta.total_districts} districts we scored, ${csrMeta.whitespace_count} are among the poorest quarter in India and also among the bottom quarter for the CSR spending companies report per person. A district on that list deserves a closer look before anyone draws a conclusion about it. Money may arrive through channels the filings do not record, or conditions may have changed since the data was collected.`,
     more: { href: "/csr-spending/whitespace-districts", label: "See those districts" },
   },
   {
@@ -474,7 +476,7 @@ const FAQS: Faq[] = [
   },
   {
     q: "What is live today?",
-    a: "Two pieces of work. The CSR Opportunity Index ranks every district on poverty and on the CSR money reaching it, for anyone deciding where to direct funds. The Instruments are working tools built on government data that is public but hard to use: the first, People & Consent, makes the national environmental clearance register searchable by place and sets beside each proposal the people who live there and the laws that apply.",
+    a: `Two pieces of work. The CSR Opportunity Index ranks every district on poverty and on the CSR money reaching it, for anyone deciding where to direct funds. The Instruments are working tools built on government data that is public but hard to use. People & Consent makes the national environmental clearance register searchable by place and sets beside each proposal the people who live there and the laws that apply. Meal Claims Check reads the daily midday meal returns filed for schools in ${mealMeta.counts.states} States and Union Territories, and flags a day on which a school's reported meals exceed the enrolment filed for it, fall on a day it normally stays closed, or jump far above its other days.`,
     more: { href: "/instruments", label: "See the instruments" },
   },
   {
@@ -489,16 +491,16 @@ const FAQS: Faq[] = [
   },
   {
     q: "How current is it?",
-    a: "The clearance register is read again every night, and each instrument page states when its copy was last checked. The CSR index is a fixed edition built on spending from 2021-22 to 2023-24. Population figures come from the 2011 Census, which is still the most recent one India has published, so they describe the people who lived in a place in 2011 and are labelled with that year wherever they appear.",
+    a: "The clearance register and the school meal returns are read again every night, and each instrument page states when its copy was last read. The CSR index is a fixed edition built on spending from 2021-22 to 2023-24. Population figures come from the 2011 Census, which is still the most recent one India has published, so they describe the people who lived in a place in 2011 and are labelled with that year wherever they appear.",
   },
   {
     q: "Where does the data come from?",
-    a: "All of it comes from public records, most of them published by the government and a few made usable by research groups. The CSR index draws on NITI Aayog's Multidimensional Poverty Index, the CSR filings companies make to the Ministry of Corporate Affairs (as compiled by Dataful.in), and the 2011 Census. People & Consent reads the PARIVESH register, each proposal's application form and its appraisal history directly from the portal. To these it adds the 2011 Census and the 2011 Socio Economic and Caste Census as cleaned in the SHRUG research dataset, district boundaries for 2011 from datameet, and the Presidential Orders that define the Scheduled Areas. Each figure on an instrument page names its source and year.",
+    a: "All of it comes from public records, most of them published by the government and a few made usable by research groups. The CSR index draws on NITI Aayog's Multidimensional Poverty Index, the CSR filings companies make to the Ministry of Corporate Affairs (as compiled by Dataful.in), and the 2011 Census. People & Consent reads the PARIVESH register, each proposal's application form and its appraisal history directly from the portal. To these it adds the 2011 Census and the 2011 Socio Economic and Caste Census as cleaned in the SHRUG research dataset, district boundaries for 2011 from datameet, and the Presidential Orders that define the Scheduled Areas. Meal Claims Check reads school returns from the PM POSHAN daily reporting system run by NIC Himachal Pradesh, school details from UDISE+ for the schools it flags, and State and district totals from the Ministry of Education's national monitoring system. Each figure on an instrument page names its source, along with the year it was collected or, for a source that changes daily, the date it was read.",
   },
   {
     q: "Can I reuse the data?",
-    a: "Yes, as long as you credit Whitespace India. The data is published under CC BY 4.0, which allows commercial use. The one exception is the district and sub-district profiles in People & Consent, which carry figures from SHRUG and keep its CC BY-NC-SA 4.0 licence, so they cannot be used commercially. The code is open source under AGPL-3.0, and the data page lists each file with its licence.",
-    more: { href: "/instruments/consent/data", label: "Every file and its licence" },
+    a: "Yes, as long as you credit Whitespace India. What the project adds is published under CC BY 4.0, which allows commercial use. The district and sub-district profiles in People & Consent carry figures from SHRUG and keep its CC BY-NC-SA 4.0 licence, so they cannot be used commercially. Meal Claims Check reproduces the meal, enrolment and school figures as the government systems publish them and claims no rights over them; its own flags and counts are under CC BY 4.0. The code is open source under AGPL-3.0, and each instrument's data page lists its files with their licences.",
+    more: { href: "/instruments/consent/data", label: "People & Consent's files and licences" },
   },
   {
     q: "Which problems come next?",

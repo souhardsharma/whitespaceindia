@@ -36,7 +36,6 @@ const PRIMARY = "https://whitespaceindia.pages.dev";
 const MOVED = [
   "whitespaceindia.vercel.app",
   "whitespaceindia-csr.vercel.app",
-  "csr.whitespaceindia.com",
   "whitespaceindia-backend.onrender.com",
 ];
 const PROPOSAL_SAMPLE = 15;

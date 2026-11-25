@@ -121,6 +121,6 @@ test("a configured host the site moved away from resolves to the primary origin"
 });
 
 test("another origin is honoured, without a trailing slash or path", () => {
-  assert.equal(resolveSiteUrl("https://whitespaceindia.com/"), "https://whitespaceindia.com");
-  assert.equal(resolveSiteUrl("https://whitespaceindia.com/csr"), "https://whitespaceindia.com");
+  assert.equal(resolveSiteUrl("https://example.org/"), "https://example.org");
+  assert.equal(resolveSiteUrl("https://example.org/csr"), "https://example.org");
 });

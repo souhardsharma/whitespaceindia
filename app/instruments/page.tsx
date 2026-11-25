@@ -113,8 +113,9 @@ export default function InstrumentsShelf() {
                 has it, with no score or opinion added.
               </p>
               <p className="md:col-span-5 font-body text-[15px] leading-relaxed opacity-70 md:border-l md:border-[#1c1c19]/20 md:pl-8">
-                Each figure an instrument shows names the dataset it came from
-                and the year that dataset was collected. Where the record is
+                Each figure an instrument shows names the dataset it came from,
+                with the year that dataset was collected or, for a source that
+                keeps changing, the date the instrument last read it. Where the record is
                 silent on a question, the instrument says so and leaves the gap
                 unfilled, so a reader can see where the evidence ends as well
                 as what it shows.
@@ -281,7 +282,7 @@ export default function InstrumentsShelf() {
         </section>
       </main>
 
-      <InstrumentFooter />
+      <InstrumentFooter instrument="shelf" />
     </div>
   );
 }

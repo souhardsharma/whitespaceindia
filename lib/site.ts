@@ -24,7 +24,6 @@ export const PRIMARY_ORIGIN = "https://whitespaceindia.pages.dev";
 /** Hosts whose "/" was the CSR app; it redirects to /csr on the primary. */
 export const LEGACY_CSR_HOSTS: ReadonlySet<string> = new Set([
   "whitespaceindia-csr.vercel.app",
-  "csr.whitespaceindia.com",
 ]);
 
 /**
