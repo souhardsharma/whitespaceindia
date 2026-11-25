@@ -50,8 +50,10 @@
 # not probed; and the routes Instrument 01 verified against PARIVESH on its
 # last run are entered as known routes, because both sources answer India
 # only. Its cache is restored here read-only and never saved. While the
-# night runs, a refresher re-verifies and widens the pool every ten minutes,
-# and the read takes new routes up as they appear.
+# national read runs, a refresher re-verifies and widens the pool every
+# quarter-hour, and the read takes new routes up as they appear. Every probe
+# is one plain request for the system's lightest page from a different
+# address; the refresher stops when the read does.
 #
 # WHEN IT RUNS. GitHub's cron arrives hours late on this repository or not at
 # all, so the run is started by the completion of Instrument 01's sync, which
@@ -250,23 +252,29 @@ jobs:
           minutes=150
           if [ -n "$NATIONAL_MINUTES" ]; then
             [[ "$NATIONAL_MINUTES" =~ ^[0-9]{1,3}$ ]] || { echo "::error::national_minutes must be a number"; exit 1; }
-            minutes=$NATIONAL_MINUTES
+            # base 10: "08" is not octal here. At most 200, so the step ends inside the job.
+            minutes=$((10#$NATIONAL_MINUTES))
+            (( minutes >= 1 && minutes <= 200 )) || { echo "::error::national_minutes must be 1 to 200"; exit 1; }
           fi
           # The national read works on a copy: two processes do not write one
           # SQLite file. Its output and the refresher's go to files, because a
           # background child holding the step's output keeps the step open.
           cp "$STORE" "$NATIONAL"
+          timeout "$((minutes * 60 + 300))" python -I -X utf8 scripts/meal_claims/ams_sync.py \
+            --store "$NATIONAL" --minutes "$minutes" > "$RUNNER_TEMP/national.log" 2>&1 &
+          national=$!
+          # Each probe is a request to the source, so the refresher runs only
+          # while the national read does, and narrowly: a quarter-hour apart,
+          # stopping at 100 working routes.
           (
-            while true; do
-              sleep 600
-              python -I -X utf8 scripts/education/refresh_pool.py ams --workers 800 --max-minutes 6 --target 400 || true
+            while kill -0 "$national" 2>/dev/null; do
+              sleep 900
+              kill -0 "$national" 2>/dev/null || break
+              python -I -X utf8 scripts/education/refresh_pool.py ams --workers 400 --max-minutes 5 --target 100 || true
               echo "[pool] $(date -u +%H:%M) refreshed: $(wc -l < "$EDUCATION_CACHE_DIR/pools/ams.txt") routes"
             done
           ) > "$RUNNER_TEMP/refresher.log" 2>&1 &
           refresher=$!
-          timeout "$((minutes * 60 + 300))" python -I -X utf8 scripts/meal_claims/ams_sync.py \
-            --store "$NATIONAL" --minutes "$minutes" > "$RUNNER_TEMP/national.log" 2>&1 &
-          national=$!
           status=0
           python -I -X utf8 scripts/meal_claims/sync.py --store "$STORE" --minutes 240 "${args[@]}" || status=$?
           # The national read ends at its own minutes; nothing is cut off here.

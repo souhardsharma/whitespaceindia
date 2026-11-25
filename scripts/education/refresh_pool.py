@@ -18,10 +18,11 @@ Three things are added here, and none of them is a second pool mechanism:
                outside India's address ranges are not probed at all: on
                2026-11-25 a ten-minute run spent itself on 274,620 candidates
                of which 30 verified.
-  the seed     `--seed FILE` enters another pool's routes as known ones, so
-               they are re-verified first. The meal workflow passes the pool
-               People & Consent verified against PARIVESH the same night:
-               both sources answer India only, so a route good for one is the
+  the seed     `--seed FILE` puts another pool's routes at the head of the
+               candidates, so they are probed first and enter this pool only
+               if they verify against this target. The meal workflow passes
+               the pool People & Consent verified against PARIVESH: both
+               sources answer India only, so a route good for one is the
                likeliest to be good for the other.
 
     EDUCATION_CACHE_DIR=... python scripts/education/refresh_pool.py india --max-minutes 10
@@ -117,41 +118,35 @@ def india_only(routes: list[str], ranges, known: set[str]) -> list[str]:
     return kept
 
 
-def enter_seed(seed: Path, out: Path) -> int:
-    """Add another pool's routes to this pool's file as known routes. A line
-    already there is left as it is. Returns how many were added."""
+def read_seed(seed: Path) -> list[str]:
+    """Routes from another pool's file, in its order; any line that is not
+    the shape of a pool line is ignored."""
     if not seed.exists():
         print(f"  no seed at {seed}")
-        return 0
-    have = {ln.split()[0] for ln in (out.read_text(encoding="utf-8").splitlines()
-                                     if out.exists() else []) if ln.strip()}
-    new = []
+        return []
+    routes = []
     for ln in seed.read_text(encoding="utf-8").splitlines():
         route = ln.split()[0] if ln.strip() else ""
-        # the shape a pool line has, and nothing else from a file not ours
-        if route and route not in have and (RP.ADDR.match(route) or RP.SCHEMED.match(route)):
-            have.add(route)
-            new.append(route)
-    with open(out, "a", encoding="utf-8") as f:
-        f.writelines(f"{route} 0 0\n" for route in new)
-    print(f"  seed: {len(new)} routes entered from {seed.name}")
-    return len(new)
+        if route and (RP.ADDR.match(route) or RP.SCHEMED.match(route)):
+            routes.append(route)
+    print(f"  seed: {len(routes)} routes from {seed.name}, probed first")
+    return routes
 
 
-def widen(target: egress.Target, out: Path) -> None:
+def widen(target: egress.Target, out: Path, seed: list[str]) -> None:
     """Point the refresher's own gather and ordering at this target."""
     listed = {url for _, url in RP.SOCKS_SOURCES}
     RP.SOCKS_SOURCES.extend(s for s in MORE_SOCKS if s[1] not in listed)
     gather, order = RP.gather, RP.india_first
 
     def gather_wider() -> list[str]:
-        # India lists first: gather() orders by list, most promising first.
-        return RP.cap_ports(india_extra() + gather())[0]
+        # The seed, then the India lists: gather() orders by list, most promising first.
+        return RP.cap_ports(seed + india_extra() + gather())[0]
 
     def order_for_target(routes: list[str], ranges) -> list[str]:
         if target.india_only:
-            known = {ln.split()[0] for ln in (out.read_text(encoding="utf-8").splitlines()
-                                              if out.exists() else []) if ln.strip()}
+            known = set(seed) | {ln.split()[0] for ln in (out.read_text(encoding="utf-8").splitlines()
+                                                          if out.exists() else []) if ln.strip()}
             routes = india_only(routes, ranges, known)
         return order(routes, ranges)
 
@@ -198,13 +193,14 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     rest = sys.argv[2:]
     print(f"target {target.name}: {target.note}")
+    seed: list[str] = []
     if "--seed" in rest:
         at = rest.index("--seed")
-        enter_seed(Path(rest[at + 1]), out)
+        seed = read_seed(Path(rest[at + 1]))
         del rest[at:at + 2]
     RP.PROBE = target.probe_url
     RP.probe = make_probe(target)
-    widen(target, out)
+    widen(target, out, seed)
     sys.argv = [sys.argv[0], "--out", str(out)] + rest
     return RP.run()
 

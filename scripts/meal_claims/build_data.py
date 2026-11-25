@@ -483,10 +483,20 @@ def write_national(db, out: Path) -> dict:
         district_day = db.execute("select max(day) from ams_district_day where state=?", (r["name"],)).fetchone()[0]
         districts = [{"name": tidy(d["name"]), **{k: d[k] for k in NATIONAL_FIGURES}} for d in db.execute(
             "select * from ams_district_day where state=? and day=? order by name", (r["name"], district_day))]
+        # The source's State row and its own district table can disagree for
+        # the same day: on 24 Nov 2026 every State marked on holiday printed
+        # 0 returns in its State row while its districts counted schools that
+        # had reported. Both are published, side by side, as the source has them.
+        district_sum = None
+        if district_day == latest:
+            sums = {k: sum(d[k] or 0 for d in districts) for k in ("schools", "reported", "meals")}
+            if any(sums[k] != (r[k] or 0) for k in sums):
+                district_sum = sums
         doc["states"].append({
             "name": name, "slug": slug(name), "st": RD.state_code_of(name),
             **{k: r[k] for k in NATIONAL_FIGURES}, "approved": r["approved"],
-            "series": series[-STATE_SERIES_DAYS:], "district_day": district_day, "districts": districts})
+            "series": series[-STATE_SERIES_DAYS:], "district_day": district_day, "districts": districts,
+            "district_sum": district_sum})
         # only while the day is still in the State's published series
         here = db.execute(
             "select schools, reported, meals from state_day where st=? and day=? and day in "
