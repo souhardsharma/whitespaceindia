@@ -36,6 +36,7 @@ Usage:
 from __future__ import annotations
 
 import hashlib
+import http.client
 import http.cookiejar
 import json
 import os
@@ -272,10 +273,18 @@ def load_intermediates() -> int:
         if _intermediates_loaded:
             return 0
         _intermediates_loaded = True
-        files = sorted(_intermediate_dir().glob("*.der"))
-        for f in files:
-            _trust_as_intermediate(f.read_bytes())
-        return len(files)
+        loaded = 0
+        for f in sorted(_intermediate_dir().glob("*.der")):
+            der = f.read_bytes()
+            try:
+                issuer, subject = cert_names(der)
+            except IndexError:
+                continue
+            if issuer == subject:   # a kept file is held to the rule a fetched one is
+                continue
+            _trust_as_intermediate(der)
+            loaded += 1
+        return loaded
 
 
 def _tunnel(host: str, proxy: str | None, timeout: float) -> socket.socket:
@@ -472,6 +481,15 @@ class SessionLost(Exception):
     """The route under a session failed; the caller restarts its flow."""
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """A flow asks for one page. A redirect is returned as its 3xx answer and
+    never followed, so a session cannot be walked to a page it did not ask for
+    (a login page, say)."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
 class Session:
     """Several requests that must share one cookie jar and one exit address.
 
@@ -497,6 +515,7 @@ class Session:
         self.jar = http.cookiejar.CookieJar()
         self.opener = NET.Route(self.proxy).opener()
         self.opener.add_handler(urllib.request.HTTPCookieProcessor(self.jar))
+        self.opener.add_handler(_NoRedirect())
         self.spacing, self.timeout, self._next = spacing, timeout, 0.0
 
     def request(self, url: str, *, data: bytes | None = None,
@@ -516,7 +535,7 @@ class Session:
                     return r.status, r.read(), r.geturl()
             except urllib.error.HTTPError as e:
                 return e.code, e.read(), url
-            except OSError as e:
+            except (OSError, http.client.HTTPException) as e:   # a body cut short is not an OSError
                 if (chain_checked or ISSUER_MISSING not in str(e)
                         or ensure_chain(url, [self.proxy], recheck=True) != "completed"):
                     raise SessionLost(f"{self.proxy}: {e}") from e
