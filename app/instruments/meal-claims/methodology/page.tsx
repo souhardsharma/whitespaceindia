@@ -423,17 +423,19 @@ export default function MealMethodology() {
               those that pass. Every request is encrypted to the
               Ministry&rsquo;s own certificate, so a relay carries the page
               without being able to read or change it. On a night when no
-              relay holds, the national tables keep their previous date and
+              relay works, the national tables keep their previous date and
               the rest of the instrument is unaffected.
             </p>
             <p>
-              No test is run on the national figures. Each table is added
-              up and compared with its own TOTAL row, and a table that does
-              not add up is stored with that noted. Opened by hand
-              on 25 November 2026, the system showed the same meal counts as
-              mdmhp.nic.in for eight Tripura schools on 24 November, left a
-              ninth school out, and showed a different enrolment for six of
-              the eight.
+              The national figures are not put through the
+              instrument&rsquo;s tests. Each table is only added up and
+              compared with its own TOTAL row, and a table that does not add
+              up is stored with that noted. The system
+              was opened by hand on 25 November 2026 and compared with
+              mdmhp.nic.in for nine Tripura schools on 24 November. Eight had
+              the same meal counts in both, the ninth was missing from the
+              national system, and six of the eight showed a different
+              enrolment.
             </p>
           </Section>
 

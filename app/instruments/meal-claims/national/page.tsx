@@ -2,7 +2,7 @@ import Link from "next/link";
 import StructuredData from "@/components/instruments/StructuredData";
 import { pageMeta, pageLd } from "@/lib/instruments/metadata";
 import { InstrumentFooter, InstrumentHeader } from "@/components/instruments/InstrumentChrome";
-import { SECTION_HEADING, Spark, Stat, TD, TH } from "@/components/instruments/meal/parts";
+import { SECTION_HEADING, SMALL_LABEL, Spark, Stat, TD, TH } from "@/components/instruments/meal/parts";
 import SeriesChart from "@/components/instruments/meal/SeriesChart";
 import {
   AMS_HOST, MEAL_BASE, MEAL_DATA, MEAL_HOST, MEAL_OG, count, dayLong, dayShort, monthLabel, share, statePath,
@@ -109,9 +109,10 @@ export default function MealNational() {
                 </dl>
                 <p className="mt-7 font-body text-[13px] leading-relaxed opacity-70 max-w-3xl">
                   These are the figures for {dayLong(nat.day)}
-                  {readAt ? `, read on ${readAt}` : ""}. Schools go on filing
-                  for a day after it has passed, so the latest two days are
-                  read again each night and their figures can still rise.
+                  {readAt ? `, read on ${readAt}` : ""}. Schools can still file a
+                  day&rsquo;s return after that day has passed, so the latest
+                  two days are read again each night and their figures can
+                  still rise.
                 </p>
               </>
             ) : (
@@ -119,7 +120,8 @@ export default function MealNational() {
                 The national system has not been read yet. It answers only
                 addresses in India, and the nightly run reaches it through
                 Indian routes that have to be found afresh each night. The
-                tables appear here after the first night on which one held.
+                tables appear here after the first night on which one of those
+                routes works.
               </p>
             )}
           </div>
@@ -161,7 +163,7 @@ export default function MealNational() {
                       <tr className="border-b border-[#1c1c19]">
                         <th className={TH}>State or UT</th>
                         {figureHeads}
-                        <th className={`${TH} text-right`}>Share reporting, days read</th>
+                        <th className={`${TH} text-right`}>Share reporting on each day read</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -198,8 +200,7 @@ export default function MealNational() {
                   </table>
                 </div>
                 <p className="mt-5 font-body text-[13px] leading-relaxed opacity-70 max-w-3xl">
-                  {M.nat_holiday.definition} {M.nat_meals_pct.definition} A
-                  State marked &ldquo;schools tested&rdquo; also files into
+                  A State marked &ldquo;schools tested&rdquo; also files into
                   the system this instrument tests school by school.
                 </p>
               </div>
@@ -213,8 +214,9 @@ export default function MealNational() {
                     These States appear in both systems, and both were read
                     for {dayShort(nat.day)}. The two keep separate school
                     lists and were read at different hours, so small
-                    differences are expected. A large one means the two
-                    systems hold different returns for the State.
+                    differences are expected. A difference too large for either
+                    reason means the two systems hold different returns for
+                    the State.
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[680px] border-collapse">
@@ -254,7 +256,7 @@ export default function MealNational() {
                 <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl mb-6">
                   District tables are read one State at a time, so a
                   State&rsquo;s table can be a day or two older than the
-                  table above. Each says which day it is for.{" "}
+                  table above. Each State&rsquo;s table states the day it is for.{" "}
                   {withDistricts.length < nat.states.length
                     ? `${count(withDistricts.length)} of ${count(nat.states.length)} States and Union Territories have been read at district level so far.`
                     : ""}
@@ -296,13 +298,22 @@ export default function MealNational() {
               <div className="max-w-6xl mx-auto">
                 <h2 className={`${SECTION_HEADING} mb-3`}>Reading these tables</h2>
                 <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl">
-                  Every figure here is a total the national system printed,
-                  copied as it stood when read. No test is run on them and
-                  no flag is raised from them: the tests need a
-                  school&rsquo;s own month, and only State and district
-                  totals are read here. {M.nat_enrolled.definition}{" "}
-                  {M.nat_reported.definition}
+                  The counts here are totals the national system printed,
+                  copied as they stood when read. The two shares are worked
+                  out from those counts. The instrument&rsquo;s tests are not
+                  run on these totals and no flag is raised from them,
+                  because the tests need a school&rsquo;s day-by-day record
+                  for the month and only State and district totals are read
+                  here.
                 </p>
+                <dl className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4 max-w-5xl">
+                  {[M.nat_schools, M.nat_reported, M.nat_reported_pct, M.nat_holiday, M.nat_enrolled, M.nat_meals, M.nat_meals_pct].map((measure) => (
+                    <div key={measure.label}>
+                      <dt className={SMALL_LABEL}>{measure.label}</dt>
+                      <dd className="font-body text-[13.5px] leading-relaxed opacity-80 mt-1">{measure.definition}</dd>
+                    </div>
+                  ))}
+                </dl>
                 <p className="mt-4 font-body text-[14px] leading-relaxed opacity-80 max-w-3xl">
                   Every State-day read is in{" "}
                   <a href={`${MEAL_DATA}/national/states.csv`} className={LINK}>states.csv</a>
