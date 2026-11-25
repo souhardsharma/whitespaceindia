@@ -116,11 +116,11 @@ export default async function MealDistrict({ params }: Props) {
             {d.flagged.length ? (
               <>
                 <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-5 max-w-3xl">
-                  All {count(d.flagged.length)} schools in {d.name} that hold
-                  a flag on the figures as last read, {count(flags)}{" "}
-                  school-days between them. Each name opens the school&rsquo;s
-                  month as it filed it, with every flag and the figures it
-                  rests on.
+                  {count(d.flagged.length)} {d.flagged.length === 1 ? "school" : "schools"} in{" "}
+                  {d.name} {d.flagged.length === 1 ? "holds" : "hold"} a flag on the figures as last read,{" "}
+                  {count(flags)} school-days in all. A school&rsquo;s name
+                  opens its month as filed, with each flag and the figures
+                  behind it.
                 </p>
                 <FlagNotFinding className="mb-7 max-w-3xl" />
                 <div className="overflow-x-auto">
@@ -166,8 +166,7 @@ export default async function MealDistrict({ params }: Props) {
                 ({count(d.tables_read)} school tables,{" "}
                 {count(d.school_days_tested)} school-days that could be
                 tested against enrolment). School tables are read as a
-                sample, so this says what has been read and not that the
-                district&rsquo;s reports are all consistent.
+                sample, and the schools outside it have not been checked.
               </p>
             )}
           </div>
@@ -179,8 +178,8 @@ export default async function MealDistrict({ params }: Props) {
               <div className="md:col-span-4">
                 <h2 id="days-heading" className={`${SECTION_HEADING} mb-3`}>Meals reported, day by day</h2>
                 <p className="font-body text-[13.5px] leading-relaxed opacity-70">
-                  {M.meals.definition} A day with no bar holds no report and
-                  is never flagged.
+                  {M.meals.definition} A day with no report is left empty and
+                  is not flagged.
                 </p>
               </div>
               <div className="md:col-span-8">
@@ -206,10 +205,11 @@ export default async function MealDistrict({ params }: Props) {
               <h2 id="schools-heading" className={`${SECTION_HEADING} mb-3`}>Schools read</h2>
               <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-6 max-w-3xl">
                 {count(d.schools_read)} schools in {count(d.clusters_read)} of
-                the district&rsquo;s {count(d.clusters)} clusters, each with
-                the enrolment it had filed and the meals it reported on the
-                date its cluster was last read. The other clusters have not
-                been read yet. A school with a flag opens its own page.
+                the {count(d.clusters)} clusters listed for the district so
+                far, each with the enrolment it had filed and the meals it
+                reported on the date its cluster was last read. The other
+                clusters have not been read yet. A flagged school&rsquo;s
+                name opens its page.
               </p>
               <Roster
                 st={s.st}
@@ -258,7 +258,7 @@ export default async function MealDistrict({ params }: Props) {
             ) : (
               <p className="font-body text-[14px] leading-relaxed opacity-80 max-w-3xl">
                 The block table for {d.name} has not been read yet. Block
-                tables are read in rotation, a few districts each night.
+                tables are read in turn, a few districts each night.
               </p>
             )}
           </div>

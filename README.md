@@ -64,16 +64,17 @@ Its files and endpoints are documented at [/instruments/consent/data](https://wh
 Meal Claims Check reads the PM POSHAN (midday meal) daily reporting system at mdmhp.nic.in, kept by the National Informatics Centre, Himachal Pradesh, into which 17 States and Union Territories file a return for every school. It flags three things:
 
 - a school-day on which the meals reported exceed the enrolment the school filed for the month;
-- meals reported on a weekday the school's own record shows it does not serve, or on a State-listed holiday while the State was shut;
+- meals reported on a weekday the school's own record shows it does not normally serve, or on a State-listed holiday while the State was shut;
 - a one-day count several times the school's usual one.
 
-A flag is two filed figures that disagree. It is not a finding about a school, and the instrument scores and ranks nothing. Each flag shows the figures it rests on, and a flag a later read no longer supports is kept and marked as no longer standing.
+A flag is two filed figures that disagree. It is not a finding about a school, and the instrument gives no score and ranks no school. Each flag is printed with the figures behind it. When a later read no longer supports a flag, the flag is kept and marked as no longer standing.
 
-A scheduled job reads the source once a day inside a request budget it sets for itself, stops at the first refusal, and publishes only files that pass the contract (`scripts/meal_claims/check_published.py`). School tables are read as a rotating sample, so counts are counts of what has been read. The method and its limits are at [/instruments/meal-claims/methodology](https://whitespaceindia.pages.dev/instruments/meal-claims/methodology); the files are documented at [/instruments/meal-claims/data](https://whitespaceindia.pages.dev/instruments/meal-claims/data).
+A scheduled job reads the meal system once a day. It counts its requests against a budget it sets for itself and stops at the first refusal. For each flagged school it then asks UDISE+, the Ministry of Education's register of schools, for the school's report card, and keeps the classes taught, the kind of school and the free-textbook counts. Files are published only if they pass the contract in `scripts/meal_claims/check_published.py`. School tables are read as a sample that moves through the clusters, so every count is a count of what has been read so far. The method and its limits are at [/instruments/meal-claims/methodology](https://whitespaceindia.pages.dev/instruments/meal-claims/methodology). The files are documented at [/instruments/meal-claims/data](https://whitespaceindia.pages.dev/instruments/meal-claims/data).
 
 | Source | Publisher |
 |--------|-----------|
 | PM POSHAN daily meal reporting system (mdmhp.nic.in): daily reports, monthly enrolment filings, State holiday lists | National Informatics Centre, Himachal Pradesh, for the Department of School Education & Literacy, Ministry of Education; filed by State education departments |
+| UDISE+ school report card (kys.udiseplus.gov.in): classes taught, category, management, status and free-textbook counts, for flagged schools | Department of School Education & Literacy, Ministry of Education; filed yearly by schools |
 
 ## Tech stack
 

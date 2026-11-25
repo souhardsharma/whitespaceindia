@@ -55,7 +55,7 @@ BUDGET_GROWTH = 1.5         # ... and the multiple it grows by once that is more
 # About 14,000 clusters hold the schools. At 1,000 requests a night one pass
 # over them took a month, and a school's month can only be read while it is
 # the current month. At 5,000, with the pause between requests unchanged, a
-# pass takes about a week and the night about two hours.
+# pass takes about a week and the night about three hours.
 BUDGET_CAP = 5000
 BUDGET_FLOOR = 150
 CLEAN_FAIL_SHARE = 0.02     # a night is clean under this share of failed attempts
