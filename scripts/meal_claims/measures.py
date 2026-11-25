@@ -60,7 +60,7 @@ MEASURES: dict[str, dict] = {
     },
     "enrolled": {
         "label": "Enrolment filed",
-        "definition": "The total enrolment of the schools that filed one for the month. Schools that have not filed add nothing, so this is not the area's enrolment.",
+        "definition": "The total enrolment of the schools that filed one for the month. Schools that have not filed add nothing to it, so it can fall short of the area's enrolment.",
         "unit": "children", "source": SOURCE,
     },
     "tables_read": {
@@ -128,7 +128,7 @@ MEASURES: dict[str, dict] = {
     },
     "udise_category": {
         "label": "Kind of school",
-        "definition": "The school's category, type and management as UDISE+ records them. A madrasa or other school with its own calendar may keep working days its State's holiday list does not show.",
+        "definition": "How UDISE+ records the school: its category and type, who manages it, and whether it is rural or urban. A madrasa or other school with its own calendar may keep working days its State's holiday list does not show.",
         "source": UDISE,
     },
     "udise_status": {
@@ -138,7 +138,7 @@ MEASURES: dict[str, dict] = {
     },
     "udise_textbooks": {
         "label": "Children given free textbooks",
-        "definition": "Children in classes I to V (primary) and VI to VIII (upper primary) to whom the school says it gave free textbooks in the year shown. The school files this once a year for the textbook scheme, outside the meal system. It is not an enrolment figure, though it covers the same classes as the meal scheme.",
+        "definition": "Children in classes I to V (primary) and VI to VIII (upper primary) to whom the school says it gave free textbooks in the year shown. The school files this once a year for the textbook scheme, outside the meal system. It covers the same classes as the meal scheme but counts children given textbooks, so it can differ from enrolment.",
         "unit": "children", "source": UDISE,
     },
     "nat_schools": {

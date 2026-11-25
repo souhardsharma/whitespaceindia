@@ -70,7 +70,7 @@ const INSTRUMENTS: Shelf[] = [
     question:
       "Which schools reported serving more midday meals than the enrolment they filed, or reported meals on a day they do not serve?",
     blurb:
-      "Meal Claims Check reads the PM POSHAN daily reporting system school by school. It compares the meals a school reported for a day with the enrolment the same school filed for the month, and with the days on which that school normally serves, and marks each school-day on which they disagree. Each flag is printed with the figures behind it. A flag means the record disagrees with itself. It is not a finding about a school.",
+      "Meal Claims Check reads the PM POSHAN daily reporting system school by school. It compares the meals a school reported for a day with the enrolment the same school filed for the month, and with the days on which that school normally serves, and marks each school-day on which they disagree. Each flag is printed with the figures behind it, which show the school's record disagreeing with itself.",
     inputs:
       "Sources: PM POSHAN daily meal reporting system (mdmhp.nic.in), National Informatics Centre, Himachal Pradesh · daily meal reports, monthly enrolment filings and State holiday lists · UDISE+ school report card (kys.udiseplus.gov.in), Ministry of Education, for flagged schools",
     stats: [

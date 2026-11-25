@@ -26,7 +26,7 @@ type Props = { params: Promise<{ slug: string }> };
 function describe(name: string) {
   return {
     title: `${name}: midday meal reports and flags by district | Meal Claims Check`,
-    description: `Midday meal (PM POSHAN) daily reporting in ${name}: schools listed and reporting, the share that filed enrolment, and the schools in each district whose meal reports their own filings contradict.`,
+    description: `Midday meal (PM POSHAN) daily reporting in ${name}: the schools listed, the share that report, the share that filed enrolment, and the schools in each district whose meal reports their own filings contradict.`,
   };
 }
 
@@ -108,10 +108,10 @@ export default async function MealState({ params }: Props) {
             <div className="md:col-span-4">
               <h2 id="days-heading" className={`${SECTION_HEADING} mb-3`}>Meals reported, day by day</h2>
               <p className="font-body text-[13.5px] leading-relaxed opacity-70">
-                {M.meals.definition} Where the chart has a gap, the system
-                holds no report for that day. Schools may have been closed,
-                the State may not have filed, or the system may have been
-                down. Gaps are not flagged.
+                {M.meals.definition} Where the chart has a gap, the system holds no
+                report for that day, and the gap is not flagged. Schools may have been
+                closed that day, or their reports may never have reached
+                the system.
               </p>
             </div>
             <div className="md:col-span-8">
@@ -171,10 +171,10 @@ export default async function MealState({ params }: Props) {
               <p className="font-body text-[13.5px] leading-relaxed opacity-70 mb-6 max-w-3xl">
                 On these days almost none of the State&rsquo;s schools
                 reported, and the nightly run looked for the ones that did.
-                The last column counts the schools it traced. Few of them
-                are flagged: a school is flagged only if its own record
-                shows it does not normally serve on that weekday, or if the
-                date is on the State&rsquo;s holiday list.
+                The last column counts the schools it traced, and few of them are
+                flagged, because a school is flagged only if its own
+                record shows it does not normally serve on that weekday
+                or the date is on the State&rsquo;s holiday list.
               </p>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[520px] max-w-3xl border-collapse">

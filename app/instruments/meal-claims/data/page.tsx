@@ -36,7 +36,7 @@ const FILES: [string, string][] = [
   ["flags/recent.json", "Flags first seen in recent nights, each with the figures it rests on. `seen` points into `stamps`, the list of builds."],
   ["schools/<yyyy-mm>/<bucket>.json", "For each flagged school: the month day by day, the enrolment filed for each month of the year, its flags, and under `udise` its entry in UDISE+ where one has been read. The bucket is the school code modulo the `buckets` value in meta.json, two digits."],
   ["holidays.json", "Each State's holiday list as the system gives it: date and reason."],
-  ["national.json", "The national system's totals. For each of the 36 States and Union Territories it holds the latest day read, the daily series and the latest district table. For States on both systems it sets the same day side by side. `read` is false until the national system has been read."],
+  ["national.json", "For each of the 36 States and Union Territories this holds the national system's totals day by day and the State's latest district table. For States on both systems, the same day from each system is set side by side. `read` is false until the national system has been read."],
   ["national/states.csv", "Every State-day read from the national system. Columns: date, state, schools, schools_reported, schools_on_holiday, enrolment, children_approved, enrolment_in_reporting_schools, meals."],
   ["national/districts-<yyyy-mm>.csv", "Every district-day read from the national system in that month. The columns are those of states.csv with district added and children_approved left out; the source gives that figure for States only."],
 ];
@@ -81,9 +81,10 @@ export default function MealData() {
             Data and terms
           </h1>
           <p className="mt-5 font-body text-[15px] leading-relaxed opacity-80 max-w-3xl">
-            Each page of the instrument is drawn from the files listed here.
-            They are rebuilt once a night and need no key. All paths below
-            are under <code className="font-label text-[13px]">{MEAL_DATA}/</code>.
+            Each page of the instrument is drawn from the files listed here,
+            all of them under{" "}
+            <code className="font-label text-[13px]">{MEAL_DATA}/</code>.
+            They are rebuilt once a night and can be fetched without a key.
           </p>
 
           <section className="mt-12 pt-8 border-t border-[#1c1c19]" aria-labelledby="csv-heading">
@@ -179,10 +180,10 @@ export default function MealData() {
                 read them without a login. The entries under{" "}
                 <code className="font-label text-[13px]">udise</code> come
                 from the Ministry of Education&rsquo;s school report card at{" "}
-                <a href={UDISE_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">kys.udiseplus.gov.in</a>.
-                The files under{" "}
-                <code className="font-label text-[13px]">national</code> come
-                from the Ministry&rsquo;s monitoring system at{" "}
+                <a href={UDISE_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">kys.udiseplus.gov.in</a>,
+                and the files under{" "}
+                <code className="font-label text-[13px]">national</code> from
+                the Ministry&rsquo;s monitoring system at{" "}
                 <a href={AMS_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">pmposhan-ams.education.gov.in</a>.
                 None of the three sets out terms for reusing its figures. They
                 are reproduced here as filed, with the source named, and this
@@ -192,16 +193,16 @@ export default function MealData() {
               <p>
                 What this site adds is under{" "}
                 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer license" className="underline underline-offset-4">CC BY 4.0</a>:
-                the flags, the counts of what has been read, and the way the
-                files are put together. Credit Whitespace India and link to
-                this page. A flag reused elsewhere should be described as it
-                is here, as two filed figures that disagree. It is not a
-                finding about a school. The code that produces the files is
-                under AGPL-3.0-or-later.
+                the flags and the counts of how much was read, and the way the files are
+                put together. Credit Whitespace India and link to this page. A flag reused
+                elsewhere should be described as two filed figures that
+                disagree, since it passes no judgement on the school. The code that produces the files is under
+                AGPL-3.0-or-later.
               </p>
               <p>
-                The files hold no personal data. They contain counts, codes,
-                dates and the names of institutions. How they are made is on{" "}
+                The files contain counts, codes, dates and the names of
+                institutions, none of which is personal data. How they are
+                made is on{" "}
                 <Link href={`${MEAL_BASE}/methodology`} className="underline underline-offset-4">the methodology page</Link>.
               </p>
             </div>

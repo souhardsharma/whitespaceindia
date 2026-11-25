@@ -84,14 +84,13 @@ export default function MealMethodology() {
             Methodology
           </h1>
           <p className="mt-5 mb-10 font-headline italic text-[clamp(17px,2vw,23px)] leading-snug max-w-3xl opacity-90">
-            How the tables are read each night, how the three tests work, and
-            what the instrument cannot see.
+            How the tables are read and put through the three tests each night, and what the instrument cannot see.
           </p>
 
           <Section id="duty" title="The law the tests rest on">
             <p>
-              A midday meal at school is a legal entitlement. Section 5 of the
-              National Food Security Act, 2013 creates it. Rule 3 of the
+              A midday meal at school is a legal entitlement, created by section 5 of
+              the National Food Security Act, 2013. Rule 3 of the
               Mid-Day Meal Rules, 2015 (G.S.R. 743(E), made under section 39
               of the Act) says who receives it: every child aged six to
               fourteen in classes I to VIII &ldquo;who enroll and attend the
@@ -125,19 +124,20 @@ export default function MealMethodology() {
               {count(m.counts.states)} States and Union Territories file on
               it, for {count(m.counts.schools)} schools in{" "}
               {count(m.counts.districts)} districts. Its tables open without
-              a login. There is one for each State, district, block and
-              cluster on any date, and under each cluster a table of its
-              schools for that date. For a single school the system also
+              a login, one for each State, district, block and cluster on
+              any date, with a table of its schools under each cluster for
+              that date. For a single school the system also
               shows the current month day by day and the enrolment filed for
               each month of the year, and for each State it shows a holiday
-              list. The instrument reads these tables and no other part of
-              the system. A State that files somewhere else is not covered.
+              list. The instrument reads these tables alone. A State that files on
+              another system is not covered.
             </p>
             <p>
-              The nightly run reads yesterday. Schools keep filing through
-              the afternoon, so a table for today would be incomplete. Late
-              returns also change the two days before yesterday, so the
-              all-States table for those days is read again every night.
+              The nightly run reads yesterday&rsquo;s tables, because
+              schools keep filing through the afternoon and a table for
+              today would be incomplete. Late returns go on changing the two
+              days before yesterday as well, so the all-States table for
+              those days is read again every night.
             </p>
             <p>
               The run also works backwards through earlier dates of the
@@ -171,8 +171,8 @@ export default function MealMethodology() {
               and how many children in classes I to VIII it gave free
               textbooks to. {count(m.counts.udise_asked)} flagged schools
               have been looked up and {count(m.counts.udise_found)} were
-              found. None of the three tests uses these figures. They are
-              printed on the school&rsquo;s page for whoever reads the flag.
+              found. These figures are printed on the school&rsquo;s page for whoever
+              reads the flag, and none of the three tests uses them.
             </p>
           </Section>
 
@@ -232,10 +232,9 @@ export default function MealMethodology() {
               </p>
               <p>
                 A school with its own calendar may be open on a State holiday
-                and serve a meal that day. All the flag says is that the
-                school reported on a date its State lists as a holiday.
-                Whether it was open is a question for someone who can ask the
-                school. Where UDISE+ holds an entry for the school, its page
+                and serve a meal that day. The flag records that the school reported on
+                a date its State lists as a holiday, and whether it was
+                open is a question for someone who can ask the school. Where UDISE+ holds an entry for the school, its page
                 shows the management and category recorded there, which is
                 the quickest way to see whether it is a madrasa.
               </p>
@@ -250,7 +249,7 @@ export default function MealMethodology() {
             <Test measure={M.flag_spike}>
               <p>
                 At least {count(T.spike_min_other_days)} other serving days
-                must have been read for the school. A spike can be a typing slip. It is shown because the system accepted the
+                must have been read for the school. Although a spike can be a typing slip, it is shown because the system accepted the
                 figure and added it into the totals for the block, the
                 district and the State.
               </p>
@@ -285,9 +284,10 @@ export default function MealMethodology() {
               far. They cover {count(m.counts.clusters_read)} clusters and{" "}
               {count(m.counts.schools_read)} schools, and hold{" "}
               {count(m.counts.school_days_tested)} school-days that could be
-              tested against enrolment. Every count on the site is a count of
-              what was read. None is a rate for a State or a district, and a
-              school without a flag may simply not have been read yet.
+              tested against enrolment. Every count on the site is a count of what was
+              read, so it cannot be taken as a rate for a State or a
+              district, and a school without a flag may simply not have
+              been read yet.
             </p>
           </Section>
 
@@ -318,12 +318,12 @@ export default function MealMethodology() {
 
           <Section id="life" title="What happens to a flag later">
             <p>
-              Each flag carries the date it was first seen. Schools do
-              correct their counts and their enrolment. When a later reading
-              of the same school-day no longer supports a flag, the flag
-              stays on the school&rsquo;s page, marked as no longer standing
-              and showing the figure as last read, and it drops out of every
-              count. {count(m.counts.flags_no_longer_standing)} flags have
+              Each flag carries the date it was first seen, and since
+              schools do correct their counts and their enrolment, a later reading of
+              the same school-day can stop supporting the flag. The
+              flag then stays on the school&rsquo;s page, marked as no longer
+              standing and showing the figure as last read, and it drops out
+              of every count. {count(m.counts.flags_no_longer_standing)} flags have
               ended this way.
             </p>
           </Section>
@@ -357,11 +357,11 @@ export default function MealMethodology() {
               The share is lower in the middle of a month. At least 85% of
               schools had filed in{" "}
               {count(filed.filter(([, p]) => p >= 85).length)} of these
-              States and Union Territories, and there the test reaches nearly
-              every school. Between 45% and 85% had filed in{" "}
+              States and Union Territories, where the test reaches nearly
+              every school, and between 45% and 85% in{" "}
               {count(filed.filter(([, p]) => p >= 45 && p < 85).length)}. In
-              the others it reaches a minority. Rajasthan is on the system
-              and files almost nothing.{" "}
+              the others it reaches a minority, and Rajasthan, though on the
+              system, files almost nothing.{" "}
               <Link href={`${MEAL_BASE}/states`}>The State list</Link> gives
               each State&rsquo;s current share.
             </p>
@@ -369,17 +369,16 @@ export default function MealMethodology() {
 
           <Section id="blanks" title="Days with no reports">
             <p>
-              A day without a report does not show that schools served
-              nothing. The State may not have filed, or the system may have
-              been down. Such days are not flagged.
+              Days without a report are not flagged, because the State may not have
+              filed or the system may have been down.
             </p>
             <p>
               Between {dayLong(year.from)} and {dayLong(year.to)},{" "}
               {count(year.dates_read)} dates were read. Taken together the
               States had reports in {count(year.weeks_with_records)} of{" "}
               {count(year.weeks)} weeks. The system held no report from any
-              State on {year.host_blanks.map(span).join(", or on ")}. The
-              cause is unknown. It does not recur each year, since June 2024
+              State on {year.host_blanks.map(span).join(", or on ")}. The cause of
+              that gap is unknown, and it does not recur each year, since June 2024
               and June 2025 both have reports.
             </p>
             {m.blank_ranges.length ? (
@@ -412,22 +411,21 @@ export default function MealMethodology() {
               totals for each State and, one step down, for each district.
               The nightly run reads those two levels and publishes them on
               the <Link href={`${MEAL_BASE}/national`}>All India page</Link>.
-              It reads the latest two days every night, because schools go
-              on filing after a day has passed, and works back through the
-              thirty days as its time allows. A day once read is kept after
+              It reads the latest two days every night, because schools can
+              still file a day&rsquo;s return after that day has passed, and
+              works back through the thirty days as its time allows. A day once read is kept after
               the source has dropped it.
             </p>
             <p>
               The system closes every connection from an address outside
               India, and the server the nightly run uses is outside India.
-              The run therefore builds a list of open relays in India each
-              night, checks each one against the system, and reads through
-              those that pass. It uses a few of them at a time and counts
+              The run therefore builds a list of open relays in India each night and
+              reads through those that pass a check against the system. It uses a few of them at a time and counts
               their requests together, so more relays do not mean more
               requests for the system to answer. A relay that stops working
               is replaced by another, and the list is checked again every
-              quarter of an hour while the national read lasts. A refusal
-              ends the national read for that night. Every request is encrypted to
+              quarter of an hour while the national read lasts. A refusal from the
+              system ends the national read for that night. Every request is encrypted to
               the Ministry&rsquo;s own certificate, so a relay carries the
               page without being able to read or change it. On a night when
               no relay works, the national tables keep their previous date
@@ -442,29 +440,28 @@ export default function MealMethodology() {
               reading, as described above.
             </p>
             <p>
-              The national figures are not put through the
-              instrument&rsquo;s tests. Each table is only added up and
-              compared with its own TOTAL row, and a table that does not add
-              up is stored with that noted. The system
+              Each national table is added up and compared with its own TOTAL row, and
+              a table that does not add up is stored with that noted.
+              The instrument&rsquo;s tests are not run on these figures. The system
               was opened by hand on 25 November 2026 and compared with
-              mdmhp.nic.in for nine Tripura schools on 24 November. Eight had
-              the same meal counts in both, the ninth was missing from the
-              national system, and six of the eight showed a different
-              enrolment.
+              mdmhp.nic.in for nine Tripura schools on 24 November. Eight had the same
+              meal counts in both, though six of those eight showed a
+              different enrolment, and the ninth was missing from the
+              national system.
             </p>
           </Section>
 
           <Section id="others" title="Systems that are not read">
             <p>
-              Jharkhand keeps its own system (mdm.jharkhand.gov.in). On 25
-              November 2026 it gave the nightly run&rsquo;s server no
-              answer, and it is not read. Jharkhand&rsquo;s State and
-              district totals come from the national system instead.
+              Jharkhand keeps its own system (mdm.jharkhand.gov.in). On 25 November
+              2026 it gave the nightly run&rsquo;s server no answer, and
+              it is not read. Jharkhand&rsquo;s State and district
+              totals come from the national system.
             </p>
             <p>
-              UDISE+ publishes enrolment by class, but only behind a search
-              that requires a CAPTCHA. The instrument does not solve
-              CAPTCHAs, so that enrolment is not used.
+              UDISE+ publishes enrolment by class behind a search that requires a
+              CAPTCHA. The instrument does not solve CAPTCHAs, so that
+              enrolment is not used.
             </p>
           </Section>
 
@@ -487,14 +484,14 @@ export default function MealMethodology() {
 
           <Section id="privacy" title="What is not read or kept">
             <p>
-              Counts, codes, dates and the names of institutions are kept,
-              and nothing about a person. The reader works from a fixed list
+              The instrument keeps counts, codes, dates and the names of institutions.
+              It stores nothing about any person. The reader works from a fixed list
               of addresses and refuses any other. That keeps it out of the
               pages that name a school&rsquo;s meal in-charge or principal,
               the user lists, the grievance pages, and everything behind a
               login or a human check. From a UDISE+ report card it keeps
               twelve fields about the school and discards the rest of the
-              answer, teacher counts included. No page is stored whole.
+              answer, teacher counts included, and no page is stored whole.
               Before any text is stored it is searched for anything shaped
               like a phone number or an e-mail address, and that is removed.
             </p>
@@ -508,14 +505,13 @@ export default function MealMethodology() {
               (Pune Mirror, 1 December 2019). An audit in Odisha found meals
               above attendance in 42 of 642 schools (The New Indian Express,
               2 April 2026). The Comptroller and Auditor General&rsquo;s
-              Report 36 of 2015 audited the scheme across the country. None
-              of the three concerns a State on this system.
+              Report 36 of 2015 audited the scheme across the country. None of these
+              concerns a State on this system.
             </p>
             <p>
-              The national system publishes exception reports of its own.
-              They cover meals below enrolment and runs of days with no
-              meals. Meals above enrolment and meals on a closed day are not
-              among them. A March 2026 analysis of the holiday reasons States
+              The national system&rsquo;s own exception reports cover meals below
+              enrolment and runs of days with no meals, and none of them
+              reports meals above enrolment or meals on a closed day. A March 2026 analysis of the holiday reasons States
               record nationally is{" "}
               <a href="https://medium.com/@dwivedimav/anything-interesting-about-the-mid-day-meals-57564d8981d4" target="_blank" rel="noopener noreferrer">
                 on Medium
@@ -529,9 +525,9 @@ export default function MealMethodology() {
               On{" "}
               <a href={MEAL_HOST} target="_blank" rel="noopener noreferrer">mdmhp.nic.in</a>,
               choose the State and the date, then the district, block and
-              cluster named on the school&rsquo;s page. The cluster&rsquo;s
-              table lists each school with whether it filed enrolment, the
-              enrolment, and the meals reported that day. The date picker
+              cluster named on the school&rsquo;s page. The cluster&rsquo;s table
+              lists each school with the enrolment it filed, if any, and the meals it
+              reported that day. The date picker
               there offers only the last month.
             </p>
             <p className="opacity-75">
