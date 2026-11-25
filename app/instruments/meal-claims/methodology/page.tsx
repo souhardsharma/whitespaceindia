@@ -453,9 +453,9 @@ export default function MealMethodology() {
 
           <Section id="others" title="Systems that are not read">
             <p>
-              Jharkhand keeps its own system (mdm.jharkhand.gov.in). On 25 November
-              2026 it gave the nightly run&rsquo;s server no answer, and
-              it is not read. Jharkhand&rsquo;s State and district
+              Jharkhand keeps its own system at mdm.jharkhand.gov.in, which gave
+              the nightly run&rsquo;s server no answer on 25 November 2026 and
+              is not read. Jharkhand&rsquo;s State and district
               totals come from the national system.
             </p>
             <p>

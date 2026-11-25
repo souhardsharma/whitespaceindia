@@ -185,9 +185,8 @@ export default function MealData() {
                 <code className="font-label text-[13px]">national</code> from
                 the Ministry&rsquo;s monitoring system at{" "}
                 <a href={AMS_HOST} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">pmposhan-ams.education.gov.in</a>.
-                None of the three sets out terms for reusing its figures. They
-                are reproduced here as filed, with the source named, and this
-                site claims no rights over them. If you reuse them, credit
+                None of the three sets out terms for reusing its figures. They are reproduced here as filed and credited to their source,
+                and this site claims no rights over them. If you reuse them, credit
                 the system they came from.
               </p>
               <p>

@@ -128,7 +128,7 @@ MEASURES: dict[str, dict] = {
     },
     "udise_category": {
         "label": "Kind of school",
-        "definition": "How UDISE+ records the school: its category and type, who manages it, and whether it is rural or urban. A madrasa or other school with its own calendar may keep working days its State's holiday list does not show.",
+        "definition": "How UDISE+ records the school: its category, type, management and location (rural or urban). A madrasa or other school with its own calendar may keep working days its State's holiday list does not show.",
         "source": UDISE,
     },
     "udise_status": {
