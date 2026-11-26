@@ -417,7 +417,8 @@ function buildDocument(d: BriefInput, briefText: string) {
           const isHeading = para.startsWith('**') && para.endsWith('**') && para.split('**').length === 3;
 
           if (isHeading) {
-            return ce(Text, { key: String(i), style: styles.heading }, para.replace(/\*\*/g, ''));
+            // minPresenceAhead keeps a heading off the foot of a page, away from its paragraph
+            return ce(Text, { key: String(i), style: styles.heading, minPresenceAhead: 60 }, para.replace(/\*\*/g, ''));
           }
 
           const chunks = para.split('**');
