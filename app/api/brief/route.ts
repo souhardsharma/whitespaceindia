@@ -19,11 +19,14 @@ FACTS:
 
 STYLE:
 - Write complete sentences in plain words. Punctuate with commas, full stops and brackets; a hyphen belongs only inside a word or a year range such as 2019-21.
-- Let the figures carry the size of things. Give a figure and the figure it is compared with ("INR 5 per person, against a median of INR 148"), and qualify neither with a word of degree or judgement.
+- Let the figures carry the size of things. Give a figure and the figure it is compared with ("INR 5 per person, against a median of INR 148"). Never add an adverb or adjective of degree, a word that says how large, small, high or low something is, to a figure, a difference or the score.
 - Copy every number exactly as the data block writes it, separators included. Write "district" in lower case after a name, and call the score "the opportunity score".
-- Each section adds something the others do not. "What the figures indicate" says what the figures show together, such as which of poverty, CSR spending and the change since 2015-16 accounts for the score, without restating the earlier sections. "Limits of this brief" is one paragraph of continuous prose, with no numbering and no opening sentence about the section itself.
+- Each section adds something the others do not. "What the figures indicate" uses the score breakdown in the data block: say how many of the score's points come from poverty, from the funding gap and from persistence, and what that means for this district, without repeating figures already given. "Limits of this brief" is one paragraph of continuous prose, with no numbering and no opening sentence about the section itself.
 - Write full paragraphs, vary sentence length, and join sentences with ordinary connectives such as because, so, but and which means. Use no lists and no questions.
 - Write only about the district and its figures.
+
+EXAMPLE OF THE STYLE, for an invented district whose figures must never be used:
+"The district received INR 2.40 crore of CSR spending over FY2021-24, or INR 18 per person at its Census 2011 population of 13,10,000. The median for districts in its population tier is INR 134 per person, so it fell INR 116 short of that median."
 
 FORMAT: write exactly five sections in this order. Put each heading alone on its own line, in bold, exactly as written below, and follow it with one paragraph of three to five sentences.
 
@@ -150,7 +153,7 @@ async function callGeminiWithKey(
         generationConfig: {
           maxOutputTokens: 8192,
           // low: the brief restates figures, and at 0.7 it drifted from the style rules
-          temperature: 0.3,
+          temperature: 0.2,
         },
       }),
     }
@@ -280,9 +283,18 @@ interface BriefInput {
   population_parent_districts?: string;
   /** False when the filings place no CSR spending in the district in FY2021-24. */
   csr_recorded?: boolean;
+  /** The score's points from each measure (rescaled measure times its weight, times 100). */
+  points?: { poverty: number; gap: number; persistence: number };
 }
 
 const inr = (n: number) => 'INR ' + Math.round(n).toLocaleString('en-IN');
+
+/** How many of the score's points each measure supplies, as sectorPOS adds them. */
+function scorePoints(d: District, w: Weights, sector: string) {
+  const sectorG = sector === 'All Sectors' ? undefined : sectorScores()[d.district_lgd_code]?.[sector];
+  const g = sectorG ?? d.G_norm;
+  return { poverty: w.w_N * d.N_norm * 100, gap: w.w_G * g * 100, persistence: w.w_U * d.U_norm * 100 };
+}
 
 function buildPrompt(d: BriefInput): string {
   const tierMedian = d.tier_median_csr;
@@ -305,8 +317,9 @@ DATA FOR ${d.district_name.toUpperCase()} DISTRICT, ${d.state_name.toUpperCase()
 - CSR received FY2021-24: ${d.csr_recorded === false ? 'none. The CSR filings place no spending in this district in these three years, so its recorded CSR is zero' : `INR ${Number(d.total_csr_recent).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} crore`}
 - CSR per person (CSR received FY2021-24 divided by Census 2011 population): ${inr(d.district_csr_per_person)}
 - Median CSR per person for districts in the same population tier: ${inr(tierMedian)}
-- Shortfall against that median: ${inr(Math.max(0, Math.round(tierMedian) - Math.round(d.district_csr_per_person)))} per person
-- Opportunity score: ${Math.round(d.computed_pos)} out of 100 (a higher score means more poverty relative to recorded CSR spending; it reflects the weights and sector the reader chose)`;
+- ${d.district_csr_per_person >= tierMedian ? `No shortfall: CSR per person is ${inr(d.district_csr_per_person - tierMedian)} above that median` : `Shortfall against that median: ${inr(Math.round(tierMedian) - Math.round(d.district_csr_per_person))} per person`}
+- Opportunity score: ${Math.round(d.computed_pos)} out of 100 (a higher score means more poverty relative to recorded CSR spending; it reflects the weights and sector the reader chose)${d.points ? `
+- Score breakdown: ${d.points.poverty.toFixed(1)} points from poverty, ${d.points.gap.toFixed(1)} from the funding gap and ${d.points.persistence.toFixed(1)} from persistence${d.headcount_ratio_2016 ? '' : ' (persistence is set to the median for districts with both survey rounds, because this district has no 2015-16 figure)'}` : ''}`;
 
   return `Write the research brief for this district from the data below, in the five-section format.\n\n${dataBlock}`;
 }
@@ -521,6 +534,7 @@ export async function POST(req: NextRequest) {
     total_population: d.total_population,
     mpi_2021: d.mpi_2021,
     computed_pos: sectorPOS(d, weights, sector, sectorScores()),
+    points: scorePoints(d, weights, sector),
     pop_tier: d.pop_tier,
     tier_median_csr: d.tier_median_csr,
     csr_recorded: d.csr_recorded,
