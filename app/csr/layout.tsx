@@ -90,6 +90,17 @@ const PAGE_LD = {
       spatialCoverage: { "@type": "Place", name: "India" },
       temporalCoverage: "2014-04-01/2024-03-31",
       url: PAGE_URL,
+      // The page's one Dataset. A second, built in page.tsx with another name
+      // and date range, described the same files.
+      distribution: [
+        { "@type": "DataDownload", encodingFormat: "application/json", contentUrl: `${siteUrl}/data/csr/whitespace_master.json` },
+        { "@type": "DataDownload", encodingFormat: "application/json", contentUrl: `${siteUrl}/data/csr/sector_scores.json` },
+      ],
+      citation: [
+        "National Multidimensional Poverty Index 2023 (NITI Aayog), https://niti.gov.in/sites/default/files/2023-07/National-Multidimentional-Poverty-Index-2023-Final-17th-July.pdf",
+        "CSR District-Level Spending Data (Ministry of Corporate Affairs), https://www.csr.gov.in/",
+        "CSR District-Level Dataset via Dataful.in (Dataset 1612), https://dataful.in/datasets/1612",
+      ],
     },
     {
       "@type": "BreadcrumbList",

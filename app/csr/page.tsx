@@ -43,10 +43,8 @@ import {
   BIHAR_VS_MAHARASHTRA,
   PAN_INDIA_CRORE,
   PAN_INDIA_PCT,
-  TOTAL_DISTRICTS,
 } from "@/lib/csr/findings";
 import { CSR_STATES, stateSlug } from "@/lib/csr/states";
-import { SITE_URL } from "@/lib/site";
 
 function DataInsightCard({
   number,
@@ -365,52 +363,13 @@ export default function HomePage() {
     });
   }, []);
 
-  const safeJsonLd = (obj: unknown): string =>
-    JSON.stringify(obj).replace(/</g, '\\u003c');
-
-  const siteUrl = SITE_URL;
-
-  const districtCount = districts.length || TOTAL_DISTRICTS;
   const csrWindow = meta?.csr_window_fy;
   const fiscalWindow = csrWindow
     ? `FY${csrWindow[0]} to ${csrWindow[csrWindow.length - 1]}`
     : "";
 
-  const datasetSchema = {
-    "@context": "https://schema.org",
-    "@type": "Dataset",
-    name: "CSR Opportunity Index: opportunity scores for Indian districts",
-    description: `An opportunity score for ${districtCount} Indian districts, calculated from NITI Aayog's MPI 2023 poverty data and Ministry of Corporate Affairs CSR spending data (via Dataful.in dataset 1612).`,
-    url: `${siteUrl}/csr`,
-    distribution: [
-      {
-        "@type": "DataDownload",
-        encodingFormat: "application/json",
-        contentUrl: `${siteUrl}/data/csr/whitespace_master.json`,
-      },
-    ],
-    creator: {
-      "@type": "Person",
-      name: "Souhard Sharma",
-      url: "https://www.linkedin.com/in/souhardsharma/",
-      sameAs: ["https://www.linkedin.com/in/souhardsharma/"],
-    },
-    license: "https://creativecommons.org/licenses/by/4.0/",
-    citation: [
-      "National Multidimensional Poverty Index 2023 (NITI Aayog), https://niti.gov.in/sites/default/files/2023-07/National-Multidimentional-Poverty-Index-2023-Final-17th-July.pdf",
-      "CSR District-Level Spending Data (Ministry of Corporate Affairs), https://www.csr.gov.in/",
-      "CSR District-Level Dataset via Dataful.in (Dataset 1612), https://dataful.in/datasets/1612",
-    ],
-    temporalCoverage: "2014/2024",
-    spatialCoverage: { "@type": "Place", name: "India" },
-  };
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: safeJsonLd(datasetSchema) }}
-      />
       <main id="main-content" className="bg-[#fcf9f4] min-h-screen">
         <Navbar vertical={csrConfig} />
         <Hero vertical={csrConfig} onEnterLedger={enterLedger} initialMeta={csrMeta} />
