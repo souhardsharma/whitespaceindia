@@ -25,13 +25,14 @@ export default function WhitespaceDistricts() {
           <p>
             A whitespace district is one where the need is plain in the record and the money is not. These{" "}
             {WHITESPACES.length} are in the poorest quarter of India&apos;s districts, with at least{" "}
-            {meta.whitespace_thresholds.hr_p75_pct}% of people in multidimensional poverty, and in the bottom quarter for
-            CSR spending per person, at ₹{meta.whitespace_thresholds.csr_p25} or less over {CSR_WINDOW}.
+            {meta.whitespace_thresholds.hr_p75_pct.toFixed(2)}% of people in multidimensional poverty, and in the bottom quarter for
+            CSR spending per person, at ₹{meta.whitespace_thresholds.csr_p25.toFixed(2)} or less over {CSR_WINDOW}.
           </p>
           <p>
-            {first[0]} has {first[1]} of them and {second[0]} {second[1]}. Being on this list is a reason to look closer:
-            money may arrive through channels the filings do not record, or conditions may have changed since the data was
-            collected.
+            {first[0]} has {first[1]} of them and {second[0]} {second[1]}. For {meta.csr_not_recorded_whitespace} of
+            them the filings place no CSR spending at all in these years. A district on this list deserves a closer look
+            before anyone draws a conclusion: money may arrive through channels the filings do not record, or conditions
+            may have changed since the data was collected.
           </p>
         </>
       }

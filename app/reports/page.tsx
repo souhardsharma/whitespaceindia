@@ -6,6 +6,11 @@ import { motion, useInView } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SubscribeForm from "@/components/SubscribeForm";
+import csrMeta from "@/public/data/csr/meta.json";
+import { TOTAL_DISTRICTS, WHITESPACE_COUNT } from "@/lib/csr/findings";
+
+const methods = csrMeta.population_method_counts;
+const CARVED_OUT = methods.gazette_2011_table + methods.subdistrict_sum + methods.areal_allocation;
 
 function FadeIn({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -26,7 +31,7 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
 const PLANNED_REPORTS = [
   {
     tag: "District Profile",
-    title: "An atlas of the 44 whitespace districts",
+    title: `An atlas of the ${WHITESPACE_COUNT} whitespace districts`,
     body: "The atlas will profile each whitespace district, meaning a district where CSR spending per person is in the bottom 25% of all districts in the index and the share of people in multidimensional poverty is in the top 25%. Each profile will set the parts of the district's score beside its CSR spending by sector.",
   },
   {
@@ -42,7 +47,7 @@ const PLANNED_REPORTS = [
   {
     tag: "Methodological Note",
     title: "Districts drawn after Census 2011",
-    body: "More than fifty districts in NITI Aayog's poverty index did not exist at the time of Census 2011, so the index has to estimate their 2011 populations by dividing the population of the district they were carved from in proportion. This note will show how much those estimates move each district's CSR per person and where the uncertainty is largest.",
+    body: `Of the districts in NITI Aayog's poverty index, ${CARVED_OUT} did not exist at the time of Census 2011. The index gives each the 2011 population of the area it now covers, taken from District Census Handbooks, gazette notifications or the Census totals of its sub-districts, and in ${methods.areal_allocation} cases divides the older district's population in proportion to area. This note will show how much those figures move each district's CSR per person and where the uncertainty is largest.`,
   },
 ];
 
@@ -73,7 +78,7 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
             <div className="md:col-span-8">
               <h1 className="font-headline text-5xl sm:text-6xl md:text-7xl lg:text-8xl headline-tight text-[#1c1c19]">
-                Reports &amp;<br />
+                Reports &amp;{" "}<br />
                 <span className="italic font-light">analysis</span>
               </h1>
               <p className="mt-8 md:mt-10 max-w-2xl font-body text-lg md:text-xl leading-relaxed text-[#1c1c19]/90">
@@ -179,7 +184,7 @@ export default function ReportsPage() {
                   href: "/csr",
                   tag: "Tool",
                   title: "CSR Opportunity Index",
-                  body: "The index ranks 651 districts by their poverty against the CSR spending they receive, and you can download a research brief on any of them.",
+                  body: `The index ranks ${TOTAL_DISTRICTS} districts by their poverty against the CSR spending they receive, and you can download a research brief on any of them.`,
                 },
                 {
                   href: "/methodology",

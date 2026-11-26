@@ -8,7 +8,9 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: { absolute: "Page not found | Whitespace India" },
   description: "There is no page at this address on Whitespace India.",
-  robots: { index: false, follow: true, googleBot: { index: false, follow: true } },
+  // Next marks a not-found page noindex itself; naming robots here as well
+  // printed a second robots tag, and null keeps the layout's "index, follow" off.
+  robots: null,
   alternates: { canonical: null },
 };
 

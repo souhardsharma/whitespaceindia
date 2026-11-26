@@ -30,7 +30,7 @@ test("the landing page still has its tiles", () => {
 });
 
 test("every landing tile is named in the site's description", () => {
-  const m = layout.match(/description:\s*"([^"]+)"/);
+  const m = layout.match(/description:\s*["`]([^"`]+)["`]/);
   assert.ok(m, "no description in app/layout.tsx");
   const description = m[1].replace(/\s+and\s+/g, ", ");
   const missing = tileTitles().filter((t) => !m[1].includes(t) && !description.includes(t));

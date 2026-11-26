@@ -1,7 +1,7 @@
 import type { VerticalConfig } from '@/lib/verticals/types';
 import { WEIGHT_PRESETS } from './constants';
 import { SECTORS } from './score';
-import { BIHAR_VS_MAHARASHTRA } from './findings';
+import { BIHAR_NITI_PCT, BIHAR_VS_MAHARASHTRA, PAN_INDIA_CRORE, PAN_INDIA_PCT, TOTAL_DISTRICTS, WHITESPACE_COUNT } from './findings';
 
 export const csrConfig: VerticalConfig = {
   id: 'csr',
@@ -50,7 +50,7 @@ export const csrConfig: VerticalConfig = {
   })),
   dataPath: '/data/csr',
   heroStats: [
-    { label: 'Districts scored', value: '651' },
+    { label: 'Districts scored', value: String(TOTAL_DISTRICTS) },
     { label: 'CSR window', value: 'FY21-24' },
   ],
   heroContent: {
@@ -87,19 +87,19 @@ export const csrConfig: VerticalConfig = {
   findingsCards: [
     {
       number: '01',
-      value: '₹1,29,660 Cr',
+      value: PAN_INDIA_CRORE,
       label: 'CSR with no district',
-      sub: 'Of all CSR spending filed between FY2014-15 and FY2023-24, 60.7% was recorded as "Pan India" or named no district, so every district total is a lower bound.',
+      sub: `Of all CSR spending filed between FY2014-15 and FY2023-24, ${PAN_INDIA_PCT} was recorded as "Pan India" or named no district, so every district total is a lower bound.`,
     },
     {
       number: '02',
-      value: '33.76%',
+      value: BIHAR_NITI_PCT,
       label: 'Bihar\'s poverty headcount',
       sub: `The share of Bihar's people in multidimensional poverty in 2019-21, from NITI Aayog's MPI 2023. ${BIHAR_VS_MAHARASHTRA}`,
     },
     {
       number: '03',
-      value: '—',
+      value: String(WHITESPACE_COUNT),
       label: 'Whitespace districts',
       sub: 'Districts in the bottom 25% of all districts for CSR spending per person and the top 25% for the share of people in poverty.',
     },

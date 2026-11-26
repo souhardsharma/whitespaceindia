@@ -22,9 +22,9 @@ export interface StateSpending {
   csrPerPerson: number;
   /** Share of people in poverty, weighted by district population. 0-1. */
   poorShare: number;
-  /** Districts with no spending named in the filings over the window. */
+  /** Districts in which the filings place no spending over the window. */
   noRecordedSpending: number;
-  /** Districts absent from Census 2011, whose population is estimated from their parents. */
+  /** Districts whose 2011 population is worked out from older districts' Census figures. */
   estimatedPopulation: number;
 }
 
@@ -47,7 +47,7 @@ export function summariseState(name: string, ranked: RankedDistrict[] = RANKED_D
     csrCrore,
     csrPerPerson: population > 0 ? (csrCrore * CRORE) / population : 0,
     poorShare: population > 0 ? poorPeople / population : 0,
-    noRecordedSpending: districts.filter((d) => d.district_csr_per_person === 0).length,
+    noRecordedSpending: districts.filter((d) => d.csr_recorded === false).length,
     estimatedPopulation: districts.filter((d) => d.population_imputed).length,
   };
 }

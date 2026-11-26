@@ -27,7 +27,11 @@ function plural(count: number, one: string, many: string) {
 }
 
 function describe(state: StateSpending) {
-  return `${state.name}: ${formatCrore(state.csrCrore)} of CSR spending reported across ${plural(state.districts.length, "district", "districts")}, ${CSR_WINDOW}, set against poverty. Rank, CSR per person and whitespace districts for each.`;
+  const one = state.districts.length === 1;
+  const spent = state.csrCrore > 0 ? `${formatCrore(state.csrCrore)} of CSR spending reported` : "No CSR spending on record";
+  return one
+    ? `${state.name}: ${spent}, ${CSR_WINDOW}, set against poverty. Its rank among India's districts, CSR per person and whitespace status.`
+    : `${state.name}: ${spent} across ${state.districts.length} districts, ${CSR_WINDOW}, set against poverty. Rank, CSR per person and whitespace status for each district.`;
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
@@ -53,11 +57,15 @@ export default async function StateSpendingPage({ params }: { params: Params }) 
       intro={
         <>
           <p>
-            Companies reported {formatCrore(state.csrCrore)} of CSR spending in{" "}
-            {plural(state.districts.length, "district", "districts")} of {state.name} over {CSR_WINDOW}, about{" "}
-            {formatRupees(state.csrPerPerson)} per person. The median district in India recorded{" "}
-            {formatRupees(NATIONAL_MEDIAN_CSR_PER_PERSON)}. Weighted by population, {formatPoor(state.poorShare)} of
-            people in {state.name} were in multidimensional poverty in 2019-21.
+            {state.csrCrore > 0
+              ? `Companies reported ${formatCrore(state.csrCrore)} of CSR spending in ${state.name} over ${CSR_WINDOW}, ` +
+                `across ${state.districts.length === 1 ? "the one district NITI Aayog's index counts there" : `the ${state.districts.length} districts NITI Aayog's index counts there`}, ` +
+                `about ${formatRupees(state.csrPerPerson)} per person.`
+              : `The filings record no CSR spending in ${state.name} over ${CSR_WINDOW}.`}{" "}
+            The median district in India recorded {formatRupees(NATIONAL_MEDIAN_CSR_PER_PERSON)}.{" "}
+            {state.districts.length === 1
+              ? `In 2019-21, ${formatPoor(state.poorShare)} of people in ${state.name} were in multidimensional poverty.`
+              : `Across the districts of ${state.name}, weighted by their 2011 population, ${formatPoor(state.poorShare)} of people were in multidimensional poverty in 2019-21.`}
           </p>
           {state.districts.length > 1 ? (
             <p>
@@ -65,17 +73,17 @@ export default async function StateSpendingPage({ params }: { params: Params }) 
                 ? `The most money was recorded in ${largest.district_name}, at ${formatCrore(largest.total_csr_recent)}. `
                 : ""}
               {state.noRecordedSpending > 0
-                ? `${plural(state.noRecordedSpending, "district shows", "districts show")} no recorded spending at all. `
+                ? `The filings place no spending in ${state.noRecordedSpending === 1 ? "one of its districts" : `${state.noRecordedSpending} of its districts`}. `
                 : ""}
               {top.district_name} has the highest opportunity score, ranking {top.rank} of all districts in India.
             </p>
           ) : null}
           <p>
             {state.whitespace.length > 0
-              ? `${plural(state.whitespace.length, "district is a whitespace", "districts are whitespaces")}, in the poorest quarter of India's districts and the bottom quarter for CSR per person: ${whitespaceNames}.`
+              ? `The whitespace ${state.whitespace.length === 1 ? "district here is" : `districts here, ${state.whitespace.length} of them, are`} in the poorest quarter of India's districts and the bottom quarter for CSR per person: ${whitespaceNames}.`
               : `No district here meets the whitespace test of being in the poorest quarter of India's districts and the bottom quarter for CSR per person.`}
             {state.estimatedPopulation > 0
-              ? ` Census 2011 has no direct count for ${plural(state.estimatedPopulation, "district", "districts")} here, so population is estimated from the parent districts.`
+              ? ` Census 2011 has no count on today's boundaries for ${plural(state.estimatedPopulation, "district", "districts")} here, so their 2011 population is worked out from the Census figures of the older districts, as the methodology explains.`
               : ""}
           </p>
         </>

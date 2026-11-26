@@ -42,7 +42,7 @@ export default function CsrSpendingIndex() {
             <Link href="/csr-spending/whitespace-districts" className="underline underline-offset-4">
               {whitespaceTotal} districts are whitespaces
             </Link>
-            : very poor, and with almost no recorded CSR money.
+            : very poor, and with little recorded CSR money.
           </p>
         </>
       }
@@ -52,7 +52,7 @@ export default function CsrSpendingIndex() {
       />
       <div className="mt-12 overflow-x-auto border-t border-[#1c1c19]">
         <table className="w-full min-w-[600px] border-collapse">
-          <caption className="sr-only">States and UTs with recorded CSR spending and poverty</caption>
+          <caption className="sr-only">CSR spending and poverty by State and UT</caption>
           <thead>
             <tr className="border-b border-[#1c1c19] text-left">
               <th scope="col" className={HEAD}>State or UT</th>

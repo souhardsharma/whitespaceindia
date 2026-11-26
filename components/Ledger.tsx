@@ -12,7 +12,7 @@ const GROW_S = 0.45;
 const SWING_S = 0.85;
 const COVER_OPEN_DEG = -112;
 const STAGGERED_ROWS = 24;
-// Rows mounted behind the cover. All 651 in one commit stall the cover's first frames.
+// Rows mounted behind the cover. All of them (651 at the time) in one commit stalled the cover's first frames.
 const ROWS_BEHIND_COVER = 40;
 
 // The first cover is held long enough to read; after that it only opens.
@@ -252,7 +252,11 @@ function Ledger({
                   </td>
                   <td className={styles.stateCell}>{district.state_name}</td>
                   <td className={styles.figure}>{(district.headcount_ratio_2021 * 100).toFixed(1)}%</td>
-                  <td className={styles.figure}>₹{Math.round(district.district_csr_per_person).toLocaleString("en-IN")}</td>
+                  <td className={styles.figure}>
+                    {district.csr_recorded === false
+                      ? "None on record"
+                      : `₹${Math.round(district.district_csr_per_person).toLocaleString("en-IN")}`}
+                  </td>
                   <td className={`${styles.figure} ${styles.score}`}>{district.computed_pos.toFixed(1)}</td>
                 </tr>
               ))}

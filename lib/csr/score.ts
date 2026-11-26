@@ -18,6 +18,8 @@ export interface District {
   U_norm: number;
   POS: number;
   is_whitespace: boolean;
+  /** False when the filings place no CSR spending in the district in the window. */
+  csr_recorded?: boolean;
   u_imputed?: boolean;
   population_imputed?: boolean;
   population_parent_districts?: string;

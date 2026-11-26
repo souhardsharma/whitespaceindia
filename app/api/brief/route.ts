@@ -18,13 +18,10 @@ FACTS:
 - Describe and compare. Do not recommend where money should go, and do not call the district neglected, deserving or a priority.
 
 STYLE:
-- Never use a dash as punctuation: no em dash, no en dash, and no hyphen with spaces around it. Use a comma, a full stop, brackets or a conjunction. Hyphens inside words and in year ranges such as 2019-21 are fine.
-- Never use these words: leverage, utilize, robust, seamless, innovative, transformative, pivotal, synergy, foster, harness, catalyze, optimize, democratize, holistic, impactful, actionable, delve, embark, unleash, crucial, insights, navigate, landscape, unlock, empower, stark, staggering, underscore, surface (as a verb).
-- State each claim directly. Avoid contrasts of the form "not X but Y", "it is not X, it is Y" and "rather than".
-- Do not group adjectives, phrases or sentences in threes for rhythm.
-- No rhetorical questions, slogans, closing one-liners or sentence fragments.
-- No bullet points or lists. Write full paragraphs, vary sentence length, and join sentences with ordinary connectives such as because, so, but and which means.
-- Do not mention artificial intelligence, language models or automation.
+- Write complete sentences in plain words. Punctuate with commas, full stops and brackets; a hyphen belongs only inside a word or a year range such as 2019-21.
+- State what each figure shows and how large it is. Leave out adjectives that judge the district or the figures.
+- Write full paragraphs, vary sentence length, and join sentences with ordinary connectives such as because, so, but and which means. Use no lists and no questions.
+- Write only about the district and its figures.
 
 FORMAT: write exactly five sections in this order. Put each heading alone on its own line, in bold, exactly as written below, and follow it with one paragraph of three to five sentences.
 
@@ -274,6 +271,8 @@ interface BriefInput {
   population_source?: string;
   population_citation?: string;
   population_parent_districts?: string;
+  /** False when the filings place no CSR spending in the district in FY2021-24. */
+  csr_recorded?: boolean;
 }
 
 function buildPrompt(d: BriefInput): string {
@@ -294,11 +293,11 @@ DATA FOR ${d.district_name.toUpperCase()} DISTRICT, ${d.state_name.toUpperCase()
 - Poverty retention ratio (2019-21 headcount divided by 2015-16 headcount): ${retentionRatio} (1.0 means no fall, above 1.0 means a rise)
 - Total population (Census 2011${d.population_imputed && d.population_source ? `, ${d.population_source.replace(/_/g, ' ')}` : ''}): ${d.total_population ? Number(d.total_population).toLocaleString('en-IN') : 'not available'}${d.population_imputed && d.population_parent_districts ? ` (district carved from ${d.population_parent_districts} after Census 2011; recast to current boundary)` : ''}
 - Population tier: ${d.pop_tier || 'N/A'}
-- CSR received FY2021-24: INR ${Number(d.total_csr_recent).toFixed(2)} crore
+- CSR received FY2021-24: INR ${Number(d.total_csr_recent).toFixed(2)} crore${d.csr_recorded === false ? ' (the filings place no CSR spending in this district in these years)' : ''}
 - CSR per person (CSR received FY2021-24 divided by Census 2011 population): INR ${Math.round(d.district_csr_per_person)}
 - Median CSR per person for districts in the same population tier: INR ${Math.round(tierMedian)}
 - Shortfall against that median: INR ${Math.max(0, Math.round(tierMedian) - Math.round(d.district_csr_per_person))} per person
-- Philanthropic Opportunity Score: ${Math.round(d.computed_pos)} out of 100 (a higher score means more poverty relative to recorded CSR spending; it reflects the weights and sector the reader chose)`;
+- Opportunity score: ${Math.round(d.computed_pos)} out of 100 (a higher score means more poverty relative to recorded CSR spending; it reflects the weights and sector the reader chose)`;
 
   return `Write the research brief for this district from the data below, in the five-section format.\n\n${dataBlock}`;
 }
@@ -515,6 +514,7 @@ export async function POST(req: NextRequest) {
     computed_pos: sectorPOS(d, weights, sector, sectorScores()),
     pop_tier: d.pop_tier,
     tier_median_csr: d.tier_median_csr,
+    csr_recorded: d.csr_recorded,
   };
   const district_name = d.district_name;
 

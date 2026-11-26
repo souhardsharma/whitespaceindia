@@ -197,7 +197,7 @@ export default function Footer({ vertical }: { vertical?: VerticalConfig }) {
               Method
             </span>
             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-[#1c1c19]">
-              OECD composite index
+              Weighted composite score
             </span>
           </div>
         </div>

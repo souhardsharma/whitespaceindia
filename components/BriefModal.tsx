@@ -452,7 +452,9 @@ export default function BriefModal({ district, onClose, vertical, sector = "All 
                   },
                   {
                     value: formatCurrency(district.district_csr_per_person),
-                    label: "CSR per person, FY2021-24",
+                    label: district.csr_recorded === false
+                      ? "CSR per person, FY2021-24 (none on record)"
+                      : "CSR per person, FY2021-24",
                   },
                   {
                     value: formatCurrency(district.tier_median_csr),

@@ -38,7 +38,13 @@ import { csrConfig } from "@/lib/csr/config";
 // "0 districts", "0 whitespace districts" and a score range from 0 to 81.2
 // that the data does not hold. 3.5 KB; the full files still load as before.
 import csrMeta from "@/public/data/csr/meta.json";
-import { BIHAR_VS_MAHARASHTRA } from "@/lib/csr/findings";
+import {
+  BIHAR_NITI_PCT,
+  BIHAR_VS_MAHARASHTRA,
+  PAN_INDIA_CRORE,
+  PAN_INDIA_PCT,
+  TOTAL_DISTRICTS,
+} from "@/lib/csr/findings";
 import { CSR_STATES, stateSlug } from "@/lib/csr/states";
 import { SITE_URL } from "@/lib/site";
 
@@ -111,9 +117,6 @@ function InsightSection({ whitespaceCount }: { whitespaceCount: number }) {
             <h2 className="font-headline text-4xl md:text-6xl lg:text-7xl headline-tight text-[#1c1c19] mb-6">
               Findings from the <span className="italic font-light">index</span>
             </h2>
-            <p className="font-body text-base md:text-lg text-[#1c1c19]/75 leading-relaxed max-w-2xl">
-              The first finding concerns CSR spending that cannot be placed in any district, and the other two concern how unevenly the rest is shared between places.
-            </p>
           </div>
         </motion.div>
 
@@ -121,16 +124,16 @@ function InsightSection({ whitespaceCount }: { whitespaceCount: number }) {
           <div className="border-b md:border-b-0 md:border-r border-[#1c1c19]">
             <DataInsightCard
               number="01"
-              value="₹1,29,660 Cr"
+              value={PAN_INDIA_CRORE}
               label="CSR with no district"
-              sub="Of all CSR spending filed between FY2014-15 and FY2023-24, 60.7% was recorded as Pan-India or named no district. The index cannot place that money in any district."
+              sub={`Of all CSR spending filed between FY2014-15 and FY2023-24, ${PAN_INDIA_PCT} was recorded as Pan-India or named no district. The index cannot place that money in any district.`}
               delay={0}
             />
           </div>
           <div className="border-b md:border-b-0 md:border-r border-[#1c1c19] bg-[#f6f3ee]">
             <DataInsightCard
               number="02"
-              value="33.76%"
+              value={BIHAR_NITI_PCT}
               label="Bihar's poverty headcount"
               sub={`The share of Bihar’s people in multidimensional poverty in 2019-21, from NITI Aayog’s MPI 2023. ${BIHAR_VS_MAHARASHTRA}`}
               delay={0.12}
@@ -267,8 +270,8 @@ export default function HomePage() {
   }, []);
 
   const posMin = meta?.pos_range?.min ?? 0.0;
-  const posMax = meta?.pos_range?.max ?? 81.2;
-  const sectorPosMax = meta?.sector_pos_max ?? 85.5;
+  const posMax = meta?.pos_range?.max ?? csrMeta.pos_range.max;
+  const sectorPosMax = meta?.sector_pos_max ?? csrMeta.sector_pos_max;
 
   const csrWeights: Weights = useMemo(() => ({
     w_N: weights.w_N ?? DEFAULT_WEIGHTS.w_N,
@@ -367,7 +370,7 @@ export default function HomePage() {
 
   const siteUrl = SITE_URL;
 
-  const districtCount = districts.length || 651;
+  const districtCount = districts.length || TOTAL_DISTRICTS;
   const csrWindow = meta?.csr_window_fy;
   const fiscalWindow = csrWindow
     ? `FY${csrWindow[0]} to ${csrWindow[csrWindow.length - 1]}`
@@ -376,8 +379,8 @@ export default function HomePage() {
   const datasetSchema = {
     "@context": "https://schema.org",
     "@type": "Dataset",
-    name: "Philanthropic Opportunity Score (POS) for Indian districts",
-    description: `A composite score for ${districtCount} Indian districts, calculated from NITI Aayog's MPI 2023 poverty data and Ministry of Corporate Affairs CSR spending data (via Dataful.in dataset 1612).`,
+    name: "CSR Opportunity Index: opportunity scores for Indian districts",
+    description: `An opportunity score for ${districtCount} Indian districts, calculated from NITI Aayog's MPI 2023 poverty data and Ministry of Corporate Affairs CSR spending data (via Dataful.in dataset 1612).`,
     url: `${siteUrl}/csr`,
     distribution: [
       {

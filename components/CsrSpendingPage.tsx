@@ -54,8 +54,11 @@ export default function CsrSpendingPage({
               Spending is what companies reported to the Ministry of Corporate Affairs for {CSR_WINDOW}, summed across
               those years. About {PAN_INDIA_SHARE}% of all CSR money in the filings is reported as Pan India or names no
               district, so every figure here is a floor. Per-person figures use Census 2011 population, and poverty is
-              NITI Aayog&apos;s headcount for 2019-21. The score combines poverty, the funding gap and persistence; a
-              high score marks a place to look closer and is no verdict on anyone&apos;s work.
+              NITI Aayog&apos;s headcount for 2019-21. A State&apos;s share of people in poverty is its districts&apos;
+              headcounts weighted by their 2011 population, which can differ slightly from NITI Aayog&apos;s own State
+              figure. Where a district shows no CSR on record, the filings place no spending there in these years. The
+              score combines poverty, the funding gap and persistence, and a high score marks a district worth a closer
+              look before anyone acts on it.
             </p>
             <p>
               Source: NITI Aayog MPI 2023; Ministry of Corporate Affairs CSR filings via Dataful.in; Census 2011.
@@ -117,7 +120,11 @@ export function DistrictTable({ districts, showState = false }: { districts: Ran
               </th>
               {showState ? <td className={`${CELL} font-body text-sm`}>{d.state_name}</td> : null}
               <td className={NUMBER}>{formatPoor(d.headcount_ratio_2021)}</td>
-              <td className={NUMBER}>{d.total_csr_recent.toLocaleString("en-IN", { maximumFractionDigits: 1 })}</td>
+              <td className={NUMBER}>
+                {d.csr_recorded === false
+                  ? <span className="font-body text-[12px] text-[#1c1c19]/65">None on record</span>
+                  : d.total_csr_recent.toLocaleString("en-IN", { maximumFractionDigits: 1 })}
+              </td>
               <td className={NUMBER}>{formatRupees(d.district_csr_per_person)}</td>
               <td className={`${NUMBER} !pr-0 font-bold text-[#BD402C]`}>{d.computed_pos.toFixed(1)}</td>
             </tr>
@@ -131,10 +138,12 @@ export function DistrictTable({ districts, showState = false }: { districts: Ran
 /** Metadata for a /csr-spending page: its own canonical and the CSR share card. */
 export function spendingMeta(path: string, title: string, description: string, siteUrl: string) {
   const url = `${siteUrl}${path}`;
-  const image = { url: "/og/csr-index-4.jpg", width: 1200, height: 630, alt: title };
+  const image = { url: "/og/csr-index-5.jpg", width: 1200, height: 630, alt: title };
   return {
     title,
     description,
+    // the root layout's keywords name the clearance register; these pages are about CSR
+    keywords: ["CSR spending India", "CSR by State", "CSR by district", "NITI Aayog MPI", "MCA CSR data", "whitespace district"],
     alternates: { canonical: url },
     openGraph: { title, description, url, type: "website" as const, siteName: "Whitespace India", locale: "en_IN", images: [image] },
     twitter: { card: "summary_large_image" as const, title, description, images: [image] },

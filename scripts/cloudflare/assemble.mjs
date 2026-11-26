@@ -60,6 +60,9 @@ const consent = fs
   .filter((n) => n.endsWith(".html"))
   .map((n) => n.slice(0, -5));
 const redirects = [
+  // The old simulator address. As a static page it answered 200 with an empty
+  // body and moved to /csr only once its script ran.
+  "/simulator /csr#simulator 301",
   ...consent.map((n) => `/instruments/consent/${n} /instruments/consent/${n} 200`),
   ..."0123456789".split("").map((d) => `/instruments/consent/${d}* /instruments/consent/view 200`),
   // Instrument 02's schools are one static page too. School codes start with

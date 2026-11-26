@@ -15,8 +15,8 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 // The index's summary, built into the page so the page as served states the
-// data's figures. Until it was, the served page gave the fallbacks below
-// ("Score range 0-100", 44 whitespace districts, a 25th percentile of 13),
+// data's figures. Until it was, the served page gave typed fallbacks
+// ("Score range 0-100", an older whitespace count, a 25th percentile of 13),
 // none of which the data holds. The file is still read afterwards.
 import csrMeta from "@/public/data/csr/meta.json";
 
@@ -58,9 +58,9 @@ interface MetaData {
 
 const WEIGHT_PRESETS = [
   { name: "Balanced", N: 40, G: 40, U: 20, desc: "Need and the funding gap weighted equally" },
-  { name: "Highest Need", N: 60, G: 25, U: 15, desc: "More weight on poverty severity" },
+  { name: "Highest Need", N: 60, G: 25, U: 15, desc: "More weight on poverty" },
   { name: "Most Underfunded", N: 20, G: 65, U: 15, desc: "More weight on the funding gap" },
-  { name: "Stuck Districts", N: 25, G: 30, U: 45, desc: "More weight on persistent poverty" },
+  { name: "Stuck Districts", N: 25, G: 30, U: 45, desc: "More weight on persistence" },
 ];
 
 const CHART_TOOLTIP_STYLE = {
@@ -109,7 +109,12 @@ function JoinPipeline({ totalDistricts }: { totalDistricts: number }) {
   const palgharPct = (2990116 / 11060148) * 100;
   const thaneResidualPct = 100 - palgharPct;
   const matched = totalDistricts;
-  const dropped = 653 - matched;
+  const mpiDistricts = csrMeta.mpi_districts;
+  const dropped = mpiDistricts - matched;
+  const notRecorded = csrMeta.csr_not_recorded_count;
+  const methods = csrMeta.population_method_counts;
+  // districts drawn after 2011, each given the 2011 population of its area
+  const carvedOut = methods.gazette_2011_table + methods.subdistrict_sum + methods.areal_allocation;
   return (
     <div className="border border-[#1c1c19] bg-[#fcf9f4]">
       {/* Frame header */}
@@ -131,9 +136,9 @@ function JoinPipeline({ totalDistricts }: { totalDistricts: number }) {
       <div className="px-6 md:px-8 py-6 md:py-8">
         <div className="grid grid-cols-3 border border-[#1c1c19]/30">
           {[
-            { dataset: "Census 2011", source: "Registrar General of India", spelling: "Hooghly", subline: "640 districts" },
-            { dataset: "MPI 2023", source: "NITI Aayog (NFHS-5)", spelling: "Hugli (Hooghly)", subline: "653 districts" },
-            { dataset: "CSR / MCA", source: "Ministry of Corporate Affairs", spelling: "Hugli", subline: "663 state and district pairs" },
+            { dataset: "Census 2011", source: "Registrar General of India", spelling: "Hugli", subline: "640 districts" },
+            { dataset: "MPI 2023", source: "NITI Aayog (NFHS-5)", spelling: "Hugli (Hooghly)", subline: `${mpiDistricts} districts` },
+            { dataset: "CSR / MCA", source: "Ministry of Corporate Affairs", spelling: "Hooghly", subline: `${csrMeta.csr_district_pairs} state and district pairs` },
           ].map((s, i) => (
             <div
               key={s.dataset}
@@ -193,18 +198,18 @@ function JoinPipeline({ totalDistricts }: { totalDistricts: number }) {
             <span className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/60 block mb-1">
               Threshold
             </span>
-            <p className="font-mono text-base text-[#1c1c19]">{`>= 75% similarity`}</p>
+            <p className="font-mono text-base text-[#1c1c19]">90% for CSR names, 80% for Census names</p>
             <p className="font-body text-xs text-[#1c1c19]/55 italic mt-1">
-              Set low so that as many districts as possible find a match.
+              A CSR name must also share its first word with the district&apos;s, so West Jaintia Hills cannot take East Jaintia Hills&apos; spending.
             </p>
           </div>
           <div>
             <span className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/60 block mb-1">
-              Caution band
+              Spellings checked by hand
             </span>
-            <p className="font-mono text-base text-[#1c1c19]">75 to 90%</p>
+            <p className="font-mono text-base text-[#1c1c19]">Shravasti and Shrawasti</p>
             <p className="font-body text-xs text-[#1c1c19]/55 italic mt-1">
-              Matches in this range are listed in the verification report for a reviewer to check.
+              Pairs too far apart for the matcher, and districts renamed since 2021, are listed in the code after a check against the filings&apos; own district list for the state.
             </p>
           </div>
           <div>
@@ -276,7 +281,7 @@ function JoinPipeline({ totalDistricts }: { totalDistricts: number }) {
             </span>
           ))}
           <span className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/55 px-2 py-1.5 self-center">
-            and 20 more
+            and {methods.census_exact_rename - 9} more renamed or spelled differently
           </span>
         </div>
         <p className="font-body text-xs text-[#1c1c19]/60 italic mt-3">
@@ -289,7 +294,7 @@ function JoinPipeline({ totalDistricts }: { totalDistricts: number }) {
       {/* Step 03: districts drawn after 2011 get their own 2011 population */}
       <PipelineStep number="03" title="Districts created after 2011">
         <p className="font-body text-sm text-[#1c1c19]/75 leading-relaxed mb-4">
-          Over fifty districts in the MPI list <span className="italic">did not exist in Census 2011</span>. They were carved out of older districts after the census was taken, so each was given the 2011 population of the area it now covers, and the district it came from kept the remainder.
+          Of the districts in the MPI list, {carvedOut} <span className="italic">did not exist in Census 2011</span>. They were carved out of older districts after the census was taken, so each was given the 2011 population of the area it now covers, and the district it came from kept the remainder.
         </p>
 
         {/* The split shown as one bar */}
@@ -369,16 +374,15 @@ function JoinPipeline({ totalDistricts }: { totalDistricts: number }) {
               scripts/csr/data/external/population_recast_2011.csv
             </p>
             <p className="font-body text-sm text-[#1c1c19]/70 leading-relaxed">
-              This table in the project&apos;s code gives each new district its 2011 population and links each figure to its source, which is a District Census Handbook, the state&apos;s gazette notification, or a Wikipedia article that cites one of those.
+              This table in the project&apos;s code gives each new district its 2011 population and links each figure to its source. Of those figures, {methods.gazette_2011_table} come from a District Census Handbook, the state&apos;s gazette notification or a Wikipedia article citing one of them, and {methods.subdistrict_sum} are the Census 2011 totals of the sub-districts the new district took over. For the {methods.areal_allocation} where neither was available, the older district&apos;s population was divided in proportion to area.
             </p>
           </div>
           <div>
             <p className="font-label text-[10px] uppercase tracking-[0.25em] text-[#1c1c19]/60 mb-2">
-              Where it applied (50+ districts)
+              Where it applied ({carvedOut} districts)
             </p>
             <ul className="font-body text-sm text-[#1c1c19]/75 leading-relaxed space-y-1">
-              <li>Telangana, 2014: 21 new districts and the remainders of 9 older ones</li>
-              <li>Ladakh, 2019</li>
+              <li>Telangana, 2016: 21 new districts and the remainders of 9 older ones</li>
               <li>Paschim and Purba Bardhaman, split in 2017</li>
               <li>East and West Jaintia Hills, split in 2012</li>
               <li>Palghar, Kondagaon, Gariyaband and others</li>
@@ -399,7 +403,7 @@ function JoinPipeline({ totalDistricts }: { totalDistricts: number }) {
       <PipelineConnector />
 
       {/* Step 04: invariants */}
-      <PipelineStep number="04" title="Three checks on the totals, each of which stops the build if it fails">
+      <PipelineStep number="04" title="Four checks, each of which stops the build if it fails">
         <div className="border border-[#1c1c19]/30 divide-y divide-[#1c1c19]/30">
           {[
             {
@@ -409,13 +413,18 @@ function JoinPipeline({ totalDistricts }: { totalDistricts: number }) {
             },
             {
               name: "Per state",
-              check: "Matched population between 5% below and 0.5% above the state's Census 2011 total",
-              guards: "Catches a district counted twice within a state",
+              check: "Matched population within 0.5% of the state's Census 2011 total, above or below",
+              guards: "Catches a district counted twice, or one lost",
             },
             {
               name: "National",
-              check: "Matched population no more than 0.5% above India's Census 2011 total",
-              guards: "Catches double counting across states",
+              check: "Matched population within 0.5% of India's Census 2011 total, above or below",
+              guards: "Catches double counting or lost districts across states",
+            },
+            {
+              name: "CSR names",
+              check: "No district's spending is credited twice, and no district without a match has a spelling in the filings that could be its own",
+              guards: "Catches a district shown as receiving nothing because its name was missed",
             },
           ].map((inv) => (
             <div key={inv.name} className="grid grid-cols-12 gap-3 px-4 py-3 items-baseline">
@@ -447,7 +456,7 @@ function JoinPipeline({ totalDistricts }: { totalDistricts: number }) {
             </span>
             <p className="font-headline text-3xl md:text-4xl headline-tight text-[#1c1c19] mt-1">
               <span className="text-[#BD402C]">{matched}</span>{" "}
-              <span className="text-[#1c1c19]/50">/ 653</span>
+              <span className="text-[#1c1c19]/50">/ {mpiDistricts}</span>
               <span className="font-body font-normal text-base text-[#1c1c19]/70 ml-3">
                 districts on the MPI list
               </span>
@@ -456,15 +465,18 @@ function JoinPipeline({ totalDistricts }: { totalDistricts: number }) {
         </div>
         {/* Coverage bar */}
         <div className="flex h-3 border border-[#1c1c19]/40">
-          <div className="bg-[#BD402C]" style={{ width: `${(matched / 653) * 100}%` }} />
-          <div className="bg-[#1c1c19]/15" style={{ width: `${(dropped / 653) * 100}%` }} />
+          <div className="bg-[#BD402C]" style={{ width: `${(matched / mpiDistricts) * 100}%` }} />
+          <div className="bg-[#1c1c19]/15" style={{ width: `${(dropped / mpiDistricts) * 100}%` }} />
         </div>
         <div className="flex justify-between mt-2 font-label text-[9px] uppercase tracking-[0.2em] text-[#1c1c19]/60">
           <span>{matched} scored</span>
           <span>{dropped} left out</span>
         </div>
         <p className="font-body text-xs text-[#1c1c19]/60 italic mt-3">
-          The districts left out have no CSR record at all, or share a name with a district in another state in a way the matching could not resolve.
+          {dropped === 0
+            ? "Every district on the MPI list has a Census population and is scored."
+            : `${dropped} districts on the MPI list have no Census population and are not scored.`}{" "}
+          The filings place no CSR spending in {notRecorded} of them between FY2021-22 and FY2023-24. Their recorded spending is ₹0, and the ranking marks them as having none on record.
         </p>
       </div>
     </div>
@@ -524,35 +536,43 @@ export default function MethodologyPage() {
 
   const tierColors = ["#e0bfb9", "#BD402C", "#9b2817"];
 
-  const totalDistricts = meta?.total_districts ?? 651;
-  const posMin = meta?.pos_range?.min ?? 0;
-  const posMax = meta?.pos_range?.max ?? 100;
-  const sectorPosMax = meta?.sector_pos_max ?? posMax;
-  const csrP25 = meta?.whitespace_thresholds?.csr_p25 ?? 13;
-  const hrP75 = meta?.whitespace_thresholds?.hr_p75_pct ?? 21.1;
-  const wsCount = meta?.whitespace_count ?? 44;
-  const wsByState = meta?.whitespace_by_state ?? {};
-  const popP33 = meta?.pop_tier_boundaries?.p33 ?? 1092256;
-  const popP67 = meta?.pop_tier_boundaries?.p67 ?? 2265482;
-  const meanCsr = meta?.national_mean_csr ?? 607;
-  const medianCsr = meta?.national_median_csr_per_person ?? 100;
-  const uImputedCount = meta?.u_imputed_count ?? 55;
-  const retStats = meta?.retention_ratio_stats;
-  const retMedian = retStats?.median ?? 0.555;
-  const retP25 = retStats?.p25 ?? 0.442;
-  const retP75 = retStats?.p75 ?? 0.674;
-  const retStd = retStats?.std ?? 0.274;
+  // Every fallback is the built-in meta.json, so the page as served states
+  // the data's figures even before the files are read again.
+  const m0 = csrMeta;
+  const totalDistricts = meta?.total_districts ?? m0.total_districts;
+  const posMin = meta?.pos_range?.min ?? m0.pos_range.min;
+  const posMax = meta?.pos_range?.max ?? m0.pos_range.max;
+  const sectorPosMax = meta?.sector_pos_max ?? m0.sector_pos_max;
+  const csrP25 = meta?.whitespace_thresholds?.csr_p25 ?? m0.whitespace_thresholds.csr_p25;
+  const hrP75 = meta?.whitespace_thresholds?.hr_p75_pct ?? m0.whitespace_thresholds.hr_p75_pct;
+  const wsCount = meta?.whitespace_count ?? m0.whitespace_count;
+  const wsByState = meta?.whitespace_by_state ?? m0.whitespace_by_state;
+  const popP33 = meta?.pop_tier_boundaries?.p33 ?? m0.pop_tier_boundaries.p33;
+  const popP67 = meta?.pop_tier_boundaries?.p67 ?? m0.pop_tier_boundaries.p67;
+  const meanCsr = meta?.national_mean_csr ?? m0.national_mean_csr;
+  const medianCsr = meta?.national_median_csr_per_person ?? m0.national_median_csr_per_person;
+  const uImputedCount = meta?.u_imputed_count ?? m0.u_imputed_count;
+  const retStats = meta?.retention_ratio_stats ?? m0.retention_ratio_stats;
+  const retMedian = retStats?.median ?? m0.retention_ratio_stats.median;
+  const retP25 = retStats?.p25 ?? m0.retention_ratio_stats.p25;
+  const retP75 = retStats?.p75 ?? m0.retention_ratio_stats.p75;
+  const retStd = retStats?.std ?? m0.retention_ratio_stats.std;
+  const totals = m0.csr_totals;
+  const crore = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")} crore`;
+  const tierMed = meta?.tier_medians ?? m0.tier_medians;
+  const largeBelowMedium = (tierMed["Tier 3 (Large)"] ?? 0) < (tierMed["Tier 2 (Medium)"] ?? 0);
 
-  // Build the whitespace-state list dynamically from meta.json so the copy
-  // never goes stale when the pipeline reruns.
+  // Where the whitespace districts are, from meta.json. States holding at
+  // least a tenth of them are named with their counts; the rest are listed.
   const wsStateEntries = Object.entries(wsByState).sort((a, b) => b[1] - a[1]);
-  const wsTopThree = wsStateEntries.slice(0, 3);
-  const wsRest = wsStateEntries.slice(3);
-  const wsTopPhrase = wsTopThree
-    .map(([s, c]) => `${s} (${c})`)
-    .join(", ");
-  const wsRestPhrase = wsRest.length
-    ? `, and the rest in ${wsRest.map(([s]) => s).join(", ")}`
+  const wsBig = wsStateEntries.filter(([, c]) => c >= wsCount / 10);
+  const wsSmall = wsStateEntries.filter(([, c]) => c < wsCount / 10);
+  const andJoin = (xs: string[]) =>
+    xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
+  const wsBigPhrase = andJoin(wsBig.map(([st, c]) => `${c} in ${st}`));
+  const wsSmallCount = wsSmall.reduce((a, [, c]) => a + c, 0);
+  const wsPlaces = wsBig.length
+    ? `: ${wsBigPhrase}${wsSmall.length ? `, and the other ${wsSmallCount} in ${andJoin(wsSmall.map(([st]) => st))}` : ""}`
     : "";
 
   return (
@@ -614,7 +634,7 @@ export default function MethodologyPage() {
             />
             <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#f6f3ee]">
               <p className="font-body text-base md:text-lg text-[#1c1c19]/85 leading-relaxed">
-                The Philanthropic Opportunity Score (POS) measures where in India the gap between poverty and CSR funding is widest. It is meant as a first screen for companies and foundations choosing where to work, and it points them to the districts that most deserve closer study. The decision about where to spend stays with them.
+                The opportunity score measures where in India the gap between poverty and CSR funding is widest. It is meant as a first screen for companies and foundations choosing where to work, and it points them to the districts that most deserve closer study. The decision about where to spend stays with them.
               </p>
             </div>
           </section>
@@ -685,7 +705,7 @@ export default function MethodologyPage() {
                       <a href="https://niti.gov.in/sites/default/files/2023-07/National-Multidimentional-Poverty-Index-2023-Final-17th-July.pdf" target="_blank" rel="noopener noreferrer" className="text-[#BD402C] underline decoration-[#BD402C]/40 hover:decoration-[#BD402C]">
                         National Multidimensional Poverty Index 2023
                       </a>
-                      , which is based on the fifth National Family Health Survey (NFHS-5, 2019-21). The index follows the Alkire-Foster method of Oxford&apos;s Poverty and Human Development Initiative (OPHI), which counts deprivations in health, education and standard of living. We took district headcount ratios for both survey rounds, 2015-16 and 2019-21, which cover 653 districts in 36 states and union territories.
+                      , which is based on the fifth National Family Health Survey (NFHS-5, 2019-21). The index follows the Alkire-Foster method of Oxford&apos;s Poverty and Human Development Initiative (OPHI), which counts deprivations in health, education and standard of living. We took district headcount ratios for both survey rounds, 2015-16 and 2019-21, which cover {m0.mpi_districts} districts in 36 states and union territories.
                     </>
                   ),
                   bg: "bg-[#fcf9f4]",
@@ -702,7 +722,7 @@ export default function MethodologyPage() {
                       <a href="https://dataful.in/datasets/1612" target="_blank" rel="noopener noreferrer" className="text-[#BD402C] underline decoration-[#BD402C]/40 hover:decoration-[#BD402C]">
                         Dataful.in (Dataset 1612)
                       </a>
-                      . The data covers ten financial years of CSR spending, FY2014-15 to FY2023-24, by district and sector, and the funding gap is calculated from the latest three (FY2021-24). About 60.7% of gross CSR spending over the ten years (₹1,29,660 crore of ₹2,13,594 crore) is recorded as &quot;Pan India&quot; or carries no district code, so it cannot be assigned to a district. Those records are left out, which is why the district CSR totals in this index are conservative.
+                      . The data covers ten financial years of CSR spending, FY2014-15 to FY2023-24, by district and sector, and the funding gap is calculated from the latest three (FY2021-24). About {totals.pan_india_pct.toFixed(1)}% of gross CSR spending over the ten years ({crore(totals.pan_india_csr_all_years_crore)} of {crore(totals.total_all_years_gross_crore)}) is recorded as &quot;Pan India&quot; or names no district, so it cannot be assigned to a district. Those records are left out, which is why the district CSR totals in this index are conservative.
                     </>
                   ),
                   bg: "bg-[#f6f3ee]",
@@ -714,7 +734,7 @@ export default function MethodologyPage() {
                       <a href="https://censusindia.gov.in/" target="_blank" rel="noopener noreferrer" className="text-[#BD402C] underline decoration-[#BD402C]/40 hover:decoration-[#BD402C]">
                         Census of India 2011
                       </a>{" "}
-                      population figures for 640 districts. It is still the most recent complete district census, because the 2021 Census was postponed. Population is the denominator of every per-person figure and the basis of the population tiers. Districts created after 2011 by administrative reorganisation were matched to the populations of their parent districts where possible.
+                      population figures for 640 districts. The 2021 Census was postponed, so Census 2011 is still the most recent one India has published. Population is the denominator of every per-person figure and the basis of the population tiers. A district created after 2011 is given the 2011 population of the area it now covers, as section 04 explains.
                     </>
                   ),
                   bg: "bg-[#fcf9f4]",
@@ -762,27 +782,27 @@ export default function MethodologyPage() {
               num="05"
               tag="Dimensions"
               title={<>Three <span className="italic font-light">measures.</span></>}
-              lead="The score combines need (N), the funding gap (G) and how little poverty has fallen (U). Each is measured on its own, and their weighted sum is the score."
+              lead="The score combines poverty (N), the funding gap (G) and persistence (U), which is how little poverty has fallen. Each is measured on its own, and their weighted sum is the score."
             />
             <div className="grid grid-cols-1 md:grid-cols-3 border border-[#1c1c19]">
               {[
                 {
                   key: "N",
-                  title: "Poverty Severity",
+                  title: "Poverty",
                   weight: "40%",
                   text: "The MPI headcount ratio from NFHS-5, which is the share of a district's people who are poor on the index's health, education and living-standard indicators. A higher share means greater unmet need.",
                   bg: "bg-[#fcf9f4]",
                 },
                 {
                   key: "G",
-                  title: "Funding Gap",
+                  title: "Funding gap",
                   weight: "40%",
                   text: "How far a district's CSR spending per person falls below the median for its population tier. A district above its tier median scores zero on this measure, since it already receives at least as much as comparable districts.",
                   bg: "bg-[#f6f3ee]",
                 },
                 {
                   key: "U",
-                  title: "Persistent Poverty",
+                  title: "Persistence",
                   weight: "20%",
                   text: `The retention ratio, which is the share of the 2015-16 poverty rate still present in 2019-21. A value near one means poverty did not fall, and a value above one means it rose. ${uImputedCount} of ${totalDistricts} districts have no 2015-16 figure, mostly because they were created after 2011 and did not exist at the time of NFHS-4, and they are given the median retention ratio. That pulls their U score towards the middle, a cautious choice in an index meant to pick out unusual districts.`,
                   bg: "bg-[#fcf9f4]",
@@ -826,7 +846,7 @@ export default function MethodologyPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 border border-[#1c1c19]">
               <div className="p-8 md:p-10 border-b md:border-b-0 md:border-r border-[#1c1c19] bg-[#fcf9f4] space-y-5">
                 <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
-                  CSR spending is concentrated in a few districts. The mean is roughly ₹{Math.round(meanCsr)} per person and the median ₹{Math.round(medianCsr)}, and the gap between the two comes from a long tail of districts where companies have their headquarters, such as Mumbai, Bengaluru and Pune.
+                  CSR spending is concentrated in a few districts. The mean is roughly ₹{Math.round(meanCsr)} per person and the median ₹{Math.round(medianCsr)}, and the gap between the two comes from a few districts where companies have their head offices, such as New Delhi, Mumbai and Gurugram.
                 </p>
                 <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
                   Measured against one national median, nearly every rural district would look underfunded. Districts are therefore split into three population tiers at the 33rd and 67th percentiles, and each is compared with the median CSR per person of its own tier.
@@ -903,9 +923,11 @@ export default function MethodologyPage() {
                 <p className="font-label text-[10px] uppercase tracking-widest text-[#1c1c19]/50 mt-3 text-center">
                   Each tier has its own benchmark
                 </p>
-                <p className="font-body text-xs text-[#1c1c19]/60 italic mt-3 leading-relaxed">
-                  Tier 3 (Large) has a lower median than Tier 2 (Medium). Large districts include very rural places with little corporate presence as well as commercial cities, and the tiers are drawn by population alone, so their medians need not rise in order.
-                </p>
+                {largeBelowMedium && (
+                  <p className="font-body text-xs text-[#1c1c19]/60 italic mt-3 leading-relaxed">
+                    Tier 3 (Large) has a lower median than Tier 2 (Medium). Large districts include very rural places with little corporate presence as well as commercial cities, and the tiers are drawn by population alone, so their medians need not rise in order.
+                  </p>
+                )}
               </div>
             </div>
           </section>
@@ -934,7 +956,7 @@ export default function MethodologyPage() {
                 </h3>
                 <div className="h-px bg-[#1c1c19]/30 w-12 mb-4" />
                 <p className="font-body text-sm text-[#1c1c19]/75 leading-relaxed">
-                  Each measure is rescaled to run from 0 to 1 across all {totalDistricts} districts, by the min-max method that the OECD Handbook on Constructing Composite Indicators recommends. Measures recorded in different units can then be added in proportion.
+                  Each measure is rescaled to run from 0 to 1 across all {totalDistricts} districts by the min-max method, one of the normalisation methods the OECD Handbook on Constructing Composite Indicators describes. Measures recorded in different units can then be added in proportion.
                 </p>
               </div>
               <div className="p-8 md:p-10 bg-[#f6f3ee]">
@@ -951,11 +973,11 @@ export default function MethodologyPage() {
                 </h3>
                 <div className="border border-[#1c1c19] bg-[#fcf9f4] p-6 my-5">
                   <p className="font-headline italic text-base md:text-lg text-center text-[#BD402C]">
-                    POS = (0.40 × N̂ + 0.40 × Ĝ + 0.20 × Û) × 100
+                    Score = (0.40 × N̂ + 0.40 × Ĝ + 0.20 × Û) × 100
                   </p>
                 </div>
                 <p className="font-body text-sm text-[#1c1c19]/75 leading-relaxed">
-                  Here N̂ is poverty severity, Ĝ the funding gap and Û the persistence of poverty, each after rescaling. The result is a score from 0 to 100, and you can change all three weights in the interactive simulator.
+                  Here N̂ is poverty, Ĝ the funding gap and Û persistence, each after rescaling. The result is a score from 0 to 100, and you can change all three weights in the interactive simulator.
                 </p>
               </div>
             </div>
@@ -972,10 +994,10 @@ export default function MethodologyPage() {
             />
             <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#fcf9f4] space-y-5 mb-8">
               <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
-                Need and the funding gap carry equal weight, 40% each, because both are necessary conditions for a white space: a district counts as a genuine opportunity only when it is both poor and underfunded. A poor district that already receives enough CSR falls outside that definition, and a well-funded district with little poverty is a low priority.
+                Need and the funding gap carry equal weight, 40% each, because both are necessary conditions for a whitespace district: a district counts as a genuine opportunity only when it is both poor and underfunded. A poor district that already receives enough CSR falls outside that definition, and a well-funded district with little poverty is a low priority.
               </p>
               <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
-                Persistence carries a lower weight, 20%, because the retention ratio rests on only two surveys, NFHS-4 and NFHS-5, taken five years apart. At district level its sampling variance is higher than that of the headcount ratio, which makes it the least precise of the three measures. The weighting follows the approach of the UNDP Human Development Index, where unequal weights reflect how reliably each component is measured.
+                Persistence carries a lower weight, 20%, because the retention ratio rests on only two surveys, NFHS-4 and NFHS-5, taken five years apart. At district level its sampling variance is higher than that of the headcount ratio, which makes it the least precise of the three measures. The 20% is this index&apos;s own judgement, and the presets below show how the ranking moves when the weights change.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 border border-[#1c1c19]">
@@ -1085,15 +1107,15 @@ export default function MethodologyPage() {
             <SectionHeader
               num="10"
               tag="Classification"
-              title={<>Defining <span className="italic font-light">a white space.</span></>}
+              title={<>Defining <span className="italic font-light">a whitespace district.</span></>}
             />
             <div className="border border-[#1c1c19] p-8 md:p-10 bg-[#fcf9f4]">
               <p className="font-body text-base md:text-lg text-[#1c1c19]/85 leading-relaxed">
                 A district is classed as a{" "}
-                <span className="text-[#BD402C] font-bold">white space</span>{" "}
-                when it is in the bottom quarter of districts for CSR per person (below ₹{Math.round(csrP25)} per person) and in the top quarter for the MPI headcount ratio (above {hrP75}%). These are the districts where need is greatest and funding smallest. The current data identifies{" "}
+                <span className="text-[#BD402C] font-bold">whitespace district</span>{" "}
+                when it is in the bottom quarter of districts for CSR per person (₹{csrP25.toFixed(2)} per person or less) and in the top quarter for the MPI headcount ratio ({hrP75.toFixed(2)}% or more). These are the districts where need is greatest and funding smallest. The current data identifies{" "}
                 <span className="text-[#BD402C] font-bold">{wsCount}</span>{" "}
-                of them{wsTopPhrase ? `, most in ${wsTopPhrase}` : ""}{wsRestPhrase}.
+                of them{wsPlaces}.
               </p>
             </div>
           </section>
@@ -1113,7 +1135,7 @@ export default function MethodologyPage() {
                 <a href="https://www.oecd.org/en/publications/handbook-on-constructing-composite-indicators-methodology-and-user-guide_9789264043466-en.html" target="_blank" rel="noopener noreferrer" className="text-[#BD402C] underline decoration-[#BD402C]/40 hover:decoration-[#BD402C]">
                   OECD Handbook on Constructing Composite Indicators (Nardo et al., 2008)
                 </a>
-                , the standard international reference on building composite indexes. Min-max normalisation and weighted linear aggregation follow the same design principles as the UNDP Human Development Index and the Global Multidimensional Poverty Index itself.
+                , a widely used guide to building composite indexes. It sets out the steps this index takes, choosing the measures, rescaling them, weighting them and adding them, and it describes min-max rescaling and weighted addition among the methods for those steps, along with their weakness: a high value on one measure can make up for a low value on another.
               </p>
             </div>
           </section>
@@ -1126,23 +1148,23 @@ export default function MethodologyPage() {
               num="12"
               tag="Caveats"
               title={<>What the score <span className="italic font-light">cannot see.</span></>}
-              lead="We know of seven limits on what the score can tell you."
             />
             <div className="border border-[#1c1c19]">
               {[
                 "The score is a screening tool for deciding where to look, and it makes no claim about cause and effect. A high score shows where the gap between need and funding is widest; whether spending there will have an impact is a separate question.",
-                "District CSR totals are conservative. About 60.7% of gross CSR spending is recorded as Pan India or has no district code, and cannot be assigned to a district. The excluded spending is unlikely to be spread evenly: Pan-India programmes come disproportionately from districts where companies have their headquarters, so the funding gap is probably overstated for well-connected urban districts and understated for rural districts that may benefit from these programmes without being credited with them.",
-                `Population figures come from Census 2011, more than eight years before the MPI survey. Districts carved out of others after 2011 take their parent's full population (flagged \`population_imputed\`), which lowers their CSR per person and raises their G score. The population of fast-growing districts may also be understated by 10–15% against today's figure.`,
+                `District CSR totals are conservative. About ${totals.pan_india_pct.toFixed(1)}% of gross CSR spending is recorded as Pan India or names no district, and cannot be assigned to a district. Where that money goes is not recorded, so a rural district that benefits from a national programme without being credited with it looks more underfunded than it is.`,
+                `In ${m0.csr_not_recorded_count} districts the filings place no CSR spending at all between FY2021-22 and FY2023-24, so their recorded spending is ₹0. Money may still reach them through programmes filed under a neighbouring district or as Pan India.`,
+                `Population figures come from Census 2011, eight years before the MPI survey began. A district carved out of another after 2011 takes the 2011 population of the area it now covers, so its figure is as old as every other district's, and a district that has grown fast since 2011 has a lower population on record than it has today, which raises its CSR per person.`,
                 "The MPI figures describe conditions in 2019-21 (NFHS-5), and district poverty may have changed since the survey was taken.",
                 `The persistence measure (U) uses the median retention ratio (${retMedian.toFixed(3)}; interquartile range ${retP25.toFixed(3)}–${retP75.toFixed(3)}; standard deviation ${retStd.toFixed(3)}) for the ${uImputedCount} of ${totalDistricts} districts with no 2015-16 figure. Most of them were carved out of older districts after Census 2011 and so are missing from NFHS-4, and their U values are therefore estimates.`,
                 "The score leaves out government spending, private giving outside the Companies Act and international aid that reach these districts.",
-                "The three measures are treated as independent. In practice poverty severity, the funding gap and persistence may be correlated, which would strengthen the signal for districts that score high on more than one.",
-              ].map((text, i) => (
+                "The three measures are treated as independent. In practice poverty, the funding gap and persistence may be correlated, which would strengthen the signal for districts that score high on more than one.",
+              ].map((text, i, all) => (
                 <div
                   key={i}
                   className={`grid grid-cols-1 md:grid-cols-12 gap-6 p-6 md:p-8 ${
                     i % 2 === 1 ? "bg-[#f6f3ee]" : "bg-[#fcf9f4]"
-                  } ${i < 6 ? "border-b border-[#1c1c19]" : ""}`}
+                  } ${i < all.length - 1 ? "border-b border-[#1c1c19]" : ""}`}
                 >
                   <div className="md:col-span-2">
                     <span className="font-headline text-4xl md:text-5xl leading-none text-[#BD402C]/30 italic font-light">

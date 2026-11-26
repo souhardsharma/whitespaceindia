@@ -202,6 +202,16 @@ function IndiaMap({ districtScores, onStateClick, highlightedState, vertical }: 
                     onMouseMove={handleMouseMove}
                     onMouseLeave={handleMouseLeave}
                     onClick={() => handleClick(geo)}
+                    // react-simple-maps makes each shape focusable; a name and
+                    // a key handler let a keyboard or screen-reader user use it
+                    role="button"
+                    aria-label={isSelected ? `${name}, selected` : `Show ${name}'s districts`}
+                    onKeyDown={(evt: React.KeyboardEvent<SVGPathElement>) => {
+                      if (evt.key === "Enter" || evt.key === " ") {
+                        evt.preventDefault();
+                        handleClick(geo);
+                      }
+                    }}
                     style={{
                       default: {
                         outline: "none",

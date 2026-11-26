@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TOTAL_DISTRICTS } from "@/lib/csr/findings";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
@@ -36,7 +37,7 @@ export const metadata: Metadata = {
     template: "%s | Whitespace India",
   },
   description:
-    "Whitespace India reads India's public records together to find unattended problems. CSR & Impact Finance and Instruments are live, covering 651 districts, the environmental clearance register and the PM POSHAN school meal returns; Health, Energy and Education are in preview.",
+    `Whitespace India reads India's public records together to find unattended problems. CSR & Impact Finance and Instruments are live, covering ${TOTAL_DISTRICTS} districts, the environmental clearance register and the PM POSHAN school meal returns; Health, Energy and Education are in preview.`,
   applicationName: "Whitespace India",
   keywords: [
     "Whitespace India",
@@ -59,7 +60,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Whitespace India",
     description:
-      "Whitespace India reads India's public records together to find unattended problems. The CSR Opportunity Index ranks 651 districts by poverty against corporate social responsibility spending. People & Consent profiles any proposal in the national environmental clearance register, and Meal Claims Check flags school meal returns that disagree with the school's own filings.",
+      `Whitespace India reads India's public records together to find unattended problems. The CSR Opportunity Index ranks ${TOTAL_DISTRICTS} districts by poverty against corporate social responsibility spending. People & Consent profiles any proposal in the national environmental clearance register, and Meal Claims Check flags school meal returns that disagree with the school's own filings.`,
     url: siteUrl,
     images: [{ url: "/og/whitespace-india-4.jpg", width: 1200, height: 630, alt: "Whitespace India: \u201cIndia\u2019s unattended problems, found in public data\u201d, beside a risograph print of coloured blocks and a seedling" }],
     type: "website",
@@ -70,7 +71,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Whitespace India",
     description:
-      "Whitespace India reads India's public records together to find unattended problems. Its free tools include a CSR index of 651 districts, a profile of each environmental clearance proposal and a nightly check of school meal returns.",
+      `Whitespace India reads India's public records together to find unattended problems. Its free tools include a CSR index of ${TOTAL_DISTRICTS} districts, a profile of each environmental clearance proposal and a nightly check of school meal returns.`,
     images: [{ url: "/og/whitespace-india-4.jpg", alt: "Whitespace India: \u201cIndia\u2019s unattended problems, found in public data\u201d, beside a risograph print of coloured blocks and a seedling" }],
   },
   alternates: { canonical: siteUrl },

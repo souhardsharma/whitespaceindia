@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TOTAL_DISTRICTS } from "@/lib/csr/findings";
 import { SITE_URL } from "@/lib/site";
 
 const siteUrl = SITE_URL;
@@ -7,7 +8,7 @@ const PAGE_URL = `${siteUrl}/about`;
 
 const TITLE = "About the CSR Opportunity Index | Whitespace India";
 const DESCRIPTION =
-  "How the CSR Opportunity Index sets the corporate social responsibility spending companies report against poverty in 651 Indian districts, and the public data it is built from.";
+  `How the CSR Opportunity Index sets the corporate social responsibility spending companies report against poverty in ${TOTAL_DISTRICTS} Indian districts, and the public data it is built from.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   keywords: [
     "About Whitespace India",
     "CSR opportunity index",
-    "Philanthropic Opportunity Score",
+    "CSR opportunity score",
     "POS score India",
     "CSR vs poverty India",
     "NITI Aayog MPI",
@@ -29,9 +30,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: "About the CSR Opportunity Index",
     description:
-      "The index sets the CSR spending companies report in each of 651 districts against NITI Aayog's poverty measure, to show where need is high and recorded spending is low.",
+      `The index sets the CSR spending companies report in each of ${TOTAL_DISTRICTS} districts against NITI Aayog's poverty measure, to show where need is high and recorded spending is low.`,
     url: PAGE_URL,
-    images: [{ url: "/og/csr-index-4.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
+    images: [{ url: "/og/csr-index-5.jpg", width: 1200, height: 630, alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
     type: "website",
     siteName: "Whitespace India",
     locale: "en_IN",
@@ -40,8 +41,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "About the CSR Opportunity Index",
     description:
-      "How the index sets reported CSR spending against poverty in 651 Indian districts.",
-    images: [{ url: "/og/csr-index-4.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
+      `How the index sets reported CSR spending against poverty in ${TOTAL_DISTRICTS} Indian districts.`,
+    images: [{ url: "/og/csr-index-5.jpg", alt: "CSR Opportunity Index: \u201cWhere CSR should go, district by district\u201d, beside a risograph print of a sapling being watered" }],
   },
   alternates: { canonical: PAGE_URL },
   robots: {
@@ -68,7 +69,7 @@ const PAGE_LD = {
       description: DESCRIPTION,
       isPartOf: { "@id": `${siteUrl}/#site` },
       about: { "@id": `${siteUrl}/#org` },
-      primaryImageOfPage: { "@type": "ImageObject", url: `${siteUrl}/og/csr-index-4.jpg` },
+      primaryImageOfPage: { "@type": "ImageObject", url: `${siteUrl}/og/csr-index-5.jpg` },
       inLanguage: "en-IN",
     },
     {

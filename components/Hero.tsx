@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import type { VerticalConfig } from "@/lib/verticals/types";
+import { BIHAR_NITI_PCT, MAHARASHTRA_NITI_PCT, PER_PERSON_RATIO } from "@/lib/csr/findings";
 
 const DEFAULT_ACCENT = "#BD402C";
 
 interface HeroMeta {
   total_districts?: number;
+  csr_not_recorded_count?: number;
   national_hr_official_pct?: number;
   csr_totals?: { total_fy23_24_crore?: number };
   state_stats?: {
@@ -97,6 +99,16 @@ const stagger = {
   show: { transition: { staggerChildren: 0.15 } },
 };
 
+// The page's h1 rises into place without fading: served at opacity 0, the
+// heading was invisible to anyone whose scripts had not run.
+const rise = {
+  hidden: { y: 28 },
+  show: {
+    y: 0,
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  },
+};
+
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
   show: {
@@ -135,7 +147,8 @@ export default function Hero({
     document.getElementById("simulator")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const totalDistricts = meta?.total_districts ?? 651;
+  const totalDistricts = meta?.total_districts ?? 0;
+  const notRecorded = meta?.csr_not_recorded_count;
   const methodologyHref = isCsr ? "/methodology" : `/${verticalSlug}/methodology`;
 
   const headline = vertical?.heroContent?.headline ?? "Companies have spent over two lakh crore rupees on CSR since 2014.";
@@ -147,7 +160,7 @@ export default function Hero({
   const nationalHr = meta?.national_hr_official_pct ?? 14.96;
   const bhCsrPp = meta?.state_stats?.bihar?.csr_per_person_inr;
   const mhCsrPp = meta?.state_stats?.maharashtra?.csr_per_person_inr;
-  const csrRatio = bhCsrPp && mhCsrPp && bhCsrPp > 0 ? Math.round(mhCsrPp / bhCsrPp) : 20;
+  const csrRatio = bhCsrPp && mhCsrPp && bhCsrPp > 0 ? Math.round(mhCsrPp / bhCsrPp) : PER_PERSON_RATIO;
 
   return (
     <section className="relative bg-[#fcf9f4] pt-32 md:pt-40 pb-16 md:pb-24 px-6 md:px-12 lg:px-16">
@@ -162,7 +175,7 @@ export default function Hero({
           {/* Headline column */}
           <div className="md:col-span-8 lg:col-span-9">
             <motion.h1
-              variants={fadeUp}
+              variants={rise}
               className="font-headline text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl headline-tight text-[#1c1c19]"
             >
               {headline}
@@ -232,10 +245,11 @@ export default function Hero({
                     Districts scored
                   </span>
                   <div className="font-label text-3xl lg:text-4xl font-bold tracking-tighter" style={{ color: accent }}>
-                    <CountUp end={totalDistricts} suffix=" Districts" />
+                    <CountUp end={totalDistricts} />
                   </div>
                   <div className="mt-4 font-body text-xs text-[#1c1c19]/70 leading-relaxed">
-                    Districts in NITI Aayog&apos;s poverty index that could be matched to the CSR filings and to Census 2011.
+                    Every district in NITI Aayog&apos;s MPI 2023.
+                    {notRecorded ? ` The filings place no CSR spending in ${notRecorded} of them between FY2021-22 and FY2023-24.` : ""}
                   </div>
                 </div>
 
@@ -299,11 +313,11 @@ export default function Hero({
                   CSR per person, Bihar and Maharashtra
                 </span>
                 <div className="font-label text-[11px] uppercase tracking-widest text-[#1c1c19] mb-2">
-                  Bihar · 33.76% poor · low CSR
+                  Bihar · {BIHAR_NITI_PCT} poor · low CSR
                 </div>
                 <div className="h-1 w-[5%] mb-6" style={{ backgroundColor: accent }} />
                 <div className="font-label text-[11px] uppercase tracking-widest text-[#1c1c19] mb-2">
-                  Maharashtra · 7.81% poor · high CSR
+                  Maharashtra · {MAHARASHTRA_NITI_PCT} poor · high CSR
                 </div>
                 <div className="h-1 bg-[#1c1c19] w-[95%]" />
               </div>
