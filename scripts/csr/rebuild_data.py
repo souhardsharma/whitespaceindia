@@ -1369,12 +1369,17 @@ def compute_sector_scores(master: pd.DataFrame, pivot: pd.DataFrame) -> tuple[di
             densities.append((amt_cr * 1e7) / pop if pop > 0 else 0.0)
         m["sector_density"] = densities
 
-        tier_sec_med = m.groupby("pop_tier", observed=True)["sector_density"].median()
+        # The benchmark is the median among the tier's districts that record
+        # spending in this sector, and the gap is the share of it a district
+        # lacks, so a district with none in the sector has the full gap of 1.
+        # Against the plain tier median, which is zero for most sectors in the
+        # two smaller tiers, 472 districts had no gap at all, those with no
+        # spending included.
+        funded = m[m["sector_density"] > 0]
+        tier_sec_med = funded.groupby("pop_tier", observed=True)["sector_density"].median()
         m["tier_sec_med"] = m["pop_tier"].map(tier_sec_med).astype(float)
-        m["sector_gap"] = (m["tier_sec_med"] - m["sector_density"]).clip(lower=0)
-
-        lo, hi = float(m["sector_gap"].min()), float(m["sector_gap"].max())
-        m["sector_G_norm"] = (m["sector_gap"] - lo) / (hi - lo) if hi > lo else 0.5
+        m["sector_G_norm"] = ((m["tier_sec_med"] - m["sector_density"]).clip(lower=0)
+                              / m["tier_sec_med"]).fillna(0.0)
 
         # Store the sector-specific G_norm (not the composite POS) so the
         # frontend can apply arbitrary user weights correctly.

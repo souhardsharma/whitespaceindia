@@ -285,6 +285,8 @@ interface BriefInput {
   csr_recorded?: boolean;
   /** The score's points from each measure (rescaled measure times its weight, times 100). */
   points?: { poverty: number; gap: number; persistence: number };
+  /** "All Sectors", or the one CSR sector the score's funding gap is taken from. */
+  sector?: string;
 }
 
 const inr = (n: number) => 'INR ' + Math.round(n).toLocaleString('en-IN');
@@ -318,7 +320,8 @@ DATA FOR ${d.district_name.toUpperCase()} DISTRICT, ${d.state_name.toUpperCase()
 - CSR per person (CSR received FY2021-24 divided by Census 2011 population): ${inr(d.district_csr_per_person)}
 - Median CSR per person for districts in the same population tier: ${inr(tierMedian)}
 - ${d.district_csr_per_person >= tierMedian ? `No shortfall: CSR per person is ${inr(d.district_csr_per_person - tierMedian)} above that median` : `Shortfall against that median: ${inr(Math.round(tierMedian) - Math.round(d.district_csr_per_person))} per person`}
-- Opportunity score: ${Math.round(d.computed_pos)} out of 100 (a higher score means more poverty relative to recorded CSR spending; it reflects the weights and sector the reader chose)${d.points ? `
+- Opportunity score: ${Math.round(d.computed_pos)} out of 100 (a higher score means more poverty relative to recorded CSR spending; it reflects the weights and sector the reader chose)${d.sector && d.sector !== 'All Sectors' ? `
+- Sector the reader chose: ${d.sector}. The score and its breakdown take the funding gap from CSR spending in that sector alone, measured as the share of a benchmark the district lacks (the benchmark is the median among districts in its population tier that record spending in the sector). The CSR amounts above cover all sectors.` : ''}${d.points ? `
 - Score breakdown: ${d.points.poverty.toFixed(1)} points from poverty, ${d.points.gap.toFixed(1)} from the funding gap and ${d.points.persistence.toFixed(1)} from persistence${d.headcount_ratio_2016 ? '' : ' (persistence is set to the median for districts with both survey rounds, because this district has no 2015-16 figure)'}` : ''}`;
 
   return `Write the research brief for this district from the data below, in the five-section format.\n\n${dataBlock}`;
@@ -371,7 +374,8 @@ function buildDocument(d: BriefInput, briefText: string) {
         ce(
           View,
           { style: styles.scoreBadge },
-          ce(Text, { style: styles.scoreBadgeText }, scoreLabel + '  ·  OPPORTUNITY SCORE')
+          ce(Text, { style: styles.scoreBadgeText },
+            scoreLabel + '  ·  OPPORTUNITY SCORE' + (d.sector && d.sector !== 'All Sectors' ? `  ·  ${d.sector.toUpperCase()}` : ''))
         )
       ),
 
@@ -536,6 +540,7 @@ export async function POST(req: NextRequest) {
     mpi_2021: d.mpi_2021,
     computed_pos: sectorPOS(d, weights, sector, sectorScores()),
     points: scorePoints(d, weights, sector),
+    sector,
     pop_tier: d.pop_tier,
     tier_median_csr: d.tier_median_csr,
     csr_recorded: d.csr_recorded,

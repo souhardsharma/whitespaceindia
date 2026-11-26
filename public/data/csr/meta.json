@@ -56,37 +56,37 @@
   "national_hr_pop_weighted_pct": 14.61,
   "national_hr_2015_16_official_pct": 24.85,
   "u_imputed_count": 70,
-  "sector_pos_max": 85.8,
+  "sector_pos_max": 88.7,
   "sector_pos_meta": {
     "Education": {
-      "pos_max": 83.27
+      "pos_max": 88.7
     },
     "Health Care": {
-      "pos_max": 82.1
+      "pos_max": 88.7
     },
     "Rural Development Projects": {
-      "pos_max": 78.95
+      "pos_max": 88.7
     },
     "Livelihood Enhancement Projects": {
-      "pos_max": 84.42
+      "pos_max": 85.76
     },
     "Environmental Sustainability": {
-      "pos_max": 84.42
+      "pos_max": 88.7
     },
     "Poverty, Eradicating Hunger, Malnutrition": {
-      "pos_max": 85.79
+      "pos_max": 88.7
     },
     "Safe Drinking Water": {
-      "pos_max": 84.42
+      "pos_max": 88.7
     },
     "Sanitation": {
-      "pos_max": 85.79
+      "pos_max": 88.7
     },
     "Vocational Skills": {
-      "pos_max": 85.79
+      "pos_max": 88.7
     },
     "Women Empowerment": {
-      "pos_max": 85.79
+      "pos_max": 88.7
     }
   },
   "mpi_districts": 707,

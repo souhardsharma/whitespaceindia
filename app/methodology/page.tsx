@@ -849,7 +849,7 @@ export default function MethodologyPage() {
                   CSR spending is concentrated in a few districts. The mean is roughly ₹{Math.round(meanCsr)} per person and the median ₹{Math.round(medianCsr)}, and the gap between the two comes from a few districts where companies have their head offices, such as New Delhi, Mumbai and Gurugram.
                 </p>
                 <p className="font-body text-base text-[#1c1c19]/85 leading-relaxed">
-                  Measured against one national median, nearly every rural district would look underfunded. Districts are therefore split into three population tiers at the 33rd and 67th percentiles, and each is compared with the median CSR per person of its own tier.
+                  Measured against one national median, nearly every rural district would look underfunded. Districts are therefore split into three population tiers at the 33rd and 67th percentiles, and each is compared with the median CSR per person of its own tier. With one sector chosen, a tier&apos;s benchmark is the median among its districts that record any spending in that sector, because in most sectors the plain median of the two smaller tiers is zero. The gap is then the share of that benchmark a district lacks, from 0 for a district at or above it to 1 for a district with no spending in the sector.
                 </p>
                 <div className="border-t border-[#1c1c19] pt-5 space-y-3">
                   <div className="flex items-start gap-4">
