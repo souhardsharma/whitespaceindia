@@ -19,7 +19,9 @@ FACTS:
 
 STYLE:
 - Write complete sentences in plain words. Punctuate with commas, full stops and brackets; a hyphen belongs only inside a word or a year range such as 2019-21.
-- State what each figure shows and how large it is. Leave out adjectives that judge the district or the figures.
+- Let the figures carry the size of things. Give a figure and the figure it is compared with ("INR 5 per person, against a median of INR 148"), and qualify neither with a word of degree or judgement.
+- Copy every number exactly as the data block writes it, separators included. Write "district" in lower case after a name, and call the score "the opportunity score".
+- Each section adds something the others do not. "What the figures indicate" says what the figures show together, such as which of poverty, CSR spending and the change since 2015-16 accounts for the score, without restating the earlier sections. "Limits of this brief" is one paragraph of continuous prose, with no numbering and no opening sentence about the section itself.
 - Write full paragraphs, vary sentence length, and join sentences with ordinary connectives such as because, so, but and which means. Use no lists and no questions.
 - Write only about the district and its figures.
 
@@ -147,7 +149,8 @@ async function callGeminiWithKey(
         contents: messages,
         generationConfig: {
           maxOutputTokens: 8192,
-          temperature: 0.7,
+          // low: the brief restates figures, and at 0.7 it drifted from the style rules
+          temperature: 0.3,
         },
       }),
     }
@@ -196,6 +199,10 @@ async function callGemini(
 
   throw new Error('ALL_KEYS_EXHAUSTED');
 }
+
+// Words are never split at the end of a line: react-pdf hyphenates by
+// default, and the metric labels read "SIMILAR DIS- TRICTS".
+Font.registerHyphenationCallback((word) => [word]);
 
 Font.register({
   family: 'Karla',
@@ -275,8 +282,10 @@ interface BriefInput {
   csr_recorded?: boolean;
 }
 
+const inr = (n: number) => 'INR ' + Math.round(n).toLocaleString('en-IN');
+
 function buildPrompt(d: BriefInput): string {
-  const tierMedian = d.tier_median_csr || 127;
+  const tierMedian = d.tier_median_csr;
   const povChange = d.headcount_ratio_2016
     ? ((d.headcount_ratio_2021 - d.headcount_ratio_2016) * 100).toFixed(1)
     : 'N/A';
@@ -293,10 +302,10 @@ DATA FOR ${d.district_name.toUpperCase()} DISTRICT, ${d.state_name.toUpperCase()
 - Poverty retention ratio (2019-21 headcount divided by 2015-16 headcount): ${retentionRatio} (1.0 means no fall, above 1.0 means a rise)
 - Total population (Census 2011${d.population_imputed && d.population_source ? `, ${d.population_source.replace(/_/g, ' ')}` : ''}): ${d.total_population ? Number(d.total_population).toLocaleString('en-IN') : 'not available'}${d.population_imputed && d.population_parent_districts ? ` (district carved from ${d.population_parent_districts} after Census 2011; recast to current boundary)` : ''}
 - Population tier: ${d.pop_tier || 'N/A'}
-- CSR received FY2021-24: INR ${Number(d.total_csr_recent).toFixed(2)} crore${d.csr_recorded === false ? ' (the filings place no CSR spending in this district in these years)' : ''}
-- CSR per person (CSR received FY2021-24 divided by Census 2011 population): INR ${Math.round(d.district_csr_per_person)}
-- Median CSR per person for districts in the same population tier: INR ${Math.round(tierMedian)}
-- Shortfall against that median: INR ${Math.max(0, Math.round(tierMedian) - Math.round(d.district_csr_per_person))} per person
+- CSR received FY2021-24: ${d.csr_recorded === false ? 'none. The CSR filings place no spending in this district in these three years, so its recorded CSR is zero' : `INR ${Number(d.total_csr_recent).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} crore`}
+- CSR per person (CSR received FY2021-24 divided by Census 2011 population): ${inr(d.district_csr_per_person)}
+- Median CSR per person for districts in the same population tier: ${inr(tierMedian)}
+- Shortfall against that median: ${inr(Math.max(0, Math.round(tierMedian) - Math.round(d.district_csr_per_person)))} per person
 - Opportunity score: ${Math.round(d.computed_pos)} out of 100 (a higher score means more poverty relative to recorded CSR spending; it reflects the weights and sector the reader chose)`;
 
   return `Write the research brief for this district from the data below, in the five-section format.\n\n${dataBlock}`;
