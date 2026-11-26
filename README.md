@@ -11,7 +11,7 @@ Whitespace India reads India's public records together to find places where a pr
 
 | Tool | What it does | Status |
 |-----|--------------|--------|
-| [CSR Opportunity Index](https://whitespaceindia.pages.dev/csr) | Ranks 651 districts by the gap between multidimensional poverty and corporate social responsibility (CSR) spending | Live |
+| [CSR Opportunity Index](https://whitespaceindia.pages.dev/csr) | Ranks all 707 districts in NITI Aayog's poverty index by the gap between multidimensional poverty and corporate social responsibility (CSR) spending | Live |
 | [CSR spending by State](https://whitespaceindia.pages.dev/csr-spending) | Reported CSR spending against poverty, district by district, for each of 36 States and Union Territories, and the [list of whitespace districts](https://whitespaceindia.pages.dev/csr-spending/whitespace-districts) | Live |
 | [Instrument 01: People & Consent](https://whitespaceindia.pages.dev/instruments/consent) | Takes an environmental clearance proposal and shows who lives where it would be built, what they live on, and which consent obligations attach | Live, refreshed nightly |
 | [Instrument 02: Meal Claims Check](https://whitespaceindia.pages.dev/instruments/meal-claims) | Reads the PM POSHAN daily meal reports of the States and Union Territories that file on mdmhp.nic.in (17 in November 2026) and flags school-days on which a school's meal report disagrees with another record on the same system | Live, refreshed nightly |
@@ -19,11 +19,11 @@ Whitespace India reads India's public records together to find places where a pr
 
 ## CSR Opportunity Index
 
-The index combines NITI Aayog's Multidimensional Poverty Index with Ministry of Corporate Affairs CSR filings. The result is a Philanthropic Opportunity Score (POS) for 651 districts, which is higher where poverty is greater relative to recorded CSR spending.
+The index combines NITI Aayog's Multidimensional Poverty Index with Ministry of Corporate Affairs CSR filings. The result is an opportunity score for each of the index's 707 districts, which is higher where poverty is greater relative to recorded CSR spending.
 
-The POS has three dimensions:
+The score has three dimensions:
 
-- **N, poverty severity:** the MPI headcount ratio (default weight 40%).
+- **N, poverty:** the MPI headcount ratio (default weight 40%).
 - **G, funding gap:** the CSR shortfall against the median for the district's population tier (default 40%).
 - **U, persistence:** the share of 2015-16 poverty still present in 2019-21 (default 20%).
 

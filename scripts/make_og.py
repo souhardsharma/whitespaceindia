@@ -41,6 +41,7 @@ Run from the project root:  python scripts/make_og.py
 """
 from __future__ import annotations
 
+import json
 import os
 import random
 import sys
@@ -83,6 +84,12 @@ class Card:
     detail: str
 
 
+# The CSR card states the index's district count, read from its data so a
+# rebuild that changes the count cannot leave the card behind (it said 651
+# after the index came to score all 707 of NITI Aayog's districts).
+CSR_DISTRICTS = json.loads((Path(__file__).resolve().parent.parent / "public/data/csr/meta.json")
+                           .read_text(encoding="utf-8"))["total_districts"]
+
 CLAY = (189, 64, 44)
 PLUM = (122, 59, 107)  # Instrument 01 only
 TEAL = (29, 92, 99)  # Instrument 02 only
@@ -92,10 +99,10 @@ CARDS = [
          "OPEN CIVIC DATA · INDIA",
          "India’s unattended\nproblems,", "found in\npublic data.",
          "District indexes · Working tools"),
-    Card("csr-index-4.jpg", "csr.webp", (180, -20, 1400, 1200), CLAY,
+    Card("csr-index-5.jpg", "csr.webp", (180, -20, 1400, 1200), CLAY,
          "CSR & IMPACT FINANCE",
          "Where CSR\nshould go,", "district by\ndistrict.",
-         "Opportunity Index · 651 districts"),
+         f"Opportunity Index · {CSR_DISTRICTS} districts"),
     Card("instruments-5.jpg", "instruments.webp", (-100, 20, 1200, 1320), GRAPHITE,
          "INSTRUMENTS",
          "Working tools,", "built on\npublic data.",
