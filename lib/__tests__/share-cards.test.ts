@@ -36,7 +36,7 @@ test("every share card named in app/ or lib/ exists in public/og", () => {
 test("each section previews with its own card", () => {
   const expected: Record<string, string> = {
     "app/layout.tsx": "/og/whitespace-india-4.jpg",
-    "app/csr/layout.tsx": "/og/csr-index-4.jpg",
+    "app/csr/layout.tsx": "/og/csr-index-5.jpg",
     "app/instruments/layout.tsx": "/og/instruments-5.jpg",
     "lib/instruments/metadata.ts": "/og/consent-4.jpg",
     "lib/instruments/meal.ts": "/og/meal-claims-2.jpg",
@@ -66,7 +66,7 @@ test("a retired card name redirects to the card that replaced it", async () => {
   }));
   // Googlebot asked for these a week after they were replaced (crawl stats, 2026-11).
   assert.equal(target.get("/og/consent-3.jpg"), "/og/consent-4.jpg");
-  assert.equal(target.get("/og/csr-index-3.jpg"), "/og/csr-index-4.jpg");
+  assert.equal(target.get("/og/csr-index-3.jpg"), "/og/csr-index-5.jpg");
   assert.equal(target.get("/og/instruments-4.jpg"), "/og/instruments-5.jpg");
   assert.equal(target.get("/og/brand.png"), "/og/whitespace-india-4.jpg");
   for (const [from, to] of target) {
