@@ -57,6 +57,7 @@ import math
 import os
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 import numpy as np
@@ -163,6 +164,10 @@ DISTRICT_NAME_ALIASES: dict[str, str] = {
     "kabirdham": "kabeerdham",
     # Assam: MPI lists both as separate rows; collapse to one.
     "kamrup metro": "kamrup metropolitan",
+    # Gujarat: the Census spells it Ahmadabad
+    "ahmedabad": "ahmadabad",
+    # Punjab: the report writes Ferozepur, the Census Firozpur
+    "ferozepur": "firozpur",
 }
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -184,6 +189,9 @@ CENSUS_NAME_OVERRIDES: dict[tuple[str, str], tuple[str, str]] = {
     ("andhra pradesh", "ysr (kadapa)"): ("andhra pradesh", "ysr"),
     # Assam
     ("assam", "kamrup metro"): ("assam", "kamrup metropolitan"),
+    # West Bengal: the report writes the numeral, the Census spells it
+    ("west bengal", "north 24 parganas"): ("west bengal", "north twenty four parganas"),
+    ("west bengal", "south 24 parganas"): ("west bengal", "south twenty four parganas"),
     # Chhattisgarh
     ("chhattisgarh", "dantewada"): ("chhattisgarh", "dakshin bastar dantewada"),
     # Gujarat
@@ -495,70 +503,203 @@ def safe_json(val: object) -> object:
 # ═════════════════════════════════════════════════════════════════════════
 # STEP 1 — Extract MPI directly from the NITI Aayog PDF
 # ═════════════════════════════════════════════════════════════════════════
+# The report's district tables cannot be read as plain text lines. On some
+# pages it overprints a neighbouring State's table (Assam's on Bihar's, a few
+# points apart), wraps long names onto their own line, and sets a name on a
+# slightly different baseline from its figures. Reading line by line lost 54
+# of the report's 707 districts, Bihar's Araria and Katihar among them. So the
+# name column and the six figure columns are read separately, by baseline,
+# and each row of figures is paired with the name nearest to it.
+MPI_VALUE = re.compile(r"^(?:[\d.,]+%?|NA|ND|-|\u2013|\u2014)$")
+MPI_NOT_A_NAME = re.compile(r"Headcount|District|NFHS|Overview|MPI|Intensity|Ratio|PROGRESS|^\d+$")
+MPI_BASELINE_TOL = 0.35   # points; the overprinted tables sit about 1 pt apart
+MPI_WORD_GAP = 1.2        # points between characters that starts a new word
+MPI_PAIR_MAX = 9.0        # points between a name and its figures
+MPI_DISTRICTS_IN_REPORT = 707   # "all 707 districts covered", the report's own count
+
+
+def _mpi_lines(chars: list[dict]) -> list[dict]:
+    """Text lines grouped by baseline, each with its words and vertical middle."""
+    cs = sorted((c for c in chars if c["text"].strip()), key=lambda c: c["bottom"])
+    groups: list[list[dict]] = []
+    for c in cs:
+        if groups and c["bottom"] - groups[-1][-1]["bottom"] <= MPI_BASELINE_TOL:
+            groups[-1].append(c)
+        else:
+            groups.append([c])
+    lines = []
+    for g in groups:
+        g.sort(key=lambda c: c["x0"])
+        words: list[dict] = []
+        for c in g:
+            if not words or c["x0"] - words[-1]["x1"] > MPI_WORD_GAP:
+                words.append({"text": "", "x0": c["x0"], "x1": c["x1"]})
+            words[-1]["text"] += c["text"]
+            words[-1]["x1"] = c["x1"]
+        top = min(c["top"] for c in g)
+        bottom = max(c["bottom"] for c in g)
+        lines.append({"words": words, "mid": (top + bottom) / 2, "top": top, "bottom": bottom})
+    return lines
+
+
+def _mpi_value_rows(lines: list[dict]) -> list[dict]:
+    """Lines ending in the table's figures: six, or three where a district
+    has only one survey round (created after 2015-16, or split before 2019-21)."""
+    def ends_in(w: list[dict], k: int) -> bool:
+        return (len(w) >= k and all(MPI_VALUE.match(x["text"]) for x in w[-k:])
+                and (len(w) == k or not MPI_VALUE.match(w[-k - 1]["text"]))
+                and any(re.search(r"\d", x["text"]) for x in w[-3:]))
+
+    rows = []
+    for ln in lines:
+        w = ln["words"]
+        if ends_in(w, 6):
+            rows.append({**ln, "vals": [x["text"] for x in w[-6:]], "x": w[-6]["x0"], "x4": w[-3]["x0"]})
+        elif ends_in(w, 3):
+            rows.append({**ln, "vals": [x["text"] for x in w[-3:]], "x": w[-3]["x0"], "short": True})
+    full = [r["x4"] for r in rows if not r.get("short")]
+    if not full:
+        return []
+    round_two = float(np.median(full))   # where the 2019-21 columns start
+    for r in rows:
+        if r.get("short"):
+            dash = ["\u2013"] * 3
+            # three figures under the 2019-21 columns are that round; under
+            # 2015-16 they belong to a district split before the second round
+            r["vals"] = dash + r["vals"] if r["x"] >= round_two - 30 else r["vals"] + dash
+    return rows
+
+
+def _is_known_name(text: str, known: set[str]) -> bool:
+    t = text.lower()
+    return any(t == k or t.startswith(k) or k.startswith(t) or fuzz.ratio(t, k) >= 85 for k in known)
+
+
+def _mpi_page_rows(page, known_vals: set[tuple], known_names: set[str]) -> tuple[list[tuple[str, list[str]]], list[tuple]]:
+    """The page's rows. Rows of figures an earlier page already printed, and
+    the names set beside them, are another State's table overprinted here
+    (Assam's on Bihar's, its names 6 pt to the left); both are set aside
+    before pairing, or a name from one table takes figures from the other."""
+    lines = _mpi_lines(page.chars)
+    all_rows = _mpi_value_rows(lines)
+    value_rows = [r for r in all_rows if tuple(r["vals"]) not in known_vals]
+    repeated = [tuple(r["vals"]) for r in all_rows if tuple(r["vals"]) in known_vals]
+    overprinted = bool(repeated)
+    if not value_rows:
+        return [], repeated
+    name_edge = min(r["x"] for r in value_rows) - 1
+    top = min(r["top"] for r in value_rows) - 40
+    bottom = max(r["bottom"] for r in value_rows) + 30
+    names = []
+    for ln in lines:
+        if not top <= ln["top"] <= bottom:
+            continue
+        text = unicodedata.normalize(
+            "NFKC", " ".join(x["text"] for x in ln["words"] if x["x1"] <= name_edge)).strip()
+        if text and re.search(r"[A-Za-z]", text) and not MPI_NOT_A_NAME.search(text):
+            names.append({"text": text, "mid": ln["mid"], "x0": ln["words"][0]["x0"], "used": False})
+    if overprinted:
+        margins = [round(n["x0"]) for n in names if _is_known_name(n["text"], known_names)]
+        if margins:
+            margin = max(set(margins), key=margins.count)
+            # names at the other table's margin go, unless they are two names
+            # struck over each other, which _without() separates afterwards
+            names = [n for n in names
+                     if abs(n["x0"] - margin) > 1.5 or not _is_known_name(n["text"], known_names) and len(n["text"]) > 10]
+    name_of: dict[int, int] = {}
+    pairs = sorted((abs(n["mid"] - r["mid"]), ni, ri)
+                   for ni, n in enumerate(names) for ri, r in enumerate(value_rows))
+    for dist, ni, ri in pairs:
+        if dist > MPI_PAIR_MAX or ri in name_of or names[ni]["used"] or names[ni]["text"].startswith("("):
+            continue
+        name_of[ri] = ni
+        names[ni]["used"] = True
+    # A line left over is part of a wrapped name or its bracketed second name.
+    for n in names:
+        if n["used"]:
+            continue
+        ri = min(range(len(value_rows)), key=lambda i: abs(value_rows[i]["mid"] - n["mid"]))
+        if ri in name_of and abs(value_rows[ri]["mid"] - n["mid"]) <= MPI_PAIR_MAX + 3:
+            base = names[name_of[ri]]
+            base["text"] = (f"{n['text']} {base['text']}" if n["mid"] < base["mid"]
+                            else f"{base['text']} {n['text']}")
+            n["used"] = True
+    return [(names[name_of[ri]]["text"] if ri in name_of else "", r["vals"])
+            for ri, r in enumerate(value_rows)], repeated
+
+
+def _without(garbled: str, other: str) -> str | None:
+    """`garbled` with the letters of `other` taken out in order, when two names
+    overprinted on one baseline interleave ("ChBiuraxnagr" is Chirang and Buxar)."""
+    if other in garbled or len(garbled) - len(other) < 3:
+        return None
+    rest, j = [], 0
+    for ch in garbled:
+        if j < len(other) and ch == other[j]:
+            j += 1
+        else:
+            rest.append(ch)
+    return "".join(rest).strip() if j == len(other) else None
+
+
 def extract_mpi(pdf_path: Path) -> pd.DataFrame:
     print("=" * 72)
     print("STEP 1  Extracting MPI districts from PDF")
     print("=" * 72)
 
-    data: list[dict] = []
-    current_state = "Unknown"
-    pattern = re.compile(
-        r"^(.+?)\s+"
-        r"([\d\.\,]+%?|NA|ND|\-|\u2013|\u2014)\s+"
-        r"([\d\.\,]+%?|NA|ND|\-|\u2013|\u2014)\s+"
-        r"([\d\.\,]+%?|NA|ND|\-|\u2013|\u2014)\s+"
-        r"([\d\.\,]+%?|NA|ND|\-|\u2013|\u2014)\s+"
-        r"([\d\.\,]+%?|NA|ND|\-|\u2013|\u2014)\s+"
-        r"([\d\.\,]+%?|NA|ND|\-|\u2013|\u2014)$"
-    )
-
+    found: list[dict] = []
+    overprint_names: dict[int, list[str]] = {}
     with pdfplumber.open(pdf_path) as pdf:
         total = len(pdf.pages)
         print(f"  PDF pages: {total}")
         for i in range(80, min(360, total)):
             page = pdf.pages[i]
-            text = page.extract_text(x_tolerance=2, y_tolerance=2)
-            if not text:
+            head = page.extract_text(x_tolerance=2, y_tolerance=2) or ""
+            m = re.search(r"\n([A-Za-z &\-]+): Overview of Districts?", "\n" + head)
+            if not m:
                 continue
-            lines = text.split("\n")
+            state = m.group(1).strip()
+            known_vals = {tuple(r["vals"]) for r in found}
+            known_names = {r["district"].lower() for r in found if r["district"]}
+            rows, repeated = _mpi_page_rows(page, known_vals, known_names)
+            if repeated:
+                print(f"  Page {i + 1} ({state}): {len(repeated)} rows of another State's table overprinted, set aside")
+                overprint_names[i] = [r["district"] for r in found if tuple(r["vals"]) in set(repeated)]
+            for name, vals in rows:
+                found.append({"page": i, "state": state, "district": name, "vals": vals})
 
-            # State detection — look at the first 30 lines of the page
-            for line in lines[:30]:
-                upper = line.strip().upper()
-                for state in INDIAN_STATES:
-                    if re.search(r"\b" + re.escape(state.upper()) + r"\b", upper):
-                        current_state = state
-                        break
+    rows = found
+    for r in rows:
+        for other in overprint_names.get(r["page"], []):
+            plain = _without(r["district"], other)
+            if plain:
+                print(f"  Overprinted name {r['district']!r} read as {plain!r} (beside {other!r})")
+                r["district"] = plain
+                break
 
-            # Data row extraction
-            for line in lines:
-                line = line.strip()
-                if not line:
-                    continue
-                m = pattern.match(line)
-                if not m:
-                    continue
-                dist = m.group(1).strip()
-                if any(tok in dist for tok in ("Total", "Average", "State")):
-                    continue
-                if len(dist) < 3 and dist.lower() != "diu":
-                    continue
-                if any(c.isdigit() for c in dist):
-                    continue
+    unnamed = [r for r in rows if not r["district"]]
+    if unnamed:
+        sys.exit(f"ERROR: {len(unnamed)} MPI rows have no district name: {unnamed[:5]}")
 
-                data.append({
-                    "state": current_state,
-                    "district": dist,
-                    "hr_2016": safe_float(m.group(2)),
-                    "intensity_2016": safe_float(m.group(3)),
-                    "mpi_2016": safe_float(m.group(4)),
-                    "hr_2021": safe_float(m.group(5)),
-                    "intensity_2021": safe_float(m.group(6)),
-                    "mpi_2021": safe_float(m.group(7)),
-                })
+    data = []
+    for r in rows:
+        v = r["vals"]
+        data.append({
+            "state": r["state"],
+            "district": re.sub(r"\s+\)", ")", re.sub(r"\s+", " ", r["district"])),   # "(Bengaluru Rural )"
+            "hr_2016": safe_float(v[0]),
+            "intensity_2016": safe_float(v[1]),
+            "mpi_2016": safe_float(v[2]),
+            "hr_2021": safe_float(v[3]),
+            "intensity_2021": safe_float(v[4]),
+            "mpi_2021": safe_float(v[5]),
+        })
+    with_round_two = sum(1 for d in data if d["hr_2021"] is not None)
+    if with_round_two != MPI_DISTRICTS_IN_REPORT:
+        sys.exit(f"ERROR: read {with_round_two} districts with 2019-21 figures; the report covers "
+                 f"{MPI_DISTRICTS_IN_REPORT}. The PDF reading has lost or invented rows.")
 
     df = pd.DataFrame(data)
-    df = df.drop_duplicates(subset=["district", "hr_2021"])
 
     # Apply state-attribution corrections
     fixes = 0
@@ -574,9 +715,11 @@ def extract_mpi(pdf_path: Path) -> pd.DataFrame:
     df["hr_2016"] = df["hr_2016"] / 100.0
     df["hr_2021"] = df["hr_2021"] / 100.0
 
-    # Drop rows where the spine data (2019-21 HR) is missing
+    # Drop rows with no 2019-21 headcount: the parents NFHS-5 split
+    # (Warangal, Barddhaman) carry only the earlier round. A ratio printed
+    # as 0.00% is a measurement (Ernakulam) and stays.
     before = len(df)
-    df = df[df["hr_2021"].notna() & (df["hr_2021"] > 0)].reset_index(drop=True)
+    df = df[df["hr_2021"].notna()].reset_index(drop=True)
 
     print(f"  Extracted {before} rows, dropped {before - len(df)} with null hr_2021")
     print(f"  State corrections applied: {fixes}")
@@ -597,13 +740,37 @@ def load_csr(excel_path: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
 
     # Compute Pan India / unattributable CSR BEFORE filtering
     exclude_states = {"Pan India", "Pan India (Other Centralized Funds)", "Nec/ Not Mentioned"}
-    pan_india_mask = raw["state"].isin(exclude_states) | raw["district_lgd_code"].isna() | (raw["district_lgd_code"].astype(str) == "Not Applicable")
+    # Jammu & Kashmir, Ladakh, the Andaman & Nicobar Islands, Dadra & Nagar
+    # Haveli and Daman & Diu carry no LGD columns in the compiled file, though
+    # each row names its district as filed. Counted as unplaceable, ₹321 crore
+    # of 2021-22 to 2023-24 spending reached no district and all 20 J&K
+    # districts read ₹0. The district as filed stands in where the LGD name is blank.
+    raw["district_as_per_lgd"] = raw["district_as_per_lgd"].fillna(raw["district_as_per_source"])
+    # Mahe and Yanam are filed under their own names but coded as Puducherry
+    # district, so the report's Mahe and Yanam read as having nothing on record
+    # while their money sat in Puducherry's total. Filed names win for these.
+    for state, filed in CSR_FILED_NAME_WINS:
+        rows = (raw["state"] == state) & (raw["district_as_per_source"] == filed)
+        raw.loc[rows, "district_as_per_lgd"] = filed
+        raw.loc[rows, "district_lgd_code"] = f"src:{filed}"
+    # Every district name filed in the window, for the join's check that no
+    # district left without a match is named there (a fold like the one above).
+    global CSR_FILED_NAMES
+    CSR_FILED_NAMES = {
+        (normalize_name(st), normalize_name(nm))
+        for st, nm in raw.loc[raw["fiscal_year"].isin(CSR_RECENT_YEARS), ["state", "district_as_per_source"]]
+        .dropna().itertuples(index=False)
+    }
+    raw["district_lgd_code"] = raw["district_lgd_code"].where(
+        raw["district_lgd_code"].notna(), raw["district_as_per_source"].map(lambda v: f"src:{v}"))
+    unplaced_names = {"Nec/ Not Mentioned", "Pan India", "Not Applicable"}
+    pan_india_mask = (raw["state"].isin(exclude_states) | raw["district_as_per_lgd"].isna()
+                      | raw["district_as_per_lgd"].isin(unplaced_names)
+                      | (raw["district_lgd_code"].astype(str) == "Not Applicable"))
     pan_india_all_years = float(pd.to_numeric(raw.loc[pan_india_mask, "amount_spent"], errors="coerce").fillna(0).sum())
     total_all_years_gross = float(pd.to_numeric(raw["amount_spent"], errors="coerce").fillna(0).sum())
 
-    df = raw[~raw["state"].isin(exclude_states)]
-    df = df[df["district_lgd_code"].notna()]
-    df = df[df["district_lgd_code"].astype(str) != "Not Applicable"]
+    df = raw[~pan_india_mask]
     print(f"  After excluding Pan-India / missing LGD: {len(df)}")
 
     df_recent = df[df["fiscal_year"].isin(CSR_RECENT_YEARS)].copy()
@@ -720,6 +887,85 @@ def best_match(
     return None, None
 
 
+# Rows filed under one district's name but coded to another (state, filed name).
+CSR_FILED_NAME_WINS: list[tuple[str, str]] = [("Puducherry", "Mahe"), ("Puducherry", "Yanam")]
+CSR_FILED_NAMES: set[tuple[str, str]] = set()
+
+# MCA names these UTs differently from the MPI report.
+CSR_STATE_ALIASES: dict[str, list[str]] = {
+    "andaman and nicobar islands": ["andaman and nicobar"],
+    "ladakh": ["leh and ladakh"],
+    "dadra and nagar haveli and daman and diu": ["dadra and nagar haveli", "daman and diu"],
+}
+
+# The report's spelling (state, district, normalised) -> the compiled MCA
+# file's. Each was checked by eye against the file's district list for the
+# State; renamed districts take their current name (Ahmednagar is Ahilyanagar
+# since 2024, Osmanabad Dharashiv since 2023, Warangal Rural Warangal since 2021).
+CSR_NAME_OVERRIDES: dict[tuple[str, str], str] = {
+    ("andhra pradesh", "anantapur"): "ananthapuramu",
+    ("andhra pradesh", "spsr nellore"): "sri potti sriramulu nellore",
+    ("andhra pradesh", "visakhapatanam"): "visakhapatnam",
+    ("andaman and nicobar islands", "nicobars"): "nicobar",
+    ("chhattisgarh", "dantewada"): "dakshin bastar dantewada",
+    ("delhi", "north east"): "north east delhi",
+    ("delhi", "north west"): "north west delhi",
+    ("delhi", "south east"): "south east delhi",
+    ("delhi", "south west"): "south west delhi",
+    ("gujarat", "dang"): "dangs",
+    ("gujarat", "dohad"): "dahod",
+    ("himachal pradesh", "lahul and spiti"): "lahaul and spiti",
+    ("karnataka", "chamarajanagara"): "chamarajanagar",
+    ("karnataka", "davangere"): "davanagere",
+    ("madhya pradesh", "narsinghpur"): "narsimhapur",
+    ("maharashtra", "ahmednagar"): "ahilyanagar",
+    ("maharashtra", "osmanabad"): "dharashiv",
+    ("tamil nadu", "kanchipuram"): "kancheepuram",
+    ("tamil nadu", "villupuram"): "viluppuram",
+    ("telangana", "warangal rural"): "warangal",
+    ("uttar pradesh", "barabanki"): "bara banki",
+    ("uttar pradesh", "kushi nagar"): "kushinagar",
+    ("uttar pradesh", "shravasti"): "shrawasti",
+    ("uttar pradesh", "siddharth nagar"): "siddharthnagar",
+    ("uttarakhand", "rudraprayag"): "rudra prayag",
+    ("uttarakhand", "udham singh nagar"): "udam singh nagar",
+    ("uttarakhand", "uttarkashi"): "uttar kashi",
+    ("west bengal", "koch bihar (coochbehar)"): "cooch behar",
+    ("west bengal", "maldah"): "malda",
+    ("west bengal", "puruliya"): "purulia",
+}
+
+
+def name_variants(raw: str) -> list[str]:
+    """A district's normalised names: as printed, then each of its names when
+    the report gives two ("Bangalore (Bengaluru Urban)", "Hugli (Hooghly)")."""
+    full = normalize_name(raw)
+    out = [full]
+    m = re.match(r"^(.*?)\s*\((.*?)\)\s*$", str(raw))
+    if m:
+        for part in (m.group(1), m.group(2)):
+            n = normalize_name(part)
+            if n and n not in out:
+                out.append(n)
+    for n in list(out):
+        if "-" in n and n.replace("-", " ") not in out:
+            out.append(n.replace("-", " "))    # Saraikela-Kharsawan, Medchal-Malkajgiri
+    return out
+
+
+def best_match_any(variants: list[str], lookup: dict, keys: list, allowed_states: list[str],
+                   cutoff: int, enforce_first_token: bool = False) -> tuple[object, float | None]:
+    """best_match over each of a district's names; an exact match wins, else the best score."""
+    best: tuple[object, float | None] = (None, None)
+    for v in variants:
+        val, score = best_match(v, lookup, keys, allowed_states, cutoff, enforce_first_token)
+        if val is not None and score == 100.0:
+            return val, score
+        if val is not None and (best[1] is None or score > best[1]):
+            best = (val, score)
+    return best
+
+
 def join_datasets(
     mpi: pd.DataFrame, csr: pd.DataFrame, census: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -754,11 +1000,15 @@ def join_datasets(
     out["csr_lgd_source"] = ""
     out["district_lgd_code"] = ""
     out["csr_match_score"] = np.nan
+    out["csr_matched_name"] = ""
+    out["csr_matched_state"] = ""
     out["census_match_score"] = np.nan
     out["population_imputed"] = False
     out["population_parent_districts"] = ""
     out["population_source"] = ""        # method label from the recast CSV
     out["population_citation"] = ""      # source URL from the recast CSV
+    csr_scope: dict[int, tuple[list[str], list[str]]] = {}
+    csr_claims: dict[tuple[str, str], list[str]] = {}
     matched_csr = matched_census = 0
     matched_override = matched_recast = matched_fuzzy = 0
     unresolved: list[tuple[str, str]] = []
@@ -773,6 +1023,7 @@ def join_datasets(
     for idx, row in out.iterrows():
         state_norm = normalize_name(row["state"])
         dist_norm = normalize_name(row["district"])
+        variants = name_variants(row["district"])
 
         # Build the canonical internal key from the MPI spine (state + district),
         # not from the CSR LGD number. This guarantees uniqueness across scored
@@ -780,30 +1031,40 @@ def join_datasets(
         out.at[idx, "district_lgd_code"] = build_district_key(row["state"], row["district"])
 
         # CSR — MCA uses modern state names, so prefer the MPI state directly
-        csr_states = [state_norm] + [
+        csr_states = [state_norm] + CSR_STATE_ALIASES.get(state_norm, []) + [
             s for s in resolve_census_state(state_norm) if s != state_norm
         ]
-        csr_val, csr_score = best_match(
-            dist_norm, csr_lookup, csr_keys, csr_states,
+        override = CSR_NAME_OVERRIDES.get((state_norm, dist_norm))
+        csr_variants = ([normalize_name(override)] if override else []) + variants
+        csr_val, csr_score = best_match_any(
+            csr_variants, csr_lookup, csr_keys, csr_states,
             cutoff=CSR_FUZZ_CUTOFF, enforce_first_token=True,
         )
+        csr_scope[idx] = (csr_states, csr_variants)
         if csr_val is not None:
             out.at[idx, "total_csr_recent"] = float(csr_val["total_csr_recent"])
             out.at[idx, "csr_lgd_source"] = str(csr_val["district_lgd_code"])
             out.at[idx, "csr_match_score"] = csr_score
+            out.at[idx, "csr_matched_name"] = str(csr_val["district_name"])
+            out.at[idx, "csr_matched_state"] = str(csr_val["state"])
+            csr_claims.setdefault((normalize_name(csr_val["state"]), normalize_name(csr_val["district_name"])), []).append(
+                f"{row['state']}/{row['district']}")
             matched_csr += 1
 
         # Census match: recast CSV, then CENSUS_NAME_OVERRIDES, then fuzzy.
         # No fallback to summing parents - unmatched districts raise.
         census_key = (state_norm, dist_norm)
-        recast_keys_to_try = [census_key]
-        for cs in resolve_census_state(state_norm):
-            if cs != state_norm:
-                recast_keys_to_try.append((cs, dist_norm))
+        recast_keys_to_try = []
+        for v in variants:
+            recast_keys_to_try.append((state_norm, v))
+            for cs in resolve_census_state(state_norm):
+                if cs != state_norm:
+                    recast_keys_to_try.append((cs, v))
         # Also try the Census-side override target (e.g. MPI 'Dantewada' ->
         # Census 'Dakshin Bastar Dantewada') so residuals keyed under the
         # Census name are found before the override falls back to full pop.
-        override = CENSUS_NAME_OVERRIDES.get(census_key)
+        override = next((CENSUS_NAME_OVERRIDES[(state_norm, v)] for v in variants
+                         if (state_norm, v) in CENSUS_NAME_OVERRIDES), None)
         if override:
             recast_keys_to_try.append(override)
 
@@ -827,7 +1088,6 @@ def join_datasets(
             matched_recast += 1
             continue
 
-        override = CENSUS_NAME_OVERRIDES.get(census_key)
         if override and override in census_lookup:
             out.at[idx, "total_population"] = float(census_lookup[override])
             out.at[idx, "census_match_score"] = 100.0
@@ -840,8 +1100,8 @@ def join_datasets(
             continue
 
         census_states = resolve_census_state(state_norm)
-        pop_val, pop_score = best_match(
-            dist_norm, census_lookup, census_keys, census_states,
+        pop_val, pop_score = best_match_any(
+            variants, census_lookup, census_keys, census_states,
             cutoff=CENSUS_FUZZ_CUTOFF, enforce_first_token=False,
         )
         if pop_val is not None:
@@ -860,6 +1120,38 @@ def join_datasets(
         # No match → record for hard fail at the end (don't sum parents)
         unresolved.append((state_norm, dist_norm))
 
+    # One district's spending must not be credited twice, and a district left
+    # without a match must have no unclaimed spelling in the file that could
+    # be its own: such a district reads as receiving nothing.
+    doubled = {k: v for k, v in csr_claims.items() if len(v) > 1}
+    if doubled:
+        raise RuntimeError(f"CSR districts matched to more than one MPI district: {doubled}")
+    unclaimed = [k for k in csr_keys if k not in csr_claims]
+    near: list[str] = []
+    for idx, (states, names) in csr_scope.items():
+        if out.at[idx, "csr_lgd_source"]:
+            continue
+        lgd_names = {d for s, d in csr_keys if s in states}
+        pool = [d for s, d in unclaimed if s in states and d not in ("nec/ not mentioned", "pan india")]
+        # names as filed that the LGD coding folded into another district
+        pool += [d for s, d in CSR_FILED_NAMES
+                 if s in states and d not in lgd_names and d not in ("nec/ not mentioned", "pan india")]
+        for n in names:
+            hit = (process.extractOne(n, pool, scorer=fuzz.ratio, score_cutoff=80)
+                   or process.extractOne(n, pool, scorer=fuzz.token_set_ratio, score_cutoff=90)) if pool else None
+            if hit:
+                near.append(f"{out.at[idx, 'state']}/{out.at[idx, 'district']} ~ {hit[0]} ({hit[1]:.0f})")
+                break
+    if near:
+        raise RuntimeError("Unmatched districts with a close unclaimed CSR spelling; add a "
+                           "CSR_NAME_OVERRIDES entry or rule it out: " + "; ".join(near))
+    loose = out[(out["csr_lgd_source"] != "") & (out["csr_match_score"] < 100)]
+    for _, r in loose.iterrows():
+        print(f"  CSR fuzzy match {r['csr_match_score']:.0f}: {r['state']}/{r['district']} -> {r['csr_matched_name']}")
+    none_recorded = sorted(f"{out.at[i, 'state']}/{out.at[i, 'district']}"
+                           for i in csr_scope if not out.at[i, "csr_lgd_source"])
+    print(f"  No CSR spending recorded for {len(none_recorded)} districts: {', '.join(none_recorded)}")
+
     print(f"  MPI districts in:           {len(out)}")
     print(f"  Matched to CSR (cutoff {CSR_FUZZ_CUTOFF}): {matched_csr} ({matched_csr/len(out)*100:.1f} %)")
     print(f"  Matched to Census (cutoff {CENSUS_FUZZ_CUTOFF}): {matched_census} ({matched_census/len(out)*100:.1f} %)")
@@ -875,7 +1167,7 @@ def join_datasets(
                         & (out["district"].apply(normalize_name) == dist_norm)]
         if mpi_match.empty:
             continue
-        if mpi_match["hr_2021"].iloc[0] and mpi_match["hr_2021"].iloc[0] > 0:
+        if pd.notna(mpi_match["hr_2021"].iloc[0]):
             fatal.append((state_norm, dist_norm))
     if fatal:
         bullet = "\n    - "
@@ -994,6 +1286,16 @@ def compute_scores(master: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         (master["hr_2021"] * master["total_population"]).sum() / tot_pop
     )
 
+    # The thresholds are published to two decimals; the pages say "₹X or
+    # less" and "Y% or more", so the published figures must select exactly
+    # the districts flagged.
+    csr_p25_shown, hr_p75_shown = round(csr_p25, 2), round(hr_p75 * 100, 2)
+    shown = int(((master["district_csr_per_person"].round(6) <= csr_p25_shown)
+                 & ((master["N_raw"] * 100).round(6) >= hr_p75_shown)).sum())
+    if shown != int(master["is_whitespace"].sum()):
+        sys.exit(f"ERROR: the rounded whitespace thresholds select {shown} districts, "
+                 f"the exact ones {int(master['is_whitespace'].sum())}")
+
     meta = {
         "national_median_csr_per_person": round(national_median, 2),
         "national_mean_csr": round(national_mean, 2),
@@ -1001,9 +1303,12 @@ def compute_scores(master: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         "total_districts": int(len(master)),
         "methodology": "population-tertile-stratified benchmarking",
         "whitespace_thresholds": {
-            "csr_p25": round(csr_p25, 2),
-            "hr_p75_pct": round(hr_p75 * 100, 1),
+            "csr_p25": csr_p25_shown,
+            "hr_p75_pct": hr_p75_shown,
         },
+        # districts whose ₹0 is what the filings record (no spending placed there)
+        "csr_not_recorded_count": int((master["csr_lgd_source"] == "").sum()),
+        "csr_not_recorded_whitespace": int(((master["csr_lgd_source"] == "") & master["is_whitespace"]).sum()),
         "whitespace_count": int(master["is_whitespace"].sum()),
         "whitespace_by_state": {str(k): int(v) for k, v in ws_by_state.items()},
         "pos_range": {
@@ -1054,8 +1359,11 @@ def compute_sector_scores(master: pd.DataFrame, pivot: pd.DataFrame) -> tuple[di
         m = master.copy()
         densities = []
         for _, r in m.iterrows():
-            key = (normalize_name(r["state"]), normalize_name(r["district"]))
-            src = pivot_by_sd.get(key)
+            # the district's spending under the name the filings use, found by
+            # the join; keyed by the report's spelling, every district spelled
+            # differently in the filings read as receiving nothing in any sector
+            key = (normalize_name(r["csr_matched_state"]), normalize_name(r["csr_matched_name"]))
+            src = pivot_by_sd.get(key) if r["csr_matched_name"] else None
             amt_cr = float(src.get(col, 0) or 0) if src is not None else 0.0
             pop = float(r["total_population"] or 0)
             densities.append((amt_cr * 1e7) / pop if pop > 0 else 0.0)
@@ -1107,6 +1415,10 @@ def write_outputs(
             "district_name": str(r["district"]),
             "district_lgd_code": str(r["district_lgd_code"]),
             "csr_lgd_source": str(r.get("csr_lgd_source", "") or ""),
+            # False: the filings place no spending in this district in the
+            # window, so its ₹0 is what was recorded (the join checks that no
+            # unclaimed spelling in the file could be its own)
+            "csr_recorded": bool(r.get("csr_lgd_source")),
             "headcount_ratio_2016": safe_json(r["hr_2016"]),
             "headcount_ratio_2021": safe_json(r["hr_2021"]),
             "mpi_2021": safe_json(r["mpi_2021"]),
@@ -1133,6 +1445,8 @@ def write_outputs(
     # Produce the verification report first — meta.json embeds a compact subset
     # so the UI can cite reconciled numbers without loading the full report.
     report = build_verification_report(master, meta, csr_overview, mpi_total_extracted)
+    if not report["population_invariants"]["ok"]:
+        sys.exit("ERROR: population invariants failed (see above); nothing was written.")
 
     meta = {
         **meta,
@@ -1189,8 +1503,9 @@ def build_verification_report(
     print(f"    Census 2011 reference:    {CENSUS_2011_NATIONAL:>16,}")
     print(f"    Deviation:                {nat_deviation_pct:>+8.3f}%")
 
-    # INV-3: cap on national total (over-count means double-count).
-    invariant_3_overcount = nat_deviation_pct > 0.5
+    # INV-3: the national total within 0.5% of the Census either way: over
+    # means a double count, under means districts were lost.
+    invariant_3_overcount = abs(nat_deviation_pct) > 0.5
     all_positive = bool((master["total_population"] > 0).all())
 
     # INV-2: per-state matched_pop vs Census state total.
@@ -1233,7 +1548,7 @@ def build_verification_report(
                     "census_pop": int(combined_census),
                     "matched_pop": int(round(matched_pop)),
                     "deviation_pct": round(dev_pct, 3),
-                    "ok": dev_pct <= 0.5,
+                    "ok": abs(dev_pct) <= 0.5,
                 })
                 accounted.update(cs_tuple)
 
@@ -1251,7 +1566,10 @@ def build_verification_report(
                 "census_pop": int(census_pop),
                 "matched_pop": int(round(matched_pop)),
                 "deviation_pct": round(dev_pct, 3),
-                "ok": dev_pct <= 0.5,
+                # Two-sided: a State short of its Census total has lost
+                # districts (54 went missing from an earlier PDF reading while
+                # this check, one-sided, passed West Bengal at -37%).
+                "ok": abs(dev_pct) <= 0.5,
             })
     invariant_2_violators = [s for s in state_invariants if not s["ok"]]
 
@@ -1320,12 +1638,6 @@ def build_verification_report(
     )
     if invariants_ok:
         print("  OK   all population invariants satisfied")
-        if nat_deviation_pct < -0.5:
-            print(
-                f"  NOTE national total runs {nat_deviation_pct:+.2f}% vs Census 2011 "
-                f"because the MPI PDF does not enumerate every Census-2011 district; "
-                f"this gap is structural and not introduced by the recast."
-            )
     else:
         print("  FAIL population invariants:")
         if invariant_1_violators:
@@ -1337,7 +1649,7 @@ def build_verification_report(
             for s in invariant_2_violators[:5]:
                 print(f"      {s}")
         if invariant_3_overcount:
-            print(f"    INV-3 (national): +{nat_deviation_pct:.2f}% over Census — DOUBLE-COUNT")
+            print(f"    INV-3 (national): {nat_deviation_pct:+.2f}% against the Census")
         if not all_positive:
             print(f"    non-positive populations present")
 
@@ -1477,6 +1789,10 @@ def main() -> None:
         max((m.get("pos_max", 0) for m in sector_meta.values()), default=0), 1
     )
     meta["sector_pos_meta"] = sector_meta
+    # what the methodology page counts: the report's districts and the
+    # (State, district) pairs the filings place spending in, in the window
+    meta["mpi_districts"] = int(mpi_total_extracted)
+    meta["csr_district_pairs"] = int(len(csr_district))
     write_outputs(master, sector_scores, meta, csr_overview, OUT_DIR, mpi_total_extracted)
 
     print("\n" + "=" * 72)

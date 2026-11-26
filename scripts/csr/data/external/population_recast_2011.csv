@@ -96,9 +96,9 @@ chhattisgarh,bastar,834375,,,residual_subtraction,https://en.wikipedia.org/wiki/
 chhattisgarh,mungeli,701707,bilaspur,,gazette_2011_table,https://en.wikipedia.org/wiki/Mungeli_district,Wikipedia: Mungeli district,2026-04-28,
 chhattisgarh,bilaspur,1961922,,,residual_subtraction,https://en.wikipedia.org/wiki/Bilaspur_district%2C_Chhattisgarh,Census 2011 Bilaspur (2663629) minus Mungeli,2026-04-28,
 chhattisgarh,surajpur,789043,surguja,,gazette_2011_table,https://en.wikipedia.org/wiki/Surajpur_district,Wikipedia: Surajpur district,2026-04-28,
-chhattisgarh,surguja,1570843,,,residual_subtraction,https://en.wikipedia.org/wiki/Surguja_district,Census 2011 Surguja (2359886) minus Surajpur. Balrampur (also 2012 carve-out) not in MPI scope so its share remains in this residual,2026-04-28,
+chhattisgarh,surguja,840352,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 Surguja (2359886) minus Surajpur (789043) and Balrampur (730491); equals its tehsils Ambikapur+Lakhanpur+Udaipur+Lundra+Sitapur+Batauli+Mainpat,2026-11-26,
 chhattisgarh,gariyaband,597653,raipur,,gazette_2011_table,https://en.wikipedia.org/wiki/Gariaband_district,Wikipedia: Gariaband district,2026-04-28,
-chhattisgarh,raipur,3466219,,,residual_subtraction,https://en.wikipedia.org/wiki/Raipur_district,Census 2011 Raipur (4063872) minus Gariyaband. Balodabazar (also 2012 carve-out) not in MPI scope so its share remains in this residual,2026-04-28,
+chhattisgarh,raipur,2160876,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 Raipur (4063872) minus Gariyaband (597653) and Baloda Bazar (1305343); equals its tehsils Raipur+Arang+Abhanpur+Tilda,2026-11-26,
 
 # === GUJARAT (15 August 2013 reorganization, GH/H/55/2013) =====================
 gujarat,devbhumi dwarka,752484,jamnagar,,gazette_2011_table,https://en.wikipedia.org/wiki/Devbhumi_Dwarka_district,Wikipedia: Devbhumi Dwarka district,2026-04-28,
@@ -151,8 +151,6 @@ west bengal,purba bardhaman,4835532,barddhaman,,gazette_2011_table,https://en.wi
 # === PUNJAB (27 July 2011 carve-outs) =========================================
 punjab,pathankot,676598,gurdaspur,,gazette_2011_table,https://en.wikipedia.org/wiki/Pathankot_district,Wikipedia: Pathankot district,2026-04-28,
 punjab,gurdaspur,1621725,,,residual_subtraction,https://en.wikipedia.org/wiki/Gurdaspur_district,Census 2011 Gurdaspur (2298323) minus Pathankot,2026-04-28,
-punjab,fazilka,1027143,firozpur,,gazette_2011_table,https://en.wikipedia.org/wiki/Fazilka_district,Wikipedia: Fazilka district,2026-04-28,
-punjab,firozpur,1001931,,,residual_subtraction,https://en.wikipedia.org/wiki/Firozpur_district,Census 2011 Firozpur (2029074) minus Fazilka,2026-04-28,
 
 # === NCT OF DELHI (Shahdara 2012; South East 2017) ============================
 delhi,shahdara,1110751,"east,north east",east=481055;north east=629696,areal_allocation,http://citypopulation.de/en/india/admin/delhi/702__shahdara/,Citypopulation.de mirroring Delhi government district profile - Seemapuri+Shahdara+Vivek Vihar tehsils,2026-04-28,Allocated proportionally to parent populations: ~481055 from East + ~629696 from North East
@@ -173,3 +171,33 @@ arunachal pradesh,west siang,80354,,,residual_subtraction,https://en.wikipedia.o
 # These are pure RENAMES with negligible boundary change, so they live in CENSUS_NAME_OVERRIDES
 # in the pipeline rather than here. Listed for documentation only:
 #   Gangtok ← East;  Gyalshing ← West;  Mangan ← North;  Namchi ← South
+# === Added 2026-11-26: districts the earlier PDF reading missed ===============
+# Each carve-out is the sum of its Census 2011 sub-districts; the parent keeps the rest.
+chhattisgarh,balod,826165,durg,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Balod+Dondi+Dondi Luhara+Gunderdehi+Gurur,2026-11-26,
+chhattisgarh,bemetara,795759,durg,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Bemetara+Berla+Nawagarh+Saja+Thanakhamria,2026-11-26,
+chhattisgarh,durg,1721948,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 Durg (3343872) minus Balod (826165) and Bemetara (795759); equals its tehsils Durg+Dhamdha+Patan,2026-11-26,
+chhattisgarh,baloda bazar,1305343,raipur,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Simga+Bhatapara+Baloda Bazar+Palari+Kasdol+Bilaigarh,2026-11-26,
+chhattisgarh,balrampur,730491,surguja,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Ramanujganj+Balrampur+Wadrafnagar+Shankargarh+Samri Kusmi+Rajpur,2026-11-26,
+arunachal pradesh,kra daadi,46704,kurung kumey,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Palin+Yangte+Chambang+Gangte+Tarak Lengdi+Longding Koling (Pipsorang)+Tali circles (Arunachal Statistical Abstract table 1.1),2026-11-26,
+arunachal pradesh,kurung kumey,45372,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 Kurung Kumey (92076) minus Kra Daadi (46704),2026-11-26,
+assam,biswanath,612491,sonitpur,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Biswanath+Helem+Gohpur revenue circles,2026-11-26,
+assam,sonitpur,1311619,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 Sonitpur (1924110) minus Biswanath (612491),2026-11-26,
+gujarat,arvalli,1039918,sabar kantha,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Modasa+Dhansura+Malpur+Bayad+Bhiloda+Meghraj talukas,2026-11-26,
+gujarat,sabar kantha,1388671,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 Sabar Kantha (2428589) minus Arvalli (1039918),2026-11-26,
+gujarat,botad,656005,"ahmadabad,bhavnagar",ahmadabad=168912;bhavnagar=487093,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Botad+Gadhada (Bhavnagar) and Ranpur+Barwala (Ahmadabad),2026-11-26,
+gujarat,ahmedabad,7045313,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 Ahmadabad (7214225) minus Ranpur and Barwala talukas (168912) now in Botad,2026-11-26,
+gujarat,bhavnagar,2393272,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 Bhavnagar (2880365) minus Botad and Gadhada talukas (487093) now in Botad,2026-11-26,
+gujarat,chhotaudepur,1071831,vadodara,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Chhota Udaipur+Jetpur Pavi+Kavant+Nasvadi+Sankheda talukas,2026-11-26,
+gujarat,vadodara,3093795,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 Vadodara (4165626) minus Chhota Udaipur (1071831),2026-11-26,
+madhya pradesh,agar malwa,571278,shajapur,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Agar+Badod+Susner+Nalkheda tehsils,2026-11-26,
+madhya pradesh,shajapur,941403,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 Shajapur (1512681) minus Agar Malwa (571278),2026-11-26,
+assam,west karbi anglong,295358,karbi anglong,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Donka sub-district (Hamren),2026-11-26,
+assam,karbi anglong,660955,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 Karbi Anglong (956313) minus West Karbi Anglong (295358),2026-11-26,
+meghalaya,north garo hills,155991,east garo hills,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Resubelpara+Kharkutta blocks,2026-11-26,Meghalaya districts follow community development blocks only approximately; other published figures differ
+meghalaya,east garo hills,161926,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 East Garo Hills (317917) minus North Garo Hills (155991),2026-11-26,
+meghalaya,south west garo hills,146705,west garo hills,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Betasing+Zikzak blocks,2026-11-26,Meghalaya districts follow community development blocks only approximately; other published figures differ
+meghalaya,west garo hills,496586,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 West Garo Hills (643291) minus South West Garo Hills (146705),2026-11-26,
+meghalaya,south west khasi hills,95680,west khasi hills,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Mawkyrwat+Ranikor blocks,2026-11-26,Meghalaya districts follow community development blocks only approximately; other published figures differ
+meghalaya,west khasi hills,287781,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 West Khasi Hills (383461) minus South West Khasi Hills (95680),2026-11-26,
+punjab,fazilka,1203445,firozpur,,subdistrict_sum,https://www.devdatalab.org/shrug,Census 2011 PCA sub-district totals (SHRUG): Fazilka+Abohar+Jalalabad tehsils,2026-11-26,Replaces an earlier figure of 1027143 taken from Wikipedia
+punjab,firozpur,825629,,,residual_subtraction,https://www.devdatalab.org/shrug,Census 2011 Firozpur (2029074) minus Fazilka (1203445); equals its tehsils Firozpur+Zira,2026-11-26,
